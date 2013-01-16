@@ -3,7 +3,7 @@
  */
 
 requirejs.config({
-    baseUrl: 'thirdparty',
+    baseUrl: './',
     paths: {
         js: './',
 				//app: './app'
