@@ -5,8 +5,8 @@
 requirejs.config({
     baseUrl: 'thirdparty',
     paths: {
-        js: '../js',
-				app: '../app'
+        js: './',
+				//app: './app'
     },
 		shim: {
 			'backbone': {
