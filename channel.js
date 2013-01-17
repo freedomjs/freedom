@@ -1,4 +1,4 @@
-define(["underscore", "backbone"],
+define(["thirdparty/underscore", "thirdparty/backbone"],
 function(_, Backbone) {
 	"use strict";
 	

@@ -1,4 +1,4 @@
-define(["require", "underscore", "backbone", "js/constants", "js/channel", "js/interface"],
+define(["thirdparty/require", "thirdparty/underscore", "thirdparty/backbone", "constants", "channel", "interface"],
 function(require, _, backbone, constants, channel, iface) {
 	"use strict";
 

@@ -1,4 +1,4 @@
-define(["freedom!js/api"], function(freedom) {
+define(["freedom!api"], function(freedom) {
 	"use strict";
 
   /**

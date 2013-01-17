@@ -1,4 +1,4 @@
-define(["underscore"],
+define(["thirdparty/underscore"],
 function(_) {
 	"use strict";
 	

@@ -1,7 +1,7 @@
-define(["freedom!js/bundlemanager",
-        "freedom!js/constants",
-				"freedom!js/platform/chrome",
-				"freedom!js/hub"], function(bundleManager, constants, chrome, hub) {
+define(["freedom!bundlemanager",
+        "freedom!constants",
+				"freedom!platform/chrome",
+				"freedom!hub"], function(bundleManager, constants, chrome, hub) {
 	"use strict";
 	
 	var storage = hub.req(constants.API._getProvider, constants.CORE.Sender, {

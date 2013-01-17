@@ -1,4 +1,4 @@
-define(["js/dommanager", "js/hub"],
+define(["dommanager", "hub"],
 function(dom, hub) {
 	"use strict";
 	

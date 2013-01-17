@@ -2,7 +2,7 @@ define(function(require, exports, module) {
 	"use strict";
 	
 	var PLATFORM = {
-		Storage: "js/interface/storage",
+		Storage: "interface/storage",
 		StorageOptions: {
 			SessionPersistance: "platformstorage.sessionPersistance",
 			HostPersistance: "platformstorage.hostPersistance",

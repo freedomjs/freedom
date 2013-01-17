@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
 	"use strict";
 	
-	var hub = require("js/hub"),
-			constants = require("js/constants");
+	var hub = require("hub"),
+			constants = require("constants");
 			
 	var localStorage = {
 		clear: function(cb) {chrome.storage.local.clear(cb);},

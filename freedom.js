@@ -3,17 +3,17 @@
  */
 
 requirejs.config({
-    baseUrl: './',
-    paths: {
-        js: './',
-				//app: './app'
-    },
+    //baseUrl: 'js/freedom/thirdparty',
+    //paths: {
+    //    js: '../',
+		//		app: './app'
+    //},
 		shim: {
-			'backbone': {
-				deps: ['underscore'],
+			'thirdparty/backbone': {
+				deps: ['thirdparty/underscore'],
 				exports: 'Backbone'
 			},
-			'underscore': {
+			'thirdparty/underscore': {
 				exports: '_'
 			}
 		}

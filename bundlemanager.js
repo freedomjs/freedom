@@ -1,4 +1,4 @@
-define(["js/sandboxmanager"],
+define(["sandboxmanager"],
 function(sandboxManager) {
 	"use strict";
 

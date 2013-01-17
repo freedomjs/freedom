@@ -1,6 +1,6 @@
-define(["freedom!js/constants",
-        "freedom!js/platform/chrome",
-			  "freedom!js/hub"], function(constants, chrome, hub) {
+define(["freedom!constants",
+        "freedom!platform/chrome",
+			  "freedom!hub"], function(constants, chrome, hub) {
 	"use strict";
 	
 	var storage = hub.req(constants.API._getProvider, constants.CORE.Sender, {

@@ -1,4 +1,4 @@
-define(["underscore", "backbone", "js/constants", "js/channel"],
+define(["thirdparty/underscore", "thirdparty/backbone", "constants", "channel"],
 function(_, backbone, constants, channel) {
 	"use strict";
 
