@@ -18,6 +18,7 @@ function(dom, hub) {
 		var self = this;
 		self._id = id;
 		self._state = state.LOADING;
+    //TODO(ryscheng): replace with webworkers
 		self._el = dom.create("iframe");
 		self._el.src = chrome.extension.getURL("sandbox.html");
 		self._listener = listener.bind(this, id);
