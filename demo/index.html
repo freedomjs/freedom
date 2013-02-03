@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<head>
+  <title>FreeDOM Sample</title>
+  <script type="text/javascript"
+      src="../freedom.js"
+      data-manifest="manifest.json">
+  </script>
+  <script type="text/javascript">
+  window.onload = function() {
+    document.getElementById('click').onclick = function() {
+      window.freedom.click();
+    }
+    window.freedom.addEventListener('number', function(e) {
+      document.getElementById('count').innerHTML = e.data;
+    }, true);
+
+    window.freedom.click(0);
+  }
+  </script>
+</head>
+<body>
+  The counter is at <span id='count'>0</span>. <button id='click'>+1</button>
+</body>
+</html>
