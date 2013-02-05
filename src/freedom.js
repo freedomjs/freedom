@@ -6,13 +6,12 @@
 /*jslint sloppy:true */
 /*global window, document, setTimeout, XMLHttpRequest */
 
-var freedom;
 (function(global) {
-  var cfg = {},
+  var cfg = {global: global},
       context,
       setup;
 
-  if (typeof freedom !== 'undefined') {
+  if (typeof global['freedom'] !== 'undefined') {
     return;
   }
 
@@ -75,13 +74,11 @@ var freedom;
   function scripts() {
       return document.getElementsByTagName('script');
   }
-  
-  function Channel() {
-  }
 
   function newContext() {
     var config = {
-      manifest: 'manifest.json'
+      manifest: 'manifest.json',
+      source: 'freedom.js'
     },
     channel;
 
@@ -93,7 +90,6 @@ var freedom;
       var ref = new XMLHttpRequest();
       ref.addEventListener('readystatechange', function(e) {
         if (ref.readyState == 4 && ref.responseText) {
-          window.ref = ref;
           var resp = {};
           try {
             resp = JSON.parse(ref.responseText);
@@ -112,6 +108,7 @@ var freedom;
     context = {
       config: config,
       channel: null,
+      proxy: null,
       
       /**
        * Set the context configuration.
@@ -126,17 +123,24 @@ var freedom;
        * @param {Function} callback function to call with the freedom object.
        */
       create: function(channel, callback) {
-        this.channel = channel || new Channel();
+        this.channel = channel || new freedom.Channel(this);
+        this.proxy = new freedom.Proxy();
 
-        loadManifest(config.manifest, this.onManifest.bind(this, callback), function(error) {
-          console.warn(error);
-        });
+        if (!this.channel.isAppContext()) {
+          loadManifest(config.manifest, this.onManifest.bind(this, callback), function(error) {
+            console.warn(error);
+          });
+        }
 
-        return this.channel;
+        return this.proxy;
       },
       
       onManifest: function(callback, manifest) {
-        console.log(manifest);
+        if (manifest && manifest['app'] && manifest['app']['script']) {
+          this.channel.start(manifest['app']['script']);
+        } else {
+          console.warn(manifest['name'] + " does not specify a valid application.");
+        }
         if (callback) {
           callback();
         }
@@ -158,18 +162,24 @@ var freedom;
       context.configure(config);
     }
 
-    return context.create(channel, callback);
+    var proxy = context.create(channel, callback);
+    proxy.addEventListener = function() {};
+    return proxy;
   };
 
   // Look for data-manifest.
-  eachReverse(scripts(), function (script) {
-    var manifest = script.getAttribute('data-manifest');
-    if (manifest) {
-      cfg.manifest = manifest;
-      return true;
-    }
-  });
+  if (typeof document !== 'undefined') {
+    eachReverse(scripts(), function (script) {
+      var manifest = script.getAttribute('data-manifest');
+      var source = script.src;
+      if (manifest) {
+        cfg.source = source;
+        cfg.manifest = manifest;
+        return true;
+      }
+    });
+  }
 
   // Create default context.
-  freedom = setup(cfg);
+  global['freedom'] = setup(cfg);
 })(this);

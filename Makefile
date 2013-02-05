@@ -1,6 +1,6 @@
 # Compile freedom.js using the closure service.
 
-SOURCES = $(wildcard src/*.js)
+SOURCES = src/channel.js src/proxy.js src/freedom.js
 
 freedom.js: $(SOURCES)
 	python tools/build.py -o $@ $(SOURCES)
