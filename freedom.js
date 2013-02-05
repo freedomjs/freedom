@@ -9,7 +9,8 @@
 var freedom;
 (function(global) {
   var cfg = {},
-      context;
+      context,
+      setup;
 
   if (typeof freedom !== 'undefined') {
     return;
@@ -74,6 +75,9 @@ var freedom;
   function scripts() {
       return document.getElementsByTagName('script');
   }
+  
+  function Channel() {
+  }
 
   function newContext() {
     var config = {
@@ -89,6 +93,7 @@ var freedom;
       var ref = new XMLHttpRequest();
       ref.addEventListener('readystatechange', function(e) {
         if (ref.readyState == 4 && ref.responseText) {
+          window.ref = ref;
           var resp = {};
           try {
             resp = JSON.parse(ref.responseText);
@@ -106,6 +111,7 @@ var freedom;
 
     context = {
       config: config,
+      channel: null,
       
       /**
        * Set the context configuration.
@@ -120,9 +126,13 @@ var freedom;
        * @param {Function} callback function to call with the freedom object.
        */
       create: function(channel, callback) {
+        this.channel = channel || new Channel();
+
         loadManifest(config.manifest, this.onManifest.bind(this, callback), function(error) {
           console.warn(error);
         });
+
+        return this.channel;
       },
       
       onManifest: function(callback, manifest) {
@@ -139,7 +149,7 @@ var freedom;
   /**
    * Main entry point.
    */
-  freedom = function (config, channel, callback) {
+  setup = function (config, channel, callback) {
     if (!context) {
       context = newContext();
     }
@@ -151,10 +161,6 @@ var freedom;
     return context.create(channel, callback);
   };
 
-  //TODO(willscott): These should come from the context.
-  freedom.addEventListener = function() {};
-  freedom.click = function() {};
-
   // Look for data-manifest.
   eachReverse(scripts(), function (script) {
     var manifest = script.getAttribute('data-manifest');
@@ -165,5 +171,5 @@ var freedom;
   });
 
   // Create default context.
-  freedom(cfg);
+  freedom = setup(cfg);
 })(this);
