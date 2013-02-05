@@ -8,6 +8,7 @@ import sys
 parser = OptionParser()
 parser.add_option("-o", "--out", dest="filename",
     help="write output to FILE", metavar="FILE")
+parser.add_option("-s", "--simple", action="store_true", dest="simple")
 
 (options, files) = parser.parse_args()
 
@@ -15,9 +16,11 @@ data = ''
 for file in files:
   data += open(file).read()
 
+optLvl = 'SIMPLE_OPTIMIZATIONS' if options.simple else 'ADVANCED_OPTIMIZATIONS'
+
 params = urllib.urlencode([
     ('js_code', data),
-    ('compilation_level', 'ADVANCED_OPTIMIZATIONS'),
+    ('compilation_level', optLvl),
     ('output_format', 'json'),
     ('output_info', 'errors'),
     ('output_info', 'compiled_code'),

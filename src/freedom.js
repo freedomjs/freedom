@@ -123,13 +123,16 @@
        * @param {Function} callback function to call with the freedom object.
        */
       create: function(channel, callback) {
-        this.channel = channel || new freedom.Channel(this);
-        this.proxy = new freedom.Proxy();
+        this.channel = channel || new fdom.Channel(this);
+        this.proxy = new fdom.Proxy();
 
         if (!this.channel.isAppContext()) {
           loadManifest(config.manifest, this.onManifest.bind(this, callback), function(error) {
             console.warn(error);
           });
+        } else {
+          this.channel.start();
+          setTimeout(callback, 0);
         }
 
         return this.proxy;

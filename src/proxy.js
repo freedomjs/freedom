@@ -1,2 +1,2 @@
-var freedom = freedom || {};
-freedom.Proxy = function() {};
+var fdom = fdom || {};
+fdom.Proxy = function() {};

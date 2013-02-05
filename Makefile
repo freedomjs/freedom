@@ -3,4 +3,4 @@
 SOURCES = src/channel.js src/proxy.js src/freedom.js
 
 freedom.js: $(SOURCES)
-	python tools/build.py -o $@ $(SOURCES)
+	python tools/build.py $(MAKEFLAGS) -o $@ $(SOURCES)
