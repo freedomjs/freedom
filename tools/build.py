@@ -20,6 +20,7 @@ params = urllib.urlencode([
     ('compilation_level', 'ADVANCED_OPTIMIZATIONS'),
     ('output_format', 'json'),
     ('output_info', 'errors'),
+    ('output_info', 'compiled_code'),
     ('formatting', 'pretty_print')
   ])
 
