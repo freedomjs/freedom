@@ -1,10 +1,10 @@
 {
-  name: "FreeDOM Sample",
-  description: "Sample FreeDOM application",
-  app: {
-    script: "core.js"
+  "name": "FreeDOM Sample",
+  "description": "Sample FreeDOM application",
+  "app": {
+    "script": "core.js"
   },
-  permissions: [
+  "permissions": [
     "background"
   ]
 }
