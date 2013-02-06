@@ -54,6 +54,24 @@ function mixin(target, source, force, deepStringMixin) {
   return target;
 }
 
+function handleEvents(obj) {
+  var listeners = {};
+  obj['on'] = function(type, handler) {
+    if (listeners[type]) {
+      listeners[type].push(handler);
+    } else {
+      listeners[type] = [handler];
+    }    
+  }
+  obj['emit'] = function(type, data) {
+    if (listeners[type]) {
+      for (var i = 0; i < listeners[type].length; i++) {
+        listeners[type][i](data);
+      }
+    }
+  }
+}
+
 function scripts() {
     return document.getElementsByTagName('script');
 }

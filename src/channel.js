@@ -5,7 +5,7 @@ fdom.Channel = function(context) {
   this.context = context;
   this.worker = null;
   this.app = null;
-  this.listeners = [];
+  handleEvents(this);
 };
 
 fdom.Channel.State = {
@@ -59,7 +59,7 @@ fdom.Channel.prototype.onMessage = function(e) {
       this.state = fdom.Channel.State.RUNNING;
       importScripts(absoluteApp);
     } else {
-      
+      this['emit']('message', e.data);
     }
   } else {
     if (this.state == fdom.Channel.State.NEW && e.data == "RUNNING") {
@@ -71,7 +71,7 @@ fdom.Channel.prototype.onMessage = function(e) {
     } else if (this.state == fdom.Channel.State.STARTING && e.data == "RUNNING") {
       this.state = fdom.Channel.State.RUNNING;
     } else {
-      //call listeners.
+      this['emit']('message', e.data);
     }
   }
 };
@@ -79,10 +79,3 @@ fdom.Channel.prototype.onMessage = function(e) {
 fdom.Channel.prototype.postMessage = function(m) {
   console.warn("Channel not functioning.");
 };
-
-fdom.Channel.prototype.addEventListener = function (event, listener) {
-  if (event != "message") {
-    throw "Unsupported Event Type";
-  }
-  this.listeners.push(listener);
-}

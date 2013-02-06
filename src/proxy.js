@@ -4,6 +4,8 @@ var fdom = fdom || {};
 
 fdom.Proxy = function(channel) {
   var values = {};
+  var listeners = {};
+
   this.get = function(key) {
     if (values.hasOwnProperty(key)) {
       return values[key];
@@ -11,17 +13,35 @@ fdom.Proxy = function(channel) {
       return undefined;
     }
   };
+
   this.set = function(key, value) {
     if (values.hasOwnProperty(key) || values[key] === undefined) {
       values[key] = value;
+      channel.postMessage({
+        'action': 'set',
+        'key': key,
+        'value': value
+      });
     }
+  }
+
+  handleEvents(this);
+  var emitter = this['emit'];
+  
+  this['emit'] = function(type, data) {
+    channel.postMessage({
+      'action': 'event',
+      'type': type,
+      'data': data
+    });
+    emitter(type, data);
   };
 
-  channel.addEventListener('message', function(msg) {
-    if (msg.type == 'set') {
-      this.set(msg.key, msg.value)
-    } else if (msg.type == 'event') {
-      console.log(msg);
+  channel['on']('message', function(msg) {
+    if (msg['action'] == 'set') {
+      this.set(msg['key'], msg['value'])
+    } else if (msg['action'] == ['event']) {
+      emitter(msg['type'], msg['data']);
     }
   })
 };

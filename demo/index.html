@@ -8,13 +8,13 @@
   <script type="text/javascript">
   window.onload = function() {
     document.getElementById('click').onclick = function() {
-      window.freedom.click();
+      window.freedom.emit('click', 1);
     }
-    window.freedom.addEventListener('number', function(e) {
-      document.getElementById('count').innerHTML = e.data;
-    }, true);
+    window.freedom.on('number', function(n) {
+      document.getElementById('count').innerHTML = n;
+    });
 
-    window.freedom.click(0);
+    window.freedom.emit('click', 0);
   }
   </script>
 </head>
