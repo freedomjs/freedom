@@ -1,8 +1,16 @@
 var fdom = fdom || {};
 
 fdom.Channel = function(context) {
+  this.state = fdom.Channel.State.NEW;
   this.context = context;
   this.worker = null;
+  this.app = null;
+};
+
+fdom.Channel.State = {
+  NEW: 1,
+  STARTING: 2,
+  RUNNING: 3
 };
 
 fdom.Channel.prototype.isAppContext = function() {
@@ -14,6 +22,7 @@ fdom.Channel.prototype._startMain = function(app) {
     this.worker.terminate();
     this.worker = null;
   }
+  this.app = app;
   this.worker = new Worker(this.context.config.source);
   this.worker.addEventListener('message', this.onMessage.bind(this), true);
   this.postMessage = function(m) {
@@ -39,7 +48,26 @@ fdom.Channel.prototype.start = function(app) {
 };
 
 fdom.Channel.prototype.onMessage = function(e) {
-  console.log(e);
+  if (this.isAppContext()) {
+    if (this.state == fdom.Channel.State.NEW) {
+      this.app = e.data.app;
+      this.manifest = e.data.manifest;
+      this.state = fdom.Channel.State.STARTING;
+      var absoluteApp = this.manifest.substr(0, this.manifest.lastIndexOf("/")) + "/"  + this.app;
+      importScripts(absoluteApp);
+    }
+  } else {
+    if (this.state == fdom.Channel.State.NEW && e.data == "RUNNING") {
+      this.state = fdom.Channel.State.STARTING;
+      this.postMessage({
+        manifest: this.context.config.manifest,
+        app: this.app
+      });
+    }
+  }
+  if (console !== undefined) {
+    console.log(e);
+  }
 };
 
 fdom.Channel.prototype.postMessage = function(m) {

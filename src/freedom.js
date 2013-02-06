@@ -74,6 +74,12 @@
   function scripts() {
       return document.getElementsByTagName('script');
   }
+  
+  function makeAbsolute(rel) {
+    var base = document.location.origin + document.location.pathname;
+    var here = base.substr(0, base.lastIndexOf("/"));
+    return here + "/" + rel;
+  }
 
   function newContext() {
     var config = {
@@ -177,7 +183,7 @@
       var source = script.src;
       if (manifest) {
         cfg.source = source;
-        cfg.manifest = manifest;
+        cfg.manifest = makeAbsolute(manifest);
         return true;
       }
     });
