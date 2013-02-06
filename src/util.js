@@ -54,6 +54,10 @@ function mixin(target, source, force, deepStringMixin) {
   return target;
 }
 
+/**
+ * Add 'on' and 'emit' methods to an object, which act as a light weight
+ * event handling structure.
+ */
 function handleEvents(obj) {
   var listeners = {};
   obj['on'] = function(type, handler) {
@@ -72,10 +76,16 @@ function handleEvents(obj) {
   }
 }
 
+/**
+ * Find all scripts on the given page.
+ */
 function scripts() {
     return document.getElementsByTagName('script');
 }
-  
+
+/**
+ * Make a relative URL absolute, based on the current document location.
+ */
 function makeAbsolute(rel) {
   var base = document.location.origin + document.location.pathname;
   var here = base.substr(0, base.lastIndexOf("/"));

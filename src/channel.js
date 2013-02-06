@@ -14,10 +14,18 @@ fdom.Channel.State = {
   RUNNING: 3
 };
 
+/**
+ * Determine if execution is working in a web worker,
+ * Or a direct browser page.
+ */
 fdom.Channel.prototype.isAppContext = function() {
   return (typeof window === 'undefined');
 }
 
+/**
+ * Start a channel from a non-worker context, by generating
+ * an on-the-fly app context.
+ */
 fdom.Channel.prototype._startMain = function(app) {
   if (this.worker) {
     this.worker.terminate();
@@ -31,6 +39,10 @@ fdom.Channel.prototype._startMain = function(app) {
   }
 };
 
+/**
+ * Start a channel from a worker context, by connecting back
+ * to the executing page.
+ */
 fdom.Channel.prototype._startApp = function() {
   this.context.config.global.addEventListener('message', this.onMessage.bind(this), true);
   this.postMessage = function(m) {
@@ -39,6 +51,11 @@ fdom.Channel.prototype._startApp = function() {
   this.postMessage("RUNNING");
 };
 
+/**
+ * Start a channel for a desired app. If this is the app, it will connect
+ * back to the creator, otherwise it will generate an appropriate sandbox
+ * to launch the app.
+ */
 fdom.Channel.prototype.start = function(app) {
   this.context.config.global._channel = this;
   if (this.isAppContext()) {
@@ -48,6 +65,9 @@ fdom.Channel.prototype.start = function(app) {
   }
 };
 
+/**
+ * Handle a message from across the channel.
+ */
 fdom.Channel.prototype.onMessage = function(e) {
   if (this.isAppContext()) {
     lastEvt = e;

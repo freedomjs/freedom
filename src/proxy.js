@@ -6,6 +6,10 @@ fdom.Proxy = function(channel) {
   var values = {};
   var listeners = {};
 
+  /**
+   * Get a property from this object.
+   * @param {String} key the property to get.
+   */
   this.get = function(key) {
     if (values.hasOwnProperty(key)) {
       return values[key];
@@ -14,6 +18,11 @@ fdom.Proxy = function(channel) {
     }
   };
 
+  /**
+   * Set a property on this object, and replicate across the channel.
+   * @param {String} key the property to set.
+   * @param {JSON} value the value for the property.
+   */
   this.set = function(key, value) {
     if (values.hasOwnProperty(key) || values[key] === undefined) {
       values[key] = value;
@@ -28,6 +37,9 @@ fdom.Proxy = function(channel) {
   handleEvents(this);
   var emitter = this['emit'];
   
+  /**
+   * Update emission of events to cross the underlying channel.
+   */
   this['emit'] = function(type, data) {
     channel.postMessage({
       'action': 'event',
@@ -37,9 +49,12 @@ fdom.Proxy = function(channel) {
     emitter(type, data);
   };
 
+  /**
+   * Handle messages from across the channel.
+   */
   channel['on']('message', function(msg) {
     if (msg['action'] == 'set') {
-      this.set(msg['key'], msg['value'])
+      values[msg['key']] = msg['value'];
     } else if (msg['action'] == ['event']) {
       emitter(msg['type'], msg['data']);
     }
