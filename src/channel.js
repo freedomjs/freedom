@@ -78,6 +78,7 @@ fdom.Channel.prototype.onMessage = function(e) {
       this.postMessage("RUNNING");
       this.state = fdom.Channel.State.RUNNING;
       importScripts(absoluteApp);
+      this['emit']('connect', null);
     } else {
       this['emit']('message', e.data);
     }
@@ -90,6 +91,7 @@ fdom.Channel.prototype.onMessage = function(e) {
       });
     } else if (this.state == fdom.Channel.State.STARTING && e.data == "RUNNING") {
       this.state = fdom.Channel.State.RUNNING;
+      this['emit']('connect', null);
     } else {
       this['emit']('message', e.data);
     }
@@ -97,5 +99,7 @@ fdom.Channel.prototype.onMessage = function(e) {
 };
 
 fdom.Channel.prototype.postMessage = function(m) {
-  console.warn("Channel not functioning.");
+  this['once']('connect', function() {
+    this.postMessage(m);
+  });
 };

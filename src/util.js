@@ -65,8 +65,19 @@ function handleEvents(obj) {
       listeners[type].push(handler);
     } else {
       listeners[type] = [handler];
-    }    
+    }
   }
+
+  obj['once'] = function(type, handler) {
+    var func = function(data) {
+      var idx = listeners[type].indexOf(func)
+      listeners[type] = listeners[type].splice(idx, 1);
+      handler(data);
+    }
+
+    obj['on'](type, func);
+  }
+
   obj['emit'] = function(type, data) {
     if (listeners[type]) {
       for (var i = 0; i < listeners[type].length; i++) {
@@ -87,7 +98,7 @@ function scripts() {
  * Make a relative URL absolute, based on the current document location.
  */
 function makeAbsolute(rel) {
-  var base = document.location.origin + document.location.pathname;
+  var base = document.location.protocol + "//" + document.location.hostname + document.location.pathname;
   var here = base.substr(0, base.lastIndexOf("/"));
   return here + "/" + rel;
 }
