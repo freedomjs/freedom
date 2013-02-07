@@ -91,6 +91,10 @@ setup = function (config, channel, callback) {
   if (config) {
     context.configure(config);
   }
+  
+  if (!callback) {
+    callback = function() {};
+  }
 
   var proxy = context.create(channel, callback);
   proxy.addEventListener = function() {};

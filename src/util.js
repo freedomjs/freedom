@@ -98,7 +98,7 @@ function scripts() {
  * Make a relative URL absolute, based on the current document location.
  */
 function makeAbsolute(rel) {
-  var base = document.location.protocol + "//" + document.location.hostname + document.location.pathname;
+  var base = document.location.protocol + "//" + document.location.host + document.location.pathname;
   var here = base.substr(0, base.lastIndexOf("/"));
   return here + "/" + rel;
 }

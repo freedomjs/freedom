@@ -101,5 +101,5 @@ fdom.Channel.prototype.onMessage = function(e) {
 fdom.Channel.prototype.postMessage = function(m) {
   this['once']('connect', function() {
     this.postMessage(m);
-  });
+  }.bind(this));
 };
