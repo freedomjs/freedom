@@ -60,8 +60,12 @@ function mixin(target, source, force, deepStringMixin) {
  */
 function handleEvents(obj) {
   var listeners = {};
+  var conditionalListeners = [];
+
   obj['on'] = function(type, handler) {
-    if (listeners[type]) {
+    if (typeof type === 'function') {
+      conditionalListeners.push([type, handler]);
+    } else if (listeners[type]) {
       listeners[type].push(handler);
     } else {
       listeners[type] = [handler];
@@ -69,22 +73,52 @@ function handleEvents(obj) {
   }
 
   obj['once'] = function(type, handler) {
-    var func = function(data) {
-      var idx = listeners[type].indexOf(func)
-      listeners[type] = listeners[type].splice(idx, 1);
-      handler(data);
+    var func;
+    if (typeof type === 'function') {
+      func = function(data) {
+        for (var i = 0; i < conditionalListeners.length; i++) {
+          if (conditionalListeners[i][1] == func) {
+            condiitonalListeners = conditionalListeners.splice(i, 1);
+            break;
+          }
+        }
+        handler(data);
+      }
+    } else {
+      func = function(data) {
+        var idx = listeners[type].indexOf(func);
+        listeners[type] = listeners[type].splice(idx, 1);
+        handler(data);
+      }
     }
 
     obj['on'](type, func);
   }
 
   obj['emit'] = function(type, data) {
+    var cl = conditionalListeners;
+    for (var i = 0; i < cl.length; i++) {
+      if (cl[i][0](type, data)) {
+        cl[i][1](data);
+      }
+    }
     if (listeners[type]) {
-      for (var i = 0; i < listeners[type].length; i++) {
-        listeners[type][i](data);
+      var handlers = listeners[type];
+      for (var i = 0; i < handlers.length; i++) {
+        if (handlers[i](data) === false) {
+          break;
+        }
       }
     }
   }
+}
+
+/**
+ * Determine if execution is working in a web worker,
+ * Or a direct browser page.
+ */
+function isAppContext() {
+  return (typeof window === 'undefined');
 }
 
 /**
@@ -95,10 +129,19 @@ function scripts() {
 }
 
 /**
- * Make a relative URL absolute, based on the current document location.
+ * Make a relative URL absolute, based on the current location.
  */
-function makeAbsolute(rel) {
-  var base = document.location.protocol + "//" + document.location.host + document.location.pathname;
-  var here = base.substr(0, base.lastIndexOf("/"));
-  return here + "/" + rel;
+function makeAbsolute(url) {
+  if (url.indexOf("http") !== 0) {
+    var base = location.protocol + "//" + location.host;
+    if (url.indexOf("/") === 0) {
+      return base + url;
+    } else {
+      base += location.pathname;
+      var here = base.substr(0, base.lastIndexOf("/"));
+      return here + "/" + url;
+    }
+  } else {
+    return url;
+  }
 }

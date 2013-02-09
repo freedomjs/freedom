@@ -55,7 +55,7 @@ fdom.Proxy = function(channel) {
   channel['on']('message', function(msg) {
     if (msg['action'] == 'set') {
       values[msg['key']] = msg['value'];
-    } else if (msg['action'] == ['event']) {
+    } else if (msg['action'] == 'event') {
       emitter(msg['type'], msg['data']);
     }
   })

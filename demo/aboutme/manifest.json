@@ -1,0 +1,13 @@
+{
+  "name": "About Me",
+  "description": "About Me Sample FreeDOM application",
+  "app": {
+    "script": "aboutme.js"
+  },
+  "dependencies": {
+    "identity": "identity.json"
+  },
+  "permissions": [
+    "identity"
+  ]
+}

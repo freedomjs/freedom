@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>About Me</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <script type="text/javascript"
+      src="/freedom.js"
+      data-manifest="manifest.json">
+  </script>
+  <script type="text/javascript">
+  window.onload = function() {
+    window.freedom.on('profile', function(data) {
+      document.getElementById("profilepic").src = data.imageUrl;
+      document.getElementById("name").innerText = data.name;
+      document.getElementById("email").innerText = data.email;
+      document.getElementById("details").innerText = JSON.stringify(data);
+      document.body.className = "loaded";
+    });
+  }
+  </script>
+  <style type="text/css">
+  .loading {
+    font:2em helvetica;
+    border-radius:15px;
+    border:2px solid #888;
+    padding:10px;
+    margin-left:40%;
+  }
+  body.loaded .loading {
+    display:none;
+  }
+  #profile {
+    display:none;
+  }
+  body.loaded #profile {
+    display:block;
+  }
+  #profile #header {
+    display: inline-block;
+    vertical-align: top;
+    font-family: helvetica;
+  }
+  </style>
+</head>
+<body>
+  <span class="loading">
+    Loading...
+  </span>
+  <div id="profile">
+    <img id="profilepic" />
+    <div id="header">
+      <h1 id="name"></h1>
+      <h2 id="email"></h2>
+    </div>
+    <pre id="details"></pre>
+  </div>
+</body>
+</html>

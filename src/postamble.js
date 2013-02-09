@@ -1,5 +1,5 @@
 
   // Create default context.
-  global['freedom'] = setup(cfg);
+  global['freedom'] = setup();
 })(this);
 

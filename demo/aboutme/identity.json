@@ -1,0 +1,10 @@
+{
+  "name": "Identity",
+  "description": "Included Identity Provider",
+  "app": {
+    "script": "identity.js"
+  },
+  "permissions": [
+    "identity"
+  ]
+}
