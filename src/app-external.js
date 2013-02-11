@@ -93,8 +93,6 @@ fdom.app.External.prototype.start = function() {
 
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.worker) {
-    console.log('to ' + this.id);
-    console.log(msg);
     this.worker.postMessage(msg);
   } else {
     this['once']('ready', function(m) {

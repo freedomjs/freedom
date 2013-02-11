@@ -16,8 +16,6 @@ fdom.Hub.get = function() {
 };
 
 fdom.Hub.prototype.onMessage = function(app, message) {
-  console.log("from " + app.id);
-  console.log(message);
   if (!this.apps[app.id]) {
     console.warn("Message dropped from unregistered app " + app.id);
     return;
@@ -25,6 +23,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
   var flows = this.pipes[app.id];
   var flow = message.sourceFlow;
   if (flow == 'control') {
+    console.log(app.id + " -C " + message.request);
     // Signaling Channel.
     if (message.request == 'dep') {
       this.createPipe(app, message.dep);
@@ -40,6 +39,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       app['emit']('ready');
     }
   } else if (flows[flow]) {
+    console.log(app.id + " -> " + flow + " " + message.msg.action + " " + message.msg.type);
     flows[flow]['emit']('message', message.msg);
   } else {
     console.warn("Message dropped from unregistered flow " + app.id + "." + flow);
