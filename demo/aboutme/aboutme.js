@@ -3,4 +3,4 @@ identity.on('identity', function(data) {
   freedom.emit('profile', data);
 });
 
-//identity.emit('identity', null);
+identity.emit('getIdentity', null);

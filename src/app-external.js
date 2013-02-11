@@ -97,6 +97,8 @@ fdom.app.External.prototype.postMessage = function(msg) {
     console.log(msg);
     this.worker.postMessage(msg);
   } else {
-    console.warn("Message dropped to " + this.id);
+    this['once']('ready', function(m) {
+      this.postMessage(m);
+    }.bind(this, msg));
   }
 }

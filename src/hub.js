@@ -37,7 +37,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
         }
       });
     } else if (message.request == 'ready') {
-      console.log("Ready!");
+      app['emit']('ready');
     }
   } else if (flows[flow]) {
     flows[flow]['emit']('message', message.msg);
