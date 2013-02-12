@@ -93,7 +93,7 @@ fdom.app.External.prototype.start = function() {
 
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.worker) {
-    this.worker.postMessage(msg);
+      this.worker.postMessage(msg);
   } else {
     this['once']('ready', function(m) {
       this.postMessage(m);

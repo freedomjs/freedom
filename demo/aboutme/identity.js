@@ -1,4 +1,4 @@
-freedom.on('getIdentity', function() {
+freedom.on('getIdentity', function(query) {
   freedom.emit('identity', {
     name: "First Last",
     email: "email@domain.com",

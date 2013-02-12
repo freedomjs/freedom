@@ -2,7 +2,7 @@
   "name": "Counter",
   "description": "Counter Sample FreeDOM application",
   "app": {
-    "script": "core.js"
+    "script": "counter.js"
   },
   "permissions": [
     "background"

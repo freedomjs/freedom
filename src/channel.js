@@ -10,7 +10,7 @@ fdom.Channel = function(app, flow) {
  * Handle a message from across the channel.
  */
 fdom.Channel.prototype.onMessage = function(e) {
-  this['emit']('message', e.data);
+  this['emit']('message', e['type'] ? e : e.data);
 };
 
 fdom.Channel.prototype.postMessage = function(m) {
