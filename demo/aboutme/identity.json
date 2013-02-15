@@ -4,7 +4,7 @@
   "app": {
     "script": "identity.js"
   },
-  "permissions": [
+  "provides": [
     "identity"
   ]
 }

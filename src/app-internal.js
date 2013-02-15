@@ -59,6 +59,15 @@ fdom.app.Internal.prototype.start = function() {
     this.manifest = control.data.msg.manifest;
     
     this.loadDependencies();
+    this.loadProvides();
+
+    this.postMessage({
+      sourceFlow: 'control',
+      request: 'ready'
+    });
+
+    var appURL = this.id.substr(0, this.id.lastIndexOf("/")) + "/"  + this.manifest['app']['script'];
+    importScripts(appURL);
   }.bind(this));
   
   // Post creation message to get the info.
@@ -73,7 +82,6 @@ fdom.app.Internal.prototype.postMessage = function(msg) {
 }
 
 fdom.app.Internal.prototype.loadDependencies = function() {
-  var outstanding = 0;
   if(this.manifest && this.manifest['dependencies']) {
     var exp = this.config.exports;
     eachProp(this.manifest['dependencies'], function(url, name) {
@@ -88,12 +96,20 @@ fdom.app.Internal.prototype.loadDependencies = function() {
       }.bind(this, name);
     }.bind(this));
   }
-
-  this.postMessage({
-    sourceFlow: 'control',
-    request: 'ready'
-  });
-
-  var appURL = this.id.substr(0, this.id.lastIndexOf("/")) + "/"  + this.manifest['app']['script'];
-  importScripts(appURL);
 };
+
+fdom.app.Internal.prototype.loadProvides = function() {
+  if(this.manifest && this.manifest['provides']) {
+    var exp = this.config.exports;
+    for (var i = 0; i < this.manifest['provides'].length; i++) {
+      var api = fdom.apis.get(this.manifest['provides'][i]);
+      if (!api) {
+        continue;
+      }
+      exp[api.name] = function(dfn) {
+        var proxy = new fdom.Proxy(this.channels['default'], dfn);
+        return proxy;
+      }.bind(this, api.definition);
+    }
+  }
+}
