@@ -31,6 +31,13 @@ setup = function () {
   }
   def.configure(site_cfg);
 
+  // Enable console.log from worker contexts.
+  if (typeof global.console === 'undefined') {
+    global.console = {
+      log: def.debug.bind(def)
+    };
+  }
+
   return def.getProxy();
 };
 
