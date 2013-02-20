@@ -23,7 +23,11 @@ fdom.Hub.prototype.onMessage = function(app, message) {
   var flows = this.pipes[app.id];
   var flow = message.sourceFlow;
   if (flow == 'control') {
-    console.log(app.id + " -C " + message.request);
+    if (message.request != 'debug') {
+      console.log(app.id + " -C " + message.request);
+    } else {
+      console.log(app.id + " -D " + message.msg);
+    }
     // Signaling Channel.
     if (message.request == 'dep') {
       this.createPipe(app, message.dep);
@@ -40,7 +44,11 @@ fdom.Hub.prototype.onMessage = function(app, message) {
     }
   } else if (flows[flow]) {
     console.log(app.id + " -> " + flow + " " + message.msg.action + " " + message.msg.type);
-    flows[flow]['emit']('message', message.msg);
+    if (flows[flow] == app.getChannel(flow)) {
+      flows[flow].onMessage(message.msg);
+    } else {
+      flows[flow].postMessage(message.msg);
+    }
   } else {
     console.warn("Message dropped from unregistered flow " + app.id + "." + flow);
   }
@@ -71,14 +79,14 @@ fdom.Hub.prototype.createPipe = function(app, dep) {
   var depApp = this.apps[depId];
 
   // 3. Register the link
-  this.pipes[app.id][dep] = depApp.getProxy('default');
-  this.pipes[depId] = {'default': app.getProxy(dep)};
+  this.pipes[app.id][dep] = depApp.getChannel('default');
+  this.pipes[depId] = {'default': app.getChannel(dep)};
 }
 
 fdom.Hub.prototype.register = function(app) {
   if (!this.apps[app.id]) {
     this.apps[app.id] = app;
-    this.pipes[app.id] = {'default' : app.channels['default'].getProxy()};
+    this.pipes[app.id] = {'default' : app.channels['default']};
   }
   this['emit']('register', app);
 }

@@ -25,23 +25,28 @@ fdom.app.External.prototype.configure = function(config) {
 }
 
 fdom.app.External.prototype.getProxy = function(flow) {
+  var channel = this.getChannel(flow);
+
+  var proxy = new fdom.Proxy(channel);
+  if (!this.config.exports) {
+    this.config.exports = proxy;
+  }
+  return proxy;
+}
+
+fdom.app.External.prototype.getChannel = function(flow) {
   if (!this.manifest || !this.id) {
     this.id = makeAbsolute(this.config.manifest);
     this.loadManifest(this.id);
   }
-
+  
   if (!flow) {
     flow = 'default'
   }
   if (!this.channels[flow]) {
     this.channels[flow] = new fdom.Channel(this, flow);
   }
-
-  var proxy = new fdom.Proxy(this.channels[flow]);
-  if (!this.config.exports) {
-    this.config.exports = proxy;
-  }
-  return proxy;
+  return this.channels[flow];
 }
 
 /**
@@ -93,7 +98,7 @@ fdom.app.External.prototype.start = function() {
 
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.worker) {
-      this.worker.postMessage(msg);
+    this.worker.postMessage(msg);
   } else {
     this['once']('ready', function(m) {
       this.postMessage(m);

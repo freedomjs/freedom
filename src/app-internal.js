@@ -81,6 +81,14 @@ fdom.app.Internal.prototype.postMessage = function(msg) {
   this.config.global.postMessage(msg);
 }
 
+fdom.app.Internal.prototype.debug = function(msg) {
+  this.postMessage({
+    sourceFlow: 'control',
+    request: 'debug',
+    msg: msg
+  });
+}
+
 fdom.app.Internal.prototype.loadDependencies = function() {
   if(this.manifest && this.manifest['dependencies']) {
     var exp = this.config.exports;

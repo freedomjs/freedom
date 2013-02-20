@@ -26,6 +26,6 @@ fdom.Channel.prototype.getProxy = function() {
   handleEvents(out);
   out['on']('message', function(msg) {
     self['emit']('message', msg);
-  })
+  });
   return out;
 }
