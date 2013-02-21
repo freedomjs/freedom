@@ -18,7 +18,7 @@ fdom.app.Internal.prototype.configure = function(config) {
   mixin(this.config, config, true);
 }
 
-fdom.app.Internal.prototype.getProxy = function(flow) {
+fdom.app.Internal.prototype.getChannel = function(flow) {
   if (!this.manifest || !this.id) {
     this.start();
   }
@@ -30,8 +30,11 @@ fdom.app.Internal.prototype.getProxy = function(flow) {
   if (!this.channels[flow]) {
     this.channels[flow] = new fdom.Channel(this, flow);
   }
+  return this.channels[flow];
+}
   
-  var proxy = new fdom.Proxy(this.channels[flow]);
+fdom.app.Internal.prototype.getProxy = function(flow) {
+  var proxy = new fdom.Proxy(this.getChannel(flow));
   if (!this.config.exports) {
     this.config.exports = proxy;
   }
@@ -58,6 +61,7 @@ fdom.app.Internal.prototype.start = function() {
     this.id = control.data.msg.id;
     this.manifest = control.data.msg.manifest;
     
+    this.loadPermissions();
     this.loadDependencies();
     this.loadProvides();
 
@@ -89,11 +93,27 @@ fdom.app.Internal.prototype.debug = function(msg) {
   });
 }
 
+fdom.app.Internal.prototype.loadPermissions = function() {
+  if(this.manifest && this.manifest['permissions']) {
+    var exp = this.config.exports;
+    for (var i = 0; i < this.manifest['permissions'].length; i++) {
+      var api = fdom.apis.get(this.manifest['permissions'][i]);
+      if (!api) {
+        continue;
+      }
+      exp[api.name] = function(n, dfn) {
+        var proxy = new fdom.Proxy(this.getChannel(n), dfn);
+        return proxy;
+      }.bind(this, api.name, api.definition);
+    }
+  }
+}
+
 fdom.app.Internal.prototype.loadDependencies = function() {
   if(this.manifest && this.manifest['dependencies']) {
     var exp = this.config.exports;
     eachProp(this.manifest['dependencies'], function(url, name) {
-      exp[name] = function(n) {
+      var dep = function(n) {
         var proxy = this.getProxy(n);
         this.postMessage({
           sourceFlow: 'control',
@@ -102,6 +122,11 @@ fdom.app.Internal.prototype.loadDependencies = function() {
         });
         return proxy;
       }.bind(this, name);
+      if (!exp[name]) {
+        exp[name] = dep;
+      } else {
+        dep();
+      }
     }.bind(this));
   }
 };
@@ -115,7 +140,7 @@ fdom.app.Internal.prototype.loadProvides = function() {
         continue;
       }
       exp[api.name] = function(dfn) {
-        var proxy = new fdom.Proxy(this.channels['default'], dfn);
+        var proxy = new fdom.Proxy(this.getChannel(), dfn, true);
         return proxy;
       }.bind(this, api.definition);
     }

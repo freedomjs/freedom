@@ -16,6 +16,7 @@ fdom.app.External = function() {
   this.channels = {};
   this.manifest = {};
   this.worker = null;
+  this.state = false;
   
   handleEvents(this);
 }
@@ -89,15 +90,19 @@ fdom.app.External.prototype.start = function() {
   if (this.worker) {
     this.worker.terminate();
     this.worker = null;
+    this.state = false;
   }
   this.worker = new Worker(this.config.source);
   this.worker.addEventListener('message', function(msg) {
     fdom.Hub.get().onMessage(this, msg.data);
   }.bind(this), true);
+  this['once']('ready', function() {
+    this.state = true;
+  }.bind(this));
 };
 
 fdom.app.External.prototype.postMessage = function(msg) {
-  if (this.worker) {
+  if (this.state || (this.worker && msg.sourceFlow == "control")) {
     this.worker.postMessage(msg);
   } else {
     this['once']('ready', function(m) {

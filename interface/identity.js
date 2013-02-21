@@ -1,3 +1,4 @@
 fdom.apis.set("identity", {
-  name: {type: "property", value: "string"}
+  name: {type: "property", value: "string"},
+  get: {type: "method", value: []}
 });

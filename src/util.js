@@ -13,6 +13,10 @@ function eachReverse(ary, func) {
   }
 }
 
+function hasProp(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
 /**
  * Cycles over properties in an object and calls a function for each
  * property value. If the function returns a truthy value, then the
@@ -77,7 +81,7 @@ function handleEvents(obj) {
     if (typeof type === 'function') {
       func = function(data) {
         for (var i = 0; i < conditionalListeners.length; i++) {
-          if (conditionalListeners[i][1] == func) {
+          if (conditionalListeners[i][1] === func) {
             condiitonalListeners = conditionalListeners.splice(i, 1);
             break;
           }
@@ -86,7 +90,7 @@ function handleEvents(obj) {
       }
     } else {
       func = function(data) {
-        var idx = listeners[type].indexOf(func);
+        var idx = listeners[type].indexOf(this);
         listeners[type] = listeners[type].splice(idx, 1);
         handler(data);
       }
@@ -103,7 +107,7 @@ function handleEvents(obj) {
       }
     }
     if (listeners[type]) {
-      var handlers = listeners[type];
+      var handlers = listeners[type].slice(0);
       for (var i = 0; i < handlers.length; i++) {
         if (handlers[i](data) === false) {
           break;

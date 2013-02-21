@@ -1,6 +1,9 @@
 var identity = freedom.identity();
-identity.on('identity', function(data) {
-  freedom.emit('profile', data);
-});
 
-identity.emit('getIdentity', null);
+// deferring execution in a setTimeout produces more comprehensible debugging.
+setTimeout(function() {
+  var promise = identity.get();
+  promise.done(function(data) {
+    freedom.emit('profile', data);
+  });
+}, 0);
