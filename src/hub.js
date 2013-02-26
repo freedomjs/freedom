@@ -39,6 +39,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
           manifest: app.manifest
         }
       });
+      this.permitAccess(app.id);
     } else if (message.request == 'ready') {
       app['emit']('ready');
     }
@@ -50,7 +51,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       flows[flow].postMessage(message.msg);
     }
   } else {
-    console.warn("Message dropped from unregistered flow " + app.id + "." + flow);
+    console.warn("Message dropped from unregistered flow " + app.id + " -> " + flow);
   }
 };
 
@@ -89,4 +90,20 @@ fdom.Hub.prototype.register = function(app) {
     this.pipes[app.id] = {'default' : app.channels['default']};
   }
   this['emit']('register', app);
+}
+
+fdom.Hub.prototype.permitAccess = function(id) {
+  if (!this.apps[id]) {
+    console.warn("Registration requested for unknown App " + id);
+    return;
+  }
+  if (!this.apps[id].manifest['permissions']) {
+    return;
+  }
+  for (var i = 0; i < this.apps[id].manifest['permissions'].length; i++) {
+    var permission = this.apps[id].manifest['permissions'][i];
+    if (permission.indexOf("core.") === 0) {
+      this.pipes[id][permission] = fdom.apis.getCore(permission, this.apps[id].getChannel(permission));
+    }
+  }
 }
