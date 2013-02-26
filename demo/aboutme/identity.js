@@ -9,6 +9,7 @@ IdentityProvider.prototype.get = function(continuation) {
   var promise = thing.show();
 
   promise.done(function(c) {
+    thing.write("test!");
     c({
       name: this.name,
       email: this.email,
