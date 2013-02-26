@@ -9,12 +9,13 @@ var fdom = fdom || {};
 fdom.View = function() {
 };
 
-fdom.View.prototype.show = function() {
+fdom.View.prototype.show = function(continuation) {
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts");
 //  frame.src = "data:text/html;charset=utf-8,<html><script type='text/javascript'>(" + fdom.View.prototype.controller.toString() + ")();</script></html>";
   document.body.appendChild(frame);
   this.win = frame;
+  continuation({});
 }
 
 fdom.View.prototype.close = function() {

@@ -5,16 +5,16 @@ function IdentityProvider() {
 }
 
 IdentityProvider.prototype.get = function(continuation) {
-  continuation({
-    name: this.name,
-    email: this.email,
-    imageUrl: this.imageUrl
-  });
+  var thing = freedom['core.view']();
+  var promise = thing.show();
+
+  promise.done(function(c) {
+    c({
+      name: this.name,
+      email: this.email,
+      imageUrl: this.imageUrl
+    });    
+  }.bind(this, continuation));
 }
 
 freedom.identity().provideAsynchronous(IdentityProvider);
-
-setTimeout(function() {
-  var thing = freedom['core.view']();
-  var promise = thing.show();
-}, 0);
