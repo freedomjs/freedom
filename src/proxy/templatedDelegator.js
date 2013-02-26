@@ -1,15 +1,31 @@
 fdom.Proxy.templatedDelegator = function(channel, definition) {
   var provider = null;
   var synchronous = true;
-  
+
+  var listen = function() {
+    eachProp(definition, function(prop, name) {
+      if (prop['type'] == 'event') {
+        provider['on'](name, function(m) {
+          channel.postMessage({
+            'action': 'event',
+            'type': name,
+            'value': m
+          })
+        });
+      }
+    });
+  }
+
   this['provideSynchronous'] = function(pro) {
     // TODO(willscott): support 1-1 mapping of provider to proxies.
     provider = new pro();
+    listen();
   }
 
   this['provideAsynchronous'] = function(pro) {
     provider = new pro();
     synchronous = false;
+    listen();
   }
 
   channel['on']('message', function(msg) {

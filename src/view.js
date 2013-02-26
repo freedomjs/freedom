@@ -7,9 +7,12 @@ var fdom = fdom || {};
  * given to the provider.
  */
 fdom.View = function() {
+  this.host = null;
+  this.win = null;
+  handleEvents(this);
 };
 
-fdom.View.prototype.show = function(continuation) {
+fdom.View.prototype.show = function(args, continuation) {
   var host = document.createElement("div");
   document.body.appendChild(host);
   var root = host.webkitCreateShadowRoot();
@@ -28,13 +31,23 @@ fdom.View.prototype.show = function(continuation) {
   continuation({});
 }
 
-fdom.View.prototype.write = function(data, continuation) {
-  this.win.contentWindow.postMessage(data, '*');
-  continuation({});
+fdom.View.prototype.postMessage = function(args, continuation) {
+  this.win.contentWindow.postMessage(args, '*');
 }
 
 fdom.View.prototype.close = function() {
-  console.log("close called.");
+  if (this.host) {
+    this.host.parentNode.removeChild(this.host);
+    this.host = null;
+  }
+  if (this.win) {
+    this.win.removeEventListener('message', this.onMessage, true);
+    this.win = null;
+  }
+}
+
+fdom.View.prototype.onMessage = function(m) {
+  this['emit']('message', m.data);
 }
 
 /**
