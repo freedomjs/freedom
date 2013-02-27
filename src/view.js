@@ -6,13 +6,15 @@ var fdom = fdom || {};
  * as a sandboxed iFrame at separate origin, whose sendMessage channel is
  * given to the provider.
  */
-fdom.View = function() {
+fdom.View = function(channel) {
   this.host = null;
   this.win = null;
+  this.channel = channel;
   handleEvents(this);
 };
 
 fdom.View.prototype.show = function(args, continuation) {
+  console.log(args);
   var host = document.createElement("div");
   document.body.appendChild(host);
   var root = host;
@@ -22,13 +24,17 @@ fdom.View.prototype.show = function(args, continuation) {
   }
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts");
-  frame.src = "data:text/html;charset=utf-8,<html><script type='text/javascript'>(" + fdom.View.prototype.controller.toString() + ")();</script></html>";
+  if (args['file']) {
+    frame.src = args['file'];
+  } else if (args['code']) {
+    frame.src = "data:text/html;charset=utf-8," + args['code'];
+  }
   frame.style.position = 'fixed';
   frame.style.top = '0px';
   frame.style.left = '0px';
   frame.style.width = '100%';
   frame.style.height = '100%';
-  frame.style.background = 'white';
+  frame.style.background = 'rgba(255,255,255,0.75)';
   frame.style.border = '0px';
   root.appendChild(frame);
   this.win = frame;
@@ -51,17 +57,10 @@ fdom.View.prototype.close = function() {
 }
 
 fdom.View.prototype.onMessage = function(m) {
-  this['emit']('message', m.data);
-}
-
-/**
- * The controller function is executed within a view to establish connectivity back
- * to the view container.
- */
-fdom.View.prototype.controller = function() {
-  window.addEventListener('message', function(m) {
-    console.log(m.data);
-    document.body.innerText = m.data;
+  this.channel.postMessage({
+    'action':'event',
+    'type': 'message',
+    'value': m.data
   });
 }
 

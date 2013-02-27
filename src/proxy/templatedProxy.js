@@ -69,6 +69,10 @@ function conform(template, values) {
           out[i] = function() {};
         }
         break;
+      case "object":
+        // Allow removal, since sandboxing will enforce this.
+        out[i] = JSON.parse(JSON.stringify(values[i]));
+        break;
       default:
         out[i] = false;
         break;
