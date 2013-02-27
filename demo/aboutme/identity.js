@@ -1,7 +1,5 @@
 function IdentityProvider() {
-  this.name = "First Last";
-  this.email = "email@domain.com";
-  this.imageUrl = "http://2.gravatar.com/avatar/0cd1738d6f880285b11edd5393ad1cce?size=240";
+  importScripts("http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js");
 }
 
 IdentityProvider.prototype.get = function(continuation) {
@@ -20,9 +18,13 @@ IdentityProvider.prototype.get = function(continuation) {
   });
 
   view.on('message', function(m) {
-    console.log(m);
-    //TODO(willscott): once signed in, get data.
-    continuation(m);
+    view.close();
+    var identity = m[0];
+    var sanitized_email = identity.email.toLowerCase().trim();
+    var hash = CryptoJS.MD5(sanitized_email);
+    identity.imageUrl = "http://2.gravatar.com/avatar/" + hash + "?size=240";
+    
+    continuation(identity);
   });
 }
 

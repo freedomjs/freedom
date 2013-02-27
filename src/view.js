@@ -14,13 +14,12 @@ fdom.View = function(channel) {
 };
 
 fdom.View.prototype.show = function(args, continuation) {
-  console.log(args);
-  var host = document.createElement("div");
-  document.body.appendChild(host);
-  var root = host;
+  this.host = document.createElement("div");
+  document.body.appendChild(this.host);
+  var root = this.host;
   // TODO(willscott): Support shadow root as available.
-  if (host['webkitCreateShadowRoot']) {
-    root = host['webkitCreateShadowRoot']();
+  if (this.host['webkitCreateShadowRoot']) {
+    root = this.host['webkitCreateShadowRoot']();
   }
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts");
@@ -38,6 +37,7 @@ fdom.View.prototype.show = function(args, continuation) {
   frame.style.border = '0px';
   root.appendChild(frame);
   this.win = frame;
+  addEventListener('message', this.onMessage.bind(this), true);
   continuation({});
 }
 
@@ -51,17 +51,19 @@ fdom.View.prototype.close = function() {
     this.host = null;
   }
   if (this.win) {
-    this.win.removeEventListener('message', this.onMessage, true);
+    removeEventListener('message', this.onMessage.bind(this), true);
     this.win = null;
   }
 }
 
 fdom.View.prototype.onMessage = function(m) {
-  this.channel.postMessage({
-    'action':'event',
-    'type': 'message',
-    'value': m.data
-  });
+  if (m.source == this.win.contentWindow) {
+    this.channel.postMessage({
+      'action':'event',
+      'type': 'message',
+      'value': m.data
+    });
+  }
 }
 
 fdom.apis.register("core.view", fdom.View);

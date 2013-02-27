@@ -1,0 +1,29 @@
+<html>
+<head>
+  <style type="text/css">
+  body {
+    border: 2px solid black;
+    background: white;
+    padding: 100px;
+  }
+  h2 {
+    font-family: helvetica;
+  }
+  </style>
+  <script type='text/javascript'>
+  window.onload = function() {
+    document.getElementById('signin').addEventListener('click', function() {
+      var name = document.getElementById('name').value;
+      var email = document.getElementById('email').value;
+      parent.postMessage({name: name, email: email}, '*');
+    }, true);
+  }
+  </script>
+</head>
+<body>
+  <h2>Sign in</h2>
+  Name: <input type='text' id='name' /><br />
+  Email: <input type='text' id='email' /><br />
+  <input type='button' value='Sign in' id='signin'>
+</body>
+</html>
