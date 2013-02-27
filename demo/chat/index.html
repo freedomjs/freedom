@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <title>WebRTC Chat Demo</title>
+  <meta http-equiv='Content-Type' content='text/html;charset=utf-8' />
+  <script type='text/javascript'
+      src='/freedom.js'
+      data-manifest='manifest.json'>
+  </script>
+  <script type='text/javascript'>
+  window.onload = function() {
+    window.freedom.on('chat', function(data) {
+      var log = document.getElementById('chat-log');
+      log.insertBefore(document.createElement('br'), log.childNodes[0]);
+      log.insertBefore(document.createTextNode(data), log.childNodes[0]);
+    });
+  }
+  </script>
+</head>
+<body>
+  <input id='msg-input'/>
+  <div id='status'>Status: No active connection</div>
+  <div id='buddylist'/>
+  <div id='log-banner'>Chat messages:</div>
+  <div id='chat-log' class='text'></div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "Transport",
+  "description": "Included Transport Provider",
+  "app": {
+    "script": "transport.js"
+  },
+  "provides": [
+    "transport"
+  ],
+}

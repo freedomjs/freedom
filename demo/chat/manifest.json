@@ -1,0 +1,11 @@
+{
+  "name": "WebRTC Chat",
+  "description": "WebRTC Chat Sample FreeDOM application",
+  "app": {
+    "script": "chat.js"
+  },
+  "dependencies": {
+  },
+  "permissions": [
+  ]
+}

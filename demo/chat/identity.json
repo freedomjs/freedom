@@ -1,0 +1,13 @@
+{
+  "name": "Identity",
+  "description": "Included Identity Provider",
+  "app": {
+    "script": "identity.js"
+  },
+  "provides": [
+    "identity"
+  ],
+  "permissions": [
+    "core.view"
+  ]
+}
