@@ -5,16 +5,25 @@ function IdentityProvider() {
 }
 
 IdentityProvider.prototype.get = function(continuation) {
-  var thing = freedom['core.view']();
-  var promise = thing.show();
+  var view = freedom['core.view']();
+  var promise = view.show({
+    file: "identityview.html",
+    widgets: true
+  });
 
-  promise.done(function(c) {
-    c({
-      name: this.name,
-      email: this.email,
-      imageUrl: this.imageUrl
-    });    
-  }.bind(this, continuation));
+  var retVal = false;
+
+  view.on('close', function() {
+    if (retVal === false) {
+      continuation({});
+    }
+  });
+
+  view.on('message', function(m) {
+    console.log(m);
+    //TODO(willscott): once signed in, get data.
+    continuation(m);
+  });
 }
 
 freedom.identity().provideAsynchronous(IdentityProvider);

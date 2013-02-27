@@ -1,9 +1,12 @@
 fdom.Proxy.templatedProxy = function(channel, definition) {
   var inflight = [];
+  var events = null;
+  var self = this;
 
   eachProp(definition, function(prop, name) {
     switch(prop['type']) {
       case "property":
+        //TODO(willscott): how should asyncronous properties work?
         break;
       case "method":
         this[name] = function() {
@@ -17,6 +20,14 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
           return deferred['promise']();
         }
         break;
+      case "event":
+        if(!events) {
+          handleEvents(this);
+          events = {name:prop};
+        } else {
+          events[name] = prop;
+        }
+        break
     }
   }.bind(this));
 
@@ -24,6 +35,12 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
     if (!msg) return;
     if (msg.action == 'method') {
       inflight.pop()['resolve'](msg.value);
+    } else if (msg.action == 'event') {
+      var prop = events[msg.type];
+      if (prop) {
+        var val = conform(prop, msg.value);
+        self['emit'](msg.type, val);
+      }
     }
   });
 };
