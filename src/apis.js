@@ -39,7 +39,7 @@ coreProvider.prototype.postMessage = function(msg) {
     this.instance = new fdom.Proxy.templatedDelegator(this.reply, def.definition)
     this.instance['provideAsynchronous'](fdom.apis.providers[this.name]);
   }
-  this.reply.emit('message', msg);
+  this.reply['emit']('message', msg);
 }
 
 fdom.apis = new api();

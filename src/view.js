@@ -15,7 +15,11 @@ fdom.View = function() {
 fdom.View.prototype.show = function(args, continuation) {
   var host = document.createElement("div");
   document.body.appendChild(host);
-  var root = host.webkitCreateShadowRoot();
+  var root = host;
+  // TODO(willscott): Support shadow root as available.
+  if (host['webkitCreateShadowRoot']) {
+    root = host['webkitCreateShadowRoot']();
+  }
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts");
   frame.src = "data:text/html;charset=utf-8,<html><script type='text/javascript'>(" + fdom.View.prototype.controller.toString() + ")();</script></html>";
