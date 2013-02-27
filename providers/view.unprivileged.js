@@ -1,19 +1,17 @@
-var fdom = fdom || {};
-
 /**
  * A FreeDOM view is provided as a core service to providers, allowing them
  * the capability of providing screen realestate.  Implementation is conducted
  * as a sandboxed iFrame at separate origin, whose sendMessage channel is
  * given to the provider.
  */
-fdom.View = function(channel) {
+var View_unprivileged = function(channel) {
   this.host = null;
   this.win = null;
   this.channel = channel;
   handleEvents(this);
 };
 
-fdom.View.prototype.show = function(args, continuation) {
+View_unprivileged.prototype.show = function(args, continuation) {
   this.host = document.createElement("div");
   document.body.appendChild(this.host);
   var root = this.host;
@@ -41,11 +39,11 @@ fdom.View.prototype.show = function(args, continuation) {
   continuation({});
 }
 
-fdom.View.prototype.postMessage = function(args, continuation) {
+View_unprivileged.prototype.postMessage = function(args, continuation) {
   this.win.contentWindow.postMessage(args, '*');
 }
 
-fdom.View.prototype.close = function() {
+View_unprivileged.prototype.close = function() {
   if (this.host) {
     this.host.parentNode.removeChild(this.host);
     this.host = null;
@@ -56,7 +54,7 @@ fdom.View.prototype.close = function() {
   }
 }
 
-fdom.View.prototype.onMessage = function(m) {
+View_unprivileged.prototype.onMessage = function(m) {
   if (m.source == this.win.contentWindow) {
     this.channel.postMessage({
       'action':'event',
@@ -66,4 +64,4 @@ fdom.View.prototype.onMessage = function(m) {
   }
 }
 
-fdom.apis.register("core.view", fdom.View);
+fdom.apis.register("core.view", View_unprivileged);
