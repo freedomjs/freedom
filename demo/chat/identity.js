@@ -1,4 +1,4 @@
-var rendezvousUrl = "";
+var rendezvousUrl = "https://script.google.com/macros/s/AKfycbwfgaSakSX6hyY_uKOLFPQhvIrp7tj3zjfwZd3PllXJV-ucmBk/exec";
 
 function IdentityProvider() {
   this.name = makeId();
@@ -14,7 +14,7 @@ function makeId(){
 };
 
 IdentityProvider.prototype.get = function(continuation) {
-  continuation({name: this.name});
+  continuation({name: makeId()});
 };
 
 IdentityProvider.prototype.getBuddyList = function(continuation) {

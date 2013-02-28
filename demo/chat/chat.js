@@ -7,15 +7,15 @@ var identity = freedom.identity();
 //});
 
 setTimeout(function() {
-  //Print UID
-  var promise = identity.get();
-  promise.done(function(data) {
-    console.log("UID:"+data.name);
-  });
-  //Periodically fetch buddy list and forward to UI
+    //Periodically fetch UID, buddy list and forward to UI
   (function getBuddyList() {
-    var promise = identity.getBuddyList();
-    promise.done(function(data) {
+    var namepromise = identity.get();
+    namepromise.done(function(data) {
+      console.log("UID:"+data.name);
+    });
+
+    var buddypromise = identity.getBuddyList();
+    buddypromise.done(function(data) {
       freedom.emit('recv-buddylist', data);
     });
     setTimeout(getBuddyList, 3000);
