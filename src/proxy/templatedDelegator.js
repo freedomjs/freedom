@@ -35,6 +35,7 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
         var ret = provider[msg.type].apply(provider, msg.value);
         channel.postMessage({
           'action': 'method',
+          'id': msg.id,
           'type': msg.type,
           'value': ret
         });
@@ -43,6 +44,7 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
           channel.postMessage({
             'action': 'method',
             'type': msg.type,
+            'id': msg.id,
             'value': ret
           });
         }));
