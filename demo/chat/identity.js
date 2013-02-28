@@ -1,4 +1,6 @@
 var rendezvousUrl = "https://script.google.com/macros/s/AKfycbwfgaSakSX6hyY_uKOLFPQhvIrp7tj3zjfwZd3PllXJV-ucmBk/exec";
+var index = 0;
+var continuations = {};
 
 function IdentityProvider() {
   this.name = makeId();
@@ -13,12 +15,20 @@ function makeId(){
   return text;
 };
 
+function callContinuation(index, result) {
+  continuations[index](result);
+  delete continuations[index];
+}
+
 IdentityProvider.prototype.get = function(continuation) {
-  continuation({name: makeId()});
+  continuation({name: this.name});
 };
 
 IdentityProvider.prototype.getBuddyList = function(continuation) {
-  continuation([makeId(), makeId()]);
+  continuations[index] = continuation;
+  var req = rendezvousUrl + "?cmd=buddylist&uid=" + this.name + "&prefix=callContinuation("+index+",";
+  index++;
+  importScripts(req);
 };
 
 freedom.identity().provideAsynchronous(IdentityProvider);
