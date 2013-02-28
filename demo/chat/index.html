@@ -31,12 +31,24 @@
       log.insertBefore(document.createElement('br'), log.childNodes[0]);
       log.insertBefore(document.createTextNode(data), log.childNodes[0]);
     });
+    window.freedom.on('recv-uid', function(data) {
+      document.getElementById('uid').innerText = "UID:"+data;
+    });
     
+    var input = document.getElementById('msg-input');
+    input.onkeydown = function(evt) {
+      if (evt.keyCode == 13) {
+        var text = input.value;
+        input.value = "";
+        window.freedom.emit('send-message', {to: activeId, msg: text});
+      }
+    };
   }
   </script>
 </head>
 <body>
-  <input id='msg-input'/>
+  <input id='msg-input' type='text'/>
+  <div id='uid'>No UID</div>
   <div id='status'>Status: No active connection</div>
   <div id='buddylist'/>
   <div id='log-banner'>Chat messages:</div>
