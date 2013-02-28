@@ -1,3 +1,5 @@
+var rendezvousUrl = "";
+
 function IdentityProvider() {
   this.name = makeId();
 }
