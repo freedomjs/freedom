@@ -11,6 +11,8 @@
   window.onload = function() {
     var activeId;
     window.freedom.on('recv-buddylist', function(val) {
+      console.log(val[0]);
+      val = val[0];
       var buddylist = document.getElementById('buddylist');
       while(buddylist.hasChildNodes()) {
         buddylist.removeChild(buddylist.lastChild);
@@ -28,8 +30,13 @@
     });
     window.freedom.on('recv-message', function(data) {
       var log = document.getElementById('messagelist');
-      log.insertBefore(document.createElement('br'), log.childNodes[0]);
-      log.insertBefore(document.createTextNode(data), log.childNodes[0]);
+      console.log(log);
+      if (log.childNodes.length) {
+        log.insertBefore(document.createElement('br'), log.childNodes[0]);
+        log.insertBefore(document.createTextNode(data), log.childNodes[0]);
+      } else {
+        log.appendChild(document.createTextNode(data));
+      }
     });
     window.freedom.on('recv-uid', function(data) {
       document.getElementById('uid').innerText = "UID:"+data;
@@ -50,7 +57,7 @@
   <input id='msg-input' type='text'/>
   <div id='uid'>No UID</div>
   <div id='status'>Status: No active connection</div>
-  <div id='buddylist'/>
+  <div id='buddylist'></div>
   <div id='log-banner'>Chat messages:</div>
   <div id='messagelist' class='text'></div>
 </body>
