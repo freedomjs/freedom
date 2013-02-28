@@ -1,0 +1,13 @@
+{
+  "name": "Tic Tak",
+  "description": "Tic Tak Sample FreeDOM application",
+  "app": {
+    "script": "tictak.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "dependencies": {
+    "storage": "storage.json"
+  }
+}

@@ -1,7 +1,6 @@
 fdom.apis.set("storage", {
-  clear: {type: "method", value: ["callback"]},
-  set: {type: "method", value: ["string", "string", "callback"]},
-  remove: {type: "method", value: ["string", "callback"]},
-  get: {type: "method", value: ["string", "callback"]},
-  on: {type: "method", value: ["string", "callback"]}
+  clear: {type: "method", value: []},
+  set: {type: "method", value: ["string", "string"]},
+  remove: {type: "method", value: ["string"]},
+  get: {type: "method", value: ["string"]}
 });

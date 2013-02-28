@@ -8,8 +8,12 @@ var Storage_unprivileged = function(channel) {
 };
 
 Storage_unprivileged.prototype.get = function(key, continuation) {
-  var val = localStorage[this.channel.app.id + key];
-  continuation(val);
+  try {
+    var val = localStorage[this.channel.app.id + key];
+    continuation(val);
+  } catch(e) {
+    continuation(null);
+  }
 }
 
 Storage_unprivileged.prototype.set = function(key, value, continuation) {
