@@ -43,7 +43,6 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
       } else {
         console.log("Dropped response message with id " + msg.id);
       }
-      inflight.pop()['resolve'](msg.value);
     } else if (msg.action == 'event') {
       var prop = events[msg.type];
       if (prop) {
