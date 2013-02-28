@@ -9,11 +9,29 @@
   </script>
   <script type='text/javascript'>
   window.onload = function() {
-    window.freedom.on('chat', function(data) {
-      var log = document.getElementById('chat-log');
+    var activeId;
+    window.freedom.on('recv-buddylist', function(val) {
+      var buddylist = document.getElementById('buddylist');
+      while(buddylist.hasChildNodes()) {
+        buddylist.removeChild(buddylist.lastChild);
+      }
+      for (var i in val) {
+        var child = document.createElement('div');
+        child.innerHTML = val[i];
+        child.addEventListener('click', function(jid) {
+          activeId = jid;
+          console.log("Messages will be sent to: " + activeId);
+          document.getElementById('status').innerText = "Active connection to " + activeId;
+        }.bind(this, val[i]), true);
+        buddylist.appendChild(child);
+      }
+    });
+    window.freedom.on('recv-message', function(data) {
+      var log = document.getElementById('messagelist');
       log.insertBefore(document.createElement('br'), log.childNodes[0]);
       log.insertBefore(document.createTextNode(data), log.childNodes[0]);
     });
+    
   }
   </script>
 </head>
@@ -22,6 +40,6 @@
   <div id='status'>Status: No active connection</div>
   <div id='buddylist'/>
   <div id='log-banner'>Chat messages:</div>
-  <div id='chat-log' class='text'></div>
+  <div id='messagelist' class='text'></div>
 </body>
 </html>

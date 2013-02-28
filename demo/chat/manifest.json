@@ -5,7 +5,9 @@
     "script": "chat.js"
   },
   "dependencies": {
+    "identity": "identity.json"
   },
   "permissions": [
+    "identity"
   ]
 }

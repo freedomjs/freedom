@@ -1,20 +1,22 @@
 function IdentityProvider() {
-  this.name = "First Last";
-  this.email = "email@domain.com";
-  this.imageUrl = "http://2.gravatar.com/avatar/0cd1738d6f880285b11edd5393ad1cce?size=240";
+  this.name = makeId();
 }
+
+function makeId(){
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for( var i=0; i < 5; i++ ) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
 
 IdentityProvider.prototype.get = function(continuation) {
-  var thing = freedom['core.view']();
-  var promise = thing.show();
+  continuation({name: this.name});
+};
 
-  promise.done(function(c) {
-    c({
-      name: this.name,
-      email: this.email,
-      imageUrl: this.imageUrl
-    });    
-  }.bind(this, continuation));
-}
+IdentityProvider.prototype.getBuddyList = function(continuation) {
+  continuation([makeId(), makeId()]);
+};
 
 freedom.identity().provideAsynchronous(IdentityProvider);
