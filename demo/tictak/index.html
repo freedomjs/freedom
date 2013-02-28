@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>FreeDOM Sample</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <script type="text/javascript"
+      src="/freedom.js"
+      data-manifest="manifest.json">
+  </script>
+  <script type="text/javascript">
+  window.onload = function() {
+    // Stats Update.
+    window.freedom.on('stats', function(stats) {
+      var win = 0, lose = 0;
+      if (stats) {
+        win = stats.win || 0;
+        lose = stats.lose || 0;
+      }
+      document.getElementById('win').innerText = win;
+      document.getElementById('lose').innerText = lose;
+    });
+    window.freedom.on('board', function(board) {
+      for (var id in board) {
+        var realid = 'b' + (parseInt(id) + 1);
+        document.getElementById(realid).className = 'c' + board[id];
+        document.getElementById(realid).checked = board[id];
+      }
+    });
+    var inputs = document.getElementsByTagName('input');
+    for (var i = 0; i < inputs.length; i ++) {
+      inputs[i].addEventListener('click', function(j) {
+        window.freedom.emit('move', j);
+      }.bind(this, i), true);
+    }
+  }
+  </script>
+  <style type='text/css'>
+  #win {color: green;}
+  #lose {color: red;}
+  input {
+    width: 100px;
+    height: 100px;
+    float:left;
+    -webkit-appearance: none;
+    border: 1px solid black;
+  }
+  input.c1:checked {
+    background:green;
+  }
+  input.c2:checked {
+    background:red;
+  }
+  input:nth-child(3n + 1) {clear:both;}
+  header {
+    font-size: 2em;
+    font-family: helvetica;
+  }
+  </style>
+</head>
+<body>
+  <header>
+    Win: <span id='win'>..</span> Lose: <span id='lose'>..</span>
+  </header>
+  <section>
+    <input type='checkbox' id='b1' />
+    <input type='checkbox' id='b2' />
+    <input type='checkbox' id='b3' />
+    <input type='checkbox' id='b4' />
+    <input type='checkbox' id='b5' />
+    <input type='checkbox' id='b6' />
+    <input type='checkbox' id='b7' />
+    <input type='checkbox' id='b8' />
+    <input type='checkbox' id='b9' />
+  </section>
+</body>
+</html>
+

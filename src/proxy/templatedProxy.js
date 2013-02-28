@@ -23,10 +23,9 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
       case "event":
         if(!events) {
           handleEvents(this);
-          events = {name:prop};
-        } else {
-          events[name] = prop;
+          events = {};
         }
+        events[name] = prop;
         break
     }
   }.bind(this));
@@ -38,7 +37,7 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
     } else if (msg.action == 'event') {
       var prop = events[msg.type];
       if (prop) {
-        var val = conform(prop, msg.value);
+        var val = conform(prop.value, [msg.value]);
         self['emit'](msg.type, val);
       }
     }
@@ -68,6 +67,10 @@ function conform(template, values) {
         } else {
           out[i] = function() {};
         }
+        break;
+      case "object":
+        // Allow removal, since sandboxing will enforce this.
+        out[i] = JSON.parse(JSON.stringify(values[i]));
         break;
       default:
         out[i] = false;

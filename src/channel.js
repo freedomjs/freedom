@@ -1,7 +1,7 @@
 var fdom = fdom || {};
 
 fdom.Channel = function(app, flow) {
-  this.app = app;  // The App ID
+  this.app = app;  // The app (internal or external)
   this.flow = flow;
   handleEvents(this);
 };

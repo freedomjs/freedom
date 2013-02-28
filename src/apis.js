@@ -30,16 +30,16 @@ api.prototype.getCore = function(name, you) {
 var coreProvider = function(name, channel) {
   this.instance = null;
   this.name = name;
-  this.reply = channel;
+  this.channel = channel;
 }
 
 coreProvider.prototype.postMessage = function(msg) {
   if (!this.instance) {
     var def = fdom.apis.get(this.name);
-    this.instance = new fdom.Proxy.templatedDelegator(this.reply, def.definition)
-    this.instance['provideAsynchronous'](fdom.apis.providers[this.name]);
+    this.instance = new fdom.Proxy.templatedDelegator(this.channel, def.definition)
+    this.instance['provideAsynchronous'](fdom.apis.providers[this.name].bind({}, this.channel));
   }
-  this.reply['emit']('message', msg);
+  this.channel['emit']('message', msg);
 }
 
 fdom.apis = new api();

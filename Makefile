@@ -1,6 +1,6 @@
 # Compile freedom.js using the closure service.
 
-SOURCES = src/util.js src/hub.js src/apis.js src/app*.js src/channel.js src/proxy.js src/proxy/*.js src/view.js src/freedom.js interface/*.js
+SOURCES = src/util.js src/hub.js src/apis.js src/app*.js src/channel.js src/proxy.js src/proxy/*.js providers/*.js src/freedom.js interface/*.js
 
 all: freedom.js
 
