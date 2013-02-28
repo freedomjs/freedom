@@ -13,3 +13,7 @@ ifeq "$(LOCAL)" 'yes'
 else
 	python tools/build.py $(MAKEFLAGS) -o $@ $(SOURCES)
 endif
+
+clean:
+	rm freedom.js
+	rm freedom.compiled.js
