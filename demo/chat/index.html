@@ -11,7 +11,6 @@
   window.onload = function() {
     var activeId;
     window.freedom.on('recv-buddylist', function(val) {
-      console.log(val[0]);
       val = val[0];
       var buddylist = document.getElementById('buddylist');
       while(buddylist.hasChildNodes()) {
@@ -30,7 +29,6 @@
     });
     window.freedom.on('recv-message', function(data) {
       var log = document.getElementById('messagelist');
-      console.log(log);
       if (log.childNodes.length) {
         log.insertBefore(document.createElement('br'), log.childNodes[0]);
         log.insertBefore(document.createTextNode(data), log.childNodes[0]);
@@ -58,7 +56,8 @@
   <div id='uid'>No UID</div>
   <div id='status'>Status: No active connection</div>
   <div id='buddylist'></div>
-  <div id='log-banner'>Chat messages:</div>
+  <br>
+  <div id='log-banner'><b>Chat messages:</b></div>
   <div id='messagelist' class='text'></div>
 </body>
 </html>
