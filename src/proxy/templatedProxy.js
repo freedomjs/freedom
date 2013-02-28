@@ -1,7 +1,8 @@
 fdom.Proxy.templatedProxy = function(channel, definition) {
-  var inflight = [];
+  var inflight = {};
   var events = null;
   var self = this;
+  var id = Math.random();
 
   eachProp(definition, function(prop, name) {
     switch(prop['type']) {
@@ -13,10 +14,12 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
           channel.postMessage({
             'action': 'method',
             'type': name,
+            'id': id,
             'value': conform(prop.value, arguments)
           });
           var deferred = fdom.Proxy.Deferred();
-          inflight.push(deferred);
+          inflight[id] = deferred;
+          id++;
           return deferred['promise']();
         }
         break;
@@ -33,6 +36,13 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
   channel['on']('message', function(msg) {
     if (!msg) return;
     if (msg.action == 'method') {
+      if (inflight[msg.id]) {
+        var deferred = inflight[msg.id];
+        delete inflight[msg.id];
+        deferred['resolve'](msg.value);
+      } else {
+        console.log("Dropped response message with id " + msg.id);
+      }
       inflight.pop()['resolve'](msg.value);
     } else if (msg.action == 'event') {
       var prop = events[msg.type];
