@@ -1,6 +1,7 @@
 fdom.Proxy.templatedProxy = function(channel, definition) {
   var inflight = {};
   var events = null;
+  var emitter = null;
   var self = this;
   var id = Math.random();
 
@@ -26,6 +27,8 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
       case "event":
         if(!events) {
           handleEvents(this);
+          emitter = this['emit'];
+          delete this ['emit'];
           events = {};
         }
         events[name] = prop;
@@ -47,7 +50,7 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
       var prop = events[msg.type];
       if (prop) {
         var val = conform(prop.value, [msg.value]);
-        self['emit'](msg.type, val);
+        emitter(msg.type, val);
       }
     }
   });
@@ -56,35 +59,32 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
 /**
  * Force a collection of values to look like the types and length of an API template.
  */
-function conform(template, values) {
-  var out = [];
-  for (var i = 0; i < template.length; i++) {
-    switch(template[i]) {
-      case "string":
-        out[i] = "" + values[i];
-        break;
-      case "number":
-        out[i] = 0 + values[i];
-        break;
-      case "bool":
-        out[i] = false | values[i];
-        break;
-      //TODO(willscott): ArrayBuffer or reference type.
-      case "callback":
-        if (typeof values[i] == "function") {
-          out[i] = values[i];
-        } else {
-          out[i] = function() {};
-        }
-        break;
-      case "object":
-        // Allow removal, since sandboxing will enforce this.
-        out[i] = JSON.parse(JSON.stringify(values[i]));
-        break;
-      default:
-        out[i] = false;
-        break;
-    }
+function conform(template, value) {
+  switch(template) {
+    case "string":
+      return "" + value;
+    case "number":
+      return 0 + value;
+    case "bool":
+      return false | value;
+    case "object":
+      // TODO(willscott): Allow removal if sandboxing enforces this.
+      return JSON.parse(JSON.stringify(value));
   }
-  return out;
-};
+  if (Array.isArray(template)) {
+    var val = [];
+    for (var i = 0; i < template.length; i++) {
+      if (value[i]) val.push(conform(template[i], value[i]))
+      else val.push(undefined);
+    }
+    return val;
+  } else if (typeof template === "object") {
+    var val = {};
+    eachProp(template, function(prop, name) {
+      if (value[name]) {
+        val[name] = conform(prop, value[name]);
+      };
+    });
+    return val;
+  }
+}

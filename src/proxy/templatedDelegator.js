@@ -2,30 +2,33 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
   var provider = null;
   var synchronous = true;
 
-  var listen = function() {
-    eachProp(definition, function(prop, name) {
-      if (prop['type'] == 'event') {
-        provider['on'](name, function(m) {
-          channel.postMessage({
-            'action': 'event',
-            'type': name,
-            'value': m
-          })
+  var events = {};
+  eachProp(definition, function(prop, name) {
+    if (prop['type'] == 'event') {
+      events[name] = prop;
+    }
+  });
+  if (events !== {}) {
+    this['emit'] = function(name, value) {
+      if (events[name]) {
+        channel.postMessage({
+          'action': 'event',
+          'type': name,
+          'value': conform(events[name], value)
         });
       }
-    });
+    }
   }
+
 
   this['provideSynchronous'] = function(pro) {
     // TODO(willscott): support 1-1 mapping of provider to proxies.
     provider = new pro();
-    listen();
   }
 
   this['provideAsynchronous'] = function(pro) {
     provider = new pro();
     synchronous = false;
-    listen();
   }
 
   channel['on']('message', function(msg) {
@@ -40,7 +43,11 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
           'value': ret
         });
       } else {
-        provider[msg.type].apply(provider, msg.value.concat(function(ret) {
+        var args = msg.value;
+        if (!Array.isArray(args)) {
+          args = [args];
+        }
+        provider[msg.type].apply(provider, args.concat(function(ret) {
           channel.postMessage({
             'action': 'method',
             'type': msg.type,

@@ -1,5 +1,8 @@
 fdom.apis.set("core.view", {
-  'show': {type: "method", value: ["object"]},
+  'show': {type: "method", value: [{
+    'file':"string",
+    'code':"string"
+  }]},
   'close': {type: "method", value: []},
   'postMessage': {type: "method", value: ["object"]},
 

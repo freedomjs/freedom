@@ -13,7 +13,6 @@ function IdentityProvider() {
   };
 
   this.name = makeId();
-  this.handlers = {};
   this.buddylist = [];
   
   callback = this.updateMailbox.bind(this);
@@ -24,10 +23,6 @@ function IdentityProvider() {
 IdentityProvider.prototype.get = function(continuation) {
   continuation({name: this.name});
 };
-
-IdentityProvider.prototype.on = function(evt, handler) {
-  this.handlers[evt] = handler;
-}
 
 IdentityProvider.prototype.send = function(to, msg, continuation) {
   var req = rendezvousUrl + "?prefix=console.log&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
@@ -44,16 +39,17 @@ IdentityProvider.prototype.getMailbox = function() {
 IdentityProvider.prototype.updateMailbox = function(mailbox) {
   if ("buddylist" in mailbox) {
     if (this.buddylist < mailbox.buddylist || this.buddylist > mailbox.buddylist) {
-      this.handlers['buddylist'](mailbox.buddylist);
+      identity.emit('buddylist', mailbox.buddylist);
       this.buddylist = mailbox.buddylist;
     }
     delete mailbox.buddylist
   }
   for (var i in mailbox) {
     for (var j in mailbox[i]) {
-      this.handlers['message'](i+":"+mailbox[i][j]);
+      identity.emit('message', i+":"+mailbox[i][j]);
     }
   }
 }
 
-freedom.identity().provideAsynchronous(IdentityProvider);
+var identity = freedom.identity();
+identity.provideAsynchronous(IdentityProvider);
