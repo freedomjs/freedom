@@ -28,6 +28,7 @@ IdentityProvider.prototype.get = function(continuation) {
 IdentityProvider.prototype.send = function(to, msg, continuation) {
   var req = rendezvousUrl + "?prefix=nop&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
   importScripts(req);
+  continuation();
 };
 
 IdentityProvider.prototype.getMailbox = function() {
