@@ -1,5 +1,5 @@
 var identity = freedom.identity();
-//var transport = freedom.transport();
+var transport = freedom.transport();
 
 freedom.on('send-message', function(val) {
   identity.send(val.to, val.msg);

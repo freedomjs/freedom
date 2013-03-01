@@ -74,7 +74,7 @@ function conform(template, value) {
   if (Array.isArray(template)) {
     var val = [];
     if (template.length == 2 && template[0] == "array") {
-      console.log("tempalte is array, value is " + JSON.stringify(value));
+      console.log("template is array, value is " + JSON.stringify(value));
       for (var i = 0; i < value.length; i++) {
         val.push(conform(template[1], value[i]));
       }
