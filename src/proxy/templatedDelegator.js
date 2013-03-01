@@ -14,7 +14,7 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
         channel.postMessage({
           'action': 'event',
           'type': name,
-          'value': conform(events[name], value)
+          'value': conform(events[name].value, value)
         });
       }
     }
