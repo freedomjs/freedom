@@ -2,6 +2,8 @@ var rendezvousUrl = "https://script.google.com/macros/s/AKfycbwfgaSakSX6hyY_uKOL
 var POLL_TIMEOUT = 3000;
 var callback;
 
+function nop(val) {};
+
 function IdentityProvider() {
   function makeId(){
     var text = "";
@@ -16,25 +18,23 @@ function IdentityProvider() {
   this.buddylist = [];
   
   callback = this.updateMailbox.bind(this);
-  //getMailbox = this.getMailbox.bind(this);
   setTimeout(this.getMailbox.bind(this), 0);
-}
+};
 
 IdentityProvider.prototype.get = function(continuation) {
   continuation({name: this.name});
 };
 
 IdentityProvider.prototype.send = function(to, msg, continuation) {
-  var req = rendezvousUrl + "?prefix=console.log&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
-  console.log(req);
+  var req = rendezvousUrl + "?prefix=nop&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
   importScripts(req);
-}
+};
 
 IdentityProvider.prototype.getMailbox = function() {
   var req = rendezvousUrl + "?prefix=callback&cmd=get&uid=" + this.name;
   importScripts(req);
   setTimeout(this.getMailbox.bind(this), POLL_TIMEOUT);
-}
+};
 
 IdentityProvider.prototype.updateMailbox = function(mailbox) {
   if ("buddylist" in mailbox) {
@@ -49,7 +49,7 @@ IdentityProvider.prototype.updateMailbox = function(mailbox) {
       identity.emit('message', i+":"+mailbox[i][j]);
     }
   }
-}
+};
 
 var identity = freedom.identity();
 identity.provideAsynchronous(IdentityProvider);
