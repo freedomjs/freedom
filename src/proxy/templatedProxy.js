@@ -49,7 +49,7 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
     } else if (msg.action == 'event') {
       var prop = events[msg.type];
       if (prop) {
-        var val = conform(prop.value, [msg.value]);
+        var val = conform(prop.value, msg.value);
         emitter(msg.type, val);
       }
     }
@@ -73,10 +73,18 @@ function conform(template, value) {
   }
   if (Array.isArray(template)) {
     var val = [];
-    for (var i = 0; i < template.length; i++) {
-      if (value[i]) val.push(conform(template[i], value[i]))
-      else val.push(undefined);
+    if (template.length == 2 && template[0] == "array") {
+      console.log("tempalte is array, value is " + JSON.stringify(value));
+      for (var i = 0; i < value.length; i++) {
+        val.push(conform(template[1], value[i]));
+      }
+    } else {
+      for (var i = 0; i < template.length; i++) {
+        if (value[i]) val.push(conform(template[i], value[i]))
+        else val.push(undefined);
+      }
     }
+    console.log("conformed array to" + JSON.stringify(val));
     return val;
   } else if (typeof template === "object") {
     var val = {};

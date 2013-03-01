@@ -11,7 +11,6 @@
   window.onload = function() {
     var activeId;
     window.freedom.on('recv-buddylist', function(val) {
-      val = val[0];
       var buddylist = document.getElementById('buddylist');
       while(buddylist.hasChildNodes()) {
         buddylist.removeChild(buddylist.lastChild);
