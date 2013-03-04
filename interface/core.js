@@ -6,7 +6,7 @@ fdom.apis.set("core.view", {
   'close': {type: "method", value: []},
   'postMessage': {type: "method", value: ["object"]},
 
-  'message': {type: "event", value: ["object"]},
+  'message': {type: "event", value: "object"},
   'onClose': {type: "event", value: []}
 });
 
