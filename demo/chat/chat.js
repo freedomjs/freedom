@@ -4,7 +4,6 @@ var sockId = -1;
 
 freedom.on('send-message', function(val) {
   identity.send(val.to, val.msg);
-  /**
   if (sockId == -1) {
     var promise = transport.create();
     promise.done(function (data) {
@@ -13,7 +12,6 @@ freedom.on('send-message', function(val) {
       //identity.send(val.to, data.offer);
     });
   }
-  **/
 });
 
 identity.on('buddylist', function(list) {
@@ -21,6 +19,7 @@ identity.on('buddylist', function(list) {
 });
 
 identity.on('message', function(data) {
+  console.log(JSON.stringify(data));
   freedom.emit('recv-message', data.message);
 });
 
