@@ -17,9 +17,8 @@ IdentityProvider.prototype.get = function(continuation) {
     }
   });
 
-  view.on('message', function(m) {
+  view.on('message', function(identity) {
     view.close();
-    var identity = m[0];
     var sanitized_email = identity.email.toLowerCase().trim();
     var hash = CryptoJS.MD5(sanitized_email);
     identity.imageUrl = "http://2.gravatar.com/avatar/" + hash + "?size=240";
