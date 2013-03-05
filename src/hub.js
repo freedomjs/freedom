@@ -52,6 +52,13 @@ fdom.Hub.prototype.onMessage = function(app, message) {
     }
   } else {
     console.warn("Message dropped from unregistered flow " + app.id + " -> " + flow);
+    var keys = [];
+    for (var i in flows) {
+      if (flows.hasOwnProperty(i)) {
+        keys.push(i);
+      }
+    }
+    console.warn("Available flows:" + keys);
   }
 };
 

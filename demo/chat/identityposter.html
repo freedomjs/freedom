@@ -1,0 +1,32 @@
+<html>
+<head>
+  <script type='text/javascript'>
+  window.onload = function() {
+    parent.postMessage({state: 0}, '*');
+    window.addEventListener('message', function (evt) {
+      var message = evt.data;
+      var form = document.getElementById('form');
+      if (message.hasOwnProperty('setUrl')) {
+        form.action = message['setUrl'];
+      } else {
+        for (var i in message) {
+          if (message.hasOwnProperty(i)) {
+            var child = document.createElement('input');
+            child.type = 'text';
+            child.name = i;
+            child.value = message[i];
+            form.appendChild(child);
+          }
+        }
+        form.submit();
+        parent.postMessage({state: 1}, '*');
+      }
+    });
+  }
+  </script>
+</head>
+<body>
+  <div id='msg'></div>
+  <form id='form' method='post' action=''></form>
+</body>
+</html>

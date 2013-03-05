@@ -6,5 +6,8 @@
   },
   "provides": [
     "identity"
+  ],
+  "permissions": [
+    "core.view"
   ]
 }

@@ -1,4 +1,4 @@
-fdom.apis.set("transport", {
+fdom.apis.set("core.transport", {
   'create': {type: "method", value: []},
   'accept': {type: "method", value: ["number", "object"]},
   'send': {type: "method", value: ["number", "object"]},

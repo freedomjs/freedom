@@ -9,7 +9,7 @@ var Transport_unprivileged = function(channel) {
   handleEvents(this);
 };
 
-Transport_unprivileged.prototype.onStateState = function(id) {
+Transport_unprivileged.prototype.onStateChange = function(id) {
   var sendChannel = this.rtcChannels[id];
   console.log(id + " send channel's state:"+sendChannel.readyState);
   this.channel.postMessage({
@@ -23,7 +23,7 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
   console.log(id + " message: "+evt.data);
   this.channel.postMessage({
     'action':'event',
-    'type': 'onStateChange',
+    'type': 'onMessage',
     'value': {id: id, message: evt.data}
   });
 };
@@ -35,7 +35,6 @@ Transport_unprivileged.prototype.create = function (continuation) {
   var pc = new webkitRTCPeerConnection(servers,
                 {optional: [{RtpDataChannels: true}]});
   this.rtcConnections[sockId] = pc;
-  console.log("Created PeerConnection");
   try {
     sendChannel = pc.createDataChannel("sendDataChannel", {reliable: false});
     this.rtcChannels[sockId] = sendChannel;
@@ -45,17 +44,18 @@ Transport_unprivileged.prototype.create = function (continuation) {
   }
   sendChannel.onopen = this.onStateChange.bind(this,sockId);
   sendChannel.onclose = this.onStateChange.bind(this,sockId);
-  sendChannel.onmessage = this.onMessage.bind(this,sockid);
+  sendChannel.onmessage = this.onMessage.bind(this,sockId);
   //Todo - do these need to be transmitted to other side?
   pc.onicecandidate = function(evt){}; 
   
   pc.createOffer(function(desc) {
     pc.setLocalDescription(desc);
-    continuation({id: sockId, offer: desc});
+    continuation({id: sockId, offer: JSON.stringify(desc)});
   });
 };
 
-Transport_unprivileged.prototype.accept = function (id, desc, continuation) {
+Transport_unprivileged.prototype.accept = function (id, strdesc, continuation) {
+  var desc = JSON.parse(strdesc);
   if (id == null || !(id in this.rtcConnections)) {
     var sockId = this.nextId++;
     var servers = null;
@@ -74,7 +74,7 @@ Transport_unprivileged.prototype.accept = function (id, desc, continuation) {
     pc.setRemoteDescription(desc);
     pc.createAnswer(function(answer) {
       pc.setLocalDescription(answer);
-      continuation({id: sockId, offer: answer});
+      continuation({id: sockId, offer: JSON.stringify(answer)});
     });
   } else {
     this.rtcConnections[id].setRemoteDescription(desc);
@@ -108,4 +108,4 @@ Transport_unprivileged.prototype.set = function(key, value, continuation) {
   continuation();
 };
 
-fdom.apis.register("transport", Transport_unprivileged);
+fdom.apis.register("core.transport", Transport_unprivileged);

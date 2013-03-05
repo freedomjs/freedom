@@ -2,7 +2,26 @@ var rendezvousUrl = "https://script.google.com/macros/s/AKfycbwfgaSakSX6hyY_uKOL
 var POLL_TIMEOUT = 3000;
 var callback;
 
-function nop(val) {};
+function sendPost(to, from, message) {
+  view = freedom['core.view']();
+  var promise = view.show({
+    file: "identityposter.html",
+    widgets: true
+  });
+  var stage = 0;
+  view.on('message', function(evt) {
+    var msg = evt;
+    console.log(JSON.stringify(msg));
+    if (stage == 0) {  
+      view.postMessage({setUrl: rendezvousUrl});
+      view.postMessage({prefix: 'nop', cmd: 'send', uid: from, to: to, msg: message});
+      stage = 1;
+    } else if (stage == 1) {
+      //setTimeout(view.close, 1000);
+      stage = 2;
+    }
+  });
+}
 
 function IdentityProvider() {
   function makeId(){
@@ -19,6 +38,7 @@ function IdentityProvider() {
   
   callback = this.updateMailbox.bind(this);
   setTimeout(this.getMailbox.bind(this), 0);
+
 };
 
 IdentityProvider.prototype.get = function(continuation) {
@@ -26,8 +46,8 @@ IdentityProvider.prototype.get = function(continuation) {
 };
 
 IdentityProvider.prototype.send = function(to, msg, continuation) {
-  var req = rendezvousUrl + "?prefix=nop&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
-  importScripts(req);
+  //var params = "prefix=nop&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
+  sendPost(to, this.name, msg);
   continuation();
 };
 
@@ -43,11 +63,11 @@ IdentityProvider.prototype.updateMailbox = function(mailbox) {
       identity.emit('buddylist', mailbox.buddylist);
       this.buddylist = mailbox.buddylist;
     }
-    delete mailbox.buddylist
+    delete mailbox.buddylist;
   }
   for (var i in mailbox) {
     for (var j in mailbox[i]) {
-      identity.emit('message', i+":"+mailbox[i][j]);
+      identity.emit('message', {from: i, message: mailbox[i][j]});
     }
   }
 };

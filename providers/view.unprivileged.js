@@ -20,7 +20,7 @@ View_unprivileged.prototype.show = function(args, continuation) {
     root = this.host['webkitCreateShadowRoot']();
   }
   var frame = document.createElement("iframe");
-  frame.setAttribute("sandbox", "allow-scripts");
+  frame.setAttribute("sandbox", "allow-scripts allow-forms");
   if (args['file']) {
     frame.src = args['file'];
   } else if (args['code']) {
