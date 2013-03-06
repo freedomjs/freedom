@@ -54,7 +54,6 @@ IdentityProvider.prototype.updateMailbox = function(mailbox) {
   }
   for (var i in mailbox) {
     for (var j in mailbox[i]) {
-      console.log(JSON.stringify(mailbox[i][j]));
       identity.emit('message', {from: i, message: mailbox[i][j]});
     }
   }

@@ -22,6 +22,7 @@
           activeId = jid;
           console.log("Messages will be sent to: " + activeId);
           document.getElementById('status').innerText = activeId;
+          window.freedom.emit('open-transport', activeId);
         }.bind(this, val[i]), true);
         buddylist.appendChild(child);
       }
@@ -44,7 +45,7 @@
       if (evt.keyCode == 13) {
         var text = input.value;
         input.value = "";
-        window.freedom.emit('send-message', {to: activeId, msg: text});
+        window.freedom.emit('send-message', text);
       }
     };
   }
