@@ -26,13 +26,18 @@ View_unprivileged.prototype.show = function(args, continuation) {
   } else if (args['code']) {
     frame.src = "data:text/html;charset=utf-8," + args['code'];
   }
-  frame.style.position = 'fixed';
-  frame.style.top = '0px';
-  frame.style.left = '0px';
-  frame.style.width = '100%';
-  frame.style.height = '100%';
-  frame.style.background = 'rgba(255,255,255,0.75)';
-  frame.style.border = '0px';
+  if (args['hide']) {
+    frame.style.width = "0";
+    frame.style.height = "0";
+  } else {
+    frame.style.position = 'fixed';
+    frame.style.top = '0px';
+    frame.style.left = '0px';
+    frame.style.width = '100%';
+    frame.style.height = '100%';
+    frame.style.background = 'rgba(255,255,255,0.75)';
+    frame.style.border = '0px';
+  }
   root.appendChild(frame);
   this.win = frame;
   addEventListener('message', this.onMessage.bind(this), true);

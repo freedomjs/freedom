@@ -28,6 +28,18 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
   });
 };
 
+Transport_unprivileged.prototype.onIceCandidate = function(id, evt) {
+  console.log(evt);
+  /**
+  console.log(id + " icecandidate: "+JSON.stringify(evt));
+  this.channel.postMessage({
+    'action': 'event',
+    'type': 'onSignal',
+    'value': {id: id, message: JSON.stringify(evt.candidate)}
+  });
+  **/
+}
+
 Transport_unprivileged.prototype.create = function (continuation) {
   var sockId = this.nextId++;
   var servers = null;
@@ -45,8 +57,7 @@ Transport_unprivileged.prototype.create = function (continuation) {
   sendChannel.onopen = this.onStateChange.bind(this,sockId);
   sendChannel.onclose = this.onStateChange.bind(this,sockId);
   sendChannel.onmessage = this.onMessage.bind(this,sockId);
-  //Todo - do these need to be transmitted to other side?
-  pc.onicecandidate = function(evt){}; 
+  pc.onicecandidate = this.onIceCandidate.bind(this,sockId);
   
   pc.createOffer(function(desc) {
     pc.setLocalDescription(desc);
@@ -55,30 +66,44 @@ Transport_unprivileged.prototype.create = function (continuation) {
 };
 
 Transport_unprivileged.prototype.accept = function (id, strdesc, continuation) {
-  var desc = JSON.parse(strdesc);
-  if (id == null || !(id in this.rtcConnections)) {
+  var parseddesc = JSON.parse(strdesc);
+  if (parseddesc.type == 'candidate') {
+    var candidate = new RTCIceCandidate({sdpMLineIndex: parseddesc.label,
+                                        candidate: parseddesc.candidate});
+    this.rtcConnections[id].addIceCandidate(candidate);
+    console.log("Successfully accepted ICE candidate");
+  //} else if (id == null || !(id in this.rtcConnections)) {
+  } else if (parseddesc.type == 'offer') {
+    var desc = new RTCSessionDescription(parseddesc);
     var sockId = this.nextId++;
     var servers = null;
     var pc = new webkitRTCPeerConnection(servers, 
                   {optional: [{RtpDataChannels: true}]});
     this.rtcConnections[sockId] = pc;
-    //Todo - fill?
-    pc.onicecandidate = function(evt){};
+    pc.onicecandidate = this.onIceCandidate.bind(this,sockId);
     pc.ondatachannel = function(evt) {
       var channel = evt.channel;
       this.rtcChannels[sockId] = channel;
       channel.onopen = this.onStateChange.bind(this,sockId);
       channel.onclose = this.onStateChange.bind(this,sockId);
-      channel.onmessage = this.onMessage.bind(this,sockid);
-    };
-    pc.setRemoteDescription(desc);
+      channel.onmessage = this.onMessage.bind(this,sockId);
+    }.bind(this);
+    //desc, successCallback, failureCallback
+    pc.setRemoteDescription(desc,
+      function(){console.log("Successfully set remote description");}, 
+      function(){console.log("Failed set remote description");});
     pc.createAnswer(function(answer) {
       pc.setLocalDescription(answer);
       continuation({id: sockId, offer: JSON.stringify(answer)});
     });
-  } else {
-    this.rtcConnections[id].setRemoteDescription(desc);
+  } else if (parseddesc.type == 'answer') {
+    var desc = new RTCSessionDescription(parseddesc);
+    this.rtcConnections[id].setRemoteDescription(desc, 
+      function(){console.log("Successfully set remote description");}, 
+      function(){console.log("Failed set remote description");});
     continuation();
+  } else if (parseddesc.type == 'bye') {
+    this.close(id);
   }
 };
 
@@ -92,6 +117,7 @@ Transport_unprivileged.prototype.close = function (id, continuation) {
   this.rtcConnections[id].close();
   delete this.rtcChannels[id];
   delete this.rtcConnections[id];
+  continuation();
 };
 
 Transport_unprivileged.prototype.get = function(key, continuation) {

@@ -5,5 +5,6 @@ fdom.apis.set("core.transport", {
   'close': {type: "method", value: ["number"]},
   
   'onStateChange': {type: "event", value: ["string"]},
-  'onMessage': {type: "event", value: ["object"]}
+  'onMessage': {type: "event", value: ["object"]},
+  'onSignal': {type: "event", value: ["object"]}
 });
