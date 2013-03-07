@@ -1,0 +1,13 @@
+{
+  "name": "Lobby",
+  "description": "Rendezvous Sample FreeDOM application",
+  "app": {
+    "script": "lobby.js"
+  },
+  "dependencies": {
+    "identity": "identity.json"
+  },
+  "permissions": [
+    "identity"
+  ]
+}
