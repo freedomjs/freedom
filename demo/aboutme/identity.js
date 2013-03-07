@@ -4,10 +4,12 @@ function IdentityProvider() {
 
 IdentityProvider.prototype.get = function(continuation) {
   var view = freedom['core.view']();
-  var promise = view.show({
-    file: "identityview.html",
-    widgets: true
+  var promise = view.open({
+    file: "identityview.html"
   });
+  promise.done(function() {
+    view.show();
+  })
 
   var retVal = false;
 

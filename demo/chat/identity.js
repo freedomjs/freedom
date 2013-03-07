@@ -19,9 +19,8 @@ function IdentityProvider() {
   setTimeout(this.getMailbox.bind(this), 0);
   
   this.view = freedom['core.view']();
-  var promise = this.view.show({
-    file: "identityposter.html",
-    hide: true
+  var promise = this.view.open({
+    file: "identityposter.html"
   });
 
 };

@@ -11,7 +11,7 @@ var View_unprivileged = function(channel) {
   handleEvents(this);
 };
 
-View_unprivileged.prototype.show = function(args, continuation) {
+View_unprivileged.prototype.open = function(args, continuation) {
   this.host = document.createElement("div");
   document.body.appendChild(this.host);
   var root = this.host;
@@ -26,22 +26,29 @@ View_unprivileged.prototype.show = function(args, continuation) {
   } else if (args['code']) {
     frame.src = "data:text/html;charset=utf-8," + args['code'];
   }
-  if (args['hide']) {
-    frame.style.width = "0";
-    frame.style.height = "0";
-  } else {
-    frame.style.position = 'fixed';
-    frame.style.top = '0px';
-    frame.style.left = '0px';
-    frame.style.width = '100%';
-    frame.style.height = '100%';
-    frame.style.background = 'rgba(255,255,255,0.75)';
-    frame.style.border = '0px';
-  }
+  frame.style.width = "0";
+  frame.style.height = "0";
   root.appendChild(frame);
   this.win = frame;
   addEventListener('message', this.onMessage.bind(this), true);
   continuation({});
+}
+
+View_unprivileged.prototype.show = function(continuation) {
+  if (this.win) {
+    // Fullscreen mode.
+    this.win.style.position = 'fixed';
+    this.win.style.top = '0px';
+    this.win.style.left = '0px';
+    this.win.style.width = '100%';
+    this.win.style.height = '100%';
+    this.win.style.background = 'rgba(255,255,255,0.75)';
+    this.win.style.border = '0px';
+    
+    // Refresh Layout
+    this.host.style.position = 'absolute';
+  }
+  continuation();
 }
 
 View_unprivileged.prototype.postMessage = function(args, continuation) {
