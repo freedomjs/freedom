@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang='en-US'>
+<head>
+  <script type='text/javascript'>
+    // override local storage to freedom/mem backing.
+    var memStorage = {};
+    window.localStorageOverride = {
+      getItem:function(k) {
+        return memStorage[k];
+      },
+      setItem:function(k,v) {
+        memStorage[k] = v;
+      },
+      removeItem:function(k) {
+        delete memStorage[k];
+      }
+    };
+  </script>
+  <script type='text/javascript' src='remoteStorage.js'></script>
+  <script type='text/javascript'>
+    remoteStorage.claimAccess("root", "rw").then(function() {
+      parent.postMessage("ready","*");
+    })
+          
+    window.addEventListener('message', function(m) {
+      if (m.data == "show") {
+        remoteStorage.displayWidget();
+      }
+      console.log(m.data);
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
