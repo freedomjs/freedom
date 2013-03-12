@@ -89,7 +89,7 @@ fdom.app.Internal.prototype.debug = function(msg) {
   this.postMessage({
     sourceFlow: 'control',
     request: 'debug',
-    msg: msg
+    msg: msg.toString()
   });
 }
 
