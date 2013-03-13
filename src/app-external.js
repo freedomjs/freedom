@@ -6,6 +6,7 @@ fdom.app = fdom.app || {};
  * Manages all active channels for the application, and allows
  * proxy objects to be created for them.  Also manages the
  * canonical view of the metadata for the application.
+ * @constructor
  */
 fdom.app.External = function() {
   this.id;
@@ -21,10 +22,20 @@ fdom.app.External = function() {
   handleEvents(this);
 }
 
+/**
+ * Configure the App based on global FreeDOM configuration.
+ * @param {Object} config global freedom Properties.
+ */
 fdom.app.External.prototype.configure = function(config) {
   mixin(this.config, config, true);
 }
 
+/**
+ * Get a publically visible object for a given Channel.
+ * @param {String?} flow The channel to provide a proxy for. If no channel
+ *     is specified, the default channel will be used.
+ * @returns {fdom.Proxy} a proxy object for the requested flow.
+ */
 fdom.app.External.prototype.getProxy = function(flow) {
   var channel = this.getChannel(flow);
 
