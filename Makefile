@@ -14,6 +14,9 @@ else
 	python tools/build.py $(MAKEFLAGS) -o $@ $(SOURCES)
 endif
 
+docs:
+	cd tools && bash docs.sh
+
 clean:
 	rm freedom.js
 	rm freedom.compiled.js
