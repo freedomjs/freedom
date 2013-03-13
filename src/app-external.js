@@ -46,6 +46,14 @@ fdom.app.External.prototype.getProxy = function(flow) {
   return proxy;
 }
 
+/**
+ * Get a communication channel for an application.  The Channel
+ * is used to pass messages in and out of the application, and
+ * specifies one 'link' between freedom modules.
+ * @param {String?} flow The identifier for the channel. If none is specified
+ *     the default channel will be used.
+ * @returns {fdom.Channel} a channel for the requested flow.
+ */
 fdom.app.External.prototype.getChannel = function(flow) {
   if (!this.manifest || !this.id) {
     this.id = makeAbsolute(this.config.manifest);
@@ -63,6 +71,8 @@ fdom.app.External.prototype.getChannel = function(flow) {
 
 /**
  * Load the description of the app.
+ * @param {String} manifest The canonical URL of the application.
+ * @private
  */
 fdom.app.External.prototype.loadManifest = function(manifest) {
   var ref = new XMLHttpRequest();
@@ -82,7 +92,13 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
   ref.open("GET", manifest, true);
   ref.send();
 }
-    
+
+/**
+ * Callback for availability of Application Manifest.
+ * Registers and starts the application.
+ * @param {Object} manifest The application manifest.
+ * @private
+ */
 fdom.app.External.prototype.onManifest = function(manifest) {
   if (manifest && manifest['app'] && manifest['app']['script']) {
     this.manifest = manifest;
@@ -95,7 +111,9 @@ fdom.app.External.prototype.onManifest = function(manifest) {
 }
 
 /**
- * Start the application context.
+ * Start the application context, and activate a communication channel to the
+ * remote javascript execution engine.
+ * @private
  */
 fdom.app.External.prototype.start = function() {
   if (this.worker) {
@@ -112,6 +130,12 @@ fdom.app.External.prototype.start = function() {
   }.bind(this));
 };
 
+/**
+ * Send a raw message to the application.
+ * This interface is expected to be used by channels to send to the application,
+ * and by the Hub to manage application lifecycle.
+ * @param {Object} msg The message to send.
+ */
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.state || (this.worker && msg.sourceFlow == "control")) {
     this.worker.postMessage(msg);

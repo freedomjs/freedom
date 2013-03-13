@@ -9,6 +9,10 @@ var fdom = fdom || {};
  * A generic messageChannel, which allows for events ('emit', 'on'), and properties ('set', 'get').
  * A templatedProxy, which appears as a pre-defined definition.
  * A templatedDelegator, which delegates calls to a provider implementing a pre-defined definition.
+ * @param {fdom.Channel} channel the Channel backing this interface.
+ * @param {Object?} definition An API definition if one is specified.
+ * @param {boolean} provider Whether this interface provides or consumes a service.
+ * @constructor
  */
 fdom.Proxy = function(channel, definition, provider) {
   if (definition) {
@@ -25,6 +29,8 @@ fdom.Proxy = function(channel, definition, provider) {
 
 /**
  * A freedom endpoint for an unconstrained, unpriveledged channel.
+ * @param {fdom.Channel} channel The Channel backing this interface.
+ * @constructor
  */
 fdom.Proxy.messageChannel = function(channel) {
   handleEvents(this);

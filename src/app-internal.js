@@ -5,6 +5,7 @@ fdom.app = fdom.app || {};
  * The internal interface for a freedom application.
  * Manages all active channels for the application, and allows
  * proxy objects to be created for them.
+ * @constructor
  */
 fdom.app.Internal = function() {
   this.id;
