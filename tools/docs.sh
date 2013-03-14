@@ -9,4 +9,20 @@ then
 fi
 
 cd ..
-tools/jsdoc/jsdoc -c tools/jsdoc-conf.json -d tools/doc
+if [ "$1" = "deploy" ]; then
+  git stash save temp
+  tools/jsdoc/jsdoc -c tools/jsdoc-conf.json -d tools/doc
+  mv tools/doc /tmp/doc-deploy
+  git branch -f gh-pages origin/gh-pages  
+  git checkout gh-pages
+  rm -r tools/doc
+  mv /tmp/doc-deploy tools/doc
+  git add -f tools/doc
+  git commit -m "Updated Docs"
+  git push origin gh-pages
+  git checkout master
+  git stash pop
+
+else
+  tools/jsdoc/jsdoc -c tools/jsdoc-conf.json -d tools/doc
+fi
