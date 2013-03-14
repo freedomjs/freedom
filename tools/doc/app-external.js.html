@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: src/app-external.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: src/app-external.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>var fdom = fdom || {};
+fdom.app = fdom.app || {};
+
+/**
+ * The external interface for a freedom application.
+ * Manages all active channels for the application, and allows
+ * proxy objects to be created for them.  Also manages the
+ * canonical view of the metadata for the application.
+ * @constructor
+ */
+fdom.app.External = function() {
+  this.id;
+  this.config = {
+    manifest: 'manifest.json',
+    source: 'freedom.js'
+  };
+  this.channels = {};
+  this.manifest = {};
+  this.worker = null;
+  this.state = false;
+  
+  handleEvents(this);
+}
+
+/**
+ * Configure the App based on global FreeDOM configuration.
+ * @param {Object} config global freedom Properties.
+ */
+fdom.app.External.prototype.configure = function(config) {
+  mixin(this.config, config, true);
+}
+
+/**
+ * Get a publically visible object for a given Channel.
+ * @param {String?} flow The channel to provide a proxy for. If no channel
+ *     is specified, the default channel will be used.
+ * @returns {fdom.Proxy} a proxy object for the requested flow.
+ */
+fdom.app.External.prototype.getProxy = function(flow) {
+  var channel = this.getChannel(flow);
+
+  var proxy = new fdom.Proxy(channel);
+  if (!this.config.exports) {
+    this.config.exports = proxy;
+  }
+  return proxy;
+}
+
+/**
+ * Get a communication channel for an application.  The Channel
+ * is used to pass messages in and out of the application, and
+ * specifies one 'link' between freedom modules.
+ * @param {String?} flow The identifier for the channel. If none is specified
+ *     the default channel will be used.
+ * @returns {fdom.Channel} a channel for the requested flow.
+ */
+fdom.app.External.prototype.getChannel = function(flow) {
+  if (!this.manifest || !this.id) {
+    this.id = makeAbsolute(this.config.manifest);
+    this.loadManifest(this.id);
+  }
+  
+  if (!flow) {
+    flow = 'default'
+  }
+  if (!this.channels[flow]) {
+    this.channels[flow] = new fdom.Channel(this, flow);
+  }
+  return this.channels[flow];
+}
+
+/**
+ * Load the description of the app.
+ * @param {String} manifest The canonical URL of the application.
+ * @private
+ */
+fdom.app.External.prototype.loadManifest = function(manifest) {
+  var ref = new XMLHttpRequest();
+  ref.addEventListener('readystatechange', function(e) {
+    if (ref.readyState == 4 && ref.responseText) {
+      var resp = {};
+      try {
+        resp = JSON.parse(ref.responseText);
+      } catch(e) {
+        return errback(e);
+      }
+      this.onManifest(resp);
+    } else if (ref.readyState == 4) {
+      console.warn(ref.status);
+    }
+  }.bind(this), false);
+  ref.open("GET", manifest, true);
+  ref.send();
+}
+
+/**
+ * Callback for availability of Application Manifest.
+ * Registers and starts the application.
+ * @param {Object} manifest The application manifest.
+ * @private
+ */
+fdom.app.External.prototype.onManifest = function(manifest) {
+  if (manifest && manifest['app'] && manifest['app']['script']) {
+    this.manifest = manifest;
+    fdom.Hub.get().register(this);
+    this['emit']('manifest');
+    this.start();
+  } else {
+    console.warn(manifest['name'] + " does not specify a valid application.");
+  }
+}
+
+/**
+ * Start the application context, and activate a communication channel to the
+ * remote javascript execution engine.
+ * @private
+ */
+fdom.app.External.prototype.start = function() {
+  if (this.worker) {
+    this.worker.terminate();
+    this.worker = null;
+    this.state = false;
+  }
+  this.worker = new Worker(this.config.source);
+  this.worker.addEventListener('message', function(msg) {
+    fdom.Hub.get().onMessage(this, msg.data);
+  }.bind(this), true);
+  this['once']('ready', function() {
+    this.state = true;
+  }.bind(this));
+};
+
+/**
+ * Send a raw message to the application.
+ * This interface is expected to be used by channels to send to the application,
+ * and by the Hub to manage application lifecycle.
+ * @param {Object} msg The message to send.
+ */
+fdom.app.External.prototype.postMessage = function(msg) {
+  if (this.state || (this.worker && msg.sourceFlow == "control")) {
+    this.worker.postMessage(msg);
+  } else {
+    this['once']('ready', function(m) {
+      this.postMessage(m);
+    }.bind(this, msg));
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="api.html">api</a></li><li><a href="fdom.app.External.html">External</a></li><li><a href="fdom.app.Internal.html">Internal</a></li><li><a href="fdom.Proxy.html">Proxy</a></li><li><a href="fdom.Proxy.messageChannel.html">messageChannel</a></li></ul><h3>Global</h3><ul><li><a href="global.html#conform">conform</a></li><li><a href="global.html#eachProp">eachProp</a></li><li><a href="global.html#eachReverse">eachReverse</a></li><li><a href="global.html#handleEvents">handleEvents</a></li><li><a href="global.html#isAppContext">isAppContext</a></li><li><a href="global.html#makeAbsolute">makeAbsolute</a></li><li><a href="global.html#mixin">mixin</a></li><li><a href="global.html#scripts">scripts</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#Storage_unprivileged">Storage_unprivileged</a></li><li><a href="global.html#this['emit']">this['emit']</a></li><li><a href="global.html#Transport_unprivileged">Transport_unprivileged</a></li><li><a href="global.html#update">update</a></li><li><a href="global.html#View_unprivileged">View_unprivileged</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.0-dev</a> on Thu Mar 14 2013 11:47:15 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+</body>
+</html>

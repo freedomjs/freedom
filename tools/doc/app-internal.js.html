@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: src/app-internal.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: src/app-internal.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>var fdom = fdom || {};
+fdom.app = fdom.app || {};
+
+/**
+ * The internal interface for a freedom application.
+ * Manages all active channels for the application, and allows
+ * proxy objects to be created for them.
+ * @constructor
+ */
+fdom.app.Internal = function() {
+  this.id;
+  this.config = {};
+  this.channels = {};
+  this.manifest = {};
+  handleEvents(this);
+}
+
+fdom.app.Internal.prototype.configure = function(config) {
+  mixin(this.config, config, true);
+}
+
+fdom.app.Internal.prototype.getChannel = function(flow) {
+  if (!this.manifest || !this.id) {
+    this.start();
+  }
+
+  if (!flow) {
+    flow = 'default'
+  }
+
+  if (!this.channels[flow]) {
+    this.channels[flow] = new fdom.Channel(this, flow);
+  }
+  return this.channels[flow];
+}
+  
+fdom.app.Internal.prototype.getProxy = function(flow) {
+  var proxy = new fdom.Proxy(this.getChannel(flow));
+  if (!this.config.exports) {
+    this.config.exports = proxy;
+  }
+  return proxy;
+}
+
+/**
+ * Start communication back to the executor.
+ */
+fdom.app.Internal.prototype.start = function() {
+  this.config.global.addEventListener('message', function(msg) {
+    if (msg.data && msg.data.sourceFlow) {
+      var chan = this.channels[msg.data.sourceFlow];
+      if (chan) {
+        chan.onMessage(msg.data.msg);
+      } else if (msg.data && msg.data.sourceFlow == 'control') {
+        this['emit']('message', msg);
+      }
+    }
+  }.bind(this), true);
+
+  // Wait to get information about this application from the creator.
+  this['once']('message', function(control) {
+    this.id = control.data.msg.id;
+    this.manifest = control.data.msg.manifest;
+    
+    this.loadPermissions();
+    this.loadDependencies();
+    this.loadProvides();
+
+    this.postMessage({
+      sourceFlow: 'control',
+      request: 'ready'
+    });
+
+    var appURL = this.id.substr(0, this.id.lastIndexOf("/")) + "/"  + this.manifest['app']['script'];
+    importScripts(appURL);
+  }.bind(this));
+  
+  // Post creation message to get the info.
+  this.postMessage({
+    sourceFlow: 'control',
+    request: 'create'
+  });
+}
+
+fdom.app.Internal.prototype.postMessage = function(msg) {
+  this.config.global.postMessage(msg);
+}
+
+fdom.app.Internal.prototype.debug = function(msg) {
+  this.postMessage({
+    sourceFlow: 'control',
+    request: 'debug',
+    msg: msg.toString()
+  });
+}
+
+fdom.app.Internal.prototype.loadPermissions = function() {
+  if(this.manifest && this.manifest['permissions']) {
+    var exp = this.config.exports;
+    for (var i = 0; i &lt; this.manifest['permissions'].length; i++) {
+      var api = fdom.apis.get(this.manifest['permissions'][i]);
+      if (!api) {
+        continue;
+      }
+      exp[api.name] = function(n, dfn) {
+        var proxy = new fdom.Proxy(this.getChannel(n), dfn);
+        return proxy;
+      }.bind(this, api.name, api.definition);
+    }
+  }
+}
+
+fdom.app.Internal.prototype.loadDependencies = function() {
+  if(this.manifest && this.manifest['dependencies']) {
+    var exp = this.config.exports;
+    eachProp(this.manifest['dependencies'], function(url, name) {
+      var dep = function(n) {
+        var proxy = this.getProxy(n);
+        this.postMessage({
+          sourceFlow: 'control',
+          request: 'dep',
+          dep: n
+        });
+        return proxy;
+      }.bind(this, name);
+      if (!exp[name]) {
+        exp[name] = dep;
+      } else {
+        dep();
+      }
+    }.bind(this));
+  }
+};
+
+fdom.app.Internal.prototype.loadProvides = function() {
+  if(this.manifest && this.manifest['provides']) {
+    var exp = this.config.exports;
+    for (var i = 0; i &lt; this.manifest['provides'].length; i++) {
+      var api = fdom.apis.get(this.manifest['provides'][i]);
+      if (!api) {
+        continue;
+      }
+      exp[api.name] = function(dfn) {
+        var proxy = new fdom.Proxy(this.getChannel(), dfn, true);
+        return proxy;
+      }.bind(this, api.definition);
+    }
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="api.html">api</a></li><li><a href="fdom.app.External.html">External</a></li><li><a href="fdom.app.Internal.html">Internal</a></li><li><a href="fdom.Proxy.html">Proxy</a></li><li><a href="fdom.Proxy.messageChannel.html">messageChannel</a></li></ul><h3>Global</h3><ul><li><a href="global.html#conform">conform</a></li><li><a href="global.html#eachProp">eachProp</a></li><li><a href="global.html#eachReverse">eachReverse</a></li><li><a href="global.html#handleEvents">handleEvents</a></li><li><a href="global.html#isAppContext">isAppContext</a></li><li><a href="global.html#makeAbsolute">makeAbsolute</a></li><li><a href="global.html#mixin">mixin</a></li><li><a href="global.html#scripts">scripts</a></li><li><a href="global.html#setup">setup</a></li><li><a href="global.html#Storage_unprivileged">Storage_unprivileged</a></li><li><a href="global.html#this['emit']">this['emit']</a></li><li><a href="global.html#Transport_unprivileged">Transport_unprivileged</a></li><li><a href="global.html#update">update</a></li><li><a href="global.html#View_unprivileged">View_unprivileged</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.0-dev</a> on Thu Mar 14 2013 11:47:15 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+</body>
+</html>
