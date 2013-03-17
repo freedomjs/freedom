@@ -3,9 +3,9 @@
  * see: https://github.com/UWNetworksLab/freedom
  */
 (function(global) {
+  var freedom_src = arguments.callee.toString();
   "use strict";
-  var cfg = {global: global},
-      context,
+  var context,
       setup;
 
   if (typeof global['freedom'] !== 'undefined') {

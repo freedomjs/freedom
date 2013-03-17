@@ -16,6 +16,8 @@ endif
 
 docs:
 	cd tools && bash docs.sh
+docs-deploy:
+	cd tools && bash docs.sh deploy
 
 clean:
 	rm freedom.js

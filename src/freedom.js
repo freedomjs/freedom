@@ -8,7 +8,8 @@
 setup = function () {
   var def;
   var site_cfg = {
-    global: global
+    global: global,
+    src: "(" + freedom_src + ")(this);"
   };
 
   if (isAppContext()) {
