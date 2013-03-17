@@ -1,39 +1,45 @@
 function IdentityProvider() {
-  this.view = freedom['core.view']();
-  this.view.open({
-    file: "rs.html"
-  });
-
-  this.outstanding = true;
-  this.queue = [];
-
-  this.view.on("message", function(m) {
-    if (m == "ready" && this.outstanding) {
-      this.view.show();
-      this.view.postMessage("show");
-      for (var i = 0; i < this.queue.length; i++) {
-        this.queue[i]();
-      }
-      this.queue = [];
-    }
-  }.bind(this));
+  this.conn = new WebSocket("ws://p2pbr.com:8082/route");
+  this.connected = false;
+  this.conn.addEventListener('open', function() {
+    this.connected = true;
+  }.bind(this), true);
+  this.conn.addEventListener('message', this.onMsg.bind(this), true);
+  this.conn.addEventListener('error', function() {
+    this.connected = false;
+  }.bind(this), true);
+  this.conn.addEventListener('close', function() {
+    this.connected = false;
+  }.bind(this), true);
 };
 
-IdentityProvider.prototype.enQueue = function(f) {
-  if (this.outstanding) {
-    this.queue.push(f);
+IdentityProvider.prototype.onMsg = function(m) {
+  var data = JSON.parse(m.data);
+  if (data.from == 0) {
+    if (typeof this.id === "function") {
+      var c = this.id;
+      this.id = data.id;
+      c();
+    }
+    // roster update
+    identity.emit('buddylist', data.msg);
   } else {
-    f();
+    identity.emit('message', data);
   }
 }
 
 IdentityProvider.prototype.get = function(continuation) {
-  this.enQueue(function() {
-    this.view.postMessage("hi");
-  }.bind(this));
+  var c = function() {continuation({"id": this.id});}.bind(this);
+  if (this.id) {
+    c();
+  } else {
+    this.id = c;
+  }
 };
 
 IdentityProvider.prototype.send = function(to, msg, continuation) {
+  this.conn.send(JSON.stringify({to:to, msg:msg}));
+  continuation();
 };
 
 var identity = freedom.identity();
