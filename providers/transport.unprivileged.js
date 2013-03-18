@@ -50,23 +50,24 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
   try {
     sendChannel = pc['createDataChannel']("sendDataChannel", {'reliable': false});
     this.rtcChannels[sockId] = sendChannel;
+    sendChannel.onopen = this.onStateChange.bind(this,sockId);
+    sendChannel.onclose = this.onStateChange.bind(this,sockId);
+    sendChannel.onmessage = this.onMessage.bind(this,sockId);
+    pc['onicecandidate'] = this.onIceCandidate.bind(this,sockId);
+  
+    pc['createOffer'](function(desc) {
+      pc['setLocalDescription'](desc);
+      continuation({'id': sockId, 'offer': JSON.stringify(desc)});
+    });
   } catch (e) {
     console.warn(e.message);
     console.warn('Failed to create data channel. You need Chrome M25' +
                   'or later with --enable-data-channels flag');
+    delete this.rtcConnections[sockId];
   }
-  sendChannel.onopen = this.onStateChange.bind(this,sockId);
-  sendChannel.onclose = this.onStateChange.bind(this,sockId);
-  sendChannel.onmessage = this.onMessage.bind(this,sockId);
-  pc['onicecandidate'] = this.onIceCandidate.bind(this,sockId);
-  
-  pc['createOffer'](function(desc) {
-    pc['setLocalDescription'](desc);
-    continuation({'id': sockId, 'offer': JSON.stringify(desc)});
-  });
 };
 
-Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
+Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation) {
   var desc = JSON.parse(strdesc);
   if (desc.type == 'icecandidate') {
     /**
