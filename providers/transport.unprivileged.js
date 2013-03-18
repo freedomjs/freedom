@@ -6,12 +6,13 @@ var Transport_unprivileged = function(channel) {
   this.channel = channel;
   this.rtcConnections = {};
   this.rtcChannels = {};
+  this.rtcStates = {};
   handleEvents(this);
 };
 
 Transport_unprivileged.prototype.onStateChange = function(id) {
   var sendChannel = this.rtcChannels[id];
-  console.log(id + " send channel's state:"+sendChannel.readyState);
+  //console.log(id + " send channel's state:"+sendChannel.readyState);
   this.channel.postMessage({
     'action':'event',
     'type': 'onStateChange',
@@ -20,7 +21,7 @@ Transport_unprivileged.prototype.onStateChange = function(id) {
 };
 
 Transport_unprivileged.prototype.onMessage = function(id, evt) {
-  console.log(id + " message: "+evt.data);
+  //console.log(id + " message: "+evt.data);
   this.channel.postMessage({
     'action':'event',
     'type': 'onMessage',
@@ -29,12 +30,14 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
 };
 
 Transport_unprivileged.prototype.onIceCandidate = function(id, evt) {
-  console.log(id + " icecandidate: "+JSON.stringify(evt));
-  this.channel.postMessage({
-    'action': 'event',
-    'type': 'onSignal',
-    'value': {id: id, message: evt.candidate}
-  });
+  //console.log(id + " icecandidate: "+JSON.stringify(evt));
+  if (evt && evt.candidate) {
+    this.channel.postMessage({
+      'action': 'event',
+      'type': 'onSignal',
+      'value': {id: id, message: JSON.stringify(evt)}
+    });
+  }
 }
 
 Transport_unprivileged.prototype['create'] = function (continuation) {
@@ -58,14 +61,21 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
   
   pc.createOffer(function(desc) {
     pc.setLocalDescription(desc);
-    continuation({id: sockId, offer: desc});
+    continuation({id: sockId, offer: JSON.stringify(desc)});
   });
 };
 
 Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
-  if (desc.type == 'candidate') {
-    var candidate = new RTCIceCandidate({sdpMLineIndex: desc.label,
-                                        candidate: desc.candidate});
+  var desc = JSON.parse(strdesc);
+  if (desc.type == 'icecandidate') {
+    /**
+    var candidate = new RTCIceCandidate({
+      sdpMLineIndex: desc.candidate.sdpMLineIndex,
+      sdpMid: desc.candidate.sdpMid,
+      candidate: desc.candidate.candidate
+    });
+    **/
+    var candidate = new RTCIceCandidate(desc.candidate);
     this.rtcConnections[id].addIceCandidate(candidate);
     console.log("Successfully accepted ICE candidate");
     continuation();
@@ -91,7 +101,7 @@ Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
       function(){console.log("Failed set remote description");});
     pc.createAnswer(function(answer) {
       pc.setLocalDescription(answer);
-      continuation({id: sockId, offer: answer});
+      continuation({id: sockId, offer: JSON.stringify(answer)});
     });
   } else if (desc.type == 'answer') {
     var desc = new RTCSessionDescription(desc);
