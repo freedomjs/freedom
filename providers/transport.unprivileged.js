@@ -25,7 +25,7 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
   this.channel.postMessage({
     'action':'event',
     'type': 'onMessage',
-    'value': {'header': id, 'data': evt.data}
+    'value': {'header': id, 'data': new Blob([evt.data])}
   });
 };
 
@@ -118,8 +118,18 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
 };
 
 Transport_unprivileged.prototype['send'] = function (msg, continuation) {
-  this.rtcChannels[msg.header].send(msg.data);
-  continuation();
+  var blob = msg.data;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    console.log(e.target.result);
+    this.rtcChannels[msg.header].send(e.target.result);
+    continuation();
+  }.bind(this);
+  reader.onerror = function(e) {
+    console.log("arraybuffer conversion on send error!");
+    continuation();
+  }
+  reader.readAsArrayBuffer(blob);
 };
 
 Transport_unprivileged.prototype['close'] = function (id, continuation) {
