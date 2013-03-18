@@ -48,7 +48,7 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
                 {'optional': [{'RtpDataChannels': true}]});
   this.rtcConnections[sockId] = pc;
   try {
-    sendChannel = pc.createDataChannel("sendDataChannel", {'reliable': false});
+    sendChannel = pc['createDataChannel']("sendDataChannel", {'reliable': false});
     this.rtcChannels[sockId] = sendChannel;
     sendChannel.binaryType = "blob";
     sendChannel.onopen = this.onStateChange.bind(this,sockId);
@@ -61,6 +61,7 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
       continuation({'id': sockId, 'offer': JSON.stringify(desc)});
     });
   } catch (e) {
+    console.warn(e.message);
     console.warn('Failed to create data channel. You need Chrome M25' +
                   'or later with --enable-data-channels flag');
     delete this.rtcConnections[sockId];
