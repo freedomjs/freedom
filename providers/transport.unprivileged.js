@@ -120,11 +120,10 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
 Transport_unprivileged.prototype['send'] = function (msg, continuation) {
   var blob = msg.data;
   var reader = new FileReader();
-  reader.onload = function(e) {
-    console.log(e.target.result);
-    this.rtcChannels[msg.header].send(e.target.result);
+  reader.onload = function(m, e) {
+    this.rtcChannels[m.header].send(e.target.result);
     continuation();
-  }.bind(this);
+  }.bind(this, msg);
   reader.onerror = function(e) {
     console.log("arraybuffer conversion on send error!");
     continuation();
