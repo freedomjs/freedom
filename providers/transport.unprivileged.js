@@ -21,11 +21,11 @@ Transport_unprivileged.prototype.onStateChange = function(id) {
 };
 
 Transport_unprivileged.prototype.onMessage = function(id, evt) {
-  //console.log(id + " message: "+evt.data);
+  console.log(id + " message: "+evt);
   this.channel.postMessage({
     'action':'event',
     'type': 'onMessage',
-    'value': {'id': id, 'message': evt.data}
+    'value': {'header': id, 'data': evt.data}
   });
 };
 
@@ -117,8 +117,8 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
   }
 };
 
-Transport_unprivileged.prototype['send'] = function (id, msg, continuation) {
-  this.rtcChannels[id].send(msg);
+Transport_unprivileged.prototype['send'] = function (msg, continuation) {
+  this.rtcChannels[msg.header].send(msg.data);
   continuation();
 };
 
