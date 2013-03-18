@@ -16,7 +16,7 @@ Transport_unprivileged.prototype.onStateChange = function(id) {
   this.channel.postMessage({
     'action':'event',
     'type': 'onStateChange',
-    'value': {id: id, state: sendChannel.readyState}
+    'value': {'id': id, 'state': sendChannel.readyState}
   });
 };
 
@@ -25,7 +25,7 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
   this.channel.postMessage({
     'action':'event',
     'type': 'onMessage',
-    'value': {id: id, message: evt.data}
+    'value': {'id': id, 'message': evt.data}
   });
 };
 
@@ -35,7 +35,7 @@ Transport_unprivileged.prototype.onIceCandidate = function(id, evt) {
     this.channel.postMessage({
       'action': 'event',
       'type': 'onSignal',
-      'value': {id: id, message: JSON.stringify(evt)}
+      'value': {'id': id, 'message': JSON.stringify(evt)}
     });
   }
 }
@@ -45,10 +45,10 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
   var servers = null;
   var sendChannel;
   var pc = new webkitRTCPeerConnection(servers,
-                {optional: [{RtpDataChannels: true}]});
+                {'optional': [{'RtpDataChannels': true}]});
   this.rtcConnections[sockId] = pc;
   try {
-    sendChannel = pc.createDataChannel("sendDataChannel", {reliable: false});
+    sendChannel = pc.createDataChannel("sendDataChannel", {'reliable': false});
     this.rtcChannels[sockId] = sendChannel;
   } catch (e) {
     console.warn('Failed to create data channel. You need Chrome M25' +
@@ -61,7 +61,7 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
   
   pc.createOffer(function(desc) {
     pc.setLocalDescription(desc);
-    continuation({id: sockId, offer: JSON.stringify(desc)});
+    continuation({'id': sockId, 'offer': JSON.stringify(desc)});
   });
 };
 
@@ -85,7 +85,7 @@ Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
     var sockId = this.nextId++;
     var servers = null;
     var pc = new webkitRTCPeerConnection(servers, 
-                  {optional: [{RtpDataChannels: true}]});
+                  {'optional': [{'RtpDataChannels': true}]});
     this.rtcConnections[sockId] = pc;
     pc.onicecandidate = this.onIceCandidate.bind(this,sockId);
     pc.ondatachannel = function(evt) {
@@ -101,7 +101,7 @@ Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
       function(){console.log("Failed set remote description");});
     pc.createAnswer(function(answer) {
       pc.setLocalDescription(answer);
-      continuation({id: sockId, offer: JSON.stringify(answer)});
+      continuation({'id': sockId, 'offer': JSON.stringify(answer)});
     });
   } else if (desc.type == 'answer') {
     var desc = new RTCSessionDescription(desc);
