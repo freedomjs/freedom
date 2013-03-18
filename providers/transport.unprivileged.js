@@ -129,7 +129,7 @@ Transport_unprivileged.prototype['send'] = function (msg, continuation) {
     console.log("arraybuffer conversion on send error!");
     continuation();
   }
-  reader.readAsArrayBuffer(blob);
+  reader.readAsBinaryString(blob);
 };
 
 Transport_unprivileged.prototype['close'] = function (id, continuation) {
