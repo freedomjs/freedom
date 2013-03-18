@@ -37,7 +37,7 @@ Transport_unprivileged.prototype.onIceCandidate = function(id, evt) {
   });
 }
 
-Transport_unprivileged.prototype.create = function (continuation) {
+Transport_unprivileged.prototype['create'] = function (continuation) {
   var sockId = this.nextId++;
   var servers = null;
   var sendChannel;
@@ -62,7 +62,7 @@ Transport_unprivileged.prototype.create = function (continuation) {
   });
 };
 
-Transport_unprivileged.prototype.accept = function (id, desc, continuation) {
+Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
   if (desc.type == 'candidate') {
     var candidate = new RTCIceCandidate({sdpMLineIndex: desc.label,
                                         candidate: desc.candidate});
@@ -105,12 +105,12 @@ Transport_unprivileged.prototype.accept = function (id, desc, continuation) {
   }
 };
 
-Transport_unprivileged.prototype.send = function (id, msg, continuation) {
+Transport_unprivileged.prototype['send'] = function (id, msg, continuation) {
   this.rtcChannels[id].send(msg);
   continuation();
 };
 
-Transport_unprivileged.prototype.close = function (id, continuation) {
+Transport_unprivileged.prototype['close'] = function (id, continuation) {
   this.rtcChannels[id].close();
   this.rtcConnections[id].close();
   delete this.rtcChannels[id];
