@@ -55,14 +55,13 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
     console.warn('Failed to create data channel. You need Chrome M25' +
                   'or later with --enable-data-channels flag');
   }
-  sendChannel.binaryType = "blob";
   sendChannel.onopen = this.onStateChange.bind(this,sockId);
   sendChannel.onclose = this.onStateChange.bind(this,sockId);
   sendChannel.onmessage = this.onMessage.bind(this,sockId);
-  pc.onicecandidate = this.onIceCandidate.bind(this,sockId);
+  pc['onicecandidate'] = this.onIceCandidate.bind(this,sockId);
   
-  pc.createOffer(function(desc) {
-    pc.setLocalDescription(desc);
+  pc['createOffer'](function(desc) {
+    pc['setLocalDescription'](desc);
     continuation({'id': sockId, 'offer': JSON.stringify(desc)});
   });
 };
@@ -78,7 +77,7 @@ Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
     });
     **/
     var candidate = new RTCIceCandidate(desc.candidate);
-    this.rtcConnections[id].addIceCandidate(candidate);
+    this.rtcConnections[id]['addIceCandidate'](candidate);
     console.log("Successfully accepted ICE candidate");
     continuation();
   //} else if (id == null || !(id in this.rtcConnections)) {
@@ -89,8 +88,8 @@ Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
     var pc = new webkitRTCPeerConnection(servers, 
                   {'optional': [{'RtpDataChannels': true}]});
     this.rtcConnections[sockId] = pc;
-    pc.onicecandidate = this.onIceCandidate.bind(this,sockId);
-    pc.ondatachannel = function(evt) {
+    pc['onicecandidate'] = this.onIceCandidate.bind(this,sockId);
+    pc['ondatachannel'] = function(evt) {
       var channel = evt.channel;
       this.rtcChannels[sockId] = channel;
       channel.onopen = this.onStateChange.bind(this,sockId);
@@ -98,16 +97,16 @@ Transport_unprivileged.prototype['accept'] = function (id, desc, continuation) {
       channel.onmessage = this.onMessage.bind(this,sockId);
     }.bind(this);
     //desc, successCallback, failureCallback
-    pc.setRemoteDescription(desc,
+    pc['setRemoteDescription'](desc,
       function(){console.log("Successfully set remote description");}, 
       function(){console.log("Failed set remote description");});
-    pc.createAnswer(function(answer) {
-      pc.setLocalDescription(answer);
+    pc['createAnswer'](function(answer) {
+      pc['setLocalDescription'](answer);
       continuation({'id': sockId, 'offer': JSON.stringify(answer)});
     });
   } else if (desc.type == 'answer') {
     var desc = new RTCSessionDescription(desc);
-    this.rtcConnections[id].setRemoteDescription(desc, 
+    this.rtcConnections[id]['setRemoteDescription'](desc, 
       function(){console.log("Successfully set remote description");}, 
       function(){console.log("Failed set remote description");});
     continuation();
