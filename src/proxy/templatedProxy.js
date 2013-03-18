@@ -72,6 +72,8 @@ function conform(template, value) {
       return JSON.parse(JSON.stringify(value));
     case "blob":
       return value instanceof Blob ? value : new Blob([]);
+    case "buffer":
+      return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
   }
   if (Array.isArray(template)) {
     var val = [];
