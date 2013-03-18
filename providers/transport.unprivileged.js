@@ -54,6 +54,7 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
     console.warn('Failed to create data channel. You need Chrome M25' +
                   'or later with --enable-data-channels flag');
   }
+  sendChannel.binaryType = "blob";
   sendChannel.onopen = this.onStateChange.bind(this,sockId);
   sendChannel.onclose = this.onStateChange.bind(this,sockId);
   sendChannel.onmessage = this.onMessage.bind(this,sockId);
