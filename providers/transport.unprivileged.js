@@ -29,15 +29,12 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
 };
 
 Transport_unprivileged.prototype.onIceCandidate = function(id, evt) {
-  console.log(evt);
-  /**
   console.log(id + " icecandidate: "+JSON.stringify(evt));
   this.channel.postMessage({
     'action': 'event',
     'type': 'onSignal',
-    'value': {id: id, message: JSON.stringify(evt.candidate)}
+    'value': {id: id, message: evt.candidate}
   });
-  **/
 }
 
 Transport_unprivileged.prototype.create = function (continuation) {
@@ -61,20 +58,20 @@ Transport_unprivileged.prototype.create = function (continuation) {
   
   pc.createOffer(function(desc) {
     pc.setLocalDescription(desc);
-    continuation({id: sockId, offer: JSON.stringify(desc)});
+    continuation({id: sockId, offer: desc});
   });
 };
 
-Transport_unprivileged.prototype.accept = function (id, strdesc, continuation) {
-  var parseddesc = JSON.parse(strdesc);
-  if (parseddesc.type == 'candidate') {
-    var candidate = new RTCIceCandidate({sdpMLineIndex: parseddesc.label,
-                                        candidate: parseddesc.candidate});
+Transport_unprivileged.prototype.accept = function (id, desc, continuation) {
+  if (desc.type == 'candidate') {
+    var candidate = new RTCIceCandidate({sdpMLineIndex: desc.label,
+                                        candidate: desc.candidate});
     this.rtcConnections[id].addIceCandidate(candidate);
     console.log("Successfully accepted ICE candidate");
+    continuation();
   //} else if (id == null || !(id in this.rtcConnections)) {
-  } else if (parseddesc.type == 'offer') {
-    var desc = new RTCSessionDescription(parseddesc);
+  } else if (desc.type == 'offer') {
+    var desc = new RTCSessionDescription(desc);
     var sockId = this.nextId++;
     var servers = null;
     var pc = new webkitRTCPeerConnection(servers, 
@@ -94,16 +91,17 @@ Transport_unprivileged.prototype.accept = function (id, strdesc, continuation) {
       function(){console.log("Failed set remote description");});
     pc.createAnswer(function(answer) {
       pc.setLocalDescription(answer);
-      continuation({id: sockId, offer: JSON.stringify(answer)});
+      continuation({id: sockId, offer: answer});
     });
-  } else if (parseddesc.type == 'answer') {
-    var desc = new RTCSessionDescription(parseddesc);
+  } else if (desc.type == 'answer') {
+    var desc = new RTCSessionDescription(desc);
     this.rtcConnections[id].setRemoteDescription(desc, 
       function(){console.log("Successfully set remote description");}, 
       function(){console.log("Failed set remote description");});
     continuation();
-  } else if (parseddesc.type == 'bye') {
+  } else if (desc.type == 'bye') {
     this.close(id);
+    continuation();
   }
 };
 
