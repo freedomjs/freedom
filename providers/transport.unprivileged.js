@@ -50,7 +50,7 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
   try {
     sendChannel = pc['createDataChannel']("sendDataChannel", {'reliable': false});
     this.rtcChannels[sockId] = sendChannel;
-    sendChannel.binaryType = "blob";
+    //sendChannel.binaryType = "blob";
     sendChannel.onopen = this.onStateChange.bind(this,sockId);
     sendChannel.onclose = this.onStateChange.bind(this,sockId);
     sendChannel.onmessage = this.onMessage.bind(this,sockId);
