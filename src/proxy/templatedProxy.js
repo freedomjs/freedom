@@ -70,6 +70,8 @@ function conform(template, value) {
     case "object":
       // TODO(willscott): Allow removal if sandboxing enforces this.
       return JSON.parse(JSON.stringify(value));
+    case "blob":
+      return value instanceof Blob ? value : new Blob([]);
   }
   if (Array.isArray(template)) {
     var val = [];
