@@ -21,7 +21,15 @@ Transport_unprivileged.prototype.onStateChange = function(id) {
 };
 
 Transport_unprivileged.prototype.onMessage = function(id, evt) {
-  console.log(id + " message: "+evt);
+  console.log(id + " message: "+evt.data.length);
+  var blobber = new Blob([evt.data]);
+  console.log("as blob it is length " + blobber.size);
+  
+  if (evt.data instanceof Blob) {
+    console.log("And msg is a blob :)");
+  } else {
+    console.log("Msg is a " + evt.data);
+  }
   this.channel.postMessage({
     'action':'event',
     'type': 'onMessage',
@@ -121,6 +129,7 @@ Transport_unprivileged.prototype['send'] = function (msg, continuation) {
   var blob = msg.data;
   var reader = new FileReader();
   reader.onload = function(m, e) {
+    console.log("msg to send is " + e.target.result.length + " characters.");
     this.rtcChannels[m.header].send(e.target.result);
     continuation();
   }.bind(this, msg);
@@ -128,7 +137,7 @@ Transport_unprivileged.prototype['send'] = function (msg, continuation) {
     console.log("arraybuffer conversion on send error!");
     continuation();
   }
-  reader.readAsBinaryString(blob);
+  reader.readAsText(blob);
 };
 
 Transport_unprivileged.prototype['close'] = function (id, continuation) {
