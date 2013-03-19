@@ -25,11 +25,6 @@ Transport_unprivileged.prototype.onMessage = function(id, evt) {
   var blobber = new Blob([evt.data]);
   console.log("as blob it is length " + blobber.size);
   
-  if (evt.data instanceof Blob) {
-    console.log("And msg is a blob :)");
-  } else {
-    console.log("Msg is a " + evt.data);
-  }
   this.channel.postMessage({
     'action':'event',
     'type': 'onMessage',
@@ -129,7 +124,6 @@ Transport_unprivileged.prototype['send'] = function (msg, continuation) {
   var blob = msg.data;
   var reader = new FileReader();
   reader.onload = function(m, e) {
-    console.log("msg to send is " + e.target.result.length + " characters.");
     this.rtcChannels[m.header].send(e.target.result);
     continuation();
   }.bind(this, msg);
