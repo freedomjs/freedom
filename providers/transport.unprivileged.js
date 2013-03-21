@@ -80,7 +80,7 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
     });
     **/
     var candidate = new RTCIceCandidate(desc.candidate);
-    if (this.rtcConnections[id]) {
+    if (this.rtcConnections[id] && this.rtcChannels[id].readyState !== "closed") {
       this.rtcConnections[id]['addIceCandidate'](candidate);
       console.log("Successfully accepted ICE candidate");
     }
