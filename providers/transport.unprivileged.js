@@ -81,8 +81,10 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
     });
     **/
     var candidate = new RTCIceCandidate(desc.candidate);
-    this.rtcConnections[id]['addIceCandidate'](candidate);
-    console.log("Successfully accepted ICE candidate");
+    if (this.rtcConnections[id]) {
+      this.rtcConnections[id]['addIceCandidate'](candidate);
+      console.log("Successfully accepted ICE candidate");
+    }
     continuation();
   //} else if (id == null || !(id in this.rtcConnections)) {
   } else if (desc.type == 'offer') {
@@ -137,11 +139,12 @@ Transport_unprivileged.prototype['send'] = function (msg, continuation) {
 Transport_unprivileged.prototype['close'] = function (id, continuation) {
   this.rtcChannels[id].close();
   this.rtcConnections[id].close();
-  delete this.rtcChannels[id];
-  delete this.rtcConnections[id];
+  //delete this.rtcChannels[id];
+  //delete this.rtcConnections[id];
   continuation();
 };
 
+/**
 Transport_unprivileged.prototype.get = function(key, continuation) {
   try {
     var val = localTransport[this.channel.app.id + key];
@@ -155,5 +158,6 @@ Transport_unprivileged.prototype.set = function(key, value, continuation) {
   localTransport[this.channel.app.id + key] = value;
   continuation();
 };
+**/
 
 fdom.apis.register("core.transport", Transport_unprivileged);
