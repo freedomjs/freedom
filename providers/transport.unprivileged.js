@@ -111,7 +111,7 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
     });
   } else if (desc.type == 'answer') {
     var desc = new RTCSessionDescription(desc);
-    console.log("connection status is " + this.rtcConnections[id].readyState);
+    console.log("connection status is " + this.rtcChannels[id].readyState);
     this.rtcConnections[id]['setRemoteDescription'](desc, 
       function(){console.log("Successfully set remote description");}, 
       function(e){console.warn(e);});
