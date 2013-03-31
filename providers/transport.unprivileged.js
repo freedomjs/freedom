@@ -80,7 +80,7 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
     });
     **/
     var candidate = new RTCIceCandidate(desc.candidate);
-    if (this.rtcConnections[id]) {
+    if (this.rtcConnections[id] && this.rtcChannels[id].readyState !== "closed") {
       this.rtcConnections[id]['addIceCandidate'](candidate);
       console.log("Successfully accepted ICE candidate");
     }
@@ -111,7 +111,7 @@ Transport_unprivileged.prototype['accept'] = function (id, strdesc, continuation
     });
   } else if (desc.type == 'answer') {
     var desc = new RTCSessionDescription(desc);
-    console.log("connection status is " + this.rtcConnections[id].readyState);
+    console.log("connection status is " + this.rtcChannels[id].readyState);
     this.rtcConnections[id]['setRemoteDescription'](desc, 
       function(){console.log("Successfully set remote description");}, 
       function(e){console.warn(e);});
