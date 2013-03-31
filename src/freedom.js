@@ -9,6 +9,7 @@ setup = function () {
   var def;
   var site_cfg = {
     global: global,
+    'debug': true,
     src: "(" + freedom_src + ")(this);"
   };
 
@@ -25,6 +26,13 @@ setup = function () {
         if (manifest) {
           site_cfg.source = source;
           site_cfg.manifest = manifest;
+          if (script.innerText.trim().length) {
+            try {
+              mixin(site_cfg, JSON.parse(script.innerText), true);
+            } catch (e) {
+              global.console.warn("Failed to parse configuration: " + e);
+            }
+          }
           return true;
         }
       });
