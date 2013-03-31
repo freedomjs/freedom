@@ -9,7 +9,25 @@ var PeerConnection_unprivileged = function(channel) {
 };
 
 PeerConnection_unprivileged.prototype.open = function(proxy, id, continuation) {
-  this.identity = fdom.Hub.get().
+  if (this.connection) {
+    continuation(false);
+  }
+
+  this.identity = fdom.Hub.get();
+
+  var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
+  this.connection = new RTCPeerConnection(null, {'optional': [{'RtpDataChannels': true}]});
+
+  this.connection.addEventListener('icecandidate', function(evt) {
+    if(evt && evt['candidate']) {
+      this.identity.postMessage({
+        'action': 'method',
+        'type': 'send',
+        'value': [id, evt['candidate']]
+      });
+    }
+  }, true);
+
   continuation();
 };
 
