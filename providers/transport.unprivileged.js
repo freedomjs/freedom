@@ -1,5 +1,7 @@
 /**
  * A FreeDOM transport provider using WebRTC
+ * @constructor
+ * @private
  */
 var Transport_unprivileged = function(channel) {
   this.nextId = 10;

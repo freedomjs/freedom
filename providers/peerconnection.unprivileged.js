@@ -1,5 +1,7 @@
 /**
  * A FreeDOM interface to WebRTC Peer Connections
+ * @constructor
+ * @private
  */
 var PeerConnection_unprivileged = function(channel) {
   this.channel = channel;
@@ -14,19 +16,27 @@ PeerConnection_unprivileged.prototype.open = function(proxy, id, continuation) {
   }
 
   this.identity = fdom.Hub.get();
+  this.backchannel = function(msg) {
+    this.identity.postMessage({
+      'action': 'method',
+      'type': 'send',
+      'value': msg
+    });
+  }
 
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
   this.connection = new RTCPeerConnection(null, {'optional': [{'RtpDataChannels': true}]});
 
   this.connection.addEventListener('icecandidate', function(evt) {
     if(evt && evt['candidate']) {
-      this.identity.postMessage({
-        'action': 'method',
-        'type': 'send',
-        'value': [id, evt['candidate']]
-      });
+      this.backchannel(JSON.stringify(evt['candidate']));
     }
-  }, true);
+  }.bind(this), true);
+
+  this.connection.createOffer(function(desc) {
+    this.connection.setLocalDescription(desc);
+    this.backchannel(JSON.stringify(desc));
+  }.bind(this));
 
   continuation();
 };
