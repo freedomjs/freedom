@@ -70,11 +70,7 @@ View_unprivileged.prototype.close = function() {
 
 View_unprivileged.prototype.onMessage = function(m) {
   if (m.source == this.win.contentWindow) {
-    this.channel.postMessage({
-      'action':'event',
-      'type': 'message',
-      'value': m.data
-    });
+    this['dispatchEvent']('message', m.data);
   }
 }
 

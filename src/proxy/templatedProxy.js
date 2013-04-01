@@ -3,7 +3,8 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
   var events = null;
   var emitter = null;
   var self = this;
-  var id = Math.random();
+  var flowId = Math.random();
+  var reqId = 0;
 
   eachProp(definition, function(prop, name) {
     switch(prop['type']) {
@@ -15,12 +16,13 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
           channel.postMessage({
             'action': 'method',
             'type': name,
-            'id': id,
+            reqId: reqId,
+            flowId: flowId,
             'value': conform(prop.value, arguments)
           });
           var deferred = fdom.Proxy.Deferred();
-          inflight[id] = deferred;
-          id++;
+          inflight[reqId] = deferred;
+          reqId++;
           return deferred['promise']();
         }
         break;
@@ -38,13 +40,14 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
 
   channel['on']('message', function(msg) {
     if (!msg) return;
+    if (msg.flowId != flowId) return;
     if (msg.action == 'method') {
-      if (inflight[msg.id]) {
-        var deferred = inflight[msg.id];
-        delete inflight[msg.id];
+      if (inflight[msg.reqId]) {
+        var deferred = inflight[msg.reqId];
+        delete inflight[msg.reqId];
         deferred['resolve'](msg.value);
       } else {
-        console.log("Dropped response message with id " + msg.id);
+        console.log("Dropped response message with id " + msg.reqId);
       }
     } else if (msg.action == 'event') {
       var prop = events[msg.type];
@@ -53,6 +56,12 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
         emitter(msg.type, val);
       }
     }
+  });
+  
+  channel.postMessage({
+    'action': 'construct',
+    'type': 'construct',
+    flowId: flowId
   });
 };
 

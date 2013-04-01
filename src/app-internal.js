@@ -115,7 +115,7 @@ fdom.app.Internal.prototype.loadPermissions = function() {
 
 fdom.app.Internal.prototype.loadDependencies = function() {
   if(this.manifest && this.manifest['dependencies']) {
-    var exp = this.config.exports;
+    var exports = this.config.exports;
     eachProp(this.manifest['dependencies'], function(url, name) {
       var dep = function(n) {
         var proxy = this.getProxy(n);
@@ -126,8 +126,8 @@ fdom.app.Internal.prototype.loadDependencies = function() {
         });
         return proxy;
       }.bind(this, name);
-      if (!exp[name]) {
-        exp[name] = dep;
+      if (!exports[name]) {
+        exports[name] = dep;
       } else {
         dep();
       }

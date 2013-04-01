@@ -62,7 +62,7 @@ var coreProvider = function(name, channel) {
 coreProvider.prototype.postMessage = function(msg) {
   if (!this.instance) {
     var def = fdom.apis.get(this.name);
-    this.instance = new fdom.Proxy.templatedDelegator(this.channel, def.definition)
+    this.instance = new fdom.Proxy.templatedDelegator(this.channel, def.definition);
     this.instance['provideAsynchronous'](fdom.apis.providers[this.name].bind({}, this.channel));
   }
   this.channel['emit']('message', msg);
