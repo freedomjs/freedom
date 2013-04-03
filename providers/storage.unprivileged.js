@@ -2,6 +2,7 @@
  * A FreeDOM storage provider offers a key value store interface
  * with some level of persistance, and some size limitation.
  * @constructor
+ * @private
  */
 var Storage_unprivileged = function(channel) {
   this.channel = channel;

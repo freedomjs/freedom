@@ -27,6 +27,7 @@ fdom.app.External = function() {
  * @param {Object} config global freedom Properties.
  */
 fdom.app.External.prototype.configure = function(config) {
+  mixin(fdom.Hub.get().config, config);
   mixin(this.config, config, true);
 }
 

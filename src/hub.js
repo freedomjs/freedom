@@ -8,6 +8,7 @@ var fdom = fdom || {};
  * @constructor
  */
 fdom.Hub = function() {
+  this.config = {};
   this.apps = {};
   this.pipes = {};
   handleEvents(this);
@@ -38,20 +39,25 @@ fdom.Hub.prototype.onMessage = function(app, message) {
   var flows = this.pipes[app.id];
   var flow = message.sourceFlow;
   if (flow == 'control') {
-    if (message.request != 'debug') {
+    if (this.config['debug'] && message.request != 'debug') {
       console.log(app.id + " -C " + message.request);
-    } else {
+    } else if (this.config['debug']) {
       console.log(app.id + " -D " + message.msg);
     }
     // Signaling Channel.
     if (message.request == 'dep') {
       this.createPipe(app, message.dep);
     } else if (message.request == 'create') {
+      var config = {
+        "debug": this.config['debug']
+      };
+
       app.postMessage({
         sourceFlow: 'control',
         msg: {
           id: app.id,
-          manifest: app.manifest
+          manifest: app.manifest,
+          config: config
         }
       });
       this.permitAccess(app.id);
@@ -59,7 +65,9 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       app['emit']('ready');
     }
   } else if (flows[flow]) {
-    console.log(app.id + " -> " + flow + " " + message.msg.action + " " + message.msg.type);
+    if (this.config['debug']) {
+      console.log(app.id + " -> " + flow + " " + message.msg.action + " " + message.msg.type);
+    }
     if (flows[flow] == app.getChannel(flow)) {
       flows[flow].onMessage(message.msg);
     } else {
@@ -86,7 +94,7 @@ fdom.Hub.prototype.ensureApp = function(id, app) {
   var canonicalId = makeAbsolute(id);
   if (!this.apps[canonicalId]) {
     var newApp = new fdom.app.External();
-    newApp.configure(app.config);
+    newApp.configure(this.config);
     newApp.configure({
       manifest: canonicalId
     });

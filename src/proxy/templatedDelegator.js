@@ -1,5 +1,6 @@
 fdom.Proxy.templatedDelegator = function(channel, definition) {
   var provider = null;
+  var instances = {};
   var synchronous = true;
 
   var events = {};
@@ -8,37 +9,48 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
       events[name] = prop;
     }
   });
-  if (events !== {}) {
-    this['emit'] = function(name, value) {
-      if (events[name]) {
-        channel.postMessage({
-          'action': 'event',
-          'type': name,
-          'value': conform(events[name].value, value)
-        });
-      }
-    }
-  }
-
 
   this['provideSynchronous'] = function(pro) {
-    // TODO(willscott): support 1-1 mapping of provider to proxies.
-    provider = new pro();
+    provider = pro;
   }
 
   this['provideAsynchronous'] = function(pro) {
-    provider = new pro();
+    provider = pro;
     synchronous = false;
+  }
+  
+  function buildInstance(identifier) {
+    var instance = new provider();
+    instance['dispatchEvent'] = function(id, name, value) {
+      if (events[name]) {
+        channel.postMessage({
+          'action': 'event',
+          flowId: id,
+          'type': name,
+          'value': conform(events[name].value, value)
+        })
+      }
+    }.bind({}, identifier);
+    return instance;
   }
 
   channel['on']('message', function(msg) {
     if (!msg) return;
+    if (!instances[msg.flowId]) {
+      if (msg.action == 'construct') {
+        instances[msg.flowId] = buildInstance(msg.flowId);
+      }
+      return;
+    }
+
     if (msg.action == 'method') {
+      var instance = instances[msg.flowId];
       if (synchronous) {
-        var ret = provider[msg.type].apply(provider, msg.value);
+        var ret = instance[msg.type].apply(instance, msg.value);
         channel.postMessage({
           'action': 'method',
-          'id': msg.id,
+          flowId: msg.flowId,
+          reqId: msg.reqId,
           'type': msg.type,
           'value': ret
         });
@@ -47,11 +59,12 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
         if (!Array.isArray(args)) {
           args = [args];
         }
-        provider[msg.type].apply(provider, args.concat(function(ret) {
+        instance[msg.type].apply(instance, args.concat(function(ret) {
           channel.postMessage({
             'action': 'method',
             'type': msg.type,
-            'id': msg.id,
+            flowId: msg.flowId,
+            reqId: msg.reqId,
             'value': ret
           });
         }));

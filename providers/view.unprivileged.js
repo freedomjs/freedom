@@ -3,6 +3,8 @@
  * the capability of providing screen realestate.  Implementation is conducted
  * as a sandboxed iFrame at separate origin, whose sendMessage channel is
  * given to the provider.
+ * @constructor
+ * @private
  */
 var View_unprivileged = function(channel) {
   this.host = null;
@@ -68,11 +70,7 @@ View_unprivileged.prototype.close = function() {
 
 View_unprivileged.prototype.onMessage = function(m) {
   if (m.source == this.win.contentWindow) {
-    this.channel.postMessage({
-      'action':'event',
-      'type': 'message',
-      'value': m.data
-    });
+    this['dispatchEvent']('message', m.data);
   }
 }
 

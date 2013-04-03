@@ -61,6 +61,7 @@ fdom.app.Internal.prototype.start = function() {
   this['once']('message', function(control) {
     this.id = control.data.msg.id;
     this.manifest = control.data.msg.manifest;
+    this.configure(control.data.msg.config);
     
     this.loadPermissions();
     this.loadDependencies();
@@ -87,11 +88,13 @@ fdom.app.Internal.prototype.postMessage = function(msg) {
 }
 
 fdom.app.Internal.prototype.debug = function(msg) {
-  this.postMessage({
-    sourceFlow: 'control',
-    request: 'debug',
-    msg: msg.toString()
-  });
+  if (this.config.debug) {
+    this.postMessage({
+      sourceFlow: 'control',
+      request: 'debug',
+      msg: msg.toString()
+    });
+  }
 }
 
 fdom.app.Internal.prototype.loadPermissions = function() {
@@ -112,7 +115,7 @@ fdom.app.Internal.prototype.loadPermissions = function() {
 
 fdom.app.Internal.prototype.loadDependencies = function() {
   if(this.manifest && this.manifest['dependencies']) {
-    var exp = this.config.exports;
+    var exports = this.config.exports;
     eachProp(this.manifest['dependencies'], function(url, name) {
       var dep = function(n) {
         var proxy = this.getProxy(n);
@@ -123,8 +126,8 @@ fdom.app.Internal.prototype.loadDependencies = function() {
         });
         return proxy;
       }.bind(this, name);
-      if (!exp[name]) {
-        exp[name] = dep;
+      if (!exports[name]) {
+        exports[name] = dep;
       } else {
         dep();
       }

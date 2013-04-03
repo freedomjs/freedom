@@ -83,6 +83,7 @@ fdom.Proxy.messageChannel = function(channel) {
    * Handle messages from across the channel.
    */
   channel['on']('message', function(msg) {
+    if (!msg) return;
     if (msg['action'] == 'event') {
       emitter(msg['type'], msg['data']);
     } else if (msg['action'] == 'set') {
