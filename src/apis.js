@@ -53,12 +53,22 @@ api.prototype.getCore = function(name, you) {
   return new coreProvider(name, you);
 }
 
+/**
+ * A core API provider, implementing the fdom.Proxy interface.
+ * @param {String} name The core provider name
+ * @param {fdom.Channel} channel The communication channel from the provider.
+ * @constructor
+ */
 var coreProvider = function(name, channel) {
   this.instance = null;
   this.name = name;
   this.channel = channel;
 }
 
+/**
+ * Send a message to this core provider.
+ * @param {Object} msg The message to post.
+ */
 coreProvider.prototype.postMessage = function(msg) {
   if (!this.instance) {
     var def = fdom.apis.get(this.name);
@@ -68,4 +78,7 @@ coreProvider.prototype.postMessage = function(msg) {
   this.channel['emit']('message', msg);
 }
 
+/**
+ * Defines fdom.apis for fdom module registry and core provider registation.
+ */
 fdom.apis = new api();

@@ -45,7 +45,7 @@ Transport_unprivileged.prototype['create'] = function (continuation) {
   var servers = null;
   var sendChannel;
   var pc = new webkitRTCPeerConnection(servers,
-                {optional: [{RtpDataChannels: true}]});
+                {'optional': [{'RtpDataChannels': true}]});
   this.rtcConnections[sockId] = pc;
   try {
     sendChannel = pc.createDataChannel("sendDataChannel", {reliable: false});

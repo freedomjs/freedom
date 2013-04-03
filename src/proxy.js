@@ -39,6 +39,8 @@ fdom.Proxy.messageChannel = function(channel) {
 
   /**
    * Update emission of events to cross the underlying channel.
+   * @param {String} type The type of message to send.
+   * @param {Object} data The message to send.
    */
   this['emit'] = function(type, data) {
     channel.postMessage({

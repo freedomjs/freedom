@@ -1,12 +1,22 @@
 var fdom = fdom || {};
 
-
+/**
+ * Defines fdom.Hub, the core message hub between freedom modules.
+ * Incomming messages from apps are sent to hub.onMessage()
+ * Use fdom.Hub.get() for the singleton instance.
+ * @private
+ * @constructor
+ */
 fdom.Hub = function() {
   this.apps = {};
   this.pipes = {};
   handleEvents(this);
 };
 
+/**
+ * Singleton accessor for fdom.Hub.
+ * @returns {fdom.Hub} The singleton freedom hub interconnecting freedom modules.
+ */
 fdom.Hub.get = function() {
   if (!fdom.Hub._hub) {
     fdom.Hub._hub = new fdom.Hub();
@@ -15,6 +25,11 @@ fdom.Hub.get = function() {
   return fdom.Hub._hub;
 };
 
+/**
+ * Handle an incoming message from a freedom app.
+ * @param {fdom.app} app The app sending the message.
+ * @param {Object} message The sent message.
+ */
 fdom.Hub.prototype.onMessage = function(app, message) {
   if (!this.apps[app.id]) {
     console.warn("Message dropped from unregistered app " + app.id);
@@ -62,6 +77,11 @@ fdom.Hub.prototype.onMessage = function(app, message) {
   }
 };
 
+/**
+ * Ensure than an application is enstantiated. and registered.
+ * @param {String} id The URL identifying the app.
+ * @param {fdom.app} app Existing app definition.
+ */
 fdom.Hub.prototype.ensureApp = function(id, app) {
   var canonicalId = makeAbsolute(id);
   if (!this.apps[canonicalId]) {
@@ -75,6 +95,11 @@ fdom.Hub.prototype.ensureApp = function(id, app) {
   return canonicalId;
 }
 
+/**
+ * Establish a communication channel between an application and one of its dependencies.
+ * @param {fdom.app} app The application establishing communication.
+ * @param {String} dep The identifier of the dependency.
+ */
 fdom.Hub.prototype.createPipe = function(app, dep) {
   // 1. Make sure source has permissions to create the pipe.
   if (!app.manifest['dependencies'].hasOwnProperty(dep)) {
@@ -91,6 +116,10 @@ fdom.Hub.prototype.createPipe = function(app, dep) {
   this.pipes[depId] = {'default': app.getChannel(dep)};
 }
 
+/**
+ * Register an application with the hub.
+ * @param {fdom.app} app The application to register. 
+ */
 fdom.Hub.prototype.register = function(app) {
   if (!this.apps[app.id]) {
     this.apps[app.id] = app;
@@ -99,6 +128,11 @@ fdom.Hub.prototype.register = function(app) {
   this['emit']('register', app);
 }
 
+/**
+ * Register permissions of a freedom application.
+ * @param String id The application for whom to register permissions.
+ * @private
+ */
 fdom.Hub.prototype.permitAccess = function(id) {
   if (!this.apps[id]) {
     console.warn("Registration requested for unknown App " + id);
