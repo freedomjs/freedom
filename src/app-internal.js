@@ -98,18 +98,22 @@ fdom.app.Internal.prototype.debug = function(msg) {
 }
 
 fdom.app.Internal.prototype.loadPermissions = function() {
+  var permissions = ["core"];
+  var exp = this.config.exports;
   if(this.manifest && this.manifest['permissions']) {
-    var exp = this.config.exports;
     for (var i = 0; i < this.manifest['permissions'].length; i++) {
-      var api = fdom.apis.get(this.manifest['permissions'][i]);
-      if (!api) {
-        continue;
-      }
-      exp[api.name] = function(n, dfn) {
-        var proxy = new fdom.Proxy(this.getChannel(n), dfn);
-        return proxy;
-      }.bind(this, api.name, api.definition);
+      permissions.push(this.manifest['permissions'][i]);
     }
+  }
+  for (var i = 0; i < permissions.length; i++) {
+    var api = fdom.apis.get(permissions[i]);
+    if (!api) {
+      continue;
+    }
+    exp[api.name] = function(n, dfn) {
+      var proxy = new fdom.Proxy(this.getChannel(n), dfn);
+      return proxy;
+    }.bind(this, api.name, api.definition);
   }
 }
 
