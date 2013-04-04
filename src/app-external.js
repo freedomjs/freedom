@@ -127,10 +127,16 @@ fdom.app.External.prototype.start = function() {
   this.worker.addEventListener('message', function(msg) {
     fdom.Hub.get().onMessage(this, msg.data);
   }.bind(this), true);
-  this['once']('ready', function() {
-    this.state = true;
-  }.bind(this));
 };
+
+/**
+ * Mark the application context ready, and deliver queued messages to the
+ * worker process.
+ */
+fdom.app.External.prototype.ready = function() {
+  this.state = true;
+  this['emit']('ready');
+}
 
 /**
  * Send a raw message to the application.

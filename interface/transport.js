@@ -14,3 +14,11 @@ fdom.apis.set("core.transport", {
   }},
   'onSignal': {type: "event", value: "object"}
 });
+
+fdom.apis.set("transport", {
+  'open': {type: "method", value: ["proxy", "string"]},
+  'send': {type: "method", value: ["data"]},
+  'message': {type: "event", value: ["data"]},
+  'close': {type: "method", value: []},
+  'onClose': {type: "event", value: []}
+});

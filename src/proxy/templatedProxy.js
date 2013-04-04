@@ -83,6 +83,8 @@ function conform(template, value) {
       return value instanceof Blob ? value : new Blob([]);
     case "buffer":
       return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
+    case "data":
+      return {ref: 0 + value.ref};
   }
   if (Array.isArray(template)) {
     var val = [];

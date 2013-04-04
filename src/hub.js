@@ -62,7 +62,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       });
       this.permitAccess(app.id);
     } else if (message.request == 'ready') {
-      app['emit']('ready');
+      app.ready();
     }
   } else if (flows[flow]) {
     if (this.config['debug']) {

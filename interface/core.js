@@ -1,3 +1,7 @@
+fdom.apis.set("core", {
+  'getReference': {type: "method", value: ["String"]}
+});
+
 fdom.apis.set("core.view", {
   'open': {type: "method", value: [{
     'file':"string",
