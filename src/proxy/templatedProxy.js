@@ -1,18 +1,30 @@
-fdom.Proxy.templatedProxy = function(channel, definition) {
+fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
   var inflight = {};
   var events = null;
   var emitter = null;
   var self = this;
-  var flowId = Math.random();
+  var flowId;
+  if (identifier.flowId) {
+    flowId = identifier.flowId
+  } else {
+    flowId = Math.random();
+  }
+  if (identifier.hash) {
+    fdom.Proxy.registry[identifier.hash] = [channel, channel.flow, flowId];
+  }
   var reqId = 0;
 
   eachProp(definition, function(prop, name) {
     switch(prop['type']) {
       case "property":
-        //TODO(willscott): how should asyncronous properties work?
+        //TODO(willscott): how should asynchronous properties work?
         break;
       case "method":
         this[name] = function() {
+          // Note: inflight should be registered before message is passed
+          // in order to prepare for synchronous in-window pipes.
+          var deferred = fdom.Proxy.Deferred();
+          inflight[reqId] = deferred;
           channel.postMessage({
             'action': 'method',
             'type': name,
@@ -20,8 +32,6 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
             flowId: flowId,
             'value': conform(prop.value, arguments)
           });
-          var deferred = fdom.Proxy.Deferred();
-          inflight[reqId] = deferred;
           reqId++;
           return deferred['promise']();
         }
@@ -58,11 +68,13 @@ fdom.Proxy.templatedProxy = function(channel, definition) {
     }
   });
   
-  channel.postMessage({
-    'action': 'construct',
-    'type': 'construct',
-    flowId: flowId
-  });
+  if (!identifier.flowId) {
+    channel.postMessage({
+      'action': 'construct',
+      'type': 'construct',
+      flowId: flowId
+    });
+  }
 };
 
 /**
@@ -85,6 +97,12 @@ function conform(template, value) {
       return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
     case "data":
       return {ref: 0 + value.ref};
+    case "proxy":
+      if (Array.isArray(value)) {
+        return value;
+      } else {
+        return fdom.Proxy.getIdentifier(value);
+      }
   }
   if (Array.isArray(template)) {
     var val = [];

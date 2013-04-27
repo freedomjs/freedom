@@ -11,6 +11,7 @@ fdom.Hub = function() {
   this.config = {};
   this.apps = {};
   this.pipes = {};
+  this.unbound = [];
   handleEvents(this);
 };
 
@@ -38,6 +39,8 @@ fdom.Hub.prototype.onMessage = function(app, message) {
   }
   var flows = this.pipes[app.id];
   var flow = message.sourceFlow;
+  var destChannel = flows[flow];
+
   if (flow == 'control') {
     if (this.config['debug'] && message.request != 'debug') {
       console.log(app.id + " -C " + message.request);
@@ -63,34 +66,69 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       this.permitAccess(app.id);
     } else if (message.request == 'ready') {
       app.ready();
+    } else if (message.request == 'channel') {
+      // Register new unprivileged message channel.
+      var flow = 'custom' + Math.random();
+
+      // Binding a channel.
+      if (message.to) {
+        var aid = message.to[0];
+        var dep = this.apps[aid];
+        var endpoint = false;
+        for (var i = 0; i < this.unbound.length; i++) {
+          if (this.unbound[i][0] == dep) {
+            endpoint = this.unbound[i];
+            this.unbound.splice(i, 1);
+            break;
+          }
+        }
+        if (endpoint) {
+          var other = endpoint[0];
+          if (this.pipes[app.id][flow] || this.pipes[other.id][endpoint[1]]) {
+            console.warn("unwilling to redefine existing pipes.");
+          } else {
+            this.pipes[app.id][flow] = other.getChannel(endpoint[1]);
+            this.pipes[other.id][endpoint[1]] = app.getChannel(flow);
+          }
+        }
+      } else {
+        // TODO: make sure apps can't make infinite unbound pipes.
+        this.unbound.push([app, flow]);
+      }
+
+      app.postMessage({
+        sourceFlow: 'control',
+        msg: {
+          flow: flow
+        }
+      });
     }
-  } else if (flows[flow]) {
+  } else if (destChannel) {
     if (this.config['debug']) {
       console.log(app.id + " -> " + flow + " " + message.msg.action + " " + message.msg.type);
     }
-    if (flows[flow] == app.getChannel(flow)) {
-      flows[flow].onMessage(message.msg);
+
+    // Deliver Message
+    if (destChannel == app.getChannel(flow)) {
+      destChannel.onMessage(message.msg);
     } else {
-      flows[flow].postMessage(message.msg);
+      destChannel.postMessage(message.msg);
     }
   } else {
-    console.warn("Message dropped from unregistered flow " + app.id + " -> " + flow);
-    var keys = [];
-    for (var i in flows) {
-      if (flows.hasOwnProperty(i)) {
-        keys.push(i);
-      }
+    var af = []
+    for(var i in flows) {
+      af.push(i);
     }
-    console.warn("Available flows:" + keys);
+    console.warn("Message dropped from unregistered flow " + app.id + " -> " + flow);
+    console.log(message.msg);
   }
 };
 
 /**
  * Ensure than an application is enstantiated. and registered.
  * @param {String} id The URL identifying the app.
- * @param {fdom.app} app Existing app definition.
  */
-fdom.Hub.prototype.ensureApp = function(id, app) {
+fdom.Hub.prototype.ensureApp = function(id) {
   var canonicalId = makeAbsolute(id);
   if (!this.apps[canonicalId]) {
     var newApp = new fdom.app.External();
@@ -116,7 +154,7 @@ fdom.Hub.prototype.createPipe = function(app, dep) {
   }
 
   // 2. Make sure the dependency exists.
-  var depId = this.ensureApp(app.manifest['dependencies'][dep], app);
+  var depId = this.ensureApp(app.manifest['dependencies'][dep]);
   var depApp = this.apps[depId];
 
   // 3. Register the link
@@ -156,3 +194,28 @@ fdom.Hub.prototype.permitAccess = function(id) {
     }
   }
 }
+
+/**
+ * Bind an unbound app channel to a service implementing 'postMessage'.
+ */
+fdom.Hub.prototype.bindChannel = function(id, flow, service) {
+  var dep = this.apps[id];
+  var endpoint = false;
+  for (var i = 0; i < this.unbound.length; i++) {
+    if (this.unbound[i][0] == dep) {
+      endpoint = this.unbound[i];
+      this.unbound.splice(i, 1);
+      break;
+    }
+  }
+  if (endpoint) {
+    if (this.pipes[endpoint[0].id][endpoint[1]]) {
+      console.warn("unwilling to redefine existing pipes.");
+    } else {
+      console.log("Custom channel bound: " + endpoint[1]);
+      this.pipes[endpoint[0].id][endpoint[1]] = service;
+      return true;
+    }
+  }
+  return false;
+};

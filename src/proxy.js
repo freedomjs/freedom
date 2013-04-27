@@ -15,25 +15,73 @@ var fdom = fdom || {};
  * @constructor
  */
 fdom.Proxy = function(channel, definition, provider) {
+  var proxy;
+
+  // TODO(willscott): remove collision potential
+  var hash = channel.flow + Math.random();
+
   if (definition) {
     if (provider) {
-      return new fdom.Proxy.templatedDelegator(channel, definition);
+      proxy = new fdom.Proxy.templatedDelegator(channel, definition);
     } else {
-      return new fdom.Proxy.templatedProxy(channel, definition);
+      proxy = new fdom.Proxy.templatedProxy(channel, definition, {hash: hash});
     }
   } else {
-    return new fdom.Proxy.messageChannel(channel);
+    proxy = new fdom.Proxy.messageChannel(channel, hash);
+  }
+  Object.defineProperty(proxy, '__identifier', {
+    __proto__: null,
+    value: hash
+  });
+  return proxy;
+};
+
+
+/**
+ * A registry of created proxies, used for resolving proxies back
+ * to identifiers in order to resolve channels within the freedom core.
+ */
+fdom.Proxy.registry = {};
+
+/**
+ * Get an identifier for a proxy, in order to transfer the capability
+ * to access that channel across application boundaries
+ * @param {fdom.Proxy} proxy The proxy to identify
+ * @returns {Array.<String>} A transferable identifier for the proxy.
+ */
+fdom.Proxy.getIdentifier = function(proxy) {
+  if (fdom.Proxy.registry[proxy['__identifier']]) {
+    var info = fdom.Proxy.registry[proxy['__identifier']];
+    return [info[0].app.id, info[1], info[2]];
+  } else {
+    return undefined;
   }
 };
 
+/**
+ * Reconstitute a proxy from a channel and Identifier.
+ * @param {fdom.Channel} channel The channel backing the proxy interface.
+ * @param {Object} definition The API definition if the channel is a provider.
+ * @param {Array.<String>} identifier The identifier for the channel.
+ */
+fdom.Proxy.get = function(channel, definition, identifier) {
+  if (definition) {
+    return new fdom.Proxy.templatedProxy(channel, definition, {flowId: identifier[2]});
+  } else {
+    return new fdom.Proxy.messageChannel(channel)
+  }
+}
 
 /**
  * A freedom endpoint for an unconstrained, unpriveledged channel.
  * @param {fdom.Channel} channel The Channel backing this interface.
  * @constructor
  */
-fdom.Proxy.messageChannel = function(channel) {
+fdom.Proxy.messageChannel = function(channel, hash) {
   handleEvents(this);
+  if (hash) {
+    fdom.Proxy.registry[hash] = [channel, channel.flow];
+  }
   var emitter = this['emit'];
   var values = {};
 

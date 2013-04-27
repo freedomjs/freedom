@@ -13,6 +13,9 @@ fdom.Channel.prototype.onMessage = function(e) {
   this['emit']('message', e['type'] ? e : e.data);
 };
 
+/**
+ * Post a message to this channel.
+ */
 fdom.Channel.prototype.postMessage = function(m) {
   this.app.postMessage({
     sourceFlow: this.flow,
@@ -20,6 +23,12 @@ fdom.Channel.prototype.postMessage = function(m) {
   });
 };
 
+/**
+ * Create an opaque object which acts like this channel
+ * for the purpose of receiving message events, but which
+ * can not be introspected to see the flow or app backing
+ * the channel.
+ */
 fdom.Channel.prototype.getProxy = function() {
   var self = this;
   var out = {};
@@ -28,4 +37,21 @@ fdom.Channel.prototype.getProxy = function() {
     self['emit']('message', msg);
   });
   return out;
+}
+
+/**
+ * Create a pair of channels which relay messages to each other.
+ */
+fdom.Channel.pipe = function() {
+  var first = {};
+  var second = {};
+  handleEvents(first);
+  handleEvents(second);
+  first.postMessage = function(msg) {
+    second['emit']('message', msg);
+  }
+  second.postMessage = function(msg) {
+    first['emit']('message', msg);
+  }
+  return [first, second];
 }

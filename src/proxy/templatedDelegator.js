@@ -19,6 +19,8 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
     synchronous = false;
   }
   
+  //TODO(willscott): Allow provider instances to be sent via proxied methods.
+  //To do so, generate hashes and put instances in the fdom.Proxy.registry.
   function buildInstance(identifier) {
     var instance = new provider();
     instance['dispatchEvent'] = function(id, name, value) {

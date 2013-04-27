@@ -98,7 +98,7 @@ fdom.app.Internal.prototype.debug = function(msg) {
 }
 
 fdom.app.Internal.prototype.loadPermissions = function() {
-  var permissions = ["core"];
+  var permissions = [];
   var exp = this.config.exports;
   if(this.manifest && this.manifest['permissions']) {
     for (var i = 0; i < this.manifest['permissions'].length; i++) {
@@ -115,6 +115,12 @@ fdom.app.Internal.prototype.loadPermissions = function() {
       return proxy;
     }.bind(this, api.name, api.definition);
   }
+
+  //Core API is handled locally, to facilitate channel setup.
+  var coreAPI = fdom.apis.get('core');
+  var pipe = fdom.Channel.pipe();
+  fdom.apis.bindCore('core', pipe[1]);
+  exp['core'] = new fdom.Proxy(pipe[0], coreAPI.definition);
 }
 
 fdom.app.Internal.prototype.loadDependencies = function() {

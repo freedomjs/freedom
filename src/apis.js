@@ -54,6 +54,18 @@ api.prototype.getCore = function(name, you) {
 }
 
 /**
+ * Bind a core API to a preexisting channel.
+ * @param {String} name the API to bind.
+ * @param {fdom.Channel} channel The Channel to terminate with the Core API.
+ */
+api.prototype.bindCore = function(name, channel) {
+  var def = fdom.apis.get(name);
+  var endpoint = new fdom.Proxy(channel, def, true);
+  endpoint['provideAsynchronous'](fdom.apis.providers[name].bind({}, channel));
+  return endpoint;
+}
+
+/**
  * A core API provider, implementing the fdom.Proxy interface.
  * @param {String} name The core provider name
  * @param {fdom.Channel} channel The communication channel from the provider.
@@ -71,9 +83,7 @@ var coreProvider = function(name, channel) {
  */
 coreProvider.prototype.postMessage = function(msg) {
   if (!this.instance) {
-    var def = fdom.apis.get(this.name);
-    this.instance = new fdom.Proxy.templatedDelegator(this.channel, def.definition);
-    this.instance['provideAsynchronous'](fdom.apis.providers[this.name].bind({}, this.channel));
+    this.instance = fdom.apis.bindCore(this.name, this.channel);
   }
   this.channel['emit']('message', msg);
 }

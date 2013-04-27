@@ -63,58 +63,59 @@ function mixin(target, source, force, deepStringMixin) {
  * event handling structure.
  */
 function handleEvents(obj) {
-  var listeners = {};
-  var conditionalListeners = [];
+  var eventState = {
+    listeners: {},
+    conditional: [],
+    oneshots: {},
+    onceConditional: []
+  };
 
   obj['on'] = function(type, handler) {
     if (typeof type === 'function') {
-      conditionalListeners.push([type, handler]);
-    } else if (listeners[type]) {
-      listeners[type].push(handler);
+      this.conditional.push([type, handler]);
+    } else if (this.listeners[type]) {
+      this.listeners[type].push(handler);
     } else {
-      listeners[type] = [handler];
+      this.listeners[type] = [handler];
     }
-  }
+  }.bind(eventState);
 
   obj['once'] = function(type, handler) {
-    var func;
     if (typeof type === 'function') {
-      func = function(data) {
-        for (var i = 0; i < conditionalListeners.length; i++) {
-          if (conditionalListeners[i][1] === func) {
-            condiitonalListeners = conditionalListeners.splice(i, 1);
-            break;
-          }
-        }
-        handler(data);
-      }
+      this.onceConditional.push([type, handler]);
+    } else if (this.oneshots[type]) {
+      this.oneshots[type].push(handler);
     } else {
-      func = function(data) {
-        var idx = listeners[type].indexOf(this);
-        listeners[type] = listeners[type].splice(idx, 1);
-        handler(data);
-      }
+      this.oneshots[type] = [handler];
     }
-
-    obj['on'](type, func);
-  }
+  }.bind(eventState);
 
   obj['emit'] = function(type, data) {
-    var cl = conditionalListeners;
-    for (var i = 0; i < cl.length; i++) {
-      if (cl[i][0](type, data)) {
-        cl[i][1](data);
-      }
-    }
-    if (listeners[type]) {
-      var handlers = listeners[type].slice(0);
-      for (var i = 0; i < handlers.length; i++) {
-        if (handlers[i](data) === false) {
-          break;
+    if (this.listeners[type]) {
+      for (var i = 0; i < this.listeners[type].length; i++) {
+        if (this.listeners[type][i](data) === false) {
+          return;
         }
       }
     }
-  }
+    if (this.oneshots[type]) {
+      for (var i = 0; i < this.oneshots[type].length; i++) {
+        this.oneshots[type][i](data);
+      }
+      this.oneshots[type] = [];
+    }
+    for (var i = 0; i < this.conditional.length; i++) {
+      if (this.conditional[i][0](type, data)) {
+        this.conditional[i][1](data);
+      }
+    }
+    for (var i = this.onceConditional.length - 1; i >= 0; i--) {
+      if (this.onceConditional[i][0](type, data)) {
+        var cond = this.onceConditional.splice(i, 1);
+        cond[0][1](data);
+      }
+    }
+  }.bind(eventState);
 }
 
 /**

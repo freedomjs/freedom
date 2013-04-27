@@ -1,5 +1,6 @@
 fdom.apis.set("core", {
-  'getReference': {type: "method", value: ["String"]}
+  'createChannel': {type: "method", value: []},
+  'bindChannel': {type: "method", value: ["proxy"]}
 });
 
 fdom.apis.set("core.view", {
@@ -24,7 +25,7 @@ fdom.apis.set("core.storage", {
 fdom.apis.set("core.peerconnection", {
   'open': {type: "method", value: ["proxy", "string"]},
   'postMessage': {type: "method", value: [{"text": "string", "binary": "blob"}]},
-  'message': {type: "event", value: {"text": "object", "binary": "blob"}},
+  'message': {type: "event", value: {"text": "string", "binary": "blob"}},
 
   'close': {type: "method", value: []},
   'onClose': {type: "event", value: []}
