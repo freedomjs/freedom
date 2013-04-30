@@ -23,27 +23,40 @@ PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
   this.appChannel['on']('message', this.onIdentity.bind(this));
   this.appChannel['emit']('ready');
 
-  this.setup();
+  this.setup(true);
   continuation();
 }
 
-PeerConnection_unprivileged.prototype.setup = function() {
+PeerConnection_unprivileged.prototype.setup = function(initiate) {
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
   this.connection = new RTCPeerConnection(null, {'optional': [{'RtpDataChannels': true}]});
-  this.dataChannel = this.connection.createDataChannel("sendChannel", {'reliable': false});
-  
-  this.dataChannel.addEventListener('open', function() {
-    console.log("Data channel opened!");
-    this.emit('open');
-  }.bind(this), true);
-  this.dataChannel.addEventListener('message', function(m) {
-    // TODO(willscott): Handle receipt of binary data.
-    this['dispatchEvent']('message', {"text": m.data});
-  }.bind(this), true);
-  this.dataChannel.addEventListener('close', function() {
-    this['dispatchEvent']('onClose');
-    this.close(function() {});
-  }.bind(this), true);
+
+  var dcSetup = function() {
+    this.dataChannel.addEventListener('open', function() {
+      console.log("Data channel opened!");
+      this.emit('open');
+    }.bind(this), true);
+    this.dataChannel.addEventListener('message', function(m) {
+      // TODO(willscott): Handle receipt of binary data.
+      this['dispatchEvent']('message', {"text": m.data});
+    }.bind(this), true);
+    this.dataChannel.addEventListener('close', function(conn) {
+      if (this.connection == conn) {
+        this['dispatchEvent']('onClose');
+        this.close(function() {});
+      }
+    }.bind(this, this.connection), true);
+  }.bind(this);
+
+  if (initiate) {
+    this.dataChannel = this.connection.createDataChannel("sendChannel", {'reliable': false});
+    dcSetup();
+  } else {
+    this.connection.addEventListener('datachannel', function(evt) {
+      this.dataChannel = evt['channel'];
+      dcSetup();
+    }.bind(this));
+  }
 
   this.connection.addEventListener('icecandidate', function(evt) {
     if(evt && evt['candidate']) {
@@ -62,7 +75,7 @@ PeerConnection_unprivileged.prototype.makeOffer = function() {
   if (this.remotePid < this.myPid) {
     return;
   }
-  console.log("Making offer!");
+  console.log("Making offer as " + this.myPid);
   this.connection.createOffer(function(desc) {
     this.connection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
@@ -75,7 +88,7 @@ PeerConnection_unprivileged.prototype.makeOffer = function() {
 }
 
 PeerConnection_unprivileged.prototype.makeAnswer = function() {
-  console.log("Making answer!");
+  console.log("Making answer as " + this.myPid);
   this.connection.createAnswer(function(desc) {
     this.connection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
@@ -97,16 +110,19 @@ PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
       this.remotePid = m['pid'];
       if (this.remotePid < this.myPid) {
         this.close(function() {
-          this.setup();
-          this.connection.setRemoteDescription(new RTCSessionDescription(m),
-              this.makeAnswer.bind(this), function() {
-                console.log("Failed to set remote description");
-              });
+          this.setup(false);
+          this.connection.setRemoteDescription(new RTCSessionDescription(m), function() {
+            console.log("Set remote description, making answer");
+            this.makeAnswer();
+          }.bind(this), function() {
+            console.log("Failed to set remote description");
+          });
         }.bind(this));
       } else {
         // They'll get my offer and send an answer.
       }
     } else if (m['type'] == 'answer') {
+      console.log("Got Answer!");
       this.connection.setRemoteDescription(new RTCSessionDescription(m));
     }
   } catch(e) {

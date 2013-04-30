@@ -104,7 +104,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       });
     }
   } else if (destChannel) {
-    if (this.config['debug']) {
+    if (this.debug("channels")) {
       console.log(app.id + " -> " + flow + " " + message.msg.action + " " + message.msg.type);
     }
 
@@ -219,3 +219,11 @@ fdom.Hub.prototype.bindChannel = function(id, flow, service) {
   }
   return false;
 };
+
+/**
+ * Decide which messages to debug, if debugging enabled.
+ */
+fdom.Hub.prototype.debug = function(feature) {
+  return this.config['debug'] === true || (this.config['debug'] !== false &&
+      this.config['debug'].indexOf(feature) > -1);
+}
