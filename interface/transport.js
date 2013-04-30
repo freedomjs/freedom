@@ -16,7 +16,7 @@ fdom.apis.set("core.transport", {
 });
 
 fdom.apis.set("transport", {
-  'open': {type: "method", value: ["proxy", "string"]},
+  'open': {type: "method", value: ["proxy"]},
   'send': {type: "method", value: ["data"]},
   'message': {type: "event", value: ["data"]},
   'close': {type: "method", value: []},

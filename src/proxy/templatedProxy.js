@@ -96,7 +96,8 @@ function conform(template, value) {
     case "buffer":
       return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
     case "data":
-      return {ref: 0 + value.ref};
+      // TODO(willscott): should be opaque to non-creator.
+      return value;
     case "proxy":
       if (Array.isArray(value)) {
         return value;

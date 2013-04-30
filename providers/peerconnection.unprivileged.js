@@ -8,10 +8,12 @@ var PeerConnection_unprivileged = function(channel) {
   this.dataChannel = null;
   this.identity = null;
   this.connection = null;
+  this.myPid = Math.random();
+  this.remotePid = 1;
   handleEvents(this);
 };
 
-PeerConnection_unprivileged.prototype.open = function(proxy, id, continuation) {
+PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
   if (this.connection) {
     continuation(false);
   }
@@ -21,11 +23,17 @@ PeerConnection_unprivileged.prototype.open = function(proxy, id, continuation) {
   this.appChannel['on']('message', this.onIdentity.bind(this));
   this.appChannel['emit']('ready');
 
+  this.setup();
+  continuation();
+}
+
+PeerConnection_unprivileged.prototype.setup = function() {
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
   this.connection = new RTCPeerConnection(null, {'optional': [{'RtpDataChannels': true}]});
   this.dataChannel = this.connection.createDataChannel("sendChannel", {'reliable': false});
   
   this.dataChannel.addEventListener('open', function() {
+    console.log("Data channel opened!");
     this.emit('open');
   }.bind(this), true);
   this.dataChannel.addEventListener('message', function(m) {
@@ -47,17 +55,37 @@ PeerConnection_unprivileged.prototype.open = function(proxy, id, continuation) {
     }
   }.bind(this), true);
 
+  this.makeOffer();
+}
+
+PeerConnection_unprivileged.prototype.makeOffer = function() {
+  if (this.remotePid < this.myPid) {
+    return;
+  }
+  console.log("Making offer!");
   this.connection.createOffer(function(desc) {
     this.connection.setLocalDescription(desc);
+    desc['pid'] = this.myPid;
     this.appChannel.postMessage({
       'type': 'message',
       'action': 'event',
       'data': JSON.stringify(desc)
     });
   }.bind(this));
+}
 
-  continuation();
-};
+PeerConnection_unprivileged.prototype.makeAnswer = function() {
+  console.log("Making answer!");
+  this.connection.createAnswer(function(desc) {
+    this.connection.setLocalDescription(desc);
+    desc['pid'] = this.myPid;
+    this.appChannel.postMessage({
+      'type': 'message',
+      'action': 'event',
+      'data': JSON.stringify(desc)
+    });
+  }.bind(this));
+}
 
 PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
   try {
@@ -65,11 +93,24 @@ PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
     if (m['candidate']) {
       var candidate = new RTCIceCandidate(m);
       this.connection.addIceCandidate(candidate);
-    } else {
+    } else if (m['type'] == 'offer') {
+      this.remotePid = m['pid'];
+      if (this.remotePid < this.myPid) {
+        this.close(function() {
+          this.setup();
+          this.connection.setRemoteDescription(new RTCSessionDescription(m),
+              this.makeAnswer.bind(this), function() {
+                console.log("Failed to set remote description");
+              });
+        }.bind(this));
+      } else {
+        // They'll get my offer and send an answer.
+      }
+    } else if (m['type'] == 'answer') {
       this.connection.setRemoteDescription(new RTCSessionDescription(m));
     }
   } catch(e) {
-    console.log("Couldn't understand identity message: " + JSON.stringify(msg));
+    console.log("Couldn't understand identity message: " + JSON.stringify(msg) + ": -> " + e.message);
   }
 }
 

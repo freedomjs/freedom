@@ -23,7 +23,7 @@ fdom.apis.set("core.storage", {
 });
 
 fdom.apis.set("core.peerconnection", {
-  'open': {type: "method", value: ["proxy", "string"]},
+  'open': {type: "method", value: ["proxy"]},
   'postMessage': {type: "method", value: [{"text": "string", "binary": "blob"}]},
   'message': {type: "event", value: {"text": "string", "binary": "blob"}},
 
