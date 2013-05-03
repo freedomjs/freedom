@@ -212,7 +212,9 @@ fdom.Hub.prototype.bindChannel = function(id, flow, service) {
     if (this.pipes[endpoint[0].id][endpoint[1]]) {
       console.warn("unwilling to redefine existing pipes.");
     } else {
-      console.log("Custom channel bound: " + endpoint[1]);
+      if (this.debug("pipes")) {
+        console.log("Custom channel bound: " + endpoint[1]);
+      }
       this.pipes[endpoint[0].id][endpoint[1]] = service;
       return true;
     }

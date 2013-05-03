@@ -21,7 +21,10 @@ PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
   // Listen for messages to/from the provided message channel.
   this.appChannel = Core_unprivileged.bindChannel(proxy);
   this.appChannel['on']('message', this.onIdentity.bind(this));
-  this.appChannel['emit']('ready');
+  this.appChannel.postMessage({
+    'type': 'ready',
+    'action': 'event'
+  });
 
   this.setup(true);
   continuation();
@@ -33,7 +36,7 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
 
   var dcSetup = function() {
     this.dataChannel.addEventListener('open', function() {
-      console.log("Data channel opened!");
+      console.log("Data channel opened.");
       this.emit('open');
     }.bind(this), true);
     this.dataChannel.addEventListener('message', function(m) {
@@ -107,22 +110,25 @@ PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
       var candidate = new RTCIceCandidate(m);
       this.connection.addIceCandidate(candidate);
     } else if (m['type'] == 'offer') {
+      if (m['pid'] == this.remotePid || m['pid'] == this.myId) {
+        return;
+      } else {
+        console.log("remote pid " + this.remotePid + " mismatch w/ " + m['pid']);
+      }
       this.remotePid = m['pid'];
       if (this.remotePid < this.myPid) {
         this.close(function() {
           this.setup(false);
-          this.connection.setRemoteDescription(new RTCSessionDescription(m), function() {
-            console.log("Set remote description, making answer");
-            this.makeAnswer();
-          }.bind(this), function() {
+          this.connection.setRemoteDescription(new RTCSessionDescription(m), function() {}, function() {
             console.log("Failed to set remote description");
           });
+          this.makeAnswer();
         }.bind(this));
       } else {
         // They'll get my offer and send an answer.
       }
-    } else if (m['type'] == 'answer') {
-      console.log("Got Answer!");
+    } else if (m['type'] == 'answer' && m['pid'] != this.myId && this.remotePid != m['pid']) {
+      this.remotePid = m['pid'];
       this.connection.setRemoteDescription(new RTCSessionDescription(m));
     }
   } catch(e) {
@@ -135,11 +141,12 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
     return continuation(false);
   }
   // Queue until open.
-  if (this.dataChannel.readyState != "open") {
+  if (!this.dataChannel || this.dataChannel.readyState != "open") {
     return this.once('open', this.postMessage.bind(this, ref, continuation));
   }
 
   // TODO(willscott): Handle send of binary data.
+  console.log("Sending transport data.");
   this.dataChannel.send(ref);
   continuation();
 };

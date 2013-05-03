@@ -85,6 +85,12 @@ fdom.Proxy.messageChannel = function(channel, hash) {
   var emitter = this['emit'];
   var values = {};
 
+  Object.defineProperty(this, 'reflectEvents', {
+    __proto__: null,
+    value: true,
+    writable: true
+  });
+
   /**
    * Update emission of events to cross the underlying channel.
    * @param {String} type The type of message to send.
@@ -96,7 +102,10 @@ fdom.Proxy.messageChannel = function(channel, hash) {
       'type': type,
       'data': data
     });
-    emitter(type, data);
+    
+    if (this['reflectEvents']) {
+      emitter(type, data);
+    }
   };
 
   /**
