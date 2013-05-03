@@ -78,7 +78,6 @@ PeerConnection_unprivileged.prototype.makeOffer = function() {
   if (this.remotePid < this.myPid) {
     return;
   }
-  console.log("Making offer as " + this.myPid);
   this.connection.createOffer(function(desc) {
     this.connection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
@@ -91,7 +90,6 @@ PeerConnection_unprivileged.prototype.makeOffer = function() {
 }
 
 PeerConnection_unprivileged.prototype.makeAnswer = function() {
-  console.log("Making answer as " + this.myPid);
   this.connection.createAnswer(function(desc) {
     this.connection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
@@ -127,7 +125,7 @@ PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
       } else {
         // They'll get my offer and send an answer.
       }
-    } else if (m['type'] == 'answer' && m['pid'] != this.myId && this.remotePid != m['pid']) {
+    } else if (m['type'] == 'answer' && m['pid'] != this.myId) {
       this.remotePid = m['pid'];
       this.connection.setRemoteDescription(new RTCSessionDescription(m));
     }
@@ -145,9 +143,12 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
     return this.once('open', this.postMessage.bind(this, ref, continuation));
   }
 
-  // TODO(willscott): Handle send of binary data.
   console.log("Sending transport data.");
-  this.dataChannel.send(ref);
+  if(ref['text']) {
+    this.dataChannel.send(ref['text']);
+  } else if(ref['data']) {
+    // TODO(willscott): Handle send of binary data.
+  }
   continuation();
 };
 
@@ -155,7 +156,12 @@ PeerConnection_unprivileged.prototype.close = function(continuation) {
   delete this.dataChannel;
 
   if (this.connection) {
-    this.connection.close();
+    try {
+      this.connection.close();
+    } catch(e) {
+      // Ignore already-closed errors.
+    }
+    delete this.connection;
   }
   continuation();
 };

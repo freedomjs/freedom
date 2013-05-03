@@ -21,7 +21,7 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
   
   //TODO(willscott): Allow provider instances to be sent via proxied methods.
   //To do so, generate hashes and put instances in the fdom.Proxy.registry.
-  function buildInstance(identifier) {
+  var buildInstance = function(channel, events, identifier) {
     var instance = new provider();
     instance['dispatchEvent'] = function(id, name, value) {
       if (events[name]) {
@@ -34,7 +34,7 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
       }
     }.bind({}, identifier);
     return instance;
-  }
+  }.bind({}, channel, events);
 
   channel['on']('message', function(msg) {
     if (!msg) return;

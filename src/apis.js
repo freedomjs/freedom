@@ -59,7 +59,7 @@ api.prototype.getCore = function(name, you) {
  * @param {fdom.Channel} channel The Channel to terminate with the Core API.
  */
 api.prototype.bindCore = function(name, channel) {
-  var def = fdom.apis.get(name);
+  var def = fdom.apis.get(name).definition;
   var endpoint = new fdom.Proxy(channel, def, true);
   endpoint['provideAsynchronous'](fdom.apis.providers[name].bind({}, channel));
   return endpoint;
