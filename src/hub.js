@@ -42,9 +42,9 @@ fdom.Hub.prototype.onMessage = function(app, message) {
   var destChannel = flows[flow];
 
   if (flow == 'control') {
-    if (this.config['debug'] && message.request != 'debug') {
+    if (this.debug("control") && message.request != 'debug') {
       console.log(app.id + " -C " + message.request);
-    } else if (this.config['debug']) {
+    } else if (this.config['debug'] && message.request == 'debug') {
       console.log(app.id + " -D " + message.msg);
     }
     // Signaling Channel.
