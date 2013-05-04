@@ -41,7 +41,24 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
     }.bind(this), true);
     this.dataChannel.addEventListener('message', function(m) {
       // TODO(willscott): Handle receipt of binary data.
-      this['dispatchEvent']('message', {"text": m.data});
+      if (this.parts > 0) {
+        this.buf += m.data;
+        this.parts--;
+        if (this.parts == 0) {
+          var data = JSON.parse(this.buf);
+          var blob = new Blob([data['binary']], {"type": data['mime']});
+          this['dispatchEvent']('message', {"binary": blob});
+          this.buf = "";
+        }
+        return;
+      }
+      var data = JSON.parse(m.data);
+      if (data['text']) {
+        this['dispatchEvent']('message', {"text": data['text']});
+      } else {
+        this.parts = data['binary'];
+        this.buf = "";
+      }
     }.bind(this), true);
     this.dataChannel.addEventListener('close', function(conn) {
       if (this.connection == conn) {
@@ -107,12 +124,7 @@ PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
     if (m['candidate']) {
       var candidate = new RTCIceCandidate(m);
       this.connection.addIceCandidate(candidate);
-    } else if (m['type'] == 'offer') {
-      if (m['pid'] == this.remotePid || m['pid'] == this.myId) {
-        return;
-      } else {
-        console.log("remote pid " + this.remotePid + " mismatch w/ " + m['pid']);
-      }
+    } else if (m['type'] == 'offer' && m['pid'] != this.myId) {
       this.remotePid = m['pid'];
       if (this.remotePid < this.myPid) {
         this.close(function() {
@@ -145,9 +157,23 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
 
   console.log("Sending transport data.");
   if(ref['text']) {
-    this.dataChannel.send(ref['text']);
-  } else if(ref['data']) {
-    // TODO(willscott): Handle send of binary data.
+    console.log("Sending text: " + ref['text']);
+    this.dataChannel.send(JSON.stringify({"text":ref['text']}));
+  } else if(ref['binary']) {
+    // TODO(willscott): implement direct blob sending.
+    var reader = new FileReader();
+    reader.addEventListener('load', function(type, ev) {
+      // Chunk message so that packets work.
+      var MAX_LENGTH = 512;
+      var str = JSON.stringify({"mime": type, "binary": ev.target.result});
+      var parts = Math.ceil(str.length / MAX_LENGTH);
+      this.dataChannel.send(JSON.stringify({"binary": parts}));
+      while (str.length > 0) {
+        this.dataChannel.send(str.substr(0, MAX_LENGTH));
+        str = str.substr(MAX_LENGTH);
+      }
+    }.bind(this, ref['binary'].type), true);
+    reader.readAsBinaryString(ref['binary']);
   }
   continuation();
 };
