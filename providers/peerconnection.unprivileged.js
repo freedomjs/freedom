@@ -40,13 +40,16 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
       this.emit('open');
     }.bind(this), true);
     this.dataChannel.addEventListener('message', function(m) {
-      // TODO(willscott): Handle receipt of binary data.
+      // TODO(willscott): Support native binary transport, rather than this mess
       if (this.parts > 0) {
         this.buf += m.data;
         this.parts--;
+        console.log('waiting for ' + this.parts + ' more parts.')
         if (this.parts == 0) {
+          console.log("binary data recieved (" + this.buf.length + " bytes)");
           var data = JSON.parse(this.buf);
-          var blob = new Blob([data['binary']], {"type": data['mime']});
+          var arr = new Uint8Array(data['binary']);
+          var blob = new Blob([arr.buffer], {"type": data['mime']});
           this['dispatchEvent']('message', {"binary": blob});
           this.buf = "";
         }
@@ -57,6 +60,7 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
         this['dispatchEvent']('message', {"text": data['text']});
       } else {
         this.parts = data['binary'];
+        console.log("Beginning receipt of binary data (" + this.parts + " parts)");
         this.buf = "";
       }
     }.bind(this), true);
@@ -154,26 +158,38 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
   if (!this.dataChannel || this.dataChannel.readyState != "open") {
     return this.once('open', this.postMessage.bind(this, ref, continuation));
   }
+  window.dc = this.dataChannel;
 
   console.log("Sending transport data.");
   if(ref['text']) {
     console.log("Sending text: " + ref['text']);
     this.dataChannel.send(JSON.stringify({"text":ref['text']}));
   } else if(ref['binary']) {
-    // TODO(willscott): implement direct blob sending.
+    // TODO(willscott): implement direct blob support when available.
+    console.log("Transmitting " + ref['binary'].size + " binary bytes");
     var reader = new FileReader();
     reader.addEventListener('load', function(type, ev) {
-      // Chunk message so that packets work.
-      var MAX_LENGTH = 512;
-      var str = JSON.stringify({"mime": type, "binary": ev.target.result});
-      var parts = Math.ceil(str.length / MAX_LENGTH);
+      var arr = [];
+      arr.push.apply(arr, new Uint8Array(ev.target.result));
+      // Chunk messages so that packets are below MTU.
+      var MAX_LEN = 512;
+      var STEP = 300;
+      var str = JSON.stringify({"mime": type, "binary": arr});
+      var parts = Math.ceil(str.length / MAX_LEN);
+      console.log("Sending chunked " + type + " ("+ str.length + " bytes)");
       this.dataChannel.send(JSON.stringify({"binary": parts}));
+
+      var delay = 0;
       while (str.length > 0) {
-        this.dataChannel.send(str.substr(0, MAX_LENGTH));
-        str = str.substr(MAX_LENGTH);
+        setTimeout(function(x) {
+          this.dataChannel.send(x);
+        }.bind(this, str.substr(0, MAX_LEN)), delay);
+        delay += STEP;
+        str = str.substr(MAX_LEN);
       }
     }.bind(this, ref['binary'].type), true);
-    reader.readAsBinaryString(ref['binary']);
+
+    reader.readAsArrayBuffer(ref['binary']);
   }
   continuation();
 };
