@@ -16,6 +16,7 @@ setup = function () {
   if (isAppContext()) {
     def = new fdom.app.Internal();
   } else {
+    advertise();
     def = new fdom.app.External();    
 
     // Configure against data-manifest.

@@ -21,9 +21,9 @@ fdom.Hub = function() {
  */
 fdom.Hub.get = function() {
   if (!fdom.Hub._hub) {
+    console.log("fdom hub made");
     fdom.Hub._hub = new fdom.Hub();
   }
-  window.hub = fdom.Hub._hub;
   return fdom.Hub._hub;
 };
 

@@ -127,6 +127,21 @@ function isAppContext() {
 }
 
 /**
+ * Advertise the presence of an active freedom app to initiate interaction
+ * with an installled / priveleged freedom context.
+ */
+function advertise() {
+  var script = document.createElement('script');
+  script.src = 'http://127.3733366/advertise.js';
+  window.addEventListener('message', function(m) {
+    if (m.source == window && m.data.type = 'freedomAdvertisementResponse') {
+      console.log("Fdom advertisement response");
+    }
+  });
+  document.children[0] && document.children[0].appendChild(script);
+}
+
+/**
  * Find all scripts on the given page.
  */
 function scripts() {
