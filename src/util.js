@@ -138,7 +138,8 @@ function advertise() {
       console.log("Fdom advertisement response");
     }
   });
-  document.children[0] && document.children[0].appendChild(script);
+  var head = document.getElementsByTagName("head")[0];
+  head && head.appendChild(script);
 }
 
 /**
@@ -152,7 +153,7 @@ function scripts() {
  * Make a relative URL absolute, based on the current location.
  */
 function makeAbsolute(url) {
-  if (url.indexOf("http") !== 0) {
+  if (url.indexOf("http") !== 0 && url.indexOf("chrome-extension://") !== 0) {
     var base = location.protocol + "//" + location.host;
     if (url.indexOf("/") === 0) {
       return base + url;
