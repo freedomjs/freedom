@@ -153,16 +153,19 @@ function scripts() {
  * Make a relative URL absolute, based on the current location.
  */
 function makeAbsolute(url) {
-  if (url.indexOf("http") !== 0 && url.indexOf("chrome-extension://") !== 0) {
-    var base = location.protocol + "//" + location.host;
-    if (url.indexOf("/") === 0) {
-      return base + url;
-    } else {
-      base += location.pathname;
-      var here = base.substr(0, base.lastIndexOf("/"));
-      return here + "/" + url;
+  var protocols = ["http", "https", "chrome-extension"];
+  for (var i = 0; i < protocols.length; i++) {
+    if (url.indexOf(protocols[i] + "://") === 0) {
+      return url;
     }
+  }
+  
+  var base = location.protocol + "//" + location.host;
+  if (url.indexOf("/") === 0) {
+    return base + url;
   } else {
-    return url;
+    base += location.pathname;
+    var here = base.substr(0, base.lastIndexOf("/"));
+    return here + "/" + url;
   }
 }
