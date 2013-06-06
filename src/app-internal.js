@@ -72,7 +72,16 @@ fdom.app.Internal.prototype.start = function() {
       request: 'ready'
     });
 
-    var appURL = this.id.substr(0, this.id.lastIndexOf("/")) + "/"  + this.manifest['app']['script'];
+    var prefix = this.id.substr(0, this.id.lastIndexOf("/")) + "/";
+    var is = importScripts;
+    importScripts = function(prefix, src) {
+      if (src.indexOf("://") < 0) {
+        src = prefix + src;
+      }
+      is(src);
+    }.bind({}, prefix);
+
+    var appURL = prefix  + this.manifest['app']['script'];
     importScripts(appURL);
   }.bind(this));
   
