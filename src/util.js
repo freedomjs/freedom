@@ -131,15 +131,17 @@ function isAppContext() {
  * with an installled / priveleged freedom context.
  */
 function advertise() {
-  var script = document.createElement('script');
-  script.src = 'http://127.3733366/advertise.js';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://127.3733366/advertise.js', true);
   window.addEventListener('message', function(m) {
     if (m.source == window && m.data.type == 'freedomAdvertisementResponse') {
       console.log("Fdom advertisement response");
     }
   });
-  var head = document.getElementsByTagName("head")[0];
-  head && head.appendChild(script);
+  xhr.send();
+  setTimeout(function() {
+    xhr.abort();
+  }, 50);
 }
 
 /**
