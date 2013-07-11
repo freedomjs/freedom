@@ -131,17 +131,19 @@ function isAppContext() {
  * with an installled / priveleged freedom context.
  */
 function advertise() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'http://127.3733366/advertise.js', true);
-  window.addEventListener('message', function(m) {
-    if (m.source == window && m.data.type == 'freedomAdvertisementResponse') {
-      console.log("Fdom advertisement response");
-    }
-  });
-  xhr.send();
-  setTimeout(function() {
-    xhr.abort();
-  }, 50);
+  // TODO: Firefox rejects cross site requests, so this approach will not work.
+  // Figure out a new way to advertise to the addon.
+  // var xhr = new XMLHttpRequest();
+  // xhr.open('GET', 'http://127.3733366/advertise.js', true);
+  // window.addEventListener('message', function(m) {
+  //   if (m.source == window && m.data.type == 'freedomAdvertisementResponse') {
+  //     console.log("Fdom advertisement response");
+  //   }
+  // });
+  // xhr.send();
+  // setTimeout(function() {
+  //   xhr.abort();
+  // }, 50);
 }
 
 /**
