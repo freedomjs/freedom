@@ -27,7 +27,7 @@ setup = function () {
         if (manifest) {
           site_cfg.source = source;
           site_cfg.manifest = manifest;
-          if (script.innerText.trim().length) {
+          if (script.textContent.trim().length) {
             try {
               mixin(site_cfg, JSON.parse(script.innerText), true);
             } catch (e) {
