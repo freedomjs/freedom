@@ -144,6 +144,10 @@ function advertise() {
   // setTimeout(function() {
   //   xhr.abort();
   // }, 50);
+  // TODO: Determine a mechanism by which to restrict responses by non-priveledged code.
+  if (location.protocol === 'chrome-extension:' && freedomcfg) {
+    freedomcfg(fdom.apis.register.bind(fdom.apis));
+  }
 }
 
 /**
