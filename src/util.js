@@ -144,6 +144,10 @@ function advertise() {
   // setTimeout(function() {
   //   xhr.abort();
   // }, 50);
+  // TODO: Determine a mechanism by which to restrict responses by non-priveledged code.
+  if (location.protocol === 'chrome-extension:' && freedomcfg) {
+    freedomcfg(fdom.apis.register.bind(fdom.apis));
+  }
 }
 
 /**
@@ -157,19 +161,29 @@ function scripts() {
  * Make a relative URL absolute, based on the current location.
  */
 function makeAbsolute(url) {
+  var base = location.protocol + "//" + location.host + location.pathname;
+  return resolvePath(url, base);
+}
+
+/**
+ * Resolve a url against a defined base location.
+ */
+function resolvePath(url, from) {
   var protocols = ["http", "https", "chrome-extension"];
   for (var i = 0; i < protocols.length; i++) {
     if (url.indexOf(protocols[i] + "://") === 0) {
       return url;
     }
   }
-  
-  var base = location.protocol + "//" + location.host;
+
+  var dirname = from.substr(0, from.lastIndexOf("/"));
+  var protocolIdx = dirname.indexOf("://");
+  var pathIdx = protocolIdx + 3 + dirname.substr(protocolIdx + 3).indexOf("/");
+  var path = dirname.substr(pathIdx);
+  var base = dirname.substr(0, pathIdx);
   if (url.indexOf("/") === 0) {
     return base + url;
   } else {
-    base += location.pathname;
-    var here = base.substr(0, base.lastIndexOf("/"));
-    return here + "/" + url;
+    return base + path + "/" + url;
   }
 }

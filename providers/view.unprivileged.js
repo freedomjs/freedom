@@ -18,13 +18,14 @@ View_unprivileged.prototype.open = function(args, continuation) {
   document.body.appendChild(this.host);
   var root = this.host;
   // TODO(willscott): Support shadow root as available.
-  if (this.host['webkitCreateShadowRoot']) {
-    root = this.host['webkitCreateShadowRoot']();
-  }
+  // if (this.host['webkitCreateShadowRoot']) {
+  //   root = this.host['webkitCreateShadowRoot']();
+  // }
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts allow-forms");
   if (args['file']) {
-    frame.src = args['file'];
+    var app = this.channel.app;
+    frame.src = resolvePath(args['file'], app.id);
   } else if (args['code']) {
     frame.src = "data:text/html;charset=utf-8," + args['code'];
   }
