@@ -1,8 +1,43 @@
 fdom.apis.set("identity", {
-  'name': {type: "property", value: "string"},
-  'get': {type: "method", value: []},
-  'send': {type: "method", value: ["string", "string"]},
-
-  'buddylist': {type: "event", value: ["array", "string"]},
-  'message': {type: "event", value: {"from": "string", "message": "object"}}
+  //Stores the 'ID' for logged in user (alice@gmail.com)
+  //e.g. var id = identity.id
+  'id': {type: "property", value: "string"},
+  //Gets the profile of a user
+  //e.g. identity.getProfile(String id);
+  //Returns {
+  //  'card': {
+  //    'id': 'string',       //ID (e.g. alice@gmail.com) username
+  //    'name': 'string',     //Name (e.g. Alice Underpants)
+  //    'imageUrl': 'string', //URL to profile pic
+  //    'status': 'string'    //Status (['online', 'offline', 'away', 'idle'])
+  //  }
+  //  'roster': {             //List of friends
+  //    'id1': {              //NOTE: Key must match 'id' in card
+  //      'id1': 'string',
+  //      'name': 'string',
+  //      'imageUrl': 'string',
+  //      'status': 'string'
+  //    },
+  //    'id2': ...
+  //  }
+  //}
+  'getProfile': {type: "method", value: ["string"]},
+  //Send a message to user on your network
+  //e.g. sendMessage(String destination_id, String message)
+  //Returns nothing
+  'sendMessage': {type: "method", value: ["string", "string"]},
+  //Event on change in profile
+  //(includes changes to roster)
+  'onChange': {type: "event", value: {
+    'id': 'string',
+    'name': 'string',
+    'imageUrl': 'string',
+    'status': 'string'
+  }},
+  //Event on incoming message
+  'onMessage': {type: "event", value: {
+    "from": "string",   //id of user message is from
+    "message": "object" //message contents
+  }}
 });
+
