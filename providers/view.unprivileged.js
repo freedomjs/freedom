@@ -24,7 +24,8 @@ View_unprivileged.prototype.open = function(args, continuation) {
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts allow-forms");
   if (args['file']) {
-    frame.src = args['file'];
+    var app = this.channel.app;
+    frame.src = resolvePath(args['file'], app.id);
   } else if (args['code']) {
     frame.src = "data:text/html;charset=utf-8," + args['code'];
   }
