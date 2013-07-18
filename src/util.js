@@ -178,10 +178,8 @@ function resolvePath(url, from) {
   var path = dirname.substr(pathIdx);
   var base = dirname.substr(0, pathIdx);
   if (url.indexOf("/") === 0) {
-    console.log("Resolve path " + url + " against " + from + ": " + base + url);
     return base + url;
   } else {
-    console.log("Resolve path " + url + " against " + from + ": " + base + path + "/" + url);
     return base + path + "/" + url;
   }
 }
