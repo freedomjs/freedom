@@ -47,6 +47,10 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
 
     if (msg.action == 'method') {
       var instance = instances[msg.flowId];
+      if (!instance[msg.type]) {
+        console.log("Provider does not implement " + msg.type + "()!");
+        return;
+      }
       if (synchronous) {
         var ret = instance[msg.type].apply(instance, msg.value);
         channel.postMessage({
