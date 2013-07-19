@@ -10,7 +10,7 @@ fdom.apis.set("identity", {
   //    'id': 'string',       //ID (e.g. alice@gmail.com) username
   //    'name': 'string',     //Name (e.g. Alice Underpants)
   //    'imageUrl': 'string', //URL to profile pic
-  //    'status': 'string'    //Status (['available', 'offline', 'away', 'idle'])
+  //    'status': 'string'    //Status (['messageable', 'online', 'offline'])
   //  }
   //  'roster': {             //List of friends
   //    'id1': {              //NOTE: Key must match 'id' in card
