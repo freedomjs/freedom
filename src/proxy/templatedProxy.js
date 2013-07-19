@@ -114,7 +114,7 @@ function conform(template, value) {
       }
     } else {
       for (var i = 0; i < template.length; i++) {
-        if (value[i]) val.push(conform(template[i], value[i]))
+        if (value[i]==null || value[i]) val.push(conform(template[i], value[i]))
         else val.push(undefined);
       }
     }
