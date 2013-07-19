@@ -74,7 +74,11 @@ fdom.app.Internal.prototype.start = function() {
 
     var is = importScripts;
     importScripts = function(prefix, src) {
-      is(resolvePath(src, prefix));
+      try {
+        is(resolvePath(src, prefix));
+      } catch (e) {
+        console.log(e);
+      }
     }.bind({}, this.id);
 
     var appURL = resolvePath(this.manifest['app']['script'], this.id);
