@@ -145,7 +145,7 @@ function advertise() {
   //   xhr.abort();
   // }, 50);
   // TODO: Determine a mechanism by which to restrict responses by non-priveledged code.
-  if (location.protocol === 'chrome-extension:' && freedomcfg) {
+  if (location.protocol === 'chrome-extension:' && typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
 }
