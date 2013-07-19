@@ -77,7 +77,7 @@ fdom.app.Internal.prototype.start = function() {
       try {
         is(resolvePath(src, prefix));
       } catch (e) {
-        console.log(e);
+        console.log(e.message+'\n'+e.stack);
       }
     }.bind({}, this.id);
 
