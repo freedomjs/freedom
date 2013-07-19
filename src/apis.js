@@ -61,7 +61,15 @@ api.prototype.getCore = function(name, you) {
 api.prototype.bindCore = function(name, channel) {
   var def = fdom.apis.get(name).definition;
   var endpoint = new fdom.Proxy(channel, def, true);
-  endpoint['provideAsynchronous'](fdom.apis.providers[name].bind({}, channel));
+
+  var resolver = makeAbsolute.bind({});
+  if (channel.app) {
+    resolver = function(base, file) {
+      return resolvePath(file, base);
+    }.bind({}, channel.app.id);
+  }
+  
+  endpoint['provideAsynchronous'](fdom.apis.providers[name].bind({}, channel, resolver));
   return endpoint;
 }
 
