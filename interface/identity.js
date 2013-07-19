@@ -3,13 +3,14 @@ fdom.apis.set("identity", {
   //e.g. var id = identity.id
   'id': {type: "property", value: "string"},
   //Gets the profile of a user
+  //If id is null, return self
   //e.g. identity.getProfile(String id);
   //Returns {
   //  'card': {
   //    'id': 'string',       //ID (e.g. alice@gmail.com) username
   //    'name': 'string',     //Name (e.g. Alice Underpants)
   //    'imageUrl': 'string', //URL to profile pic
-  //    'status': 'string'    //Status (['online', 'offline', 'away', 'idle'])
+  //    'status': 'string'    //Status (['available', 'offline', 'away', 'idle'])
   //  }
   //  'roster': {             //List of friends
   //    'id1': {              //NOTE: Key must match 'id' in card
