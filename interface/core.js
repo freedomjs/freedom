@@ -37,5 +37,8 @@ fdom.apis.set("core.socket", {
   'read': {type: "method", value: ["number"]},
   'write': {type: "method", value: ["number", "buffer"]},
   'disconnect': {type: "method", value: ["number"]},
-  'destroy': {type: "method", value: ["number"]}
+  'destroy': {type: "method", value: ["number"]},
+  'listen': {type: "method", value: ["number", "string", "number"]},
+  'accept': {type: "method", value: ["number"]},
+  'getInfo': {type: "method", value: ["number"]}
 });
