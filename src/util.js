@@ -169,7 +169,7 @@ function makeAbsolute(url) {
  * Resolve a url against a defined base location.
  */
 function resolvePath(url, from) {
-  var protocols = ["http", "https", "chrome-extension"];
+  var protocols = ["http", "https", "chrome-extension", "resource"];
   for (var i = 0; i < protocols.length; i++) {
     if (url.indexOf(protocols[i] + "://") === 0) {
       return url;

@@ -90,6 +90,7 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
       console.warn(ref.status);
     }
   }.bind(this), false);
+  ref.overrideMimeType('application/json');
   ref.open("GET", manifest, true);
   ref.send();
 }
