@@ -10,6 +10,7 @@ setup = function () {
   var site_cfg = {
     global: global,
     'debug': true,
+    nonblob: false,
     src: freedom_src
   };
 
