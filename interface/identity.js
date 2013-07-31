@@ -8,7 +8,7 @@ fdom.apis.set("identity", {
   //  'success': 'boolean',
   //  'message': 'string'
   //}
-  'login': {type: "method", value: "string"},
+  'login': {type: "method", value: ["string"]},
   //Gets the profile of a user
   //If id is null, return self
   //e.g. identity.getProfile(String id);
