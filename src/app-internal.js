@@ -72,8 +72,8 @@ fdom.app.Internal.prototype.start = function() {
       request: 'ready'
     });
 
-    var is = importScripts;
-    importScripts = function(prefix, src) {
+    var is = this.config.global.importScripts;
+    this.config.global.importScripts = function(prefix, src) {
       try {
         is(resolvePath(src, prefix));
       } catch (e) {
@@ -82,7 +82,7 @@ fdom.app.Internal.prototype.start = function() {
     }.bind({}, this.id);
 
     var appURL = resolvePath(this.manifest['app']['script'], this.id);
-    importScripts(appURL);
+    this.config.global.importScripts(appURL);
   }.bind(this));
   
   // Post creation message to get the info.

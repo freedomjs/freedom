@@ -123,8 +123,12 @@ fdom.app.External.prototype.start = function() {
     this.worker = null;
     this.state = false;
   }
-  var blob = new Blob([this.config.src], {type: 'text/javascript'});
-  this.worker = new Worker(URL.createObjectURL(blob));
+  if (this.config.nonblob) {
+    this.worker = new Worker(this.config.source);
+  } else {
+    var blob = new Blob([this.config.src], {type: 'text/javascript'});
+    this.worker = new Worker(URL.createObjectURL(blob));
+  }
   this.worker.addEventListener('message', function(msg) {
     fdom.Hub.get().onMessage(this, msg.data);
   }.bind(this), true);

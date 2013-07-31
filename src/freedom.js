@@ -10,7 +10,8 @@ setup = function () {
   var site_cfg = {
     global: global,
     'debug': true,
-    src: "(" + freedom_src + ")(this);"
+    nonblob: false,
+    src: freedom_src
   };
 
   if (isAppContext()) {

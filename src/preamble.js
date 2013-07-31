@@ -3,11 +3,13 @@
  * see: https://github.com/UWNetworksLab/freedom
  */
 (function (global) {
-  var freedom_src = arguments.callee.toString();
-  "use strict";
-  var context,
-      setup;
+  'use strict';
+  (function freedom() {
+    var freedom_src = '(function (global) {\'use strict\';(' + freedom + ')();})(this);';
 
-  if (typeof global['freedom'] !== 'undefined') {
-    return;
-  }
+    var context,
+        setup;
+
+    if (typeof global['freedom'] !== 'undefined') {
+      return;
+    }
