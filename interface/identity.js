@@ -17,6 +17,7 @@ fdom.apis.set("identity", {
   //    'userId': 'string',       //ID (e.g. alice@gmail.com) username
   //    'name': 'string',         //Name (e.g. Alice Underpants)
   //    'imageUrl': 'string',     //URL to profile pic
+  //    'url': 'string',          //Homepage URL
   //    'devices': [{              //Array of devices
   //      'deviceId': 'string',   //ID of device (e.g. alice@gmail.com/Android-23nadsv32f)
   //      'status': 'string'      //Status (['messageable', 'online', 'offline'])
@@ -27,6 +28,7 @@ fdom.apis.set("identity", {
   //      'userId': 'string',
   //      'name': 'string',
   //      'imageUrl': 'string',
+  //      'url': string,
   //      'devices': [
   //        'deviceId': 'string',
   //        'status': 'string'
@@ -46,6 +48,7 @@ fdom.apis.set("identity", {
     'userId': 'string',
     'name': 'string',
     'imageUrl': 'string',
+    'url': 'string',
     'devices': ['object']
   }},
   //Event on incoming message
