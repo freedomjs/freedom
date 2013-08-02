@@ -3,12 +3,12 @@ fdom.apis.set("identity", {
   //e.g. var id = identity.id
   'id': {type: "property", value: "string"},
   //Log into the network
-  //e.g. login(String agent)
+  //e.g. login(String agent, String version, String url)
   //Returns {
   //  'success': 'boolean',
   //  'message': 'string'
   //}
-  'login': {type: "method", value: ["string"]},
+  'login': {type: "method", value: ["string", "string", "string"]},
   //Gets the profile of a user
   //If id is null, return self
   //e.g. identity.getProfile(String id);
@@ -49,11 +49,12 @@ fdom.apis.set("identity", {
     'name': 'string',
     'imageUrl': 'string',
     'url': 'string',
-    'devices': ['object']
+    'devices': ['array', 'object']
   }},
   //Event on incoming message
   'onMessage': {type: "event", value: {
     "from": "string",   //id of user message is from
+    "to": "string",     //id of user message is to
     "message": "object" //message contents
   }}
 });
