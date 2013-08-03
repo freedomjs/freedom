@@ -23,7 +23,6 @@ fdom.Hub = function() {
  */
 fdom.Hub.get = function() {
   if (!fdom.Hub._hub) {
-    console.log("fdom hub made");
     fdom.Hub._hub = new fdom.Hub();
   }
   return fdom.Hub._hub;

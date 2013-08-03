@@ -1,6 +1,4 @@
 // This structure is meant to resemble that of require.js
-/*jslint sloppy:true */
-/*global window, document, setTimeout, XMLHttpRequest */
 
 /**
  * Main entry point.

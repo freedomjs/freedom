@@ -78,13 +78,14 @@ fdom.app.External.prototype.getChannel = function(flow) {
  */
 fdom.app.External.prototype.loadManifest = function(manifest) {
   var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function(e) {
+  ref.addEventListener('readystatechange', function() {
     if (ref.readyState == 4 && ref.responseText) {
       var resp = {};
       try {
         resp = JSON.parse(ref.responseText);
       } catch(err) {
-        return errback(err);
+        this.onManifest();
+        return;
       }
       this.onManifest(resp);
     } else if (ref.readyState == 4) {

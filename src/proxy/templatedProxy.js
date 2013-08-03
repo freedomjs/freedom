@@ -2,7 +2,6 @@ fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
   var inflight = {};
   var events = null;
   var emitter = null;
-  var self = this;
   var flowId;
   if (identifier.flowId) {
     flowId = identifier.flowId;

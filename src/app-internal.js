@@ -139,6 +139,7 @@ fdom.app.Internal.prototype.loadPermissions = function() {
 };
 
 fdom.app.Internal.prototype.loadDependencies = function() {
+  /*jshint unused:true */
   if(this.manifest && this.manifest['dependencies']) {
     var exports = this.config.exports;
     eachProp(this.manifest['dependencies'], function(url, name) {

@@ -4,6 +4,7 @@
  * @private
  */
 var Core_unprivileged = function(pipe, app) {
+  this.pipe = pipe;
   if (app) {
     this.app = app;
   } else {

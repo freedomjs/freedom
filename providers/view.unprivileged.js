@@ -56,6 +56,7 @@ View_unprivileged.prototype.show = function(continuation) {
 
 View_unprivileged.prototype.postMessage = function(args, continuation) {
   this.win.contentWindow.postMessage(args, '*');
+  continuation();
 };
 
 View_unprivileged.prototype.close = function() {
