@@ -26,8 +26,7 @@ Core_unprivileged.prototype.onResponse = function(continuation) {
     var chan = this.app.getProxy(id);
     cb(chan);
   }.bind(this, continuation));
-}
-
+};
 
 Core_unprivileged.prototype.createChannel = function(continuation) {
   this.onResponse(continuation);

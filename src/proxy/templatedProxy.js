@@ -5,7 +5,7 @@ fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
   var self = this;
   var flowId;
   if (identifier.flowId) {
-    flowId = identifier.flowId
+    flowId = identifier.flowId;
   } else {
     flowId = Math.random();
   }
@@ -34,7 +34,7 @@ fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
           });
           reqId++;
           return deferred['promise']();
-        }
+        };
         break;
       case "event":
         if(!events) {
@@ -44,7 +44,7 @@ fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
           events = {};
         }
         events[name] = prop;
-        break
+        break;
     }
   }.bind(this));
 
@@ -80,7 +80,7 @@ fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
 /**
  * Force a collection of values to look like the types and length of an API template.
  */
-function conform(template, value) {
+var conform = function(template, value) {
   switch(template) {
     case "string":
       return "" + value;
@@ -105,27 +105,32 @@ function conform(template, value) {
         return fdom.Proxy.getIdentifier(value);
       }
   }
+  var val;
   if (Array.isArray(template)) {
-    var val = [];
+    val = [];
+    var i = 0;
     if (template.length == 2 && template[0] == "array") {
       //console.log("template is array, value is " + JSON.stringify(value));
-      for (var i = 0; i < value.length; i++) {
+      for (i = 0; i < value.length; i++) {
         val.push(conform(template[1], value[i]));
       }
     } else {
-      for (var i = 0; i < template.length; i++) {
-        if (value[i]==null || value[i]) val.push(conform(template[i], value[i]))
-        else val.push(undefined);
+      for (i = 0; i < template.length; i++) {
+        if (value[i] === null || value[i]) {
+          val.push(conform(template[i], value[i]));
+        } else {
+          val.push(undefined);
+        }
       }
     }
     return val;
   } else if (typeof template === "object") {
-    var val = {};
+    val = {};
     eachProp(template, function(prop, name) {
       if (value[name]) {
         val[name] = conform(prop, value[name]);
-      };
+      }
     });
     return val;
   }
-}
+};

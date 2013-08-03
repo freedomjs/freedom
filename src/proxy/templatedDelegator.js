@@ -1,5 +1,5 @@
 fdom.Proxy.templatedDelegator = function(channel, definition) {
-  var provider = null;
+  var Provider = null;
   var instances = {};
   var synchronous = true;
 
@@ -11,18 +11,18 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
   });
 
   this['provideSynchronous'] = function(pro) {
-    provider = pro;
-  }
+    Provider = pro;
+  };
 
   this['provideAsynchronous'] = function(pro) {
-    provider = pro;
+    Provider = pro;
     synchronous = false;
-  }
+  };
   
   //TODO(willscott): Allow provider instances to be sent via proxied methods.
   //To do so, generate hashes and put instances in the fdom.Proxy.registry.
   var buildInstance = function(channel, events, identifier) {
-    var instance = new provider();
+    var instance = new Provider();
     instance['dispatchEvent'] = function(id, name, value) {
       if (events[name]) {
         channel.postMessage({
@@ -30,7 +30,7 @@ fdom.Proxy.templatedDelegator = function(channel, definition) {
           flowId: id,
           'type': name,
           'value': conform(events[name].value, value)
-        })
+        });
       }
     }.bind({}, identifier);
     return instance;

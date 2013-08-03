@@ -68,7 +68,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       app.ready();
     } else if (message.request == 'channel') {
       // Register new unprivileged message channel.
-      var flow = 'custom' + Math.random();
+      flow = 'custom' + Math.random();
 
       // Binding a channel.
       if (message.to) {
@@ -115,9 +115,9 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       destChannel.postMessage(message.msg);
     }
   } else {
-    var af = []
-    for(var i in flows) {
-      af.push(i);
+    var af = [];
+    for(var aflow in flows) {
+      af.push(aflow);
     }
     console.warn("Message dropped from unregistered flow " + app.id + " -> " + flow);
     console.log(message.msg);
@@ -139,7 +139,7 @@ fdom.Hub.prototype.ensureApp = function(id) {
     this.apps[canonicalId] = newApp;
   }
   return canonicalId;
-}
+};
 
 /**
  * Establish a communication channel between an application and one of its dependencies.
@@ -160,7 +160,7 @@ fdom.Hub.prototype.createPipe = function(app, dep) {
   // 3. Register the link
   this.pipes[app.id][dep] = depApp.getChannel('default');
   this.pipes[depId] = {'default': app.getChannel(dep)};
-}
+};
 
 /**
  * Register an application with the hub.
@@ -172,7 +172,7 @@ fdom.Hub.prototype.register = function(app) {
     this.pipes[app.id] = {'default' : app.channels['default']};
   }
   this['emit']('register', app);
-}
+};
 
 /**
  * Register permissions of a freedom application.
@@ -193,7 +193,7 @@ fdom.Hub.prototype.permitAccess = function(id) {
       this.pipes[id][permission] = fdom.apis.getCore(permission, this.apps[id].getChannel(permission));
     }
   }
-}
+};
 
 /**
  * Bind an unbound app channel to a service implementing 'postMessage'.
@@ -228,4 +228,4 @@ fdom.Hub.prototype.bindChannel = function(id, flow, service) {
 fdom.Hub.prototype.debug = function(feature) {
   return this.config['debug'] === true || (this.config['debug'] !== false &&
       this.config['debug'].indexOf(feature) > -1);
-}
+};

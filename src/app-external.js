@@ -9,7 +9,6 @@ fdom.app = fdom.app || {};
  * @constructor
  */
 fdom.app.External = function() {
-  this.id;
   this.config = {
     manifest: 'manifest.json',
     source: 'freedom.js'
@@ -20,7 +19,7 @@ fdom.app.External = function() {
   this.state = false;
   
   handleEvents(this);
-}
+};
 
 /**
  * Configure the App based on global FreeDOM configuration.
@@ -29,7 +28,7 @@ fdom.app.External = function() {
 fdom.app.External.prototype.configure = function(config) {
   mixin(fdom.Hub.get().config, config);
   mixin(this.config, config, true);
-}
+};
 
 /**
  * Get a publically visible object for a given Channel.
@@ -45,7 +44,7 @@ fdom.app.External.prototype.getProxy = function(flow) {
     this.config.exports = proxy;
   }
   return proxy;
-}
+};
 
 /**
  * Get a communication channel for an application.  The Channel
@@ -62,13 +61,13 @@ fdom.app.External.prototype.getChannel = function(flow) {
   }
   
   if (!flow) {
-    flow = 'default'
+    flow = 'default';
   }
   if (!this.channels[flow]) {
     this.channels[flow] = new fdom.Channel(this, flow);
   }
   return this.channels[flow];
-}
+};
 
 /**
  * Load the description of the app.
@@ -93,7 +92,7 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
   ref.overrideMimeType('application/json');
   ref.open("GET", manifest, true);
   ref.send();
-}
+};
 
 /**
  * Callback for availability of Application Manifest.
@@ -110,7 +109,7 @@ fdom.app.External.prototype.onManifest = function(manifest) {
   } else {
     console.warn(manifest['name'] + " does not specify a valid application.");
   }
-}
+};
 
 /**
  * Start the application context, and activate a communication channel to the
@@ -141,7 +140,7 @@ fdom.app.External.prototype.start = function() {
 fdom.app.External.prototype.ready = function() {
   this.state = true;
   this['emit']('ready');
-}
+};
 
 /**
  * Send a raw message to the application.
@@ -157,4 +156,4 @@ fdom.app.External.prototype.postMessage = function(msg) {
       this.postMessage(m);
     }.bind(this, msg));
   }
-}
+};

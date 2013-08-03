@@ -91,25 +91,26 @@ function handleEvents(obj) {
   }.bind(eventState);
 
   obj['emit'] = function(type, data) {
+    var i;
     if (this.listeners[type]) {
-      for (var i = 0; i < this.listeners[type].length; i++) {
+      for (i = 0; i < this.listeners[type].length; i++) {
         if (this.listeners[type][i](data) === false) {
           return;
         }
       }
     }
     if (this.oneshots[type]) {
-      for (var i = 0; i < this.oneshots[type].length; i++) {
+      for (i = 0; i < this.oneshots[type].length; i++) {
         this.oneshots[type][i](data);
       }
       this.oneshots[type] = [];
     }
-    for (var i = 0; i < this.conditional.length; i++) {
+    for (i = 0; i < this.conditional.length; i++) {
       if (this.conditional[i][0](type, data)) {
         this.conditional[i][1](data);
       }
     }
-    for (var i = this.onceConditional.length - 1; i >= 0; i--) {
+    for (i = this.onceConditional.length - 1; i >= 0; i--) {
       if (this.onceConditional[i][0](type, data)) {
         var cond = this.onceConditional.splice(i, 1);
         cond[0][1](data);
@@ -145,8 +146,9 @@ function advertise() {
   //   xhr.abort();
   // }, 50);
   // TODO: Determine a mechanism by which to restrict responses by non-priveledged code.
-  if ((location.protocol === 'chrome-extension:' || location.protocol == 'resource:')
-      && typeof freedomcfg !== "undefined") {
+  if ((location.protocol === 'chrome-extension:' ||
+      location.protocol == 'resource:') &&
+      typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
 }

@@ -10,6 +10,7 @@
     var context,
         setup;
 
+    /* jshint -W069 */
     if (typeof global['freedom'] !== 'undefined') {
       return;
     }

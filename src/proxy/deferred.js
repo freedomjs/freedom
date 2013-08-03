@@ -109,7 +109,7 @@ fdom.Proxy.Callbacks = function(multiple) {
     }
   };
   return self;
-}
+};
 
 fdom.Proxy.Deferred = function(func) {
   var events = [
@@ -139,7 +139,7 @@ fdom.Proxy.Deferred = function(func) {
               returned['promise']()
                 .done(newDefer.resolve)
                 .fail(newDefer.reject)
-                .progress(newDefer.notify)
+                .progress(newDefer.notify);
             } else {
               newDefer[action + "With"](this === promise ? newDefer['promise'](): this, fn ? [returned] : arguments);
             }
@@ -149,7 +149,7 @@ fdom.Proxy.Deferred = function(func) {
       })['promise']();
     },
     'promise': function(obj) {
-      return obj != null ? mixin(obj, promise) : promise;
+      return (obj !== null && obj !== undefined) ? mixin(obj, promise) : promise;
     }
   };
   var deferred = {};
@@ -164,7 +164,7 @@ fdom.Proxy.Deferred = function(func) {
     if (stateStr) {
       list.add(function() {
         state = stateStr;
-      }, events[i ^ 1][2].disable, events[2][2].lock)
+      }, events[i ^ 1][2].disable, events[2][2].lock);
     }
 
     var e = events[i][0];    
@@ -180,4 +180,4 @@ fdom.Proxy.Deferred = function(func) {
     func.call(deferred, deferred);
   }
   return deferred;
-}
+};
