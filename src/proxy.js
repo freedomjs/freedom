@@ -1,6 +1,8 @@
 // TODO: This should make use of ECMA6 Proxies once they are standardized.
 // see: https://code.google.com/p/v8/issues/detail?id=1543
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 
 /**
  * A fdomProxy or subclass are the exposed interface for freedom applications

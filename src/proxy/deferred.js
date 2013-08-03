@@ -112,6 +112,7 @@ fdom.Proxy.Callbacks = function(multiple) {
 };
 
 fdom.Proxy.Deferred = function(func) {
+  /* jshint -W083 */
   var events = [
     ["resolve", "done", fdom.Proxy.Callbacks(), "resolved"],
     ["reject", "fail", fdom.Proxy.Callbacks(), "rejected"],

@@ -1,4 +1,6 @@
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 fdom.app = fdom.app || {};
 
 /**
@@ -81,8 +83,8 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
       var resp = {};
       try {
         resp = JSON.parse(ref.responseText);
-      } catch(e) {
-        return errback(e);
+      } catch(err) {
+        return errback(err);
       }
       this.onManifest(resp);
     } else if (ref.readyState == 4) {

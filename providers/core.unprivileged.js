@@ -49,7 +49,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation) {
 
 Core_unprivileged.bindChannel = function(identifier) {
   var pipe = fdom.Channel.pipe();
-  fdom.Hub.get().bindChannel(identifier[0], identifier[1], pipe[0]);
+  fdom.Hub.get().bindChannel(identifier[0], pipe[0]);
   //TODO(willscott): this is sketchy :-/
   var app = fdom.Hub.get().apps[identifier[0]];
   var flow = app.getChannel(identifier[1]);

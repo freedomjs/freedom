@@ -1,4 +1,6 @@
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 
 /**
  * The API registry for FreeDOM.  Used to look up requested APIs,

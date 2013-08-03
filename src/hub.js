@@ -1,4 +1,6 @@
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 
 /**
  * Defines fdom.Hub, the core message hub between freedom modules.
@@ -198,7 +200,7 @@ fdom.Hub.prototype.permitAccess = function(id) {
 /**
  * Bind an unbound app channel to a service implementing 'postMessage'.
  */
-fdom.Hub.prototype.bindChannel = function(id, flow, service) {
+fdom.Hub.prototype.bindChannel = function(id, service) {
   var dep = this.apps[id];
   var endpoint = false;
   for (var i = 0; i < this.unbound.length; i++) {

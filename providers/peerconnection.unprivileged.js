@@ -180,10 +180,12 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
       this.dataChannel.send(JSON.stringify({"binary": parts}));
 
       var delay = 0;
+      var sendPart = function(x) {
+        this.dataChannel.send(x);
+      };
+      
       while (str.length > 0) {
-        setTimeout(function(x) {
-          this.dataChannel.send(x);
-        }.bind(this, str.substr(0, MAX_LEN)), delay);
+        setTimeout(sendPart.bind(this, str.substr(0, MAX_LEN)), delay);
         delay += STEP;
         str = str.substr(MAX_LEN);
       }
