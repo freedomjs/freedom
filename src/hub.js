@@ -53,7 +53,8 @@ fdom.Hub.prototype.onMessage = function(app, message) {
       this.createPipe(app, message.dep);
     } else if (message.request == 'create') {
       var config = {
-        "debug": this.config['debug']
+        'debug': this.config['debug'],
+        'strongIsolation': this.config['strongIsolation']
       };
 
       app.postMessage({

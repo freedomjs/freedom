@@ -48,7 +48,7 @@ fdom.app.Internal.prototype.getProxy = function(flow) {
  */
 fdom.app.Internal.prototype.start = function() {
   this.config.global.addEventListener('message', function(msg) {
-    if (msg.data && msg.data.sourceFlow) {
+    if (msg.data && msg.data.sourceFlow && !msg.data.fromApp) {
       var chan = this.channels[msg.data.sourceFlow];
       if (chan) {
         chan.onMessage(msg.data.msg);
@@ -70,11 +70,20 @@ fdom.app.Internal.prototype.start = function() {
 
     this.postMessage({
       sourceFlow: 'control',
+      fromApp: true,
       request: 'ready'
     });
 
-    var is = this.config.global.importScripts;
-    this.config.global.importScripts = function(prefix, src) {
+    var is = this.config.global['importScripts'];
+    if (!is && !this.config['strongIsolation']) {
+      // TODO(willscott): this implementation is asynchronous, shouldn't be.
+      is = function(url) {
+        var script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+      }
+    }
+    this.config.global['importScripts'] = function(prefix, src) {
       try {
         is(resolvePath(src, prefix));
       } catch (e) {
@@ -89,18 +98,26 @@ fdom.app.Internal.prototype.start = function() {
   // Post creation message to get the info.
   this.postMessage({
     sourceFlow: 'control',
+    fromApp: true,
     request: 'create'
   });
 };
 
 fdom.app.Internal.prototype.postMessage = function(msg) {
-  this.config.global.postMessage(msg);
+  msg.fromApp = true;
+  if (this.config.global.postMessage.length == 2) {
+    // TODO(willscott): posting blindly is insecure.
+    this.config.global.postMessage(msg, "*");
+  } else {
+    this.config.global.postMessage(msg);
+  }
 };
 
 fdom.app.Internal.prototype.debug = function(msg) {
   if (this.config.debug) {
     this.postMessage({
       sourceFlow: 'control',
+      fromApp: true,
       request: 'debug',
       msg: msg.toString()
     });

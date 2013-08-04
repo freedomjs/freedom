@@ -125,14 +125,16 @@ fdom.app.External.prototype.start = function() {
     this.worker = null;
     this.state = false;
   }
-  if (this.config.nonblob) {
-    this.worker = new Worker(this.config.source);
-  } else {
+  if (this.config['strongIsolation']) {
     var blob = new Blob([this.config.src], {type: 'text/javascript'});
     this.worker = new Worker(URL.createObjectURL(blob));
+  } else {
+    this.worker = makeFrame(this.config.source);
   }
   this.worker.addEventListener('message', function(msg) {
-    fdom.Hub.get().onMessage(this, msg.data);
+    if (msg.data.fromApp) {
+      fdom.Hub.get().onMessage(this, msg.data);
+    }
   }.bind(this), true);
 };
 
@@ -153,7 +155,12 @@ fdom.app.External.prototype.ready = function() {
  */
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.state || (this.worker && msg.sourceFlow == "control")) {
-    this.worker.postMessage(msg);
+    if (this.worker.postMessage.length == 2) {
+      // TODO(willscott): posting blindly is insecure.
+      this.worker.postMessage(msg, "*");
+    } else {
+      this.worker.postMessage(msg);
+    }
   } else {
     this['once']('ready', function(m) {
       this.postMessage(m);
