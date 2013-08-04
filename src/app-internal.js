@@ -81,7 +81,7 @@ fdom.app.Internal.prototype.start = function() {
         var script = document.createElement('script');
         script.src = url;
         document.body.appendChild(script);
-      }
+      };
     }
     this.config.global['importScripts'] = function(prefix, src) {
       try {
