@@ -5,10 +5,10 @@
 (function (global) {
   'use strict';
   (function freedom() {
-    var freedom_src = '(function (global) {\'use strict\';(' + freedom + ')();})(this);';
+    /* jshint -W069 */
 
-    var context,
-        setup;
+    var freedom_src = '(function (global) {\'use strict\';(' + freedom + ')();})(this);';
+    var setup;
 
     if (typeof global['freedom'] !== 'undefined') {
       return;

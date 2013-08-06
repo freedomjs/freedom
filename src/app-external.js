@@ -1,4 +1,6 @@
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 fdom.app = fdom.app || {};
 
 /**
@@ -9,7 +11,6 @@ fdom.app = fdom.app || {};
  * @constructor
  */
 fdom.app.External = function() {
-  this.id;
   this.config = {
     manifest: 'manifest.json',
     source: 'freedom.js'
@@ -20,7 +21,7 @@ fdom.app.External = function() {
   this.state = false;
   
   handleEvents(this);
-}
+};
 
 /**
  * Configure the App based on global FreeDOM configuration.
@@ -29,7 +30,7 @@ fdom.app.External = function() {
 fdom.app.External.prototype.configure = function(config) {
   mixin(fdom.Hub.get().config, config);
   mixin(this.config, config, true);
-}
+};
 
 /**
  * Get a publically visible object for a given Channel.
@@ -45,7 +46,7 @@ fdom.app.External.prototype.getProxy = function(flow) {
     this.config.exports = proxy;
   }
   return proxy;
-}
+};
 
 /**
  * Get a communication channel for an application.  The Channel
@@ -62,13 +63,13 @@ fdom.app.External.prototype.getChannel = function(flow) {
   }
   
   if (!flow) {
-    flow = 'default'
+    flow = 'default';
   }
   if (!this.channels[flow]) {
     this.channels[flow] = new fdom.Channel(this, flow);
   }
   return this.channels[flow];
-}
+};
 
 /**
  * Load the description of the app.
@@ -77,13 +78,14 @@ fdom.app.External.prototype.getChannel = function(flow) {
  */
 fdom.app.External.prototype.loadManifest = function(manifest) {
   var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function(e) {
+  ref.addEventListener('readystatechange', function() {
     if (ref.readyState == 4 && ref.responseText) {
       var resp = {};
       try {
         resp = JSON.parse(ref.responseText);
-      } catch(e) {
-        return errback(e);
+      } catch(err) {
+        this.onManifest();
+        return;
       }
       this.onManifest(resp);
     } else if (ref.readyState == 4) {
@@ -93,7 +95,7 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
   ref.overrideMimeType('application/json');
   ref.open("GET", manifest, true);
   ref.send();
-}
+};
 
 /**
  * Callback for availability of Application Manifest.
@@ -110,7 +112,7 @@ fdom.app.External.prototype.onManifest = function(manifest) {
   } else {
     console.warn(manifest['name'] + " does not specify a valid application.");
   }
-}
+};
 
 /**
  * Start the application context, and activate a communication channel to the
@@ -123,14 +125,16 @@ fdom.app.External.prototype.start = function() {
     this.worker = null;
     this.state = false;
   }
-  if (this.config.nonblob) {
-    this.worker = new Worker(this.config.source);
-  } else {
+  if (this.config['strongIsolation']) {
     var blob = new Blob([this.config.src], {type: 'text/javascript'});
     this.worker = new Worker(URL.createObjectURL(blob));
+  } else {
+    this.worker = makeFrame(this.config.source);
   }
   this.worker.addEventListener('message', function(msg) {
-    fdom.Hub.get().onMessage(this, msg.data);
+    if (msg.data.fromApp) {
+      fdom.Hub.get().onMessage(this, msg.data);
+    }
   }.bind(this), true);
 };
 
@@ -141,7 +145,7 @@ fdom.app.External.prototype.start = function() {
 fdom.app.External.prototype.ready = function() {
   this.state = true;
   this['emit']('ready');
-}
+};
 
 /**
  * Send a raw message to the application.
@@ -151,10 +155,15 @@ fdom.app.External.prototype.ready = function() {
  */
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.state || (this.worker && msg.sourceFlow == "control")) {
-    this.worker.postMessage(msg);
+    if (this.worker.postMessage.length == 2) {
+      // TODO(willscott): posting blindly is insecure.
+      this.worker.postMessage(msg, "*");
+    } else {
+      this.worker.postMessage(msg);
+    }
   } else {
     this['once']('ready', function(m) {
       this.postMessage(m);
     }.bind(this, msg));
   }
-}
+};

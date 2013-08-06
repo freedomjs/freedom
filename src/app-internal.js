@@ -1,4 +1,6 @@
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 fdom.app = fdom.app || {};
 
 /**
@@ -8,16 +10,15 @@ fdom.app = fdom.app || {};
  * @constructor
  */
 fdom.app.Internal = function() {
-  this.id;
   this.config = {};
   this.channels = {};
   this.manifest = {};
   handleEvents(this);
-}
+};
 
 fdom.app.Internal.prototype.configure = function(config) {
   mixin(this.config, config, true);
-}
+};
 
 fdom.app.Internal.prototype.getChannel = function(flow) {
   if (!this.manifest || !this.id) {
@@ -25,14 +26,14 @@ fdom.app.Internal.prototype.getChannel = function(flow) {
   }
 
   if (!flow) {
-    flow = 'default'
+    flow = 'default';
   }
 
   if (!this.channels[flow]) {
     this.channels[flow] = new fdom.Channel(this, flow);
   }
   return this.channels[flow];
-}
+};
   
 fdom.app.Internal.prototype.getProxy = function(flow) {
   var proxy = new fdom.Proxy(this.getChannel(flow));
@@ -40,14 +41,14 @@ fdom.app.Internal.prototype.getProxy = function(flow) {
     this.config.exports = proxy;
   }
   return proxy;
-}
+};
 
 /**
  * Start communication back to the executor.
  */
 fdom.app.Internal.prototype.start = function() {
   this.config.global.addEventListener('message', function(msg) {
-    if (msg.data && msg.data.sourceFlow) {
+    if (msg.data && msg.data.sourceFlow && !msg.data.fromApp) {
       var chan = this.channels[msg.data.sourceFlow];
       if (chan) {
         chan.onMessage(msg.data.msg);
@@ -69,11 +70,20 @@ fdom.app.Internal.prototype.start = function() {
 
     this.postMessage({
       sourceFlow: 'control',
+      fromApp: true,
       request: 'ready'
     });
 
-    var is = this.config.global.importScripts;
-    this.config.global.importScripts = function(prefix, src) {
+    var is = this.config.global['importScripts'];
+    if (!is && !this.config['strongIsolation']) {
+      // TODO(willscott): this implementation is asynchronous, shouldn't be.
+      is = function(url) {
+        var script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+      };
+    }
+    this.config.global['importScripts'] = function(prefix, src) {
       try {
         is(resolvePath(src, prefix));
       } catch (e) {
@@ -88,41 +98,54 @@ fdom.app.Internal.prototype.start = function() {
   // Post creation message to get the info.
   this.postMessage({
     sourceFlow: 'control',
+    fromApp: true,
     request: 'create'
   });
-}
+};
 
 fdom.app.Internal.prototype.postMessage = function(msg) {
-  this.config.global.postMessage(msg);
-}
+  msg.fromApp = true;
+  if (this.config.global.postMessage.length == 2) {
+    // TODO(willscott): posting blindly is insecure.
+    this.config.global.postMessage(msg, "*");
+  } else {
+    this.config.global.postMessage(msg);
+  }
+};
 
 fdom.app.Internal.prototype.debug = function(msg) {
   if (this.config.debug) {
     this.postMessage({
       sourceFlow: 'control',
+      fromApp: true,
       request: 'debug',
       msg: msg.toString()
     });
   }
-}
+};
+
+fdom.app.Internal.prototype._attach = function(exp, name, def, provider) {
+  exp[name] = function(name_, def_, provider_) {
+    return new fdom.Proxy(this.getChannel(provider_ ? undefined : name_), def_, provider_);
+  }.bind(this, name, def, provider);
+};
 
 fdom.app.Internal.prototype.loadPermissions = function() {
   var permissions = [];
   var exp = this.config.exports;
+  var i ;
   if(this.manifest && this.manifest['permissions']) {
-    for (var i = 0; i < this.manifest['permissions'].length; i++) {
+    for (i = 0; i < this.manifest['permissions'].length; i++) {
       permissions.push(this.manifest['permissions'][i]);
     }
   }
-  for (var i = 0; i < permissions.length; i++) {
+
+  for (i = 0; i < permissions.length; i++) {
     var api = fdom.apis.get(permissions[i]);
     if (!api) {
       continue;
     }
-    exp[api.name] = function(n, dfn) {
-      var proxy = new fdom.Proxy(this.getChannel(n), dfn);
-      return proxy;
-    }.bind(this, api.name, api.definition);
+    this._attach(exp, api.name, api.definition);
   }
 
   //Core API is handled locally, to facilitate channel setup.
@@ -130,9 +153,10 @@ fdom.app.Internal.prototype.loadPermissions = function() {
   var pipe = fdom.Channel.pipe();
   fdom.apis.bindCore('core', pipe[1]);
   exp['core'] = new fdom.Proxy(pipe[0], coreAPI.definition);
-}
+};
 
 fdom.app.Internal.prototype.loadDependencies = function() {
+  /*jshint unused:true */
   if(this.manifest && this.manifest['dependencies']) {
     var exports = this.config.exports;
     eachProp(this.manifest['dependencies'], function(url, name) {
@@ -162,10 +186,7 @@ fdom.app.Internal.prototype.loadProvides = function() {
       if (!api) {
         continue;
       }
-      exp[api.name] = function(dfn) {
-        var proxy = new fdom.Proxy(this.getChannel(), dfn, true);
-        return proxy;
-      }.bind(this, api.definition);
+      this._attach(exp, api.name, api.definition, true);
     }
   }
-}
+};

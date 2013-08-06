@@ -28,7 +28,7 @@ PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
 
   this.setup(true);
   continuation();
-}
+};
 
 PeerConnection_unprivileged.prototype.setup = function(initiate) {
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
@@ -44,12 +44,12 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
       if (this.parts > 0) {
         this.buf += m.data;
         this.parts--;
-        console.log('waiting for ' + this.parts + ' more parts.')
-        if (this.parts == 0) {
+        console.log('waiting for ' + this.parts + ' more parts.');
+        if (this.parts === 0) {
           console.log("binary data recieved (" + this.buf.length + " bytes)");
-          var data = JSON.parse(this.buf);
-          var arr = new Uint8Array(data['binary']);
-          var blob = new Blob([arr.buffer], {"type": data['mime']});
+          var databuf = JSON.parse(this.buf);
+          var arr = new Uint8Array(databuf['binary']);
+          var blob = new Blob([arr.buffer], {"type": databuf['mime']});
           this['dispatchEvent']('message', {"binary": blob});
           this.buf = "";
         }
@@ -93,7 +93,7 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
   }.bind(this), true);
 
   this.makeOffer();
-}
+};
 
 PeerConnection_unprivileged.prototype.makeOffer = function() {
   if (this.remotePid < this.myPid) {
@@ -108,7 +108,7 @@ PeerConnection_unprivileged.prototype.makeOffer = function() {
       'data': JSON.stringify(desc)
     });
   }.bind(this));
-}
+};
 
 PeerConnection_unprivileged.prototype.makeAnswer = function() {
   this.connection.createAnswer(function(desc) {
@@ -120,7 +120,7 @@ PeerConnection_unprivileged.prototype.makeAnswer = function() {
       'data': JSON.stringify(desc)
     });
   }.bind(this));
-}
+};
 
 PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
   try {
@@ -148,7 +148,7 @@ PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
   } catch(e) {
     console.log("Couldn't understand identity message: " + JSON.stringify(msg) + ": -> " + e.message);
   }
-}
+};
 
 PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) {
   if (!this.connection) {
@@ -180,10 +180,12 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
       this.dataChannel.send(JSON.stringify({"binary": parts}));
 
       var delay = 0;
+      var sendPart = function(x) {
+        this.dataChannel.send(x);
+      };
+      
       while (str.length > 0) {
-        setTimeout(function(x) {
-          this.dataChannel.send(x);
-        }.bind(this, str.substr(0, MAX_LEN)), delay);
+        setTimeout(sendPart.bind(this, str.substr(0, MAX_LEN)), delay);
         delay += STEP;
         str = str.substr(MAX_LEN);
       }

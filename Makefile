@@ -19,6 +19,9 @@ docs:
 docs-deploy:
 	cd tools && bash docs.sh deploy
 
+lint:
+	jshint --show-non-errors freedom.js
+
 clean:
 	rm freedom.js
 	rm freedom.compiled.js

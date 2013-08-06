@@ -1,6 +1,8 @@
 // TODO: This should make use of ECMA6 Proxies once they are standardized.
 // see: https://code.google.com/p/v8/issues/detail?id=1543
-var fdom = fdom || {};
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 
 /**
  * A fdomProxy or subclass are the exposed interface for freedom applications
@@ -30,7 +32,9 @@ fdom.Proxy = function(channel, definition, provider) {
     proxy = new fdom.Proxy.messageChannel(channel, hash);
   }
   Object.defineProperty(proxy, '__identifier', {
-    __proto__: null,
+    enumerable: false,
+    configurable: false,
+    writable: false,
     value: hash
   });
   return proxy;
@@ -68,9 +72,9 @@ fdom.Proxy.get = function(channel, definition, identifier) {
   if (definition) {
     return new fdom.Proxy.templatedProxy(channel, definition, {flowId: identifier[2]});
   } else {
-    return new fdom.Proxy.messageChannel(channel)
+    return new fdom.Proxy.messageChannel(channel);
   }
-}
+};
 
 /**
  * A freedom endpoint for an unconstrained, unpriveledged channel.
@@ -86,9 +90,10 @@ fdom.Proxy.messageChannel = function(channel, hash) {
   var values = {};
 
   Object.defineProperty(this, 'reflectEvents', {
-    __proto__: null,
-    value: true,
-    writable: true
+    enumerable: false,
+    configurable: false,
+    writable: true,
+    value: true
   });
 
   /**
@@ -134,7 +139,7 @@ fdom.Proxy.messageChannel = function(channel, hash) {
         'value': value
       });
     }
-  }
+  };
   
   /**
    * Handle messages from across the channel.

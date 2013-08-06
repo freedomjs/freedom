@@ -35,7 +35,7 @@ View_unprivileged.prototype.open = function(args, continuation) {
   this.win = frame;
   addEventListener('message', this.onMessage.bind(this), true);
   continuation({});
-}
+};
 
 View_unprivileged.prototype.show = function(continuation) {
   if (this.win) {
@@ -52,11 +52,12 @@ View_unprivileged.prototype.show = function(continuation) {
     this.host.style.position = 'absolute';
   }
   continuation();
-}
+};
 
 View_unprivileged.prototype.postMessage = function(args, continuation) {
   this.win.contentWindow.postMessage(args, '*');
-}
+  continuation();
+};
 
 View_unprivileged.prototype.close = function() {
   if (this.host) {
@@ -67,12 +68,12 @@ View_unprivileged.prototype.close = function() {
     removeEventListener('message', this.onMessage.bind(this), true);
     this.win = null;
   }
-}
+};
 
 View_unprivileged.prototype.onMessage = function(m) {
   if (m.source == this.win.contentWindow) {
     this['dispatchEvent']('message', m.data);
   }
-}
+};
 
 fdom.apis.register("core.view", View_unprivileged);

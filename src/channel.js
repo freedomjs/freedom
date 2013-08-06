@@ -37,7 +37,7 @@ fdom.Channel.prototype.getProxy = function() {
     self['emit']('message', msg);
   });
   return out;
-}
+};
 
 /**
  * Create a pair of channels which relay messages to each other.
@@ -49,9 +49,9 @@ fdom.Channel.pipe = function() {
   handleEvents(second);
   first.postMessage = function(msg) {
     second['emit']('message', msg);
-  }
+  };
   second.postMessage = function(msg) {
     first['emit']('message', msg);
-  }
+  };
   return [first, second];
-}
+};

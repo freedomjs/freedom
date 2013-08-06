@@ -1,6 +1,4 @@
 // This structure is meant to resemble that of require.js
-/*jslint sloppy:true */
-/*global window, document, setTimeout, XMLHttpRequest */
 
 /**
  * Main entry point.
@@ -8,10 +6,8 @@
 setup = function () {
   var def;
   var site_cfg = {
-    global: global,
     'debug': true,
-    nonblob: false,
-    src: freedom_src
+    'strongIsolation': true,
   };
 
   if (isAppContext()) {
@@ -40,6 +36,8 @@ setup = function () {
       });
     }
   }
+  site_cfg.global = global;
+  site_cfg.src = freedom_src;
   def.configure(site_cfg);
 
   // Enable console.log from worker contexts.

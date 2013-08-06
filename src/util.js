@@ -91,25 +91,26 @@ function handleEvents(obj) {
   }.bind(eventState);
 
   obj['emit'] = function(type, data) {
+    var i;
     if (this.listeners[type]) {
-      for (var i = 0; i < this.listeners[type].length; i++) {
+      for (i = 0; i < this.listeners[type].length; i++) {
         if (this.listeners[type][i](data) === false) {
           return;
         }
       }
     }
     if (this.oneshots[type]) {
-      for (var i = 0; i < this.oneshots[type].length; i++) {
+      for (i = 0; i < this.oneshots[type].length; i++) {
         this.oneshots[type][i](data);
       }
       this.oneshots[type] = [];
     }
-    for (var i = 0; i < this.conditional.length; i++) {
+    for (i = 0; i < this.conditional.length; i++) {
       if (this.conditional[i][0](type, data)) {
         this.conditional[i][1](data);
       }
     }
-    for (var i = this.onceConditional.length - 1; i >= 0; i--) {
+    for (i = this.onceConditional.length - 1; i >= 0; i--) {
       if (this.onceConditional[i][0](type, data)) {
         var cond = this.onceConditional.splice(i, 1);
         cond[0][1](data);
@@ -119,34 +120,32 @@ function handleEvents(obj) {
 }
 
 /**
- * Determine if execution is working in a web worker,
- * Or a direct browser page.
+ * When run without a window, or specifically requested.
  */
 function isAppContext() {
   return (typeof window === 'undefined');
 }
 
 /**
- * Advertise the presence of an active freedom app to initiate interaction
- * with an installled / priveleged freedom context.
+ * Provide a source URL which to generate an AppContext compatible with
+ * the current instance of freedom.
+ */
+function forceAppContext() {
+  var forced = "function " + isAppContext.name + "() { return true; }";
+  var source = freedom_src.replace(isAppContext.toString(), forced);
+  var blob = new Blob([source], {type: 'text/javascript'});
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * Advertise freedom when running in a priviledged context for registration
+ * of context specific providers.
  */
 function advertise() {
-  // TODO: Firefox rejects cross site requests, so this approach will not work.
-  // Figure out a new way to advertise to the addon.
-  // var xhr = new XMLHttpRequest();
-  // xhr.open('GET', 'http://127.3733366/advertise.js', true);
-  // window.addEventListener('message', function(m) {
-  //   if (m.source == window && m.data.type == 'freedomAdvertisementResponse') {
-  //     console.log("Fdom advertisement response");
-  //   }
-  // });
-  // xhr.send();
-  // setTimeout(function() {
-  //   xhr.abort();
-  // }, 50);
-  // TODO: Determine a mechanism by which to restrict responses by non-priveledged code.
-  if ((location.protocol === 'chrome-extension:' || location.protocol == 'resource:')
-      && typeof freedomcfg !== "undefined") {
+  // TODO: Determine a better mechanism that this whitelisting.
+  if ((location.protocol === 'chrome-extension:' ||
+      location.protocol == 'resource:') &&
+      typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
 }
@@ -164,6 +163,27 @@ function scripts() {
 function makeAbsolute(url) {
   var base = location.protocol + "//" + location.host + location.pathname;
   return resolvePath(url, base);
+}
+
+/**
+ * Make frames to replicate freedom isolation without web-workers.
+ * iFrame isolation is non-standardized, and access to the DOM within frames
+ * means that they are insecure. However, debugging of webworkers is
+ * painful enough that this mode of execution can be valuable for debugging.
+ */
+function makeFrame() {
+  var frame = document.createElement('iframe');
+  // TODO(willscott): add sandboxing protection.
+
+  var loader = '<html><script src="' + forceAppContext() + '"></script></html>';
+  var blob = new Blob([loader], {type: 'text/html'});
+  frame.src = URL.createObjectURL(blob);
+
+  if (!document.body) {
+    document.appendChild(document.createElement("body"));
+  }
+  document.body.appendChild(frame);
+  return frame.contentWindow;
 }
 
 /**

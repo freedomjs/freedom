@@ -4,6 +4,7 @@
  * @private
  */
 var Core_unprivileged = function(pipe, app) {
+  this.pipe = pipe;
   if (app) {
     this.app = app;
   } else {
@@ -26,8 +27,7 @@ Core_unprivileged.prototype.onResponse = function(continuation) {
     var chan = this.app.getProxy(id);
     cb(chan);
   }.bind(this, continuation));
-}
-
+};
 
 Core_unprivileged.prototype.createChannel = function(continuation) {
   this.onResponse(continuation);
@@ -50,7 +50,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation) {
 
 Core_unprivileged.bindChannel = function(identifier) {
   var pipe = fdom.Channel.pipe();
-  fdom.Hub.get().bindChannel(identifier[0], identifier[1], pipe[0]);
+  fdom.Hub.get().bindChannel(identifier[0], pipe[0]);
   //TODO(willscott): this is sketchy :-/
   var app = fdom.Hub.get().apps[identifier[0]];
   var flow = app.getChannel(identifier[1]);
