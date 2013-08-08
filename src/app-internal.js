@@ -91,8 +91,14 @@ fdom.app.Internal.prototype.start = function() {
       }
     }.bind({}, this.id);
 
-    var appURL = resolvePath(this.manifest['app']['script'], this.id);
-    this.config.global.importScripts(appURL);
+    var script = this.manifest['app']['script'];
+    if (typeof script === 'string') {
+      this.config.global.importScripts(resolvePath(script, this.id));
+    } else {
+      for (var i = 0; i < script.length; i++) {
+        this.config.global.importScripts(resolvePath(script[i], this.id));
+      }
+    }
   }.bind(this));
   
   // Post creation message to get the info.
