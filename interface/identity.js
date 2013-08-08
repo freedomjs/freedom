@@ -57,9 +57,11 @@ fdom.apis.set("identity", {
   }},
   //Event on incoming message
   'onMessage': {type: "event", value: {
-    "from": "string",   //id of user message is from
-    "to": "string",     //id of user message is to
-    "message": "object" //message contents
+    "fromUserId": "string",   //userId of user message is from
+    "fromClientId": "string", //clientId of user message is from
+    "toUserId": "string",     //userId of user message is to
+    "toClientId": "string",   //clientId of user message is to
+    "message": "object"       //message contents
   }},
   //Event on provider status
   //Can be 'offline', 'online', 'connecting' or 'error'
