@@ -5,7 +5,7 @@
  */
 var Core_unprivileged = function(pipe, app) {
   this.pipe = pipe;
-  if (app) {
+  if (app && app.id) {
     this.app = app;
   } else {
     var base = fdom.Proxy.getIdentifier(global['freedom']);
