@@ -7,7 +7,7 @@ setup = function () {
   var def;
   var site_cfg = {
     'debug': true,
-    'strongIsolation': true,
+    'strongIsolation': true
   };
 
   if (isAppContext()) {

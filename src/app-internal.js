@@ -74,29 +74,24 @@ fdom.app.Internal.prototype.start = function() {
       request: 'ready'
     });
 
-    var is = this.config.global['importScripts'];
-    if (!is && !this.config['strongIsolation']) {
+    var importer = this.config.global['importScripts'];
+    if (!importer && !this.config['strongIsolation']) {
       // TODO(willscott): this implementation is asynchronous, shouldn't be.
-      is = function(url) {
+      importer = function(url) {
         var script = document.createElement('script');
         script.src = url;
         document.body.appendChild(script);
       };
     }
-    this.config.global['importScripts'] = function(prefix, src) {
-      try {
-        is(resolvePath(src, prefix));
-      } catch (e) {
-        console.log(e.message+'\n'+e.stack);
-      }
-    }.bind({}, this.id);
+    this.config.global['importScripts'] = undefined;
+    // TODO(willscott): importScripts can be recovered via deletion.
 
     var script = this.manifest['app']['script'];
     if (typeof script === 'string') {
-      this.config.global.importScripts(resolvePath(script, this.id));
+      importer(resolvePath(script, this.id));
     } else {
       for (var i = 0; i < script.length; i++) {
-        this.config.global.importScripts(resolvePath(script[i], this.id));
+        importer(resolvePath(script[i], this.id));
       }
     }
   }.bind(this));
