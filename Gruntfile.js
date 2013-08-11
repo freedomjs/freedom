@@ -27,13 +27,15 @@ module.exports = function(grunt) {
         ],
         dest: 'freedom.js'
       }
-    }
+    },
+    clean: ['freedom.js']
   });
 
   // Load tasks.
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   // Default tasks.
   grunt.registerTask('default', [
