@@ -52,36 +52,19 @@ Api.prototype.register = function(name, constructor) {
  * @returns {coreProvider} A fdom.App look-alike to a local API definition.
  */
 Api.prototype.getCore = function(name, you) {
-  return new CoreProvider(name, you);
-};
-
-/**
- * Bind a core API to a preexisting channel.
- * @param {String} name the API to bind.
- * @param {fdom.Channel} channel The Channel to terminate with the Core API.
- */
-Api.prototype.bindCore = function(name, channel) {
-  var def = fdom.apis.get(name).definition;
-  var endpoint = new fdom.Proxy(channel, def, true);
-
-  var resolver = makeAbsolute.bind({});
-  if (channel.app) {
-    resolver = function(base, file) {
-      return resolvePath(file, base);
-    }.bind({}, channel.app.id);
-  }
-  
-  endpoint['provideAsynchronous'](fdom.apis.providers[name].bind({}, channel, resolver));
-  return endpoint;
+  return new CoreProvider(this, name, you);
 };
 
 /**
  * A core API provider, implementing the fdom.Proxy interface.
- * @param {String} name The core provider name
+ * @param {Api} api The api registry offering this provider.
+ * @param {String} name The core provider name.
  * @param {fdom.Channel} channel The communication channel from the provider.
  * @constructor
+ * @private
  */
-var CoreProvider = function(name, channel) {
+var CoreProvider = function(api, name, channel) {
+  this.api = api;
   this.instance = null;
   this.name = name;
   this.channel = channel;
@@ -93,9 +76,29 @@ var CoreProvider = function(name, channel) {
  */
 CoreProvider.prototype.postMessage = function(msg) {
   if (!this.instance) {
-    this.instance = fdom.apis.bindCore(this.name, this.channel);
+    this.instantiate();
   }
   this.channel['emit']('message', msg);
+};
+
+CoreProvider.prototype.instantiate = function() {
+  var def = this.api.get(this.name).definition;
+  if (!def) {
+    return false;
+  }
+
+  // TODO(willscott): determine if path resolver is really needed.
+  var resolver = makeAbsolute.bind({});
+  if (this.channel.app) {
+    resolver = function(base, file) {
+      return resolvePath(file, base);
+    }.bind({}, this.channel.app.id);
+  }
+
+  // The actual provider is a proxy backed by the core service.
+  this.instance = new fdom.Proxy(this.channel, def, true);
+  this.instance['provideAsynchronous'](this.api.providers[this.name].bind(
+    {}, this.channel, resolver));
 };
 
 /**

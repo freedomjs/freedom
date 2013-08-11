@@ -150,9 +150,11 @@ fdom.app.Internal.prototype.loadPermissions = function() {
   }
 
   //Core API is handled locally, to facilitate channel setup.
-  var coreAPI = fdom.apis.get('core');
   var pipe = fdom.Channel.pipe();
-  fdom.apis.bindCore('core', pipe[1]);
+  var core = fdom.apis.getCore('core', pipe[1]);
+  core.instantiate();
+  
+  var coreAPI = fdom.apis.get('core');
   exp['core'] = new fdom.Proxy(pipe[0], coreAPI.definition);
 };
 

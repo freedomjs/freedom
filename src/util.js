@@ -40,18 +40,11 @@ function eachProp(obj, func) {
  * Object.prototype names, but the uses of mixin here seem unlikely to
  * trigger a problem related to that.
  */
-function mixin(target, source, force, deepStringMixin) {
+function mixin(target, source, force) {
   if (source) {
     eachProp(source, function (value, prop) {
       if (force || !hasProp(target, prop)) {
-        if (deepStringMixin && typeof value !== 'string') {
-          if (!target[prop]) {
-            target[prop] = {};
-          }
-          mixin(target[prop], value, force, deepStringMixin);
-        } else {
-          target[prop] = value;
-        }
+        target[prop] = value;
       }
     });
   }
