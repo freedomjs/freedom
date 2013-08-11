@@ -1,13 +1,16 @@
-FreeDOM Core
-============
+FreeDOM
+=======
+[![Build Status](https://travis-ci.org/UWNetworksLab/freedom.png?branch=master)](https://travis-ci.org/UWNetworksLab/freedom)
 
-The FreeDOM application logic, and freedom.js.
-Platform specific implementations (such as freedom-chrome) will depend on this project.
+This repository contains FreeDOM, a modular runtime for distributed projects.
+FreeDOM lets you build complex web services without the costs of centralized
+infrastructure. Instead, FreeDOM will manage code and data distribution on top
+of user resources.
 
-Compiling
+Installation
 ---------
 
-Build FreeDOM locally using
+Compile FreeDOM by running
 
     LOCAL=yes make
 
@@ -18,12 +21,19 @@ FreeDOM also supports compilation using Google's Closure service, which can be a
 The closure service performs variable mangling on the code.  Development should be checked against
 both compilation modes for compatibility.
 
+Contributing
+---------
+
+FreeDOM is unit tested & linted to maintain code quality.
+Run ```grunt``` in the base FreeDOM library to test your changes before commit.
+
 Demos
 -------
 
-A set of demos are available in the ```demo``` folder.  To run the demos, first [compile](#compiling) then
-visit the demos through a local web server.  This is due to file-protocol restrictions on XHR requests used
-by FreeDOM.  A minimal server can be launched using
+Demos are available in the ```demo``` folder.  FreeDOM should be [compiled](#installation)
+before running the demos.  The demos should be viewed through a local web server,
+due to browser safety restrictions on local XHR requests.
+A minimal server can be launched by running
 
     python -m SimpleHTTPServer
 
