@@ -1,0 +1,11 @@
+{
+  "name": "freeDOM",
+  "version": "0.1.0",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-jasmine": "~0.5.1"
+  },
+  "scripts": {
+    "test": "grunt --verbose"
+  }
+}

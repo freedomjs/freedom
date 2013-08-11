@@ -16,9 +16,12 @@ describe("fdom.Proxy.templatedproxy", function() {
   });
 
   it("conforms binary arguments", function() {
-    var blob = new Blob(["test"]);
-    expect(conform("blob", blob)).toEqual(blob);
-    expect(conform("blob", "string")).toEqual(jasmine.any(Blob));
+    // TODO: test Blob support (API is nonstandard between Node and Browsers)
+    /*
+     * var blob = new Blob(["test"]);
+     * expect(conform("blob", blob)).toEqual(blob);
+     * expect(conform("blob", "string")).toEqual(jasmine.any(Blob));
+     */
 
     var buffer = new ArrayBuffer(4);
     expect(conform("buffer", buffer)).toEqual(buffer);

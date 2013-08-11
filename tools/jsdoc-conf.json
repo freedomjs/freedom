@@ -4,7 +4,7 @@
     },
     "source": {
         "include": ["src/", "interface/", "providers/"],
-        "exclude": ["src/preamble.js", "src/postamble.js"],
+        "exclude": ["src/util/"],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
