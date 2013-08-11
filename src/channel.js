@@ -24,23 +24,8 @@ fdom.Channel.prototype.postMessage = function(m) {
 };
 
 /**
- * Create an opaque object which acts like this channel
- * for the purpose of receiving message events, but which
- * can not be introspected to see the flow or app backing
- * the channel.
- */
-fdom.Channel.prototype.getProxy = function() {
-  var self = this;
-  var out = {};
-  handleEvents(out);
-  out['on']('message', function(msg) {
-    self['emit']('message', msg);
-  });
-  return out;
-};
-
-/**
  * Create a pair of channels which relay messages to each other.
+ * @returns {fdom.Channel[]} The two ends of the created pipe.
  */
 fdom.Channel.pipe = function() {
   var first = {};
