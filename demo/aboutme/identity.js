@@ -1,8 +1,4 @@
-function IdentityProvider() {
-  importScripts("http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js");
-}
-
-IdentityProvider.prototype.get = function(continuation) {
+IdentityProvider.prototype.getProfile = function(continuation) {
   var view = freedom['core.view']();
   var promise = view.open({
     file: "identityview.html"
@@ -30,3 +26,4 @@ IdentityProvider.prototype.get = function(continuation) {
 }
 
 freedom.identity().provideAsynchronous(IdentityProvider);
+

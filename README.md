@@ -7,6 +7,19 @@ FreeDOM lets you build complex web services without the costs of centralized
 infrastructure. Instead, FreeDOM will manage code and data distribution on top
 of user resources.
 
+Using
+---------
+
+The most recent version of freedom can be included or downloaded [here](https://homes.cs.washington.edu/~wrs/freedom.js).
+
+FreeDOM can be included into a view as follows:
+
+    <script type='text/javascript'
+            src='freedom.js'
+            data-manifest='MainModule.json'>
+      {"debug": true}
+    </script>
+
 Installation
 ---------
 
@@ -26,6 +39,8 @@ Contributing
 
 FreeDOM is unit tested & linted to maintain code quality.
 Run ```grunt``` in the base FreeDOM library to test your changes before commit.
+
+Internal documentation is maintained [here](https://homes.cs.washington.edu/~wrs/tools/doc).
 
 Demos
 -------
