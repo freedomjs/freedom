@@ -1,5 +1,9 @@
 var fdom = fdom || {};
 
+/**
+ * A freedom channel abstracts one hole into or out-of an App.
+ * @class Channel
+ */
 fdom.Channel = function(app, flow) {
   this.app = app;  // The app (internal or external)
   this.flow = flow;
@@ -8,6 +12,7 @@ fdom.Channel = function(app, flow) {
 
 /**
  * Handle a message from across the channel.
+ * @method onMessage
  */
 fdom.Channel.prototype.onMessage = function(e) {
   this['emit']('message', e['type'] ? e : e.data);
@@ -15,6 +20,7 @@ fdom.Channel.prototype.onMessage = function(e) {
 
 /**
  * Post a message to this channel.
+ * @method postMessage
  */
 fdom.Channel.prototype.postMessage = function(m) {
   this.app.postMessage({
@@ -25,7 +31,9 @@ fdom.Channel.prototype.postMessage = function(m) {
 
 /**
  * Create a pair of channels which relay messages to each other.
- * @returns {fdom.Channel[]} The two ends of the created pipe.
+ * @method pipe
+ * @static
+ * @returns {Channel[]} The two ends of the created pipe.
  */
 fdom.Channel.pipe = function() {
   var first = {};

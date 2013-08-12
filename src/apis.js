@@ -5,6 +5,7 @@ if (typeof fdom === 'undefined') {
 /**
  * The API registry for FreeDOM.  Used to look up requested APIs,
  * and provides a bridge for core APIs to act like normal APIs.
+ * @Class API
  * @constructor
  */
 var Api = function() {
@@ -14,8 +15,9 @@ var Api = function() {
 
 /**
  * Get an API.
+ * @method get
  * @param {String} api The API name to get.
- * @returns {{name:String, definition:API}?} The API if registered.
+ * @returns {{name:String, definition:API}} The API if registered.
  */
 Api.prototype.get = function(api) {
   if (!this.apis[api]) {
@@ -29,6 +31,7 @@ Api.prototype.get = function(api) {
 
 /**
  * Set an API to a definition.
+ * @method set
  * @param {String} name The API name.
  * @param {API} definition The JSON object defining the API.
  */
@@ -38,6 +41,7 @@ Api.prototype.set = function(name, definition) {
 
 /**
  * Register a core API provider.
+ * @method register
  * @param {String} name the API name.
  * @param {Function} constructor the function to create a provider for the API.
  */
@@ -47,9 +51,10 @@ Api.prototype.register = function(name, constructor) {
 
 /**
  * Get a core API connected to a given FreeDOM module.
+ * @method getCore
  * @param {String} name the API to retrieve.
- * @param {fdom.Channel} you The communication channel to the API.
- * @returns {coreProvider} A fdom.App look-alike to a local API definition.
+ * @param {Channel} you The communication channel to the API.
+ * @returns {CoreProvider} A fdom.App look-alike to a local API definition.
  */
 Api.prototype.getCore = function(name, you) {
   return new CoreProvider(this, name, you);
@@ -57,9 +62,12 @@ Api.prototype.getCore = function(name, you) {
 
 /**
  * A core API provider, implementing the fdom.Proxy interface.
- * @param {Api} api The api registry offering this provider.
+ * @param {API} api The api registry offering this provider.
  * @param {String} name The core provider name.
- * @param {fdom.Channel} channel The communication channel from the provider.
+ * @param {Channel} channel The communication channel from the provider.
+ * @class CoreProvider
+ * @for API
+ * @extends Proxy
  * @constructor
  * @private
  */
@@ -72,6 +80,7 @@ var CoreProvider = function(api, name, channel) {
 
 /**
  * Send a message to this core provider.
+ * @method postMessage
  * @param {Object} msg The message to post.
  */
 CoreProvider.prototype.postMessage = function(msg) {
@@ -81,6 +90,11 @@ CoreProvider.prototype.postMessage = function(msg) {
   this.channel['emit']('message', msg);
 };
 
+/**
+ * Instantiates the provider abstracted by this proxy.
+ * @method instantiate
+ * @private
+ */
 CoreProvider.prototype.instantiate = function() {
   var def = this.api.get(this.name).definition;
   if (!def) {

@@ -1,7 +1,14 @@
-// This structure is meant to resemble that of require.js
+/**
+ * @module freedom
+ */
 
 /**
- * Main entry point.
+ * External freedom Setup.  global.freedom is set to the value returned by
+ * setup (see preamble.js and postamble.js for that mechanism).  As a result,
+ * this is the primary entry function for the freedom library.
+ * @for util
+ * @method setup
+ * @static
  */
 setup = function () {
   var def;

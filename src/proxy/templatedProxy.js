@@ -1,3 +1,8 @@
+/**
+ * A proxy exposing a predefined interface
+ * @class templatedProxy
+ * @extends Proxy
+ */
 fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
   var inflight = {};
   var events = null;

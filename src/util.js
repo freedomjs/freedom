@@ -1,6 +1,16 @@
+
+/**
+ * Utility method used within the freedom Library.
+ * @class util
+ * @static
+ */
+var Util = {};
+
 /**
  * Helper function for iterating over an array backwards. If the func
  * returns a true value, it will break out of the loop.
+ * @method eachReverse
+ * @static
  */
 function eachReverse(ary, func) {
   if (ary) {
@@ -13,6 +23,10 @@ function eachReverse(ary, func) {
   }
 }
 
+/**
+ * @method hasProp
+ * @static
+ */
 function hasProp(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
@@ -21,6 +35,8 @@ function hasProp(obj, prop) {
  * Cycles over properties in an object and calls a function for each
  * property value. If the function returns a truthy value, then the
  * iteration is stopped.
+ * @method eachProp
+ * @static
  */
 function eachProp(obj, func) {
   var prop;
@@ -39,6 +55,8 @@ function eachProp(obj, func) {
  * This is not robust in IE for transferring methods that match
  * Object.prototype names, but the uses of mixin here seem unlikely to
  * trigger a problem related to that.
+ * @method mixin
+ * @static
  */
 function mixin(target, source, force) {
   if (source) {
@@ -54,6 +72,8 @@ function mixin(target, source, force) {
 /**
  * Add 'on' and 'emit' methods to an object, which act as a light weight
  * event handling structure.
+ * @class handleEvents
+ * @static
  */
 function handleEvents(obj) {
   var eventState = {
@@ -63,6 +83,12 @@ function handleEvents(obj) {
     onceConditional: []
   };
 
+  /**
+   * Register a method to be executed when an event of a specific type occurs.
+   * @method on
+   * @param {String|Function} type The type of event to register against.
+   * @param {Function} handler The handler to run when the event occurs.
+   */
   obj['on'] = function(type, handler) {
     if (typeof type === 'function') {
       this.conditional.push([type, handler]);
@@ -73,6 +99,13 @@ function handleEvents(obj) {
     }
   }.bind(eventState);
 
+  /**
+   * Register a method to be execute the next time an event occurs.
+   * @method once
+   * @param {String|Function} type The type of event to wait for.
+   * @param {Function} handler The handler to run the next time a matching event
+   *     is raised.
+   */
   obj['once'] = function(type, handler) {
     if (typeof type === 'function') {
       this.onceConditional.push([type, handler]);
@@ -83,6 +116,12 @@ function handleEvents(obj) {
     }
   }.bind(eventState);
 
+  /**
+   * Emit an event on this object.
+   * @method emit
+   * @param {String} type The type of event to raise.
+   * @param {Object} data The payload of the event.
+   */
   obj['emit'] = function(type, data) {
     var i;
     if (this.listeners[type]) {
@@ -114,6 +153,9 @@ function handleEvents(obj) {
 
 /**
  * When run without a window, or specifically requested.
+ * @method isAppContext
+ * @for util
+ * @static
  */
 function isAppContext() {
   return (typeof window === 'undefined');
@@ -122,6 +164,8 @@ function isAppContext() {
 /**
  * Provide a source URL which to generate an AppContext compatible with
  * the current instance of freedom.
+ * @method forceAppContext
+ * @static
  */
 function forceAppContext() {
   var forced = "function " + isAppContext.name + "() { return true; }";
@@ -133,6 +177,8 @@ function forceAppContext() {
 /**
  * Advertise freedom when running in a priviledged context for registration
  * of context specific providers.
+ * @method advertise
+ * @static
  */
 function advertise() {
   // TODO: Determine a better mechanism that this whitelisting.
@@ -145,6 +191,8 @@ function advertise() {
 
 /**
  * Find all scripts on the given page.
+ * @method scripts
+ * @static
  */
 function scripts() {
     return document.getElementsByTagName('script');
@@ -152,6 +200,8 @@ function scripts() {
 
 /**
  * Make a relative URL absolute, based on the current location.
+ * @method makeAbsolute
+ * @static
  */
 function makeAbsolute(url) {
   var base = location.protocol + "//" + location.host + location.pathname;
@@ -163,6 +213,8 @@ function makeAbsolute(url) {
  * iFrame isolation is non-standardized, and access to the DOM within frames
  * means that they are insecure. However, debugging of webworkers is
  * painful enough that this mode of execution can be valuable for debugging.
+ * @method makeFrame
+ * @static
  */
 function makeFrame() {
   var frame = document.createElement('iframe');
@@ -181,6 +233,8 @@ function makeFrame() {
 
 /**
  * Resolve a url against a defined base location.
+ * @method resolvePath
+ * @static
  */
 function resolvePath(url, from) {
   var protocols = ["http", "https", "chrome-extension", "resource"];
@@ -201,3 +255,4 @@ function resolvePath(url, from) {
     return base + path + "/" + url;
   }
 }
+

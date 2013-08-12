@@ -8,12 +8,14 @@ if (typeof fdom === 'undefined') {
  * A fdomProxy or subclass are the exposed interface for freedom applications
  * and providers.  The interface is determined by the constructor arguments.
  * Three types of proxies are currently used:
- * A generic messageChannel, which allows for events ('emit', 'on'), and properties ('set', 'get').
+ * A generic messageProxy
+, which allows for events ('emit', 'on'), and properties ('set', 'get').
  * A templatedProxy, which appears as a pre-defined definition.
  * A templatedDelegator, which delegates calls to a provider implementing a pre-defined definition.
- * @param {fdom.Channel} channel the Channel backing this interface.
+ * @param {Channel} channel the Channel backing this interface.
  * @param {Object?} definition An API definition if one is specified.
  * @param {boolean} provider Whether this interface provides or consumes a service.
+ * @class Proxy
  * @constructor
  */
 fdom.Proxy = function(channel, definition, provider) {
@@ -29,7 +31,7 @@ fdom.Proxy = function(channel, definition, provider) {
       proxy = new fdom.Proxy.templatedProxy(channel, definition, {hash: hash});
     }
   } else {
-    proxy = new fdom.Proxy.messageChannel(channel, hash);
+    proxy = new fdom.Proxy.messageProxy(channel, hash);
   }
   Object.defineProperty(proxy, '__identifier', {
     enumerable: false,
@@ -50,8 +52,10 @@ fdom.Proxy.registry = {};
 /**
  * Get an identifier for a proxy, in order to transfer the capability
  * to access that channel across application boundaries
- * @param {fdom.Proxy} proxy The proxy to identify
- * @returns {Array.<String>} A transferable identifier for the proxy.
+ * @method getIdentifier
+ * @static
+ * @param {Proxy} proxy The proxy to identify
+ * @returns {String[]} A transferable identifier for the proxy.
  */
 fdom.Proxy.getIdentifier = function(proxy) {
   if (fdom.Proxy.registry[proxy['__identifier']]) {
@@ -64,24 +68,29 @@ fdom.Proxy.getIdentifier = function(proxy) {
 
 /**
  * Reconstitute a proxy from a channel and Identifier.
- * @param {fdom.Channel} channel The channel backing the proxy interface.
+ * @method get
+ * @static
+ * @param {Channel} channel The channel backing the proxy interface.
  * @param {Object} definition The API definition if the channel is a provider.
- * @param {Array.<String>} identifier The identifier for the channel.
+ * @param {String[]} identifier The identifier for the channel.
  */
 fdom.Proxy.get = function(channel, definition, identifier) {
   if (definition) {
     return new fdom.Proxy.templatedProxy(channel, definition, {flowId: identifier[2]});
   } else {
-    return new fdom.Proxy.messageChannel(channel);
+    return new fdom.Proxy.messageProxy(channel);
   }
 };
 
 /**
  * A freedom endpoint for an unconstrained, unpriveledged channel.
- * @param {fdom.Channel} channel The Channel backing this interface.
+ * @class messageProxy
+ * @extends Proxy
+ * @uses handleEvents
+ * @param {Channel} channel The Channel backing this interface.
  * @constructor
  */
-fdom.Proxy.messageChannel = function(channel, hash) {
+fdom.Proxy.messageProxy = function(channel, hash) {
   handleEvents(this);
   if (hash) {
     fdom.Proxy.registry[hash] = [channel, channel.flow];
@@ -98,6 +107,7 @@ fdom.Proxy.messageChannel = function(channel, hash) {
 
   /**
    * Update emission of events to cross the underlying channel.
+   * @method emit
    * @param {String} type The type of message to send.
    * @param {Object} data The message to send.
    */
@@ -115,6 +125,7 @@ fdom.Proxy.messageChannel = function(channel, hash) {
 
   /**
    * Get a property from this object.
+   * @method get
    * @param {String} key the property to get.
    */
   this.get = function(key) {
@@ -127,6 +138,7 @@ fdom.Proxy.messageChannel = function(channel, hash) {
 
   /**
    * Set a property on this object, and replicate across the channel.
+   * @method set
    * @param {String} key the property to set.
    * @param {JSON} value the value for the property.
    */
