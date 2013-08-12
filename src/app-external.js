@@ -90,6 +90,7 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
       try {
         resp = JSON.parse(ref.responseText);
       } catch(err) {
+        console.warn(err);
         this.onManifest();
         return;
       }
@@ -117,7 +118,7 @@ fdom.app.External.prototype.onManifest = function(manifest) {
     this['emit']('manifest');
     this.start();
   } else {
-    console.warn(manifest['name'] + " does not specify a valid application.");
+    console.warn(manifest + " does not specify a valid application.");
   }
 };
 
@@ -134,10 +135,14 @@ fdom.app.External.prototype.start = function() {
     this.state = false;
   }
   if (this.config['strongIsolation']) {
-    var blob = new Blob([this.config.src], {type: 'text/javascript'});
-    this.worker = new Worker(URL.createObjectURL(blob));
+    if (typeof (window.Blob) !== typeof (Function)) {
+      this.worker = new Worker(this.config.source);
+    } else {
+      var blob = new Blob([this.config.src], {type: 'text/javascript'});
+      this.worker = new Worker(URL.createObjectURL(blob));
+    }
   } else {
-    this.worker = makeFrame(this.config.source);
+    this.worker = makeFrame(this.config.src);
   }
   this.worker.addEventListener('message', function(msg) {
     if (msg.data.fromApp) {

@@ -1,4 +1,3 @@
-
 /**
  * Utility method used within the freedom Library.
  * @class util
@@ -167,9 +166,9 @@ function isAppContext() {
  * @method forceAppContext
  * @static
  */
-function forceAppContext() {
+function forceAppContext(src) {
   var forced = "function " + isAppContext.name + "() { return true; }";
-  var source = freedom_src.replace(isAppContext.toString(), forced);
+  var source = src.replace(isAppContext.toString(), forced);
   var blob = new Blob([source], {type: 'text/javascript'});
   return URL.createObjectURL(blob);
 }
@@ -216,11 +215,11 @@ function makeAbsolute(url) {
  * @method makeFrame
  * @static
  */
-function makeFrame() {
+function makeFrame(src) {
   var frame = document.createElement('iframe');
   // TODO(willscott): add sandboxing protection.
 
-  var loader = '<html><script src="' + forceAppContext() + '"></script></html>';
+  var loader = '<html><script src="' + forceAppContext(src) + '"></script></html>';
   var blob = new Blob([loader], {type: 'text/html'});
   frame.src = URL.createObjectURL(blob);
 

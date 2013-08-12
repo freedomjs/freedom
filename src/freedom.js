@@ -10,7 +10,7 @@
  * @method setup
  * @static
  */
-setup = function () {
+setup = function (global, freedom_src, config) {
   var def;
   var site_cfg = {
     'debug': true,
@@ -45,6 +45,9 @@ setup = function () {
   }
   site_cfg.global = global;
   site_cfg.src = freedom_src;
+  if(config) {
+    mixin(site_cfg, config, true);
+  }
   def.configure(site_cfg);
 
   // Enable console.log from worker contexts.
