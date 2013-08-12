@@ -11,6 +11,7 @@ if (typeof fdom === 'undefined') {
  */
 fdom.Hub = function() {
   this.config = {};
+  this.config['debug'] = false;
   this.apps = {};
   this.pipes = {};
   this.unbound = [];
@@ -40,6 +41,10 @@ fdom.Hub.prototype.onMessage = function(app, message) {
     return;
   }
   var flows = this.pipes[app.id];
+  if (!flows) {
+    console.warn("Message dropped from unconfigured app " + app.id);
+    return;
+  }
   var flow = message.sourceFlow;
   var destChannel = flows[flow];
 
@@ -128,7 +133,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
 };
 
 /**
- * Ensure than an application is enstantiated. and registered.
+ * Ensure than an application is instantiated and registered.
  * @method ensureApp
  * @param {String} id The URL identifying the app.
  */
@@ -141,6 +146,7 @@ fdom.Hub.prototype.ensureApp = function(id) {
       manifest: canonicalId
     });
     this.apps[canonicalId] = newApp;
+    this.pipes[canonicalId] = {};
   }
   return canonicalId;
 };
