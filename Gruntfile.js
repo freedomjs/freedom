@@ -1,5 +1,6 @@
 module.exports = function(grunt) {
   grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
     jasmine: {
       freedom: {
         src: ['src/*.js', 'src/proxy/*.js'],
@@ -28,7 +29,18 @@ module.exports = function(grunt) {
         dest: 'freedom.js'
       }
     },
-    clean: ['freedom.js']
+    clean: ['freedom.js'],
+    yuidoc: {
+      compile: {
+        name: '<%= pkg.name %>',
+        description: '<%= pkg.description %>',
+        version: '<%= pkg.version %>',
+        options: {
+          paths: 'src/',
+          outdir: 'tools/doc/'
+        }
+      }
+    }
   });
 
   // Load tasks.
@@ -36,6 +48,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-yuidoc');
 
   // Default tasks.
   grunt.registerTask('default', [
