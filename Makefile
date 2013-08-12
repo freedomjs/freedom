@@ -14,13 +14,8 @@ else
 	python tools/build.py $(MAKEFLAGS) -o $@ $(SOURCES)
 endif
 
-docs:
-	cd tools && bash docs.sh
-docs-deploy:
-	cd tools && bash docs.sh deploy
-
-lint:
-	jshint --show-non-errors freedom.js
+demo: freedom.js
+	python -m SimpleHTTPServer
 
 clean:
 	rm freedom.js
