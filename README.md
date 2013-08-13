@@ -7,7 +7,7 @@ FreeDOM is a runtime for distributed web applications.
 We don't get in the way of your app, but let you build complex web services
 without worrying about where data or code will reside. Instead, FreeDOM takes
 care of the distributed systems work to reduce your costs, keep your users in
-control of their data, and make your app as available and convienent as a
+control of their data, and make your app as available and convenient as a
 cloud-based approach.
 
 Using FreeDOM

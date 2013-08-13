@@ -10,13 +10,15 @@ fdom.app = fdom.app || {};
  * canonical view of the metadata for the application.
  * @class App.External
  * @extends App
+ * @param Hub The freedom Hub to register with.
  * @constructor
  */
-fdom.app.External = function() {
+fdom.app.External = function(hub) {
   this.config = {
     manifest: 'manifest.json',
     source: 'freedom.js'
   };
+  this.hub = hub;
   this.channels = {};
   this.manifest = {};
   this.worker = null;
@@ -31,7 +33,7 @@ fdom.app.External = function() {
  * @param {Object} config global freedom Properties.
  */
 fdom.app.External.prototype.configure = function(config) {
-  mixin(fdom.Hub.get().config, config);
+  mixin(this.hub.config, config);
   mixin(this.config, config, true);
 };
 
@@ -90,7 +92,7 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
       try {
         resp = JSON.parse(ref.responseText);
       } catch(err) {
-        console.warn(err);
+        console.warn("Failed to load manifest " + manifest + ": " + err);
         this.onManifest();
         return;
       }
@@ -114,7 +116,7 @@ fdom.app.External.prototype.loadManifest = function(manifest) {
 fdom.app.External.prototype.onManifest = function(manifest) {
   if (manifest && manifest['app'] && manifest['app']['script']) {
     this.manifest = manifest;
-    fdom.Hub.get().register(this);
+    this.hub.register(this);
     this['emit']('manifest');
     this.start();
   } else {
@@ -146,7 +148,7 @@ fdom.app.External.prototype.start = function() {
   }
   this.worker.addEventListener('message', function(msg) {
     if (msg.data.fromApp) {
-      fdom.Hub.get().onMessage(this, msg.data);
+      this.hub.onMessage(this, msg.data);
     }
   }.bind(this), true);
 };

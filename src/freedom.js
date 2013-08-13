@@ -25,7 +25,7 @@ setup = function (global, freedom_src, config) {
     }
   } else {
     advertise();
-    def = new fdom.app.External();    
+    def = new fdom.app.External(fdom.Hub.get());
 
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
