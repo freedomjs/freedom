@@ -118,11 +118,11 @@ fdom.app.Internal.prototype.start = function() {
  */
 fdom.app.Internal.prototype.postMessage = function(msg) {
   msg.fromApp = true;
-  if (this.config.global.postMessage.length == 2) {
+  if (this.config['strongIsolation']) {
+    this.config.global.postMessage(msg);
+  } else {
     // TODO(willscott): posting blindly is insecure.
     this.config.global.postMessage(msg, "*");
-  } else {
-    this.config.global.postMessage(msg);
   }
 };
 

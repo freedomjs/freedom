@@ -19,6 +19,10 @@ setup = function (global, freedom_src, config) {
 
   if (isAppContext()) {
     def = new fdom.app.Internal();
+    // If you can see your parent, you're likely not fully sandboxed.
+    if (typeof global.parent !== 'undefined') {
+      site_cfg['strongIsolation'] = false;
+    }
   } else {
     advertise();
     def = new fdom.app.External();    

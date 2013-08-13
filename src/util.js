@@ -161,6 +161,38 @@ function isAppContext() {
 }
 
 /**
+ * Get a Blob object of a string.
+ * Polyfills implementations which don't have a current Blob constructor, like
+ * phantomjs.
+ * @method getBlob
+ * @static
+ */
+function getBlob(data, type) {
+  if (typeof Blob !== 'function' && typeof WebKitBlobBuilder !== 'undefined') {
+    var builder = new WebKitBlobBuilder();
+    builder.append(data);
+    return builder.getBlob(type);
+  } else {
+    return new Blob([data], {type: type});
+  }
+}
+
+/**
+ * Get a URL of a blob object for inclusion in a frame.
+ * Polyfills implementations which don't have a current URL object, like
+ * phantomjs.
+ * @method getURL
+ * @static
+ */
+function getURL(blob) {
+  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
+    return webkitURL.createObjectURL(blob);
+  } else {
+    return URL.createObjectURL(blob);
+  }
+}
+
+/**
  * Provide a source URL which to generate an AppContext compatible with
  * the current instance of freedom.
  * @method forceAppContext
@@ -169,8 +201,8 @@ function isAppContext() {
 function forceAppContext(src) {
   var forced = "function " + isAppContext.name + "() { return true; }";
   var source = src.replace(isAppContext.toString(), forced);
-  var blob = new Blob([source], {type: 'text/javascript'});
-  return URL.createObjectURL(blob);
+  var blob = getBlob(source, 'text/javascript');
+  return getURL(blob);
 }
 
 /**
@@ -215,13 +247,18 @@ function makeAbsolute(url) {
  * @method makeFrame
  * @static
  */
-function makeFrame(src) {
+function makeFrame(src, inject) {
   var frame = document.createElement('iframe');
   // TODO(willscott): add sandboxing protection.
 
-  var loader = '<html><script src="' + forceAppContext(src) + '"></script></html>';
-  var blob = new Blob([loader], {type: 'text/html'});
-  frame.src = URL.createObjectURL(blob);
+  var extra = '';
+  if (inject) {
+    extra = '<script src="' + inject + '"></script>';
+  }
+  var loader = '<html>' + extra + '<script src="' +
+      forceAppContext(src) + '"></script></html>';
+  var blob = getBlob(loader, 'text/html');
+  frame.src = getURL(blob);
 
   if (!document.body) {
     document.appendChild(document.createElement("body"));

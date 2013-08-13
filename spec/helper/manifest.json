@@ -1,0 +1,7 @@
+{
+  "name": "Echo",
+  "description": "Minimal Freedom module",
+  "app": {
+    "script": "app.js"
+  }
+}

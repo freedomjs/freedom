@@ -52,9 +52,9 @@ module.exports = function(grunt) {
 
   // Default tasks.
   grunt.registerTask('default', [
-    'jasmine',
     'jshint:beforeconcat',
     'concat',
+    'jasmine',
     'jshint:afterconcat'
   ]);
 };
