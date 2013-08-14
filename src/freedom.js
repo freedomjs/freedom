@@ -11,7 +11,7 @@
  * @static
  */
 setup = function (global, freedom_src, config) {
-  var def;
+  var def, hub;
   var site_cfg = {
     'debug': true,
     'strongIsolation': true
@@ -24,7 +24,7 @@ setup = function (global, freedom_src, config) {
       site_cfg['strongIsolation'] = false;
     }
   } else {
-    var hub = new fdom.Hub();
+    hub = new fdom.Hub();
     advertise();
     def = new fdom.app.External(hub);
 
@@ -52,6 +52,9 @@ setup = function (global, freedom_src, config) {
   site_cfg.src = freedom_src;
   if(config) {
     mixin(site_cfg, config, true);
+  }
+  if (hub) {
+    mixin(hub.config, site_cfg, true);
   }
   def.configure(site_cfg);
 
