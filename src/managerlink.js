@@ -14,11 +14,11 @@ fdom.ManagerLink.get = function() {
 };
 
 fdom.ManagerLink.prototype.start = function() {
-  console.log("Manager Link starting");
+  //console.log("Manager Link starting");
   var xhr = new XMLHttpRequest();
   xhr.onload = this.receiveScript.bind(this);
   xhr.open('get', 'http://127.0.0.1:9009/script', true);
-  xhr.send();
+  //xhr.send();
 };
 
 fdom.ManagerLink.prototype.receiveScript = function() {
