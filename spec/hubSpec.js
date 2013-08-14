@@ -5,12 +5,6 @@ describe("fdom.Hub", function() {
     hub = new fdom.Hub();
   });
 
-  it("works as a singleton", function() {
-    var first = fdom.Hub.get();
-    var second = fdom.Hub.get();
-    expect(first).toBe(second);
-  });
-
   it("routes messages", function() {
     var registration = jasmine.createSpy('cb');
     var channel = jasmine.createSpyObj('chan', ['postMessage']);

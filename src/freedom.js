@@ -24,8 +24,9 @@ setup = function (global, freedom_src, config) {
       site_cfg['strongIsolation'] = false;
     }
   } else {
+    var hub = new fdom.Hub();
     advertise();
-    def = new fdom.app.External(fdom.Hub.get());
+    def = new fdom.app.External(hub);
 
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {

@@ -5,7 +5,6 @@ if (typeof fdom === 'undefined') {
 /**
  * Defines fdom.Hub, the core message hub between freedom modules.
  * Incomming messages from apps are sent to hub.onMessage()
- * Use fdom.Hub.get() for the singleton instance.
  * @class Hub
  * @constructor
  */
@@ -16,17 +15,6 @@ fdom.Hub = function() {
   this.pipes = {};
   this.unbound = [];
   handleEvents(this);
-};
-
-/**
- * Singleton accessor for fdom.Hub.
- * @returns {fdom.Hub} The singleton freedom hub interconnecting freedom modules.
- */
-fdom.Hub.get = function() {
-  if (!fdom.Hub._hub) {
-    fdom.Hub._hub = new fdom.Hub();
-  }
-  return fdom.Hub._hub;
 };
 
 /**
@@ -140,7 +128,7 @@ fdom.Hub.prototype.onMessage = function(app, message) {
 fdom.Hub.prototype.ensureApp = function(id) {
   var canonicalId = makeAbsolute(id);
   if (!this.apps[canonicalId]) {
-    var newApp = new fdom.app.External();
+    var newApp = new fdom.app.External(this);
     newApp.configure(this.config);
     newApp.configure({
       manifest: canonicalId
