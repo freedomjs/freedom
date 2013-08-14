@@ -4,8 +4,8 @@ SOURCES = src/util.js src/hub.js src/apis.js src/app*.js src/channel.js src/prox
 
 all: freedom.js
 
-freedom.js: freedom.compiled.js src/preamble.js src/postamble.js
-	cat src/preamble.js freedom.compiled.js src/postamble.js > freedom.js
+freedom.js: freedom.compiled.js src/util/preamble.js src/util/postamble.js
+	cat src/util/preamble.js freedom.compiled.js src/util/postamble.js > freedom.js
 
 freedom.compiled.js: $(SOURCES)
 ifeq "$(LOCAL)" 'yes'
@@ -14,13 +14,8 @@ else
 	python tools/build.py $(MAKEFLAGS) -o $@ $(SOURCES)
 endif
 
-docs:
-	cd tools && bash docs.sh
-docs-deploy:
-	cd tools && bash docs.sh deploy
-
-lint:
-	jshint --show-non-errors freedom.js
+demo: freedom.js
+	python -m SimpleHTTPServer
 
 clean:
 	rm freedom.js

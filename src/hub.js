@@ -6,11 +6,12 @@ if (typeof fdom === 'undefined') {
  * Defines fdom.Hub, the core message hub between freedom modules.
  * Incomming messages from apps are sent to hub.onMessage()
  * Use fdom.Hub.get() for the singleton instance.
- * @private
+ * @class Hub
  * @constructor
  */
 fdom.Hub = function() {
   this.config = {};
+  this.config['debug'] = false;
   this.apps = {};
   this.pipes = {};
   this.unbound = [];
@@ -30,6 +31,7 @@ fdom.Hub.get = function() {
 
 /**
  * Handle an incoming message from a freedom app.
+ * @method onMessage
  * @param {fdom.app} app The app sending the message.
  * @param {Object} message The sent message.
  */
@@ -39,6 +41,10 @@ fdom.Hub.prototype.onMessage = function(app, message) {
     return;
   }
   var flows = this.pipes[app.id];
+  if (!flows) {
+    console.warn("Message dropped from unconfigured app " + app.id);
+    return;
+  }
   var flow = message.sourceFlow;
   var destChannel = flows[flow];
 
@@ -127,7 +133,8 @@ fdom.Hub.prototype.onMessage = function(app, message) {
 };
 
 /**
- * Ensure than an application is enstantiated. and registered.
+ * Ensure than an application is instantiated and registered.
+ * @method ensureApp
  * @param {String} id The URL identifying the app.
  */
 fdom.Hub.prototype.ensureApp = function(id) {
@@ -139,12 +146,14 @@ fdom.Hub.prototype.ensureApp = function(id) {
       manifest: canonicalId
     });
     this.apps[canonicalId] = newApp;
+    this.pipes[canonicalId] = {};
   }
   return canonicalId;
 };
 
 /**
  * Establish a communication channel between an application and one of its dependencies.
+ * @method createPipe
  * @param {fdom.app} app The application establishing communication.
  * @param {String} dep The identifier of the dependency.
  */
@@ -166,6 +175,7 @@ fdom.Hub.prototype.createPipe = function(app, dep) {
 
 /**
  * Register an application with the hub.
+ * @method register
  * @param {fdom.app} app The application to register. 
  */
 fdom.Hub.prototype.register = function(app) {
@@ -178,6 +188,7 @@ fdom.Hub.prototype.register = function(app) {
 
 /**
  * Register permissions of a freedom application.
+ * @method permitAccess
  * @param String id The application for whom to register permissions.
  * @private
  */
@@ -199,6 +210,7 @@ fdom.Hub.prototype.permitAccess = function(id) {
 
 /**
  * Bind an unbound app channel to a service implementing 'postMessage'.
+ * @method bindChannel
  */
 fdom.Hub.prototype.bindChannel = function(id, service) {
   var dep = this.apps[id];
@@ -226,6 +238,7 @@ fdom.Hub.prototype.bindChannel = function(id, service) {
 
 /**
  * Decide which messages to debug, if debugging enabled.
+ * @method debug
  */
 fdom.Hub.prototype.debug = function(feature) {
   return this.config['debug'] === true || (this.config['debug'] !== false &&

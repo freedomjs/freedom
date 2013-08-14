@@ -7,6 +7,8 @@ fdom.app = fdom.app || {};
  * The internal interface for a freedom application.
  * Manages all active channels for the application, and allows
  * proxy objects to be created for them.
+ * @class App.Internal
+ * @extends App
  * @constructor
  */
 fdom.app.Internal = function() {
@@ -16,10 +18,16 @@ fdom.app.Internal = function() {
   handleEvents(this);
 };
 
+/**
+ * @method configure
+ */
 fdom.app.Internal.prototype.configure = function(config) {
   mixin(this.config, config, true);
 };
 
+/**
+ * @method getChannel
+ */
 fdom.app.Internal.prototype.getChannel = function(flow) {
   if (!this.manifest || !this.id) {
     this.start();
@@ -45,6 +53,7 @@ fdom.app.Internal.prototype.getProxy = function(flow) {
 
 /**
  * Start communication back to the executor.
+ * @method start
  */
 fdom.app.Internal.prototype.start = function() {
   this.config.global.addEventListener('message', function(msg) {
@@ -104,16 +113,22 @@ fdom.app.Internal.prototype.start = function() {
   });
 };
 
+/**
+ * @method postMessage
+ */
 fdom.app.Internal.prototype.postMessage = function(msg) {
   msg.fromApp = true;
-  if (this.config.global.postMessage.length == 2) {
+  if (this.config['strongIsolation']) {
+    this.config.global.postMessage(msg);
+  } else {
     // TODO(willscott): posting blindly is insecure.
     this.config.global.postMessage(msg, "*");
-  } else {
-    this.config.global.postMessage(msg);
   }
 };
 
+/**
+ * @method debug
+ */
 fdom.app.Internal.prototype.debug = function(msg) {
   if (this.config.debug) {
     this.postMessage({
@@ -131,6 +146,9 @@ fdom.app.Internal.prototype._attach = function(exp, name, def, provider) {
   }.bind(this, name, def, provider);
 };
 
+/**
+ * @method loadPermissions
+ */
 fdom.app.Internal.prototype.loadPermissions = function() {
   var permissions = [];
   var exp = this.config.exports;
@@ -150,12 +168,17 @@ fdom.app.Internal.prototype.loadPermissions = function() {
   }
 
   //Core API is handled locally, to facilitate channel setup.
-  var coreAPI = fdom.apis.get('core');
   var pipe = fdom.Channel.pipe();
-  fdom.apis.bindCore('core', pipe[1]);
+  var core = fdom.apis.getCore('core', pipe[1]);
+  core.instantiate();
+  
+  var coreAPI = fdom.apis.get('core');
   exp['core'] = new fdom.Proxy(pipe[0], coreAPI.definition);
 };
 
+/**
+ * @method loadDependencies
+ */
 fdom.app.Internal.prototype.loadDependencies = function() {
   /*jshint unused:true */
   if(this.manifest && this.manifest['dependencies']) {
@@ -179,6 +202,9 @@ fdom.app.Internal.prototype.loadDependencies = function() {
   }
 };
 
+/**
+ * @method loadProvides
+ */
 fdom.app.Internal.prototype.loadProvides = function() {
   if(this.manifest && this.manifest['provides']) {
     var exp = this.config.exports;
@@ -191,3 +217,4 @@ fdom.app.Internal.prototype.loadProvides = function() {
     }
   }
 };
+

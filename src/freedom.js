@@ -1,9 +1,16 @@
-// This structure is meant to resemble that of require.js
+/**
+ * @module freedom
+ */
 
 /**
- * Main entry point.
+ * External freedom Setup.  global.freedom is set to the value returned by
+ * setup (see preamble.js and postamble.js for that mechanism).  As a result,
+ * this is the primary entry function for the freedom library.
+ * @for util
+ * @method setup
+ * @static
  */
-setup = function () {
+setup = function (global, freedom_src, config) {
   var def;
   var site_cfg = {
     'debug': true,
@@ -12,9 +19,13 @@ setup = function () {
 
   if (isAppContext()) {
     def = new fdom.app.Internal();
+    // If you can see your parent, you're likely not fully sandboxed.
+    if (typeof global.parent !== 'undefined') {
+      site_cfg['strongIsolation'] = false;
+    }
   } else {
     advertise();
-    def = new fdom.app.External();    
+    def = new fdom.app.External(fdom.Hub.get());
 
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
@@ -38,6 +49,9 @@ setup = function () {
   }
   site_cfg.global = global;
   site_cfg.src = freedom_src;
+  if(config) {
+    mixin(site_cfg, config, true);
+  }
   def.configure(site_cfg);
 
   // Enable console.log from worker contexts.

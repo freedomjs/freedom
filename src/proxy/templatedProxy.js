@@ -1,3 +1,8 @@
+/**
+ * A proxy exposing a predefined interface
+ * @class templatedProxy
+ * @extends Proxy
+ */
 fdom.Proxy.templatedProxy = function(channel, definition, identifier) {
   var inflight = {};
   var events = null;
@@ -84,9 +89,9 @@ var conform = function(template, value) {
     case "string":
       return "" + value;
     case "number":
-      return 0 + value;
+      return 1 * value;
     case "bool":
-      return false | value;
+      return Boolean(false | value);
     case "object":
       // TODO(willscott): Allow removal if sandboxing enforces this.
       return JSON.parse(JSON.stringify(value));

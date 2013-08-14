@@ -57,6 +57,7 @@ function AIMove() {
     board[4] = 2;
     checkWin();
     playerMove = true;
+    return;
   }
   // Counter.
   var sets = "012,345,678,036,147,258,048,246".split(",");
@@ -67,6 +68,7 @@ function AIMove() {
         board[set[p]] = 2;
         checkWin();
         playerMove = true;
+        return;
       }
     }
   }
@@ -78,6 +80,7 @@ function AIMove() {
       board[m] = 2;
       checkWin();
       playerMove = true;
+      return;
     }
   }
 }

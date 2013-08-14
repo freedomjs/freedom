@@ -1,30 +1,54 @@
-FreeDOM Core
-============
+FreeDOM
+=======
+[![Build Status](https://travis-ci.org/UWNetworksLab/freedom.png?branch=master)](https://travis-ci.org/UWNetworksLab/freedom)
 
-The FreeDOM application logic, and freedom.js.
-Platform specific implementations (such as freedom-chrome) will depend on this project.
+FreeDOM is a runtime for distributed web applications.
 
-Compiling
+We don't get in the way of your app, but let you build complex web services
+without worrying about where data or code will reside. Instead, FreeDOM takes
+care of the distributed systems work to reduce your costs, keep your users in
+control of their data, and make your app as available and convenient as a
+cloud-based approach.
+
+Using FreeDOM
 ---------
 
-Build FreeDOM locally using
+If you just want the code, the curent version is automatically built [here](https://homes.cs.washington.edu/~wrs/freedom.js).
 
-    LOCAL=yes make
-
-FreeDOM also supports compilation using Google's Closure service, which can be accomplished using
-
-    make
-
-The closure service performs variable mangling on the code.  Development should be checked against
-both compilation modes for compatibility.
+Documentation on using and working with FreeDOM, and how to structure your
+application to align with the philosophy of the FreeDOM library are available
+on the [wiki](https://github.com/UWNetworksLab/freedom/wiki).
 
 Demos
 -------
 
-A set of demos are available in the ```demo``` folder.  To run the demos, first [compile](#compiling) then
-visit the demos through a local web server.  This is due to file-protocol restrictions on XHR requests used
-by FreeDOM.  A minimal server can be launched using
+Demos are available in the ```demo``` folder.  FreeDOM must be [compiled](#development)
+before running the demos.  There is a known bug that the demos will fail when
+accessed from a ```file://``` url, due to security restrictions on access to
+local files.  You can access demos locally by running
 
-    python -m SimpleHTTPServer
+    make demo
 
-This static web server will make the demos accessible at [```http://localhost:8000/demo```](http://localhost:8000/demo)
+and then visiting [```http://localhost:8000/demo```](http://localhost:8000/demo).
+
+Or, browse the demos online [here](https://homes.cs.washington.edu/~wrs/demo/).
+
+Development
+---------
+
+FreeDOM can be compiled locally by runing
+
+    LOCAL=yes make
+
+or by running
+
+    grunt
+
+Contributing
+---------
+
+FreeDOM is unit tested & linted to maintain code quality.
+We ask that you run ```grunt``` in the base FreeDOM library to verify changes
+before committing or submitting pull requests.
+
+Internal docs are auto-generated [here](https://homes.cs.washington.edu/~wrs/tools/doc).
