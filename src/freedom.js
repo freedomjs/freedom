@@ -14,7 +14,8 @@ setup = function (global, freedom_src, config) {
   var def, hub;
   var site_cfg = {
     'debug': true,
-    'strongIsolation': true
+    'strongIsolation': true,
+    'stayLocal': false
   };
 
   if (isAppContext()) {
@@ -27,7 +28,7 @@ setup = function (global, freedom_src, config) {
     hub = new fdom.Hub();
     advertise();
     def = new fdom.app.External(hub);
-
+    
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
       eachReverse(scripts(), function (script) {
@@ -47,6 +48,10 @@ setup = function (global, freedom_src, config) {
         }
       });
     }
+    //Try to talk to local FreeDOM Manager
+    if (!site_cfg['stayLocal']) {
+      fdom.ManagerLink.get().connect();
+    }
   }
   site_cfg.global = global;
   site_cfg.src = freedom_src;
@@ -64,7 +69,7 @@ setup = function (global, freedom_src, config) {
       log: def.debug.bind(def)
     };
   }
-
+  
   return def.getProxy();
 };
 
