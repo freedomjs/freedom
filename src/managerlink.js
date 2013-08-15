@@ -25,7 +25,7 @@ fdom.ManagerLink.prototype.connect = function() {
       this.status = 'ready';
       this.socket.send("HIHIHIHI");
     }).bind(this);
-    this.socket.onmessage = function(msg){console.log(msg)};
+    this.socket.onmessage = function(msg){console.log(msg);};
     this.socket.onclose = (function(msg){
       console.log("Manager Link disconnected");
       this.status = 'disconnected';
@@ -44,6 +44,3 @@ fdom.ManagerLink.prototype.disconnect = function() {
   this.socket = null;
 };
 
-fdom.ManagerLink.prototype.receiveScript = function() {
-
-};
