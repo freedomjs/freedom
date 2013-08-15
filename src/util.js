@@ -218,7 +218,6 @@ function advertise() {
       typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
-  fdom.ManagerLink.get().start();
 }
 
 /**
