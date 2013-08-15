@@ -1,5 +1,6 @@
 /**
  * A FreeDOM interface to WebRTC Peer Connections
+ * @param Channel channel a channel for emitting events.
  * @constructor
  * @private
  */
@@ -19,7 +20,7 @@ PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
   }
 
   // Listen for messages to/from the provided message channel.
-  this.appChannel = Core_unprivileged.bindChannel(proxy);
+  this.appChannel = Core_unprivileged.bindChannel(this.appChannel.app, proxy);
   this.appChannel['on']('message', this.onIdentity.bind(this));
   this.appChannel.postMessage({
     'type': 'ready',

@@ -48,12 +48,13 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation) {
   });
 };
 
-Core_unprivileged.bindChannel = function(identifier) {
+Core_unprivileged.bindChannel = function(app, identifier) {
   var pipe = fdom.Channel.pipe();
-  fdom.Hub.get().bindChannel(identifier[0], pipe[0]);
+  var hub = app.hub;
+  hub.bindChannel(identifier[0], pipe[0]);
   //TODO(willscott): this is sketchy :-/
-  var app = fdom.Hub.get().apps[identifier[0]];
-  var flow = app.getChannel(identifier[1]);
+  var remoteApp = hub.apps[identifier[0]];
+  var flow = remoteApp.getChannel(identifier[1]);
   pipe[0]['on']('message', flow.postMessage.bind(flow));
   return pipe[1];
 };
