@@ -49,9 +49,10 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
         if (this.parts === 0) {
           console.log("binary data recieved (" + this.buf.length + " bytes)");
           var databuf = JSON.parse(this.buf);
+          console.log(databuf);
           var arr = new Uint8Array(databuf['binary']);
           var blob = new Blob([arr.buffer], {"type": databuf['mime']});
-          this['dispatchEvent']('message', {"binary": blob});
+          this['dispatchEvent']('message', {"binary": blob, "buffer" : arr.buffer});
           this.buf = "";
         }
         return;
@@ -164,7 +165,6 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
   }
   window.dc = this.dataChannel;
 
-  console.log("Sending transport data.");
   if(ref['text']) {
     console.log("Sending text: " + ref['text']);
     this.dataChannel.send(JSON.stringify({"text":ref['text']}));
