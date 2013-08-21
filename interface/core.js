@@ -34,11 +34,11 @@ fdom.apis.set("core.peerconnection", {
 fdom.apis.set("core.socket", {
   'create': {type: "method", value: ["string", "object"]},
   'connect': {type: "method", value: ["number", "string", "number"]},
-  'read': {type: "event", value: ["string"]},
+  'onData': {type: "event", value: ["string"]},
   'write': {type: "method", value: ["number", "buffer"]},
   'disconnect': {type: "method", value: ["number"]},
   'destroy': {type: "method", value: ["number"]},
   'listen': {type: "method", value: ["number", "string", "number"]},
-  'accept': {type: "event", value: ["number"]},
+  'onConnection': {type: "event", value: ["number"]},
   'getInfo': {type: "method", value: ["number"]}
 });
