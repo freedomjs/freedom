@@ -6,6 +6,10 @@
   <script type='text/javascript'
       src='/freedom.js'
       data-manifest='manifest.json'>
+  {
+    "strongIsolation": true,
+    "stayLocal": true
+  }
   </script>
   <script type='text/javascript'>
   window.onload = function() {
@@ -22,7 +26,6 @@
           activeId = jid;
           console.log("Messages will be sent to: " + activeId);
           document.getElementById('status').innerText = activeId;
-          window.freedom.emit('open-transport', activeId);
         }.bind(this, val[i]), true);
         buddylist.appendChild(child);
       }
@@ -39,26 +42,28 @@
     window.freedom.on('recv-uid', function(data) {
       document.getElementById('uid').innerText = "UID:"+data;
     });
-    
+    window.freedom.on('onStatus', function(msg) {
+      console.log(JSON.stringify(msg));
+    });
     var input = document.getElementById('msg-input');
     input.onkeydown = function(evt) {
       if (evt.keyCode == 13) {
         var text = input.value;
         input.value = "";
-        window.freedom.emit('send-message', text);
+        window.freedom.emit('send-message', {to: activeId, message: text});
       }
     };
   }
   </script>
   <style type='text/css'>
-  body {border: 1px solid black; float:left; position:relative;}
+  body {border: 1px solid black; float:left; position:relative; width:800px;}
   #uid {font-family: helvetica; float:left;}
   #uid:after {content: " <-> ";}
   #status {float:right;}
   #status:after {content: "▼"; color:#888;}
   #clear {clear:both; border-bottom:1px solid #888;}
   #buddylist {position:absolute; right:0; z-index:2; background:white; padding:5px; top:25px;}
-  #msg-input {width:300px; margin:0;}
+  #msg-input {width:700px; margin:0;}
   #messagelist {min-height: 400px;}
   </style>
 </head>

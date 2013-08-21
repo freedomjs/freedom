@@ -1,0 +1,12 @@
+{
+  "name": "WebSockets Rendezvous Identity",
+  "description": "Identity provider using the router.py WebSockets rendezvous",
+  "app": {
+    "script": "identity.js"
+  },
+  "provides": [
+    "identity"
+  ],
+  "permissions": [
+  ]
+}
