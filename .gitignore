@@ -2,3 +2,5 @@
 /freedom.compiled.js
 tools/doc
 node_modules
+demo/chat/server/tornado/
+demo/texteditor/server/tornado/

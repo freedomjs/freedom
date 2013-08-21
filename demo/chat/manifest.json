@@ -2,10 +2,10 @@
   "name": "WebRTC Chat",
   "description": "WebRTC Chat Sample FreeDOM application",
   "app": {
-    "script": "chat.js"
+    "script": "main.js"
   },
   "dependencies": {
-    "identity": "identity.json"
+    "identity": "identity/identity.json"
   },
   "permissions": [
     "identity"

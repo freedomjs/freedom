@@ -24,9 +24,8 @@ import uuid
 
 class Application(tornado.web.Application):
   def __init__(self):
-    #handlers = [(r"/route/([a-zA-Z0-9_]*)", MainHandler)]
-    #handlers.append((r"/route", MainHandler))
-    handlers = [(r"/route", MainHandler)]
+    handlers = [(r"/route/([a-zA-Z0-9_]*)", MainHandler)]
+    #handlers = [(r"/route", MainHandler)]
     settings = dict( autoescape=None )
     tornado.web.Application.__init__(self, handlers, **settings)
 
@@ -37,11 +36,13 @@ class MainHandler(tornado.websocket.WebSocketHandler):
   def allow_draft76(self):
     return True
 
-  def open(self):
-    self.setup(self.request.headers.get("Origin"))
+  #def open(self):
+  #  self.setup(self.request.headers.get("Origin"))
   
-  #def open(self, app_id):
-  #  self.setup(app_id)
+  def open(self, app_id):
+    if (app_id == None or app_id == ''):
+      app_id = self.request.headers.get("Origin")
+    self.setup(app_id)
     
   def setup(self, site):
     print "Open "+site
