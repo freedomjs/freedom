@@ -1,0 +1,7 @@
+{
+  "name": "Text Editor",
+  "description": "Simple collaborative text editor",
+  "app": {
+    "script": "main.js"
+  }
+}

@@ -1,61 +1,72 @@
-var rendezvousUrl = "https://script.google.com/macros/s/AKfycbwfgaSakSX6hyY_uKOLFPQhvIrp7tj3zjfwZd3PllXJV-ucmBk/exec";
-var POLL_TIMEOUT = 3000;
-var callback;
+var WS_URL = 'ws://localhost.com:8082/route';
 
 function IdentityProvider() {
-  function makeId(){
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for( var i=0; i < 5; i++ ) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-  };
+  this.conn = null;
+  this.agent = null;
+  this.version = null;
+  this.url = null;
+  this.status = 'offline'     //offline, online, connecting, error
+  this.loginCallback = null;
+};
 
-  this.name = makeId();
-  this.buddylist = [];
-  
-  callback = this.updateMailbox.bind(this);
-  setTimeout(this.getMailbox.bind(this), 0);
-  
-  this.view = freedom['core.view']();
-  var promise = this.view.open({
-    file: "identityposter.html"
+IdentityProvider.prototype.login = function(agent, version, url, continuation) {
+  //this.conn = new WebSocket(WS_URL+'/'+agent);
+  this.conn = new WebSocket(WS_URL);
+  this.status = 'connecting';
+  //this.dispatchEvent('onStatus', {status: this.status, message: "WS Connecting"});
+  this.conn.onopen = (function(msg) {
+    this.status = 'online';
+    this.dispatchEvent('onStatus', {status: this.status, message: "WS Connected"});
+  }).bind(this);
+  this.conn.onmessage = this._onMessage.bind(this);
+  this.conn.onclose = (function (msg) {
+    this.status = 'offline';
+    this.dispatchEvent('onStatus', {status: this.status, message: "WS Disconnected"});
+    this.conn = null;
+  }).bind(this);
+  this.loginCallback = continuation;
+};
+
+IdentityProvider.prototype._onMessage = function(msg) {
+  console.log(JSON.stringify(msg));
+  if (msg['id'] && msg['from'] && msg['from'] == 0) {
+    console.log(JSON.stringify(msg['msg']));
+    this.loginContinuation({success: true, userId: msg['id'], message: ''});
+  } else if (msg['from']) {
+    console.log(JSON.stringify(msg['msg']));
+
+  }
+  /**
+  this.dispatchEvent('onMessage', {
+    fromUserId: asdf,
+    fromClientId: adsf,
+    toUserId: asdf,
+    toClientId: asdf,
+    message: asdf
   });
 
+  this.dispatchEvent('onChange', {
+    userId: asdf,
+    name: asdf,
+    url: '',
+    clients: {
+      clientId: asdf,
+      status: 'messageable'
+    }
+  });
+  **/
 };
 
-IdentityProvider.prototype.get = function(continuation) {
-  continuation({name: this.name});
+IdentityProvider.prototype.getProfile = function(id, continuation) {
+
 };
 
-IdentityProvider.prototype.send = function(to, msg, continuation) {
+IdentityProvider.prototype.sendMessage = function(to, msg, continuation) {
   //var params = "prefix=nop&cmd=send&uid=" + this.name + "&to=" + to + "&msg=" + msg;
   //sendPost(to, this.name, msg);
-  this.view.postMessage({setUrl: rendezvousUrl});
-  this.view.postMessage({cmd: 'send', uid: this.name, to: to, msg: msg});
+  //this.view.postMessage({setUrl: rendezvousUrl});
+  //this.view.postMessage({cmd: 'send', uid: this.name, to: to, msg: msg});
   continuation();
-};
-
-IdentityProvider.prototype.getMailbox = function() {
-  var req = rendezvousUrl + "?prefix=callback&cmd=get&uid=" + this.name;
-  importScripts(req);
-  setTimeout(this.getMailbox.bind(this), POLL_TIMEOUT);
-};
-
-IdentityProvider.prototype.updateMailbox = function(mailbox) {
-  if ("buddylist" in mailbox) {
-    if (this.buddylist < mailbox.buddylist || this.buddylist > mailbox.buddylist) {
-      identity.emit('buddylist', mailbox.buddylist);
-      this.buddylist = mailbox.buddylist;
-    }
-    delete mailbox.buddylist;
-  }
-  for (var i in mailbox) {
-    for (var j in mailbox[i]) {
-      identity.emit('message', {from: i, message: mailbox[i][j]});
-    }
-  }
 };
 
 var identity = freedom.identity();

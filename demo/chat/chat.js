@@ -1,12 +1,13 @@
 var identity = freedom.identity();
-var transport = freedom['core.transport']();
+//var transport = freedom['core.transport']();
 var sockId = -1;
 var activeJid;
 
 freedom.on('send-message', function(val) {
-  transport.send(sockId, val);
+  //transport.send(sockId, val);
 });
 
+/**
 freedom.on('open-transport', function(val) {
   function openTransport() {
     sockId = -1;
@@ -58,13 +59,21 @@ transport.on('onStateChange', function(data) {
 transport.on('onMessage', function(data) {
   freedom.emit('recv-message', data.id+': '+data.message);
 });
+**/
 
-setTimeout(function() {
+identity.on('onStatus', function(msg) {
+  freedom.emit('onStatus', msg);
+});
+
+var onload = function() {
   //Fetch UID
-  var namepromise = identity.get();
-  namepromise.done(function(data) {
-    freedom.emit('recv-uid', data.name);
-  });
-}, 0);
+  identity
+    .login('chat-demo', '0.1', '')
+    .done(function(data) {
+      freedom.emit('recv-uid', data.userId);
+    });
+};
+setTimeout(onload,50);
+//onload();
 
 

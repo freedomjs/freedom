@@ -6,6 +6,10 @@
   <script type='text/javascript'
       src='/freedom.js'
       data-manifest='manifest.json'>
+  {
+    "strongIsolation": true,
+    "stayLocal": true
+  }
   </script>
   <script type='text/javascript'>
   window.onload = function() {
@@ -22,7 +26,7 @@
           activeId = jid;
           console.log("Messages will be sent to: " + activeId);
           document.getElementById('status').innerText = activeId;
-          window.freedom.emit('open-transport', activeId);
+          //window.freedom.emit('open-transport', activeId);
         }.bind(this, val[i]), true);
         buddylist.appendChild(child);
       }
@@ -39,7 +43,9 @@
     window.freedom.on('recv-uid', function(data) {
       document.getElementById('uid').innerText = "UID:"+data;
     });
-    
+    window.freedom.on('onStatus', function(msg) {
+      console.log(JSON.stringify(msg));
+    });
     var input = document.getElementById('msg-input');
     input.onkeydown = function(evt) {
       if (evt.keyCode == 13) {
