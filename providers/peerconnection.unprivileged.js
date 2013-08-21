@@ -11,6 +11,7 @@ var PeerConnection_unprivileged = function(channel) {
   this.connection = null;
   this.myPid = Math.random();
   this.remotePid = 1;
+  this.sendQueue = [];
   handleEvents(this);
 };
 
@@ -166,8 +167,9 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
   window.dc = this.dataChannel;
 
   if(ref['text']) {
+    this.sendQueue.push(JSON.stringify({"text":ref['text']}));
     console.log("Sending text: " + ref['text']);
-    this.dataChannel.send(JSON.stringify({"text":ref['text']}));
+    this._process();
   } else if(ref['binary']) {
     // TODO(willscott): implement direct blob support when available.
     console.log("Transmitting " + ref['binary'].size + " binary bytes");
@@ -177,27 +179,40 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
       arr.push.apply(arr, new Uint8Array(ev.target.result));
       // Chunk messages so that packets are below MTU.
       var MAX_LEN = 512;
-      var STEP = 300;
       var str = JSON.stringify({"mime": type, "binary": arr});
       var parts = Math.ceil(str.length / MAX_LEN);
       console.log("Sending chunked " + type + " ("+ str.length + " bytes)");
-      this.dataChannel.send(JSON.stringify({"binary": parts}));
+      this.sendQueue.push(JSON.stringify({"binary": parts}));
 
-      var delay = 0;
-      var sendPart = function(x) {
-        this.dataChannel.send(x);
-      };
-      
       while (str.length > 0) {
-        setTimeout(sendPart.bind(this, str.substr(0, MAX_LEN)), delay);
-        delay += STEP;
+        this.sendQueue.push(str.substr(0, MAX_LEN));
         str = str.substr(MAX_LEN);
       }
+      this._process();
     }.bind(this, ref['binary'].type), true);
 
     reader.readAsArrayBuffer(ref['binary']);
   }
   continuation();
+};
+
+PeerConnection_unprivileged.prototype._process = function(scheduled) {
+  if (this.scheduled && !scheduled) {
+    return;
+  }
+
+  var next = this.sendQueue.shift();
+  this.dataChannel.send(next);
+
+  if (this.scheduled) {
+    clearTimeout(this.scheduled);
+    delete this.scheduled;
+  }
+
+  if (this.sendQueue.length) {
+    var STEP = 300;
+    this.scheduled = setTimeout(this._process.bind(this, true), STEP);
+  }
 };
 
 PeerConnection_unprivileged.prototype.close = function(continuation) {
