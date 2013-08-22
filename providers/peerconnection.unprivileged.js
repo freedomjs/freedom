@@ -50,7 +50,6 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
         if (this.parts === 0) {
           console.log("binary data recieved (" + this.buf.length + " bytes)");
           var databuf = JSON.parse(this.buf);
-          console.log(databuf);
           var arr = new Uint8Array(databuf['binary']);
           var blob = new Blob([arr.buffer], {"type": databuf['mime']});
           this['dispatchEvent']('message', {"binary": blob, "buffer" : arr.buffer});
