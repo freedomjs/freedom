@@ -50,7 +50,7 @@ table {
 body {
   font-size: 1em;
   line-height: 1.5; 
-  background: #e7e7e7 url(../images/body-bg.png) 0 0 repeat;
+  background: #e7e7e7 url(../img/body-bg.png) 0 0 repeat;
   font-family: 'Helvetica Neue', Helvetica, Arial, serif;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
   color: #6d6d6d;
@@ -85,7 +85,7 @@ header h2 {
 }
 
 #container {
-  background: transparent url(../images/highlight-bg.jpg) 50% 0 no-repeat;
+  background: transparent url(../img/highlight-bg.jpg) 50% 0 no-repeat;
   min-height: 595px;
 }
 
@@ -153,13 +153,13 @@ a.button span {
 }
 
 #download-zip span {
-  background: transparent url(../images/zip-icon.png) 12px 50% no-repeat;
+  background: transparent url(../img/zip-icon.png) 12px 50% no-repeat;
 }
 #download-tar-gz span {
-  background: transparent url(../images/tar-gz-icon.png) 12px 50% no-repeat;
+  background: transparent url(../img/tar-gz-icon.png) 12px 50% no-repeat;
 }
 #view-on-github span {
-  background: transparent url(../images/octocat-icon.png) 12px 50% no-repeat;
+  background: transparent url(../img/octocat-icon.png) 12px 50% no-repeat;
 }
 #view-on-github {
   margin-right: 0;
@@ -205,7 +205,7 @@ hr {
   margin-top: 1em;
   padding-bottom: 1em;
   border: none;
-  background: transparent url('../images/hr.png') 50% 0 no-repeat;
+  background: transparent url('../img/hr.png') 50% 0 no-repeat;
 }
 
 strong {
@@ -309,7 +309,7 @@ dl dt {
 }
 
 footer {
-  background: transparent url('../images/hr.png') 0 0 no-repeat;
+  background: transparent url('../img/hr.png') 0 0 no-repeat;
   margin-top: 40px;
   padding-top: 20px;
   padding-bottom: 30px;
