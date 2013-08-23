@@ -29,6 +29,16 @@ module.exports = function(grunt) {
         dest: 'freedom.js'
       }
     },
+    uglify: {
+      options: {
+        mangle: { except: ['global'] }
+      },
+      freedom: {
+        files: {
+          'freedom.min.js': ['freedom.js']
+        }
+      }
+    },
     clean: ['freedom.js'],
     yuidoc: {
       compile: {
@@ -49,12 +59,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   // Default tasks.
   grunt.registerTask('default', [
     'jshint:beforeconcat',
     'concat',
     'jasmine',
-    'jshint:afterconcat'
+    'jshint:afterconcat',
+    'uglify'
   ]);
 };

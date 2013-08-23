@@ -1,5 +1,5 @@
 /freedom.js
-/freedom.compiled.js
+/freedom.min.js
 tools/doc
 node_modules
 demo/chat/server/tornado/
