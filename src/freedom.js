@@ -11,23 +11,21 @@
  * @static
  */
 setup = function (global, freedom_src, config) {
-  var def, hub;
-  var site_cfg = {
-    'debug': true,
-    'strongIsolation': true,
-    'stayLocal': false
-  };
-
+  var def,
+      hub = new fdom.Hub(),
+      site_cfg = {
+        'debug': true,
+        'stayLocal': false,
+        'portType': 'Worker'
+      },
+      manager = new fdom.port.Manager(hub);
+  
   if (isAppContext()) {
-    def = new fdom.app.Internal();
-    // If you can see your parent, you're likely not fully sandboxed.
-    if (typeof global.parent !== 'undefined') {
-      site_cfg['strongIsolation'] = false;
-    }
+    site_cfg.global = global;
+    site_cfg.src = freedom_src;
+    def = new fdom.port[site_cfg.portType]();
   } else {
-    hub = new fdom.Hub();
     advertise();
-    def = new fdom.app.External(hub);
     
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
@@ -52,24 +50,29 @@ setup = function (global, freedom_src, config) {
     if (!site_cfg['stayLocal']) {
       fdom.ManagerLink.get().connect();
     }
+
+    site_cfg.global = global;
+    site_cfg.src = freedom_src;
+    if(config) {
+      mixin(site_cfg, config, true);
+    }
+    def = new fdom.port.App(site_cfg.manifest);
   }
-  site_cfg.global = global;
-  site_cfg.src = freedom_src;
-  if(config) {
-    mixin(site_cfg, config, true);
-  }
-  if (hub) {
-    mixin(hub.config, site_cfg, true);
-  }
-  def.configure(site_cfg);
+  hub.emit('config', site_cfg);
+
+  manager.setup(def);
 
   // Enable console.log from worker contexts.
   if (typeof global.console === 'undefined') {
-    global.console = {
-      log: def.debug.bind(def)
-    };
+    global.console = new fdom.port.Debug();
+    manager.setup(global.console);
   }
+
+  var external = new fdom.port.Proxy(function(binder) {
+    manager.setup(binder);
+    manager.createLink(binder, 'default', def);
+  });
   
-  return def.getProxy();
+  return external;
 };
 
