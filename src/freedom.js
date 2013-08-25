@@ -19,12 +19,7 @@ setup = function (global, freedom_src, config) {
         'portType': 'Worker'
       },
       manager = new fdom.port.Manager(hub);
-
-  // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined') {
-    global.console = new fdom.port.Debug();
-    manager.setup(global.console);
-  }
+  fdom.debug = new fdom.port.Debug();
   
   if (isAppContext()) {
     site_cfg.global = global;
@@ -45,7 +40,7 @@ setup = function (global, freedom_src, config) {
             try {
               mixin(site_cfg, JSON.parse(script.innerText), true);
             } catch (e) {
-              global.console.warn("Failed to parse configuration: " + e);
+              fdom.debug.warn("Failed to parse configuration: " + e);
             }
           }
           return true;
@@ -72,6 +67,12 @@ setup = function (global, freedom_src, config) {
     manager.setup(binder);
     manager.createLink(binder, 'default', def);
   });
+
+  manager.setup(fdom.debug);
+  // Enable console.log from worker contexts.
+  if (typeof global.console === 'undefined' && site_cfg.debug) {
+    global.console = fdom.debug;
+  }
   
   return external;
 };

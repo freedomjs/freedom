@@ -17,6 +17,7 @@ fdom.port.Manager = function(hub) {
   this.config = {};
   this.flows = {};
   this.hub = hub;
+  this.delegate = null;
   
   this.hub.on('config', function(config) {
     mixin(this.config, config);
@@ -41,12 +42,27 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   }
   origin = this.hub.getDestination(reverseFlow);
   
-  if (message.request !== 'debug') {
-    // TODO(willscott): Control Debug levels.
-    console.log(message);
-    console.log(origin.id + " -C " + message.request);
-  } else if (this.config.debug && message.request === 'debug') {
-    console.log(origin.id + " -D " + message.msg);
+  if (this.delegate && reverseFlow !== this.delegate) {
+    // Ship off to the delegee
+    this.emit(this.delegate, {
+      type: 'Control Delegation',
+      request: 'handle',
+      quiet: true,
+      flow: flow,
+      message: message
+    });
+    return;
+  } else if (this.delegate && reverseFlow === this.delegate &&
+             message.request === 'reflect') {
+    flow = message.flow;
+    reverseFlow = this.flows[flow];
+    origin = this.hub.getDestination(reverseFlow);
+    message = message.message;
+  }
+
+  if (this.config.debug && message.request === 'debug') {
+    fdom.debug.print(message);
+    return;
   }
 
   if (message.request === 'link') {
@@ -57,6 +73,23 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   } else if (message.request === 'load') {
     // TODO(willscott): This is a hack.
     this.loadScripts(message.from, message.scripts);
+  } else if (message.request === 'delegate') {
+    // Initate Delegation.
+    this.delegate = reverseFlow;
+  } else if (message.request === 'handle') {
+    // TODO(willscott): Cleaner structure for parent to override children.
+    if (message.message.request === 'debug') {
+      fdom.debug.print(message.message, origin.toString());
+      return;
+    }
+    
+    this.emit(reverseFlow, {
+      type: 'Control Delegation',
+      request: 'reflect',
+      quiet: true,
+      flow: message.flow,
+      message: message.message
+    });
   } else {
     console.warn("Unknown control request: " + message.request);
     return;

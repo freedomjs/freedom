@@ -12,6 +12,8 @@ fdom.port = fdom.port || {};
  */
 fdom.port.Debug = function() {
   this.id = 'debug';
+  this.emitChannel = false;
+  this.console = null;
   handleEvents(this);
 };
 
@@ -20,20 +22,44 @@ fdom.port.Debug.prototype.toString = function() {
 };
 
 fdom.port.Debug.prototype.onMessage = function(source, message) {
-  console.log(message);
-  if (source === 'control' && message.reverse && !this.emitChannel) {
-    this.emitChannel = message.reverse;
+  if (source === 'control' && message.channel && !this.emitChannel) {
+    this.emitChannel = message.channel;
+    this.console = message.config.global.console;
+  }
+};
+
+fdom.port.Debug.prototype.format = function(severity, args) {
+  this.emit(this.emitChannel, {
+    severity: severity,
+    quiet: true,
+    request: 'debug',
+    msg: args
+  });
+};
+
+fdom.port.Debug.prototype.print = function(message, source) {
+  if (typeof console !== 'undefined' && console !== this) {
+    var args = JSON.parse(message.msg), arr = [], i = 0;
+    while (args[i] !== undefined) {
+      arr.push(args[i]);
+      i += 1;
+    }
+    if (source) {
+      arr.unshift('color: red');
+      arr.unshift('%c ' + source);
+    }
+    console[message.severity].apply(console, arr);
   }
 };
 
 fdom.port.Debug.prototype.log = function() {
-  this.emit(this.emitChannel, {severity: 'log', args: JSON.stringify(arguments)});
+  this.format('log', JSON.stringify(arguments));
 };
 
 fdom.port.Debug.prototype.warn = function() {
-  this.emit(this.emitChannel, {severity: 'warn', args: JSON.stringify(arguments)});
+  this.format('warn', JSON.stringify(arguments));
 };
 
 fdom.port.Debug.prototype.error = function() {
-  this.emit(this.emitChannel, {severity: 'error', args: JSON.stringify(arguments)});
+  this.format('error', JSON.stringify(arguments));
 };

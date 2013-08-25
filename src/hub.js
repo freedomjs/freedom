@@ -29,17 +29,17 @@ fdom.Hub = function() {
  */
 fdom.Hub.prototype.onMessage = function(source, message) {
   if (!this.routes[source]) {
-    console.warn("Message dropped from unregistered source " + source);
+    fdom.debug.warn("Message dropped from unregistered source " + source);
     return;
   }
 
   var destination = this.routes[source];
   if (!destination.app) {
-    console.log(destination);
-    console.log(message);
-    console.warn("Message dropped from unconfigured source " + source);
+    fdom.debug.warn("Message dropped from unconfigured source " + source);
     return;
   }
+
+  // TODO: remove debug log once fdom.debug works robustly.
   var debugLog = [];
   if (this.config.global) {
     if (!this.config.global.debugLog) {
@@ -50,7 +50,9 @@ fdom.Hub.prototype.onMessage = function(source, message) {
   var mlog = this.apps[destination.source].toString() +
               " -" + message.type + "-> " +
               this.apps[destination.app].toString() + "." + destination.flow;
-  console.log(mlog);
+  if (!message.quiet) {
+    fdom.debug.log(mlog);
+  }
   debugLog.push(mlog);
 
   this.apps[destination.app].onMessage(destination.flow, message);

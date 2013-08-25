@@ -44,7 +44,7 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
         this.externalPortMap[flow] = message.channel;
         return;
       }
-      console.log('mapping for ' + flow + ' was ' + this.internalPortMap[flow]);
+//      console.log('mapping for ' + flow + ' was ' + this.internalPortMap[flow]);
       if (this.internalPortMap[flow] === false) {
         this.once('bound', this.onMessage.bind(this, flow, message));
       } else {
@@ -71,6 +71,13 @@ fdom.port.App.prototype.start = function() {
       channel: 'control',
       config: this.config
     });
+
+    // Tell the remote location to delegate control.
+    this.port.onMessage('control', {
+      type: 'Redirect',
+      request: 'delegate'
+    });
+    
     // Tell the remote location to instantate the app.
     this.port.onMessage('control', {
       type: 'Load Scripts',
@@ -87,7 +94,6 @@ fdom.port.App.prototype.toString = function() {
 };
 
 fdom.port.App.prototype.emitMessage = function(name, message) {
-  console.log('emitting ' + name);
   if (this.internalPortMap[name] === false && message.channel) {
     this.internalPortMap[name] = message.channel;
     this.emit('bound');
@@ -133,7 +139,7 @@ fdom.port.App.prototype.loadManifest = function() {
  * @method loadPermissions
  */
 fdom.port.App.prototype.loadLinks = function() {
-  var i, channels = ['default'];
+  var i, channels = ['default', 'control'];
   if (this.manifest.dependencies) {
     eachProp(this.manifest.dependencies, function(url, name) {
       channels.push(name);
@@ -149,4 +155,5 @@ fdom.port.App.prototype.loadLinks = function() {
     this.externalPortMap[channels[i]] = false;
     this.internalPortMap[channels[i]] = false;
   }
+  this.externalPortMap['control'] = this.controlChannel;
 };
