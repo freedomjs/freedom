@@ -28,38 +28,39 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
   }
 };
 
-fdom.port.Debug.prototype.format = function(severity, args) {
+fdom.port.Debug.prototype.format = function(severity, source, args) {
   this.emit(this.emitChannel, {
     severity: severity,
+    source: source,
     quiet: true,
     request: 'debug',
     msg: args
   });
 };
 
-fdom.port.Debug.prototype.print = function(message, source) {
+fdom.port.Debug.prototype.print = function(message) {
   if (typeof console !== 'undefined' && console !== this) {
     var args = JSON.parse(message.msg), arr = [], i = 0;
     while (args[i] !== undefined) {
       arr.push(args[i]);
       i += 1;
     }
-    if (source) {
+    if (message.source) {
       arr.unshift('color: red');
-      arr.unshift('%c ' + source);
+      arr.unshift('%c ' + message.source);
     }
     console[message.severity].apply(console, arr);
   }
 };
 
 fdom.port.Debug.prototype.log = function() {
-  this.format('log', JSON.stringify(arguments));
+  this.format('log', undefined, JSON.stringify(arguments));
 };
 
 fdom.port.Debug.prototype.warn = function() {
-  this.format('warn', JSON.stringify(arguments));
+  this.format('warn', undefined, JSON.stringify(arguments));
 };
 
 fdom.port.Debug.prototype.error = function() {
-  this.format('error', JSON.stringify(arguments));
+  this.format('error', undefined, JSON.stringify(arguments));
 };

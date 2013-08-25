@@ -50,6 +50,9 @@ fdom.port.Worker.prototype.setupWorker = function() {
     blob = new window.Blob([this.config.src], {type: 'text/javascript'});
     worker = new Worker(window.URL.createObjectURL(blob));
   }
+  worker.addEventListener('error', function(err) {
+    fdom.debug.error(err, this.toString());
+  }, true);
   worker.addEventListener('message', function(worker, msg) {
     if (!this.obj) {
       this.obj = worker;

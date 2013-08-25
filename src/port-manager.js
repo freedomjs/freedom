@@ -18,6 +18,7 @@ fdom.port.Manager = function(hub) {
   this.flows = {};
   this.hub = hub;
   this.delegate = null;
+  this.toDelegate = {};
   
   this.hub.on('config', function(config) {
     mixin(this.config, config);
@@ -42,7 +43,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   }
   origin = this.hub.getDestination(reverseFlow);
   
-  if (this.delegate && reverseFlow !== this.delegate) {
+  if (this.delegate && reverseFlow !== this.delegate && this.toDelegate[flow]) {
     // Ship off to the delegee
     this.emit(this.delegate, {
       type: 'Control Delegation',
@@ -60,8 +61,10 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     message = message.message;
   }
 
-  if (this.config.debug && message.request === 'debug') {
-    fdom.debug.print(message);
+  if (message.request === 'debug') {
+    if (this.config.debug) {
+      fdom.debug.print(message);
+    }
     return;
   }
 
@@ -75,14 +78,12 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     this.loadScripts(message.from, message.scripts);
   } else if (message.request === 'delegate') {
     // Initate Delegation.
-    this.delegate = reverseFlow;
-  } else if (message.request === 'handle') {
-    // TODO(willscott): Cleaner structure for parent to override children.
-    if (message.message.request === 'debug') {
-      fdom.debug.print(message.message, origin.toString());
-      return;
+    if (this.delegate === null) {
+      this.delegate = reverseFlow;
     }
-    
+    this.toDelegate[message.flow] = true;
+  } else if (message.request === 'handle') {
+    // TODO(willscott): Should control do this loop?    
     this.emit(reverseFlow, {
       type: 'Control Delegation',
       request: 'reflect',
@@ -136,12 +137,16 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination) {
 fdom.port.Manager.prototype.loadScripts = function(from, scripts) {
   var i, importer = this.config.global.importScripts;
   if (importer) {
-    if (typeof scripts === 'string') {
-      importer(resolvePath(scripts, from));
-    } else {
-      for (i = 0; i < scripts.length; i += 1) {
-        importer(resolvePath(scripts[i], from));
+    try {
+      if (typeof scripts === 'string') {
+        importer(resolvePath(scripts, from));
+      } else {
+        for (i = 0; i < scripts.length; i += 1) {
+          importer(resolvePath(scripts[i], from));
+        }
       }
+    } catch(e) {
+      console.error("Error Loading ", scripts, e.message);
     }
   }
 };

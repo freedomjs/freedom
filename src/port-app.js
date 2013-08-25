@@ -75,7 +75,8 @@ fdom.port.App.prototype.start = function() {
     // Tell the remote location to delegate control.
     this.port.onMessage('control', {
       type: 'Redirect',
-      request: 'delegate'
+      request: 'delegate',
+      flow: 'debug'
     });
     
     // Tell the remote location to instantate the app.
@@ -99,7 +100,14 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
     this.emit('bound');
     return;
   }
-  this.emit(this.externalPortMap[name], message);
+  // Terminate debug redirection requested in start().
+  if (name === 'control' && message.flow === 'debug') {
+    fdom.debug.format(message.message.severity,
+        this.toString(),
+        message.message.msg);
+  } else {
+    this.emit(this.externalPortMap[name], message);
+  }
   return false;
 };
 
@@ -139,7 +147,7 @@ fdom.port.App.prototype.loadManifest = function() {
  * @method loadPermissions
  */
 fdom.port.App.prototype.loadLinks = function() {
-  var i, channels = ['default', 'control'];
+  var i, channels = ['default'];
   if (this.manifest.dependencies) {
     eachProp(this.manifest.dependencies, function(url, name) {
       channels.push(name);
@@ -155,5 +163,4 @@ fdom.port.App.prototype.loadLinks = function() {
     this.externalPortMap[channels[i]] = false;
     this.internalPortMap[channels[i]] = false;
   }
-  this.externalPortMap['control'] = this.controlChannel;
 };
