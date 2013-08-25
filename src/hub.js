@@ -40,6 +40,18 @@ fdom.Hub.prototype.onMessage = function(source, message) {
     console.warn("Message dropped from unconfigured source " + source);
     return;
   }
+  var debugLog = [];
+  if (this.config.global) {
+    if (!this.config.global.debugLog) {
+      this.config.global.debugLog = [];
+    }
+    debugLog = this.config.global.debugLog;
+  }
+  var mlog = this.apps[destination.source].toString() +
+              " -" + message.type + "-> " +
+              this.apps[destination.app].toString() + "." + destination.flow;
+  console.log(mlog);
+  debugLog.push(mlog);
 
   this.apps[destination.app].onMessage(destination.flow, message);
 };
@@ -75,7 +87,8 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
   var route = this.generateRoute();
   this.routes[route] = {
     app: destination,
-    flow: flow
+    flow: flow,
+    source: source.id
   };
   if (typeof source.on === 'function') {
     source.on(route, this.onMessage.bind(this, route));

@@ -19,6 +19,12 @@ setup = function (global, freedom_src, config) {
         'portType': 'Worker'
       },
       manager = new fdom.port.Manager(hub);
+
+  // Enable console.log from worker contexts.
+  if (typeof global.console === 'undefined') {
+    global.console = new fdom.port.Debug();
+    manager.setup(global.console);
+  }
   
   if (isAppContext()) {
     site_cfg.global = global;
@@ -61,12 +67,6 @@ setup = function (global, freedom_src, config) {
   hub.emit('config', site_cfg);
 
   manager.setup(def);
-
-  // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined') {
-    global.console = new fdom.port.Debug();
-    manager.setup(global.console);
-  }
 
   var external = new fdom.port.Proxy(function(binder) {
     manager.setup(binder);

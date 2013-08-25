@@ -11,6 +11,8 @@ fdom.port = fdom.port || {};
  * @constructor
  */
 fdom.port.Proxy = function(binder) {
+  handleEvents(this);
+
   // The internal object is bound to the hub and talks to freedom.js
   // while this becomes a divorced message channel.
   var internal = {
@@ -19,7 +21,6 @@ fdom.port.Proxy = function(binder) {
   },
       self = this;
   handleEvents(internal);
-  handleEvents(this);
   
   this.emit = function(internal, type, msg) {
     internal.emit(internal.emitChannel, {
@@ -32,12 +33,21 @@ fdom.port.Proxy = function(binder) {
     if (source === 'control' && message.reverse) {
       this.emitChannel = message.channel;
       this.emit(this.emitChannel, {
+        type: 'bindChannel',
         channel: message.reverse
       });
     } else if (source === 'default') {
       this.externalEmit(message.type, message.message);
     }
   }.bind(internal);
+  
+  internal.toString = function() {
+    if (this.emitChannel) {
+      return "[Proxy bound to " + this.emitChannel + "]";
+    } else {
+      return "[unbound Proxy]";
+    }
+  };
 
   binder(internal);
 };

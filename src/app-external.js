@@ -1,3 +1,4 @@
+/*
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -12,7 +13,7 @@ fdom.app = fdom.app || {};
  * @extends App
  * @param Hub The freedom Hub to register with.
  * @constructor
- */
+ 
 fdom.app.External = function(hub) {
   this.config = {
     manifest: 'manifest.json',
@@ -31,27 +32,9 @@ fdom.app.External = function(hub) {
  * Configure the App based on global FreeDOM configuration.
  * @method configure
  * @param {Object} config global freedom Properties.
- */
+ 
 fdom.app.External.prototype.configure = function(config) {
-  mixin(this.hub.config, config);
   mixin(this.config, config, true);
-};
-
-/**
- * Get a publically visible object for a given Channel.
- * @method getProxy
- * @param {String?} flow The channel to provide a proxy for. If no channel
- *     is specified, the default channel will be used.
- * @returns {fdom.Proxy} a proxy object for the requested flow.
- */
-fdom.app.External.prototype.getProxy = function(flow) {
-  var channel = this.getChannel(flow);
-
-  var proxy = new fdom.Proxy(channel);
-  if (!this.config.exports) {
-    this.config.exports = proxy;
-  }
-  return proxy;
 };
 
 /**
@@ -62,7 +45,7 @@ fdom.app.External.prototype.getProxy = function(flow) {
  * @param {String?} flow The identifier for the channel. If none is specified
  *     the default channel will be used.
  * @returns {fdom.Channel} a channel for the requested flow.
- */
+ 
 fdom.app.External.prototype.getChannel = function(flow) {
   if (!this.manifest || !this.id) {
     this.id = makeAbsolute(this.config.manifest);
@@ -79,40 +62,12 @@ fdom.app.External.prototype.getChannel = function(flow) {
 };
 
 /**
- * Load the description of the app.
- * @method loadManifest
- * @param {String} manifest The canonical URL of the application.
- * @private
- */
-fdom.app.External.prototype.loadManifest = function(manifest) {
-  var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function() {
-    if (ref.readyState == 4 && ref.responseText) {
-      var resp = {};
-      try {
-        resp = JSON.parse(ref.responseText);
-      } catch(err) {
-        console.warn("Failed to load manifest " + manifest + ": " + err);
-        this.onManifest();
-        return;
-      }
-      this.onManifest(resp);
-    } else if (ref.readyState == 4) {
-      console.warn(ref.status);
-    }
-  }.bind(this), false);
-  ref.overrideMimeType('application/json');
-  ref.open("GET", manifest, true);
-  ref.send();
-};
-
-/**
  * Callback for availability of Application Manifest.
  * Registers and starts the application.
  * @param onManifest
  * @param {Object} manifest The application manifest.
  * @private
- */
+ 
 fdom.app.External.prototype.onManifest = function(manifest) {
   if (manifest && manifest['app'] && manifest['app']['script']) {
     this.manifest = manifest;
@@ -129,7 +84,7 @@ fdom.app.External.prototype.onManifest = function(manifest) {
  * remote javascript execution engine.
  * @method start
  * @private
- */
+ 
 fdom.app.External.prototype.start = function() {
   if (this.worker) {
     this.worker.terminate();
@@ -137,27 +92,13 @@ fdom.app.External.prototype.start = function() {
     this.state = false;
   }
   if (this.config['strongIsolation']) {
-    if (typeof (window.Blob) !== typeof (Function)) {
-      this.worker = new Worker(this.config.source);
-    } else {
-      var blob = new Blob([this.config.src], {type: 'text/javascript'});
-      this.worker = new Worker(URL.createObjectURL(blob));
-    }
-  } else {
-    this.worker = makeFrame(this.config.src, this.config['inject']);
-  }
-  this.worker.addEventListener('message', function(msg) {
-    if (msg.data.fromApp) {
-      this.hub.onMessage(this, msg.data);
-    }
-  }.bind(this), true);
 };
 
 /**
  * Mark the application context ready, and deliver queued messages to the
  * worker process.
  * @method ready
- */
+ 
 fdom.app.External.prototype.ready = function() {
   this.state = true;
   this['emit']('ready');
@@ -169,7 +110,7 @@ fdom.app.External.prototype.ready = function() {
  * and by the Hub to manage application lifecycle.
  * @method postMessage
  * @param {Object} msg The message to send.
- */
+ 
 fdom.app.External.prototype.postMessage = function(msg) {
   if (this.state || (this.worker && msg.sourceFlow == "control")) {
     if (this.config['strongIsolation']) {
@@ -185,3 +126,4 @@ fdom.app.External.prototype.postMessage = function(msg) {
   }
 };
 
+*/

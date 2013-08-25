@@ -11,15 +11,18 @@ fdom.port = fdom.port || {};
  * @constructor
  */
 fdom.port.Debug = function() {
+  this.id = 'debug';
   handleEvents(this);
 };
 
-fdom.port.Debug.onMessage = function(source, message) {
-  if (source === 'control' && message.reverse) {
-    this.emitChannel = message.channel;
-    this.emit(this.emitChannel, {
-      channel: message.reverse
-    });
+fdom.port.Debug.prototype.toString = function() {
+  return '[Console]';
+};
+
+fdom.port.Debug.prototype.onMessage = function(source, message) {
+  console.log(message);
+  if (source === 'control' && message.reverse && !this.emitChannel) {
+    this.emitChannel = message.reverse;
   }
 };
 

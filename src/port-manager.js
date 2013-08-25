@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, XMLHttpRequest */
+/*globals fdom:true, handleEvents, mixin, XMLHttpRequest, resolvePath */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -26,6 +26,10 @@ fdom.port.Manager = function(hub) {
   this.hub.register(this);
 };
 
+fdom.port.Manager.prototype.toString = function() {
+  return "[Local Controller]";
+};
+
 /**
  * Receive a message from the freedom hub.
  */
@@ -50,6 +54,9 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   } else if (message.request === 'create') {
     console.log('setting up ' + origin.id);
     this.setup(origin);
+  } else if (message.request === 'load') {
+    // TODO(willscott): This is a hack.
+    this.loadScripts(message.from, message.scripts);
   } else {
     console.warn("Unknown control request: " + message.request);
     return;
@@ -72,6 +79,7 @@ fdom.port.Manager.prototype.setup = function(port) {
   this.flows[port.id] = flow;
 
   this.hub.onMessage(flow, {
+    type: 'setup',
     channel: reverse,
     config: this.config
   });
@@ -86,7 +94,21 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination) {
 
   this.hub.onMessage(this.flows[port.id], {
     name: name,
+    type: 'createLink',
     channel: outgoing,
     reverse: reverse
   });
+};
+
+fdom.port.Manager.prototype.loadScripts = function(from, scripts) {
+  var i, importer = this.config.global.importScripts;
+  if (importer) {
+    if (typeof scripts === 'string') {
+      importer(resolvePath(scripts, from));
+    } else {
+      for (i = 0; i < scripts.length; i += 1) {
+        importer(resolvePath(scripts[i], from));
+      }
+    }
+  }
 };
