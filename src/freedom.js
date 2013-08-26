@@ -63,10 +63,9 @@ setup = function (global, freedom_src, config) {
 
   manager.setup(def);
 
-  var external = new fdom.port.Proxy(function(binder) {
-    manager.setup(binder);
-    manager.createLink(binder, 'default', def);
-  });
+  var external = new fdom.port.Proxy();
+  manager.setup(external);
+  manager.createLink(external, 'default', def);
 
   manager.setup(fdom.debug);
   // Enable console.log from worker contexts.
@@ -74,6 +73,6 @@ setup = function (global, freedom_src, config) {
     global.console = fdom.debug;
   }
   
-  return external;
+  return external.getInterface();
 };
 

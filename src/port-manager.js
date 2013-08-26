@@ -46,19 +46,13 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   if (this.delegate && reverseFlow !== this.delegate && this.toDelegate[flow]) {
     // Ship off to the delegee
     this.emit(this.delegate, {
-      type: 'Control Delegation',
+      type: 'Delegation',
       request: 'handle',
       quiet: true,
       flow: flow,
       message: message
     });
     return;
-  } else if (this.delegate && reverseFlow === this.delegate &&
-             message.request === 'reflect') {
-    flow = message.flow;
-    reverseFlow = this.flows[flow];
-    origin = this.hub.getDestination(reverseFlow);
-    message = message.message;
   }
 
   if (message.request === 'debug') {
@@ -73,24 +67,15 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   } else if (message.request === 'create') {
     console.log('setting up ' + origin.id);
     this.setup(origin);
-  } else if (message.request === 'load') {
-    // TODO(willscott): This is a hack.
-    this.loadScripts(message.from, message.scripts);
+  } else if (message.request === 'port') {
+    this.createLink(origin, message.name, 
+        new fdom.port[message.service](message.args));
   } else if (message.request === 'delegate') {
     // Initate Delegation.
     if (this.delegate === null) {
       this.delegate = reverseFlow;
     }
     this.toDelegate[message.flow] = true;
-  } else if (message.request === 'handle') {
-    // TODO(willscott): Should control do this loop?    
-    this.emit(reverseFlow, {
-      type: 'Control Delegation',
-      request: 'reflect',
-      quiet: true,
-      flow: message.flow,
-      message: message.message
-    });
   } else {
     console.warn("Unknown control request: " + message.request);
     return;
@@ -132,21 +117,4 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination) {
     channel: outgoing,
     reverse: reverse
   });
-};
-
-fdom.port.Manager.prototype.loadScripts = function(from, scripts) {
-  var i, importer = this.config.global.importScripts;
-  if (importer) {
-    try {
-      if (typeof scripts === 'string') {
-        importer(resolvePath(scripts, from));
-      } else {
-        for (i = 0; i < scripts.length; i += 1) {
-          importer(resolvePath(scripts[i], from));
-        }
-      }
-    } catch(e) {
-      console.error("Error Loading ", scripts, e.message);
-    }
-  }
 };

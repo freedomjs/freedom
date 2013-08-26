@@ -31,6 +31,7 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
     } else if (!this.port && message.channel) {
       this.externalPortMap[message.name] = message.channel;
       this.emit(message.channel, {
+        type: 'default channel announcement',
         channel: message.reverse
       });
     } else {
@@ -55,11 +56,11 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
 };
 
 fdom.port.App.prototype.started = function() {
-  return this.port !== undefined;
+  return this.appInternal !== undefined;
 };
 
 fdom.port.App.prototype.start = function() {
-  if (this.started()) {
+  if (this.started() || this.port) {
     return false;
   }
   if (this.manifest && this.controlChannel) {
@@ -72,7 +73,7 @@ fdom.port.App.prototype.start = function() {
       config: this.config
     });
 
-    // Tell the remote location to delegate control.
+    // Tell the remote location to delegate debugging.
     this.port.onMessage('control', {
       type: 'Redirect',
       request: 'delegate',
@@ -81,12 +82,11 @@ fdom.port.App.prototype.start = function() {
     
     // Tell the remote location to instantate the app.
     this.port.onMessage('control', {
-      type: 'Load Scripts',
-      request: 'load',
-      scripts: this.manifest.app.script,
-      from: makeAbsolute(this.manifestId)
+      type: 'Environment Configuration',
+      request: 'port',
+      name: 'AppInternal',
+      service: 'AppInternal'
     });
-    this.emit('start');
   }
 };
 
@@ -101,10 +101,21 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
     return;
   }
   // Terminate debug redirection requested in start().
-  if (name === 'control' && message.flow === 'debug') {
-    fdom.debug.format(message.message.severity,
-        this.toString(),
-        message.message.msg);
+  if (name === 'control') {
+    if (message.flow === 'debug') {
+      fdom.debug.format(message.message.severity,
+          this.toString(),
+          message.message.msg);
+    } else if (message.name === 'AppInternal' && !this.appInternal) {
+      this.appInternal = message.channel;
+      // Decide if app-internal needs to be able to talk back.
+      this.port.onMessage(this.appInternal, {
+        type: 'Initialization',
+        id: makeAbsolute(this.manifestId),
+        manifest: this.manifest
+      });
+      this.emit('start');
+    }
   } else {
     this.emit(this.externalPortMap[name], message);
   }
@@ -153,6 +164,7 @@ fdom.port.App.prototype.loadLinks = function() {
       channels.push(name);
       var dep = new fdom.port.App(url);
       this.emit(this.controlChannel, {
+        type: 'Link to ' + name,
         request: 'link',
         name: name,
         to: dep
