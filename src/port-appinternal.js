@@ -81,7 +81,7 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
 };
 
 fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
-  var proxies = [], i, obj;
+  var proxies = [], seen = [], i, obj;
   
   if (manifest.permissions) {
     for (i = 0; i < manifest.permissions.length; i += 1) {
@@ -90,8 +90,9 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
         def: undefined
       };
       obj.def = fdom.apis.get(obj.name).definition;
-      if (obj.def) {
+      if (seen.indexOf(obj.name) < 0 && obj.def) {
         proxies.push(obj);
+        seen.push(obj.name);
       }
     }
   }
@@ -101,7 +102,10 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
       obj = {
         name: name
       };
-      proxies.push(obj);
+      if (seen.indexOf(name) < 0) {
+        proxies.push(obj);
+        seen.push(name);
+      }
     });
   }
   
@@ -113,8 +117,9 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
         provides: true
       };
       obj.def = fdom.apis.get(obj.name).definition;
-      if (obj.def) {
+      if (seen.indexOf(obj.name) < 0 && obj.def) {
         proxies.push(obj);
+        seen.push(obj.name);
       }
     }
   }

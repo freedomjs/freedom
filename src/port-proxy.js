@@ -33,7 +33,11 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       return;
     }
     if (message.to) {
-      this.emits[message.to](message.type, message.message);
+      if (this.emits[message.to]) {
+        this.emits[message.to](message.type, message.message);
+      } else {
+        console.warn('Could not deliver message, no such interface.');
+      }
     } else {
       eachProp(this.emits, function(iface) {
         iface(message.type, message.message);

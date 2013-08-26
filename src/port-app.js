@@ -123,6 +123,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       if (this.manifest.provides &&
           this.manifest.provides.indexOf(message.name) === 0) {
         this.internalPortMap['default'] = message.channel;
+        this.externalPortMap[message.name] = this.externalPortMap['default'];
       }
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
@@ -172,15 +173,31 @@ fdom.port.App.prototype.loadManifest = function() {
  * @method loadPermissions
  */
 fdom.port.App.prototype.loadLinks = function() {
-  var i, channels = ['default'];
+  var i, channels = ['default'], name, dep;
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
-      channels.push(this.manifest.permissions[i]);
+      name = this.manifest.permissions[i];
+      if (channels.indexOf(name) < 0) {
+        channels.push(name);
+        if (name.indexOf('core.') === 0) {
+          dep = new fdom.port.Provider(fdom.apis.get(name).definition);
+          dep.getInterface().provideAsynchronous(fdom.apis.getCore(name));
+
+          this.emit(this.controlChannel, {
+            type: 'Link to ' + name,
+            request: 'link',
+            name: name,
+            to: dep
+          });
+        }
+      }
     }
   }
   if (this.manifest.dependencies) {
     eachProp(this.manifest.dependencies, function(url, name) {
-      channels.push(name);
+      if (channels.indexOf(name) < 0) {
+        channels.push(name);
+      }
       var dep = new fdom.port.App(url);
       this.emit(this.controlChannel, {
         type: 'Link to ' + name,

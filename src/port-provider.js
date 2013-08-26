@@ -78,10 +78,13 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
   instance.dispatchEvent = function(events, id, name, value) {
     if (events[name]) {
       this.emit(this.emitChannel, {
-        action: 'event',
+        type: 'event',
         to: id,
-        type: name,
-        value: fdom.proxy.conform(events[name].value, value)
+        message: {
+          action: 'event',
+          type: name,
+          value: fdom.proxy.conform(events[name].value, value)
+        }
       });
     }
   }.bind(this, events, identifier);
@@ -95,11 +98,14 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
       var args = msg.value,
           ret = function(to, req, type, ret) {
             this.emit(this.emitChannel, {
-              action: 'method',
+              type: 'method',
               to: to,
-              reqId: req,
-              type: type,
-              value: ret
+              message: {
+                action: 'method',
+                reqId: req,
+                type: type,
+                value: ret
+              }
             });
           }.bind(port, msg.to, msg.reqId, msg.type);
       if (!Array.isArray(args)) {

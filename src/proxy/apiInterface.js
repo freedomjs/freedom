@@ -45,15 +45,11 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
     }
   }.bind(this));
 
-  onMsg(function(msg) {
+  onMsg(function(type, msg) {
     if (!msg) {
       return;
     }
-    if (msg.to !== id) {
-      console.warn('misdelivered message');
-      return;
-    }
-    if (msg.action === 'method') {
+    if (type === 'method') {
       if (inflight[msg.reqId]) {
         var deferred = inflight[msg.reqId];
         delete inflight[msg.reqId];
@@ -61,7 +57,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
       } else {
         console.log('Dropped response message with id ' + msg.reqId);
       }
-    } else if (msg.action === 'event') {
+    } else if (type === 'event') {
       if (events[msg.type]) {
         emitter(msg.type, fdom.proxy.conform(events[msg.type].value, msg.value));
       }
