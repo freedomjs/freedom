@@ -11,9 +11,12 @@ fdom.port = fdom.port || {};
  * @extends Agent
  * @constructor
  */
-fdom.port.AppInternal = function() {
+fdom.port.AppInternal = function(manager) {
   this.config = {};
+  this.manager = manager;
+  
   this.id = 'environment' + Math.random();
+  this.pendingPorts = 0;
 
   handleEvents(this);
 };
@@ -25,8 +28,14 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
       mixin(this.config, message.config);
     }
   } else if (flow === 'default') {
-    this.loadLinks(message.id, message.manifest.permissions);
-    this.loadScripts(message.id, message.manifest.app.script);
+    // Recover the app:
+    this.port = this.manager.hub.getDestination(message.channel);
+
+    var objects = this.mapProxies(message.manifest);
+
+    this.once('start', this.loadScripts.bind(this, message.id, 
+        message.manifest.app.script));
+    this.loadLinks(objects);
   }
 };
 
@@ -34,17 +43,83 @@ fdom.port.AppInternal.prototype.toString = function() {
   return "[App Environment Helper]";
 };
 
-fdom.port.AppInternal.prototype.attach = function(name) {
+fdom.port.AppInternal.prototype.attach = function(name, proxy) {
   var exp = this.config.global.freedom;
 
-  exp[name] = function() {};
+  if (!exp[name]) {
+    exp[name] = function(p) {
+      return p.getInterface();
+    }.bind({}, proxy);
+  }
+
+  this.pendingPorts -= 1;
+  if (this.pendingPorts === 0) {
+    this.emit('start');
+  }
 };
 
 fdom.port.AppInternal.prototype.loadLinks = function(items) {
-  var i;
+  var i, proxy;
   for (i = 0; i < items.length; i += 1) {
-    this.attach(items[i]);
+    if (items[i].def) {
+      if (items[i].provides) {
+        proxy = new fdom.port.Proxy();
+      } else {
+        proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, items[i].def));
+      }
+    } else {
+      proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
+    }
+    
+    this.manager.createLink(this.port, items[i].name, proxy);
+    this.pendingPorts += 1;
+    proxy.once('start', this.attach.bind(this, items[i].name, proxy));
+    if (this.pendingPorts === 0) {
+      this.emit('start');
+    }
   }
+};
+
+fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
+  var proxies = [], i, obj;
+  
+  if (manifest.permissions) {
+    for (i = 0; i < manifest.permissions.length; i += 1) {
+      obj = {
+        name: manifest.permissions[i],
+        def: undefined
+      };
+      obj.def = fdom.apis.get(obj.name).definition;
+      if (obj.def) {
+        proxies.push(obj);
+      }
+    }
+  }
+  
+  if (manifest.dependencies) {
+    eachProp(manifest.dependencies, function(url, name) {
+      obj = {
+        name: name
+      };
+      proxies.push(obj);
+    });
+  }
+  
+  if (manifest.providers) {
+    for (i = 0; i < manifest.providers.length; i += 1) {
+      obj = {
+        name: manifest.providers[i],
+        def: undefined,
+        provides: true
+      };
+      obj.def = fdom.apis.get(obj.name).definition;
+      if (obj.def) {
+        proxies.push(obj);
+      }
+    }
+  }
+
+  return proxies;
 };
 
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {

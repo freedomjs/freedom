@@ -68,6 +68,9 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     console.log('setting up ' + origin.id);
     this.setup(origin);
   } else if (message.request === 'port') {
+    if (message.exposeManager) {
+      message.args = this;
+    }
     this.createLink(origin, message.name, 
         new fdom.port[message.service](message.args));
   } else if (message.request === 'delegate') {

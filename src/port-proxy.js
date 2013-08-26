@@ -10,8 +10,9 @@ fdom.port = fdom.port || {};
  * @uses handleEvents
  * @constructor
  */
-fdom.port.Proxy = function() {
+fdom.port.Proxy = function(interfaceCls) {
   this.id = fdom.port.Proxy.nextId();
+  this.interfaceCls = interfaceCls;
   handleEvents(this);
   
   this.emits = {};
@@ -24,7 +25,13 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       type: 'bindChannel',
       channel: message.reverse
     });
+    this.emit('start');
   } else if (source === 'default') {
+    if (!this.emitChannel && message.channel) {
+      this.emitChannel = message.channel;
+      this.emit('start');
+      return;
+    }
     if (message.to) {
       this.emits[message.to](message.type, message.message);
     } else {
@@ -36,19 +43,12 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
 };
 
 fdom.port.Proxy.prototype.getInterface = function() {
-  var iface = {}, id = fdom.port.Proxy.nextId();
-  handleEvents(iface);
-
-  this.emits[id] = iface.emit.bind(iface);
-
-  iface.emit = function(type, msg) {
-    this.emit(this.emitChannel, {
-      type: type,
-      message: msg
-    });
-  }.bind(this);
-  
-  return iface;
+  var id = fdom.port.Proxy.nextId();
+  return new this.interfaceCls(function(id, binder) {
+    this.emits[id] = binder;
+  }.bind(this, id), function(chan, msg) {
+    this.emit(chan, msg);
+  }.bind(this, this.emitChannel), id);
 };
 
 fdom.port.Proxy.prototype.toString = function() {

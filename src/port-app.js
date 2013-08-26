@@ -85,7 +85,8 @@ fdom.port.App.prototype.start = function() {
       type: 'Environment Configuration',
       request: 'port',
       name: 'AppInternal',
-      service: 'AppInternal'
+      service: 'AppInternal',
+      exposeManager: true
     });
   }
 };
@@ -112,9 +113,16 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       this.port.onMessage(this.appInternal, {
         type: 'Initialization',
         id: makeAbsolute(this.manifestId),
-        manifest: this.manifest
+        manifest: this.manifest,
+        channel: message.reverse
       });
       this.emit('start');
+    } else {
+      this.internalPortMap[message.name] = message.channel;
+      this.port.onMessage(message.channel, {
+        type: 'bindChannel',
+        channel: message.reverse
+      });
     }
   } else {
     this.emit(this.externalPortMap[name], message);
@@ -159,6 +167,11 @@ fdom.port.App.prototype.loadManifest = function() {
  */
 fdom.port.App.prototype.loadLinks = function() {
   var i, channels = ['default'];
+  if (this.manifest.permissions) {
+    for (i = 0; i < this.manifest.permissions.length; i += 1) {
+      channels.push(this.manifest.permissions[i]);
+    }
+  }
   if (this.manifest.dependencies) {
     eachProp(this.manifest.dependencies, function(url, name) {
       channels.push(name);
@@ -171,8 +184,9 @@ fdom.port.App.prototype.loadLinks = function() {
       });
     }.bind(this));
   }
+  // Note that messages can be synchronous, so some ports may already be bound.
   for (i = 0; i < channels.length; i += 1) {
-    this.externalPortMap[channels[i]] = false;
+    this.externalPortMap[channels[i]] = this.externalPortMap[channels[i]] || false;
     this.internalPortMap[channels[i]] = false;
   }
 };

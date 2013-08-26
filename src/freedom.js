@@ -63,7 +63,7 @@ setup = function (global, freedom_src, config) {
 
   manager.setup(def);
 
-  var external = new fdom.port.Proxy();
+  var external = new fdom.port.Proxy(fdom.proxy.EventInterface);
   manager.setup(external);
   manager.createLink(external, 'default', def);
 
