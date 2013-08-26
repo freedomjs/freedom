@@ -63,7 +63,7 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
   for (i = 0; i < items.length; i += 1) {
     if (items[i].def) {
       if (items[i].provides) {
-        proxy = new fdom.port.Proxy();
+        proxy = new fdom.port.Provider(items[i].def);
       } else {
         proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, items[i].def));
       }
@@ -105,10 +105,10 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
     });
   }
   
-  if (manifest.providers) {
-    for (i = 0; i < manifest.providers.length; i += 1) {
+  if (manifest.provides) {
+    for (i = 0; i < manifest.provides.length; i += 1) {
       obj = {
-        name: manifest.providers[i],
+        name: manifest.provides[i],
         def: undefined,
         provides: true
       };

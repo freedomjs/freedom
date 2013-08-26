@@ -118,6 +118,12 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       });
       this.emit('start');
     } else {
+      // A design decision was that the default provider channel is
+      // disabled upon providing.
+      if (this.manifest.provides &&
+          this.manifest.provides.indexOf(message.name) === 0) {
+        this.internalPortMap['default'] = message.channel;
+      }
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
         type: 'bindChannel',

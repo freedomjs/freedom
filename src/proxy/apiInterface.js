@@ -13,10 +13,10 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
 
   eachProp(def, function(prop, name) {
     switch(prop.type) {
-      case "property":
+      case 'property':
         //TODO(willscott): how should asynchronous properties work?
         break;
-      case "method":
+      case 'method':
         this[name] = function() {
           // Note: inflight should be registered before message is passed
           // in order to prepare for synchronous in-window pipes.
@@ -33,7 +33,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
           return deferred.promise();
         };
         break;
-      case "event":
+      case 'event':
         if(!events) {
           handleEvents(this);
           emitter = this.emit;
@@ -50,7 +50,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
       return;
     }
     if (msg.to !== id) {
-      console.warn("misdelivered message");
+      console.warn('misdelivered message');
       return;
     }
     if (msg.action === 'method') {
@@ -59,7 +59,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
         delete inflight[msg.reqId];
         deferred.resolve(msg.value);
       } else {
-        console.log("Dropped response message with id " + msg.reqId);
+        console.log('Dropped response message with id ' + msg.reqId);
       }
     } else if (msg.action === 'event') {
       if (events[msg.type]) {
