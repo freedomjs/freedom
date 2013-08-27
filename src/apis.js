@@ -53,10 +53,11 @@ Api.prototype.register = function(name, constructor) {
  * Get a core API connected to a given FreeDOM module.
  * @method getCore
  * @param {String} name the API to retrieve.
+ * @param {port.App} from The instantiating App.
  * @returns {CoreProvider} A fdom.App look-alike to a local API definition.
  */
-Api.prototype.getCore = function(name) {
-  return this.providers[name];
+Api.prototype.getCore = function(name, from) {
+  return this.providers[name].bind({}, from);
 };
 
 /**

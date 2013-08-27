@@ -181,7 +181,7 @@ fdom.port.App.prototype.loadLinks = function() {
         channels.push(name);
         if (name.indexOf('core.') === 0) {
           dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-          dep.getInterface().provideAsynchronous(fdom.apis.getCore(name));
+          dep.getInterface().provideAsynchronous(fdom.apis.getCore(name, this));
 
           this.emit(this.controlChannel, {
             type: 'Link to ' + name,

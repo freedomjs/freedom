@@ -46,6 +46,14 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
   }
 };
 
+/**
+ * Create a proxy.Interface associated with this proxy.
+ * an interface is returned, and is passed three arguments
+ * at construction: onMsg: function(binder) is allows registration
+ * of a function to be called when messages for this interface arrive.
+ * emit: function(msg) allows this interface to emit messages,
+ * id: string is the Identifier for this interface.
+ */
 fdom.port.Proxy.prototype.getInterface = function() {
   var id = fdom.port.Proxy.nextId();
   return new this.interfaceCls(function(id, binder) {

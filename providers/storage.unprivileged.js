@@ -4,14 +4,14 @@
  * @constructor
  * @private
  */
-var Storage_unprivileged = function(channel) {
-  this.channel = channel;
+var Storage_unprivileged = function(app) {
+  this.app = app;
   handleEvents(this);
 };
 
 Storage_unprivileged.prototype.get = function(key, continuation) {
   try {
-    var val = localStorage[this.channel.app.id + key];
+    var val = localStorage[this.app.manifestId + key];
     continuation(val);
   } catch(e) {
     continuation(null);
@@ -19,7 +19,7 @@ Storage_unprivileged.prototype.get = function(key, continuation) {
 };
 
 Storage_unprivileged.prototype.set = function(key, value, continuation) {
-  localStorage[this.channel.app.id + key] = value;
+  localStorage[this.app.manifestId + key] = value;
   continuation();
 };
 

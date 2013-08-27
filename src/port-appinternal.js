@@ -74,9 +74,10 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
     this.manager.createLink(this.port, items[i].name, proxy);
     this.pendingPorts += 1;
     proxy.once('start', this.attach.bind(this, items[i].name, proxy));
-    if (this.pendingPorts === 0) {
-      this.emit('start');
-    }
+  }
+
+  if (this.pendingPorts === 0) {
+    this.emit('start');
   }
 };
 
