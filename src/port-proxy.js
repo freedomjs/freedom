@@ -35,6 +35,8 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       channel: message.reverse
     });
     this.emit('start');
+  } else if (source === 'control' && message.channel) {
+    this.controlChannel = message.channel;
   } else if (source === 'default') {
     if (!this.emitChannel && message.channel) {
       this.emitChannel = message.channel;

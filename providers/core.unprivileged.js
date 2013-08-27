@@ -21,7 +21,7 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
 
 Core_unprivileged.prototype.bindChannel = function(identifier, continuation) {
   var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
-  
+    
   var appId = identifier[0];
   if (appId === this.app.appId) {
     this.app.manager.createLink(proxy, 'default', {id: identifier[1]});
@@ -33,7 +33,26 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation) {
       continuation(proxy.getInterface());
     });
   }
+};
 
+Core_unprivileged.bindChannel = function(app, identifier) {
+  var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
+  // Register proxy.
+  app.emit(app.controlChannel, {
+    type: 'Custom Channel ' + identifier[0] + '.' + identifier[1],
+    request: 'link',
+    name: 'custom-' + identifier[0] + identifier[1],
+    to: proxy
+  });
+  
+  proxy.emit(proxy.controlChannel, {
+    type: 'Custom Channel Link ' + identifier[0] + '.' + identifier[1],
+    request: 'link',
+    name: identifier[1],
+    to: {id: identifier[0]}
+  });
+  
+  return proxy.getInterface();
 };
 
 fdom.apis.register("core", Core_unprivileged);
