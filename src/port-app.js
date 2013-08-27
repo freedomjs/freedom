@@ -138,6 +138,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       this.port.onMessage(this.appInternal, {
         type: 'Initialization',
         id: makeAbsolute(this.manifestId),
+        appId: this.id,
         manifest: this.manifest,
         channel: message.reverse
       });

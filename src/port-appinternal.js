@@ -42,6 +42,7 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
     // Recover the app:
     this.port = this.manager.hub.getDestination(message.channel);
     this.appChannel = message.channel;
+    this.appId = message.appId;
 
     var objects = this.mapProxies(message.manifest);
 
@@ -90,7 +91,7 @@ fdom.port.AppInternal.prototype.attach = function(name, proxy) {
  * @private
  */
 fdom.port.AppInternal.prototype.loadLinks = function(items) {
-  var i, proxy;
+  var i, proxy, provider, core;
   for (i = 0; i < items.length; i += 1) {
     if (items[i].def) {
       if (items[i].provides) {
@@ -107,6 +108,24 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
     proxy.once('start', this.attach.bind(this, items[i].name, proxy));
   }
 
+  // Attach Core.
+  this.pendingPorts += 1;
+
+  core = fdom.apis.get('core').definition;
+  provider = new fdom.port.Provider(core);
+  provider.getInterface().provideAsynchronous(fdom.apis.getCore('core', this));
+
+  this.emit(this.controlChannel, {
+    type: 'Link to core',
+    request: 'link',
+    name: 'core',
+    to: provider
+  });
+
+  proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, core));
+  this.manager.createLink(provider, 'default', proxy);
+  this.attach('core', proxy);
+
   if (this.pendingPorts === 0) {
     this.emit('start');
   }
@@ -119,7 +138,7 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
  * @return {Object[]} proxy descriptors defined in the manifest.
  */
 fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
-  var proxies = [], seen = [], i, obj;
+  var proxies = [], seen = ['core'], i, obj;
   
   if (manifest.permissions) {
     for (i = 0; i < manifest.permissions.length; i += 1) {
