@@ -34,7 +34,7 @@ fdom.apis.set("core.peerconnection", {
 fdom.apis.set("core.socket", {
   'create': {type: "method", value: ["string", "object"]},
   'connect': {type: "method", value: ["number", "string", "number"]},
-  'onData': {type: "event", value: {"socketId": "number", "data": "string"}},
+  'onData': {type: "event", value: {"socketId": "number", "data": "buffer"}},
   'write': {type: "method", value: ["number", "buffer"]},
   'disconnect': {type: "method", value: ["number"]},
   'destroy': {type: "method", value: ["number"]},
