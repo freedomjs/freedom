@@ -11,7 +11,6 @@ fdom.proxy.EventInterface = function(onMsg, emit) {
   onMsg(this.emit.bind(this));
 
   this.emit = function(emitter, type, msg) {
-    console.log('asked to emit ' + JSON.stringify(msg));
     emitter({type: type, message: msg});
   }.bind({}, emit);
 };

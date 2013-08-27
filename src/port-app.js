@@ -18,6 +18,7 @@ fdom.port.App = function(manifestURL) {
   this.loadManifest();
   this.externalPortMap = {};
   this.internalPortMap = {};
+  this.started = false;
 
   handleEvents(this);
 };
@@ -38,13 +39,15 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
       this.port.onMessage(flow, message);
     }
   } else {
-    if (!this.started()) {
+    if (this.externalPortMap[flow] === false && message.channel) {
+      this.externalPortMap[flow] = message.channel;
+      if (this.manifest.provides && flow === 'default') {
+        this.externalPortMap[this.manifest.provides[0]] = message.channel;
+      }
+      return;
+    } else if (!this.started) {
       this.once('start', this.onMessage.bind(this, flow, message));
     } else {
-      if (this.externalPortMap[flow] === false && message.channel) {
-        this.externalPortMap[flow] = message.channel;
-        return;
-      }
 //      console.log('mapping for ' + flow + ' was ' + this.internalPortMap[flow]);
       if (this.internalPortMap[flow] === false) {
         this.once('bound', this.onMessage.bind(this, flow, message));
@@ -55,12 +58,8 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
   }
 };
 
-fdom.port.App.prototype.started = function() {
-  return this.appInternal !== undefined;
-};
-
 fdom.port.App.prototype.start = function() {
-  if (this.started() || this.port) {
+  if (this.started || this.port) {
     return false;
   }
   if (this.manifest && this.controlChannel) {
@@ -109,21 +108,18 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
           message.message.msg);
     } else if (message.name === 'AppInternal' && !this.appInternal) {
       this.appInternal = message.channel;
-      // Decide if app-internal needs to be able to talk back.
       this.port.onMessage(this.appInternal, {
         type: 'Initialization',
         id: makeAbsolute(this.manifestId),
         manifest: this.manifest,
         channel: message.reverse
       });
-      this.emit('start');
     } else {
       // A design decision was that the default provider channel is
       // disabled upon providing.
       if (this.manifest.provides &&
           this.manifest.provides.indexOf(message.name) === 0) {
         this.internalPortMap['default'] = message.channel;
-        this.externalPortMap[message.name] = this.externalPortMap['default'];
       }
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
@@ -131,6 +127,9 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         channel: message.reverse
       });
     }
+  } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
+    this.started = true;
+    this.emit('start');
   } else {
     this.emit(this.externalPortMap[name], message);
   }

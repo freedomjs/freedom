@@ -30,6 +30,7 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
   } else if (flow === 'default') {
     // Recover the app:
     this.port = this.manager.hub.getDestination(message.channel);
+    this.appChannel = message.channel;
 
     var objects = this.mapProxies(message.manifest);
 
@@ -130,6 +131,9 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
 
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
   var i, importer = this.config.global.importScripts;
+  this.emit(this.appChannel, {
+    type: 'ready'
+  });
   if (importer) {
     try {
       if (typeof scripts === 'string') {
