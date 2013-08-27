@@ -15,32 +15,20 @@ describe("fdom.apis", function() {
 
   it("should not allow core providers without an API.", function() {
     var provider = function() {};
-    var client = jasmine.createSpyObj('channel', ['emit', 'on']);
 
     api.register('customCore', provider);
-    var channel = api.getCore('customCore', client);
-    channel.postMessage('custom message');
-
-    expect(client.emit).toHaveBeenCalled();
-
-    // Trying to provide a core service without a definition.
-    expect(channel.instance).toEqual(null);
+    var channel = api.getCore('customCore', null);
+    expect(channel).toEqual(null);
   });
 
   it("should register core providers", function() {
-    var provider = function() {};
-    var client = jasmine.createSpyObj('channel', ['emit', 'on']);
+    var provider = function(arg) { this.arg = arg };
 
     api.set('customCore', provider);
     api.register('customCore', provider);
-    var channel = api.getCore('customCore', client);
-    channel.postMessage('custom message');
+    var channel = api.getCore('customCore', 12);
+    var obj = new channel();
 
-    expect(client.emit).toHaveBeenCalled();
-
-    expect(channel.instance).not.toEqual(null);
-    expect(channel.name).toEqual('customCore');
-    expect(channel.channel).toEqual(client);
+    expect(obj.arg).toEqual(12);
   });
-
 });

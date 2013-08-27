@@ -59,7 +59,12 @@ Api.prototype.register = function(name, constructor) {
  * @returns {CoreProvider} A fdom.App look-alike to a local API definition.
  */
 Api.prototype.getCore = function(name, from) {
-  return this.providers[name].bind({}, from);
+  if (this.apis[name]) {
+    return this.providers[name].bind({}, from);
+  } else {
+    console.warn('Refusing to create core provider without an interface.');
+    return null;
+  }
 };
 
 /**
