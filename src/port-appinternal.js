@@ -176,18 +176,23 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
   this.emit(this.appChannel, {
     type: 'ready'
   });
-  if (importer) {
-    try {
-      if (typeof scripts === 'string') {
-        importer(resolvePath(scripts, from));
-      } else {
-        for (i = 0; i < scripts.length; i += 1) {
-          importer(resolvePath(scripts[i], from));
-        }
+  if (!importer) {
+    importer = function(url) {
+      var script = this.config.global.document.createElement('script');
+      script.src = url;
+      this.config.global.document.body.appendChild(script);
+    }.bind(this);
+  }
+  try {
+    if (typeof scripts === 'string') {
+      importer(resolvePath(scripts, from));
+    } else {
+      for (i = 0; i < scripts.length; i += 1) {
+        importer(resolvePath(scripts[i], from));
       }
-    } catch(e) {
-      console.error("Error Loading ", scripts, e.message);
     }
+  } catch(e) {
+    console.error("Error Loading ", scripts, e.message);
   }
 };
 

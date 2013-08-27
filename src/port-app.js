@@ -129,7 +129,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
   }
   // Terminate debug redirection requested in start().
   if (name === 'control') {
-    if (message.flow === 'debug') {
+    if (message.flow === 'debug' && message.message) {
       fdom.debug.format(message.message.severity,
           this.toString(),
           message.message.msg);
