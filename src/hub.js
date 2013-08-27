@@ -1,3 +1,5 @@
+/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, makeAbsolute */
+/*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -39,25 +41,21 @@ fdom.Hub.prototype.onMessage = function(source, message) {
     return;
   }
 
-  // TODO: remove debug log once fdom.debug works robustly.
-  var debugLog = [];
-  if (this.config.global) {
-    if (!this.config.global.debugLog) {
-      this.config.global.debugLog = [];
-    }
-    debugLog = this.config.global.debugLog;
-  }
-  var mlog = this.apps[destination.source].toString() +
-              " -" + message.type + "-> " +
-              this.apps[destination.app].toString() + "." + destination.flow;
   if (!message.quiet) {
-    fdom.debug.log(mlog);
+    fdom.debug.log(this.apps[destination.source].toString() +
+        " -" + message.type + "-> " +
+        this.apps[destination.app].toString() + "." + destination.flow);
   }
-  debugLog.push(mlog);
 
   this.apps[destination.app].onMessage(destination.flow, message);
 };
 
+/**
+ * Get the local destination port of a flow.
+ * @method getDestination
+ * @param {String} source The flow to retrieve.
+ * @return {Port} The destination port.
+ */
 fdom.Hub.prototype.getDestination = function(source) {
   var destination = this.routes[source];
   return this.apps[destination.app];
@@ -66,6 +64,9 @@ fdom.Hub.prototype.getDestination = function(source) {
 /**
  * Register a destination for messages with this hub.
  * @method register
+ * @param {Port} app The Port to register.
+ * @param {Boolean} [force] Whether to override an existing port.
+ * @return {Boolean} Whether the app was registered.
  */
 fdom.Hub.prototype.register = function(app, force) {
   if (!this.apps[app.id] || force) {
@@ -76,6 +77,14 @@ fdom.Hub.prototype.register = function(app, force) {
   }
 };
 
+/**
+ * Install a new route in the hub.
+ * @method install
+ * @param {Port} source The source of the route.
+ * @param {Port} destination The destination of the route.
+ * @param {String} The flow on which the destination will receive routed messages.
+ * @return {String} A routing source identifier for sending messages.
+ */
 fdom.Hub.prototype.install = function(source, destination, flow) {
   if (!this.apps[source.id]) {
     console.warn("Unwilling to generate a source for " + source.id);
@@ -99,6 +108,12 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
   return route;
 };
 
+/**
+ * Generate a unique routing identifier.
+ * @method generateRoute
+ * @return {String} a routing source identifier.
+ * @private
+ */
 fdom.Hub.prototype.generateRoute = function() {
-  return this.route++;
+  return (this.route += 1);
 };

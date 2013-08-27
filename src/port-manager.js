@@ -6,10 +6,10 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * A freedom application which processes control messages to create other
- * application instances.
- * @class App.Manager
- * @extends App
+ * A freedom application which processes control messages manage hub routing.
+ * @class Manager
+ * @extends Port
+ * @param {Hub} hub The routing hub to control.
  * @constructor
  */
 fdom.port.Manager = function(hub) {
@@ -28,12 +28,27 @@ fdom.port.Manager = function(hub) {
   this.hub.register(this);
 };
 
+/**
+ * Provide a textual description of this port.
+ * @method toString
+ * @return {String} the description of this port.
+ */
 fdom.port.Manager.prototype.toString = function() {
   return "[Local Controller]";
 };
 
 /**
- * Receive a message from the freedom hub.
+ * Process messages sent to this port.
+ * The manager, or 'control' destination handles several types of messages,
+ * identified by the request property.  The actions are:
+ * 1. debug. Prints the message to the console.
+ * 2. link. Creates a link between the source and a provided destination port.
+ * 3. create. Registers the provided port with the hub.
+ * 4. port. Creates a link between the source and a described port type.
+ * 5. delegate. Routes a defined set of control messages to another location.
+ * @method onMessage
+ * @param {String} flow The source identifier of the message.
+ * @param {Object} message The received message.
  */
 fdom.port.Manager.prototype.onMessage = function(flow, message) {
   var reverseFlow = this.flows[flow], origin;
@@ -85,6 +100,11 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   }
 };
 
+/**
+ * Set up a port with the hub.
+ * @method setup
+ * @param {Port} port The port to register.
+ */
 fdom.port.Manager.prototype.setup = function(port) {
   if (!port.id) {
     console.warn("Refusing to setup unidentified port ");
@@ -107,6 +127,14 @@ fdom.port.Manager.prototype.setup = function(port) {
   });
 };
 
+/**
+ * Create a link between two ports.  Links are created in both directions,
+ * and a message with those capabilities is sent to the source port.
+ * @method createLink
+ * @param {Port} port The source port.
+ * @param {String} name The flow for messages from destination to port.
+ * @param {Port} destiantion The destination port.
+ */
 fdom.port.Manager.prototype.createLink = function(port, name, destination) {
   if (!this.flows[destination.id]) {
     this.setup(destination);

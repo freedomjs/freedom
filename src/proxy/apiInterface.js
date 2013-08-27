@@ -20,7 +20,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
         this[name] = function() {
           // Note: inflight should be registered before message is passed
           // in order to prepare for synchronous in-window pipes.
-          var deferred = fdom.Proxy.Deferred();
+          var deferred = fdom.proxy.Deferred();
           inflight[reqId] = deferred;
           emit({
             to: id,
@@ -95,7 +95,8 @@ fdom.proxy.conform = function(template, value) {
       if (Array.isArray(value)) {
         return value;
       } else {
-        return fdom.Proxy.getIdentifier(value);
+        // TODO: make proxy.
+        return value;
       }
   }
   var val, i;

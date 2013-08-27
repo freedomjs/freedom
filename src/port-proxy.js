@@ -6,8 +6,11 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * A freedom endpoint for a user-accessable port.
+ * A freedom port for a user-accessable proxy.
+ * @class Proxy
+ * @extends Port
  * @uses handleEvents
+ * @param {Object} interfaceCls The proxy interface exposed by this proxy.
  * @constructor
  */
 fdom.port.Proxy = function(interfaceCls) {
@@ -18,6 +21,12 @@ fdom.port.Proxy = function(interfaceCls) {
   this.emits = {};
 };
 
+/**
+ * Receive incoming messages for this proxy.
+ * @method onMessage
+ * @param {String} source The source of the message.
+ * @param {Object} message The received message.
+ */
 fdom.port.Proxy.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
@@ -63,6 +72,11 @@ fdom.port.Proxy.prototype.getInterface = function() {
   }.bind(this, this.emitChannel), id);
 };
 
+/**
+ * Get the textual description of this port.
+ * @method toString
+ * @return The description of this port.
+ */
 fdom.port.Proxy.prototype.toString = function() {
   if (this.emitChannel) {
     return "[Proxy " + this.emitChannel + "]";
@@ -71,6 +85,12 @@ fdom.port.Proxy.prototype.toString = function() {
   }
 };
 
+/**
+ * Get the next ID for a proxy channel.
+ * @method nextId
+ * @static
+ * @private
+ */
 fdom.port.Proxy.nextId = function() {
   if (!fdom.port.Proxy.id) {
     fdom.port.Proxy.id = 1;

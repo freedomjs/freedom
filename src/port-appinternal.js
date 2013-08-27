@@ -6,9 +6,11 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * An agent configuring a local application to run in this scope.
- * @class Agent.Local
- * @extends Agent
+ * The internal configuration of an application, makes sure that the freedom
+ * export has the appropriate properties, and loads user scripts.
+ * @class AppInternal
+ * @extends Port
+ * @param {Port} manager The hub manager within this application to signal.
  * @constructor
  */
 fdom.port.AppInternal = function(manager) {
@@ -21,6 +23,15 @@ fdom.port.AppInternal = function(manager) {
   handleEvents(this);
 };
 
+/**
+ * Message handler for this port.
+ * The Internal app only handles two messages:
+ * The first is its setup from the manager, which it uses for configuration.
+ * The second is from the app external, which provides it with manifest info.
+ * @method onMessage
+ * @param {String} flow The detination of the message.
+ * @param {Object} message The message.
+ */
 fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (!this.controlChannel && message.channel) {
@@ -40,10 +51,22 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
   }
 };
 
+/**
+ * Get a textual description of this Port.
+ * @method toString
+ * @return {String} a description of this Port.
+ */
 fdom.port.AppInternal.prototype.toString = function() {
   return "[App Environment Helper]";
 };
 
+/**
+ * Attach a proxy to the externally visible namespace.
+ * @method attach
+ * @param {String} name The name of the proxy.
+ * @param {Proxy} proxy The proxy to attach.
+ * @private.
+ */
 fdom.port.AppInternal.prototype.attach = function(name, proxy) {
   var exp = this.config.global.freedom;
 
@@ -59,6 +82,13 @@ fdom.port.AppInternal.prototype.attach = function(name, proxy) {
   }
 };
 
+/**
+ * Request a set of proxy interfaces, and bind them to the external
+ * namespace.
+ * @method loadLinks
+ * @param {Object[]} items Descriptors of the proxy ports to load.
+ * @private
+ */
 fdom.port.AppInternal.prototype.loadLinks = function(items) {
   var i, proxy;
   for (i = 0; i < items.length; i += 1) {
@@ -82,6 +112,12 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
   }
 };
 
+/**
+ * Determine which proxy ports should be exposed by this application.
+ * @method mapProxies
+ * @param {Object} manifest the application JSON manifest.
+ * @return {Object[]} proxy descriptors defined in the manifest.
+ */
 fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
   var proxies = [], seen = [], i, obj;
   
@@ -129,6 +165,12 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
   return proxies;
 };
 
+/**
+ * Load external scripts into this namespace.
+ * @method loadScripts
+ * @param {String} from The URL of this application's manifest.
+ * @param {String[]} scripts The URLs of the scripts to load.
+ */
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
   var i, importer = this.config.global.importScripts;
   this.emit(this.appChannel, {

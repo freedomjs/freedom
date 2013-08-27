@@ -8,6 +8,9 @@
  * this is the primary entry function for the freedom library.
  * @for util
  * @method setup
+ * @param {Object} global The window / frame / worker context freedom is in.
+ * @param {String} freedom_src The textual code of freedom, for replication.
+ * @param {Object} config Overriding config for freedom.js
  * @static
  */
 setup = function (global, freedom_src, config) {
@@ -67,7 +70,9 @@ setup = function (global, freedom_src, config) {
   manager.setup(external);
   manager.createLink(external, 'default', def);
 
+  // Debugging is not recorded until this point.
   manager.setup(fdom.debug);
+
   // Enable console.log from worker contexts.
   if (typeof global.console === 'undefined' && site_cfg.debug) {
     global.console = fdom.debug;

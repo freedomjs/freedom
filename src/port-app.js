@@ -6,9 +6,10 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * An agent configuring a local application to run in this scope.
- * @class Agent.Local
- * @extends Agent
+ * The external Port face of an application on a hub.
+ * @class App
+ * @extends Port
+ * @param {String} manifestURL The manifest this module loads.
  * @constructor
  */
 fdom.port.App = function(manifestURL) {
@@ -23,6 +24,12 @@ fdom.port.App = function(manifestURL) {
   handleEvents(this);
 };
 
+/**
+ * Receive an external application for the Application.
+ * @method onMessage
+ * @param {String} flow The origin of the message.
+ * @param {Object} message The message received.
+ */
 fdom.port.App.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (!this.controlChannel && message.channel) {
@@ -58,6 +65,12 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
   }
 };
 
+/**
+ * Attempt to start the applicaiton once the remote freedom context
+ * exists.
+ * @method start
+ * @private
+ */
 fdom.port.App.prototype.start = function() {
   if (this.started || this.port) {
     return false;
@@ -65,7 +78,8 @@ fdom.port.App.prototype.start = function() {
   if (this.manifest && this.controlChannel) {
     this.loadLinks();
     this.port = new fdom.port[this.config.portType](this);
-    this.bindPorts();
+    // Listen to all port messages.
+    this.port.on(this.emitMessage.bind(this));
     // Tell the local port to ask us for help.
     this.port.onMessage('control', {
       channel: 'control',
@@ -90,10 +104,23 @@ fdom.port.App.prototype.start = function() {
   }
 };
 
+/**
+ * Textual Description of the Port
+ * @method toString
+ * @return {String} The description of this Port.
+ */
 fdom.port.App.prototype.toString = function() {
   return "[App " + this.manifestId + "]";
 };
 
+/**
+ * Intercept messages as they arrive from the application,
+ * mapping them between internal and external flow names.
+ * @method emitMessage
+ * @param {String} name The destination the app wants to send to.
+ * @param {Object} message The message to send.
+ * @private
+ */
 fdom.port.App.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
     this.internalPortMap[name] = message.channel;
@@ -115,8 +142,8 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         channel: message.reverse
       });
     } else {
-      // A design decision was that the default provider channel is
-      // disabled upon providing.
+      // A design decision was that the default channel is
+      // overridden when acting as a provider.
       if (this.manifest.provides &&
           this.manifest.provides.indexOf(message.name) === 0) {
         this.internalPortMap['default'] = message.channel;
@@ -136,12 +163,8 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
   return false;
 };
 
-fdom.port.App.prototype.bindPorts = function() {
-  this.port.on(this.emitMessage.bind(this));
-};
-
 /**
- * Load a module description from its manifest.
+ * Load the module description from its manifest.
  * @method loadManifest
  * @private
  */
@@ -169,7 +192,9 @@ fdom.port.App.prototype.loadManifest = function() {
 };
 
 /**
- * @method loadPermissions
+ * Request the external routes used by this application.
+ * @method loadLinks
+ * @private
  */
 fdom.port.App.prototype.loadLinks = function() {
   var i, channels = ['default'], name, dep;

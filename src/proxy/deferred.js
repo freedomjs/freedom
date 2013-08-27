@@ -3,7 +3,7 @@
  * https://github.com/jquery/jquery/blob/master/src/deferred.js
  */
 
-fdom.Proxy.Callbacks = function(multiple) {
+fdom.proxy.Callbacks = function(multiple) {
   var memory, fired, firing, firingStart, firingLength, firingIndex;
   var stack = multiple && [];
   var list = [];
@@ -111,12 +111,12 @@ fdom.Proxy.Callbacks = function(multiple) {
   return self;
 };
 
-fdom.Proxy.Deferred = function(func) {
+fdom.proxy.Deferred = function(func) {
   /* jshint -W083 */
   var events = [
-    ["resolve", "done", fdom.Proxy.Callbacks(), "resolved"],
-    ["reject", "fail", fdom.Proxy.Callbacks(), "rejected"],
-    ["notify", "progress", fdom.Proxy.Callbacks(true)]
+    ["resolve", "done", fdom.proxy.Callbacks(), "resolved"],
+    ["reject", "fail", fdom.proxy.Callbacks(), "rejected"],
+    ["notify", "progress", fdom.proxy.Callbacks(true)]
   ];
 
   var state = "pending";
@@ -130,7 +130,7 @@ fdom.Proxy.Deferred = function(func) {
     },
     'then': function() {
       var fns = arguments;
-      return fdom.Proxy.Deferred(function(newDefer) {
+      return fdom.proxy.Deferred(function(newDefer) {
         for (var i = 0; i < events.length; i++) {
           var action = events[i][0];
           var fn = typeof fns[i] === 'function' ? fns[i] : null;

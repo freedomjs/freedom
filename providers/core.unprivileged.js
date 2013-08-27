@@ -8,9 +8,9 @@ var Core_unprivileged = function(pipe, app) {
   if (app && app.id) {
     this.app = app;
   } else {
-    var base = fdom.Proxy.getIdentifier(global['freedom']);
-    for (var id in fdom.Proxy.registry) {
-      var proxy = fdom.Proxy.registry[id][0];
+    var base = fdom.proxy.getIdentifier(global['freedom']);
+    for (var id in fdom.proxy.registry) {
+      var proxy = fdom.proxy.registry[id][0];
       if (proxy.app && proxy.app.id == base[0]) {
         this.app = proxy.app;
         break;

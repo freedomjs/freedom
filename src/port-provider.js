@@ -6,8 +6,11 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * A freedom endpoint for a user-accessable provider port.
+ * A freedom port for a user-accessable provider.
+ * @class Provider
+ * @extends Port
  * @uses handleEvents
+ * @param {Object} def The interface of the provider.
  * @constructor
  */
 fdom.port.Provider = function(def) {
@@ -21,6 +24,12 @@ fdom.port.Provider = function(def) {
   this.providerInstances = {};
 };
 
+/**
+ * Receive external messages for the provider.
+ * @method onMessage
+ * @param {String} source the source identifier of the message.
+ * @param {Object} message The received message.
+ */
 fdom.port.Provider.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
@@ -43,6 +52,14 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
   }
 };
 
+/**
+ * Get an interface to expose externally representing this port.
+ * Providers are registered with the port using either
+ * provideSynchronous or provideAsynchronous depending on the desired
+ * return interface.
+ * @method getInterface
+ * @return {Object} The external interface of this Proxy.
+ */
 fdom.port.Provider.prototype.getInterface = function() {
   if (this.iface) {
     return this.iface;
@@ -61,6 +78,12 @@ fdom.port.Provider.prototype.getInterface = function() {
   }
 };
 
+/**
+ * Get a new instance of the registered provider.
+ * @method getProvider
+ * @param {String} identifier the messagable address for this provider.
+ * @return {Function} A function to send messages to the provider.
+ */
 fdom.port.Provider.prototype.getProvider = function(identifier) {
   if (!this.providerCls) {
     console.warn('Cannot instantiate provider, since it is not provided');
@@ -120,6 +143,11 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
   }.bind(instance, this);
 };
 
+/**
+ * Get a textual description of this port.
+ * @method toString
+ * @return {String} the description of this port.
+ */
 fdom.port.Provider.prototype.toString = function() {
   if (this.emitChannel) {
     return "[Provider " + this.emitChannel + "]";
