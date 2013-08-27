@@ -13,35 +13,35 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
 
   eachProp(def, function(prop, name) {
     switch(prop.type) {
-      case 'property':
-        //TODO(willscott): how should asynchronous properties work?
-        break;
-      case 'method':
-        this[name] = function() {
-          // Note: inflight should be registered before message is passed
-          // in order to prepare for synchronous in-window pipes.
-          var deferred = fdom.proxy.Deferred();
-          inflight[reqId] = deferred;
-          emit({
-            to: id,
-            action: 'method',
-            type: name,
-            reqId: reqId,
-            value: fdom.proxy.conform(prop.value, arguments)
-          });
-          reqId += 1;
-          return deferred.promise();
-        };
-        break;
-      case 'event':
-        if(!events) {
-          handleEvents(this);
-          emitter = this.emit;
-          delete this.emit;
-          events = {};
-        }
-        events[name] = prop;
-        break;
+    case 'property':
+      //TODO(willscott): how should asynchronous properties work?
+      break;
+    case 'method':
+      this[name] = function() {
+        // Note: inflight should be registered before message is passed
+        // in order to prepare for synchronous in-window pipes.
+        var deferred = fdom.proxy.Deferred();
+        inflight[reqId] = deferred;
+        emit({
+          to: id,
+          action: 'method',
+          type: name,
+          reqId: reqId,
+          value: fdom.proxy.conform(prop.value, arguments)
+        });
+        reqId += 1;
+        return deferred.promise();
+      };
+      break;
+    case 'event':
+      if(!events) {
+        handleEvents(this);
+        emitter = this.emit;
+        delete this.emit;
+        events = {};
+      }
+      events[name] = prop;
+      break;
     }
   }.bind(this));
 
@@ -75,29 +75,29 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
  */
 fdom.proxy.conform = function(template, value) {
   switch(template) {
-    case 'string':
-      return String('') + value;
-    case 'number':
-      return Number(1) * value;
-    case 'bool':
-      return Boolean(value === true);
-    case 'object':
-      // TODO(willscott): Allow removal if sandboxing enforces this.
-      return JSON.parse(JSON.stringify(value));
-    case 'blob':
-      return value instanceof Blob ? value : new Blob([]);
-    case 'buffer':
-      return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
-    case 'data':
-      // TODO(willscott): should be opaque to non-creator.
+  case 'string':
+    return String('') + value;
+  case 'number':
+    return Number(1) * value;
+  case 'bool':
+    return Boolean(value === true);
+  case 'object':
+    // TODO(willscott): Allow removal if sandboxing enforces this.
+    return JSON.parse(JSON.stringify(value));
+  case 'blob':
+    return value instanceof Blob ? value : new Blob([]);
+  case 'buffer':
+    return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
+  case 'data':
+    // TODO(willscott): should be opaque to non-creator.
+    return value;
+  case 'proxy':
+    if (Array.isArray(value)) {
       return value;
-    case 'proxy':
-      if (Array.isArray(value)) {
-        return value;
-      } else {
-        // TODO: make proxy.
-        return value;
-      }
+    } else {
+      // TODO: make proxy.
+      return value;
+    }
   }
   var val, i;
   if (Array.isArray(template)) {
