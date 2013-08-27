@@ -78,7 +78,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   }
 
   if (message.request === 'link') {
-    this.createLink(origin, message.name, message.to);
+    this.createLink(origin, message.name, message.to, message.overrideDest);
   } else if (message.request === 'create') {
     console.log('setting up ' + origin.id);
     this.setup(origin);
@@ -134,12 +134,14 @@ fdom.port.Manager.prototype.setup = function(port) {
  * @param {Port} port The source port.
  * @param {String} name The flow for messages from destination to port.
  * @param {Port} destiantion The destination port.
+ * @param {String} [destName] The flow name for messages to the destination.
  */
-fdom.port.Manager.prototype.createLink = function(port, name, destination) {
+fdom.port.Manager.prototype.createLink = function(port, name, destination, destName) {
   if (!this.flows[destination.id]) {
     this.setup(destination);
   }
-  var outgoing = this.hub.install(port, destination.id, 'default'),
+  var outgoingName = destName || 'default',
+      outgoing = this.hub.install(port, destination.id, outgoingName),
       reverse = this.hub.install(destination, port.id, name);
 
   this.hub.onMessage(this.flows[port.id], {

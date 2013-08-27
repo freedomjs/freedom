@@ -45,11 +45,13 @@ Core_unprivileged.bindChannel = function(app, identifier) {
     to: proxy
   });
   
+  console.log('trying to link to ' + identifier[0] + ', ' + identifier[1]);
   proxy.emit(proxy.controlChannel, {
     type: 'Custom Channel Link ' + identifier[0] + '.' + identifier[1],
     request: 'link',
-    name: identifier[1],
-    to: {id: identifier[0]}
+    name: 'default',
+    to: {id: identifier[0]},
+    overrideDest: 'custom' + identifier[1]
   });
   
   return proxy.getInterface();

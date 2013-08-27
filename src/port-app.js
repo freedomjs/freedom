@@ -45,6 +45,23 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
     } else {
       this.port.onMessage(flow, message);
     }
+  } else if (flow.indexOf('custom') === 0) {
+    if (this.internalPortMap[flow] === undefined) {
+      this.port.onMessage('control', {
+        request: 'link',
+        type: 'Custom Binding',
+        to: {id: flow.substr(6)},
+        name: flow
+      });
+      this.externalPortMap[flow] = message.reverse;
+      this.internalPortMap[flow] = false;
+      return;
+    }
+    if (!this.internalPortMap[flow]) {
+      this.on('custom', this.onMessage.bind(this, flow, message));
+    } else {
+      this.port.onMessage(this.internalPortMap[flow], message);
+    }
   } else {
     if (this.externalPortMap[flow] === false && message.channel) {
       this.externalPortMap[flow] = message.channel;
@@ -154,6 +171,9 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         type: 'bindChannel',
         channel: message.reverse
       });
+      if (message.name.indexOf('custom') === 0) {
+        this.emit('custom');
+      }
     }
   } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
     this.started = true;
