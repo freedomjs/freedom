@@ -15,6 +15,7 @@ fdom.port.Debug = function() {
   this.id = 'debug';
   this.emitChannel = false;
   this.console = null;
+  this.config = false;
   handleEvents(this);
 };
 
@@ -37,6 +38,7 @@ fdom.port.Debug.prototype.toString = function() {
 fdom.port.Debug.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.channel && !this.emitChannel) {
     this.emitChannel = message.channel;
+    this.config = message.config.debug;
     this.console = message.config.global.console;
   }
 };
@@ -65,8 +67,30 @@ fdom.port.Debug.prototype.format = function(severity, source, args) {
  * @param {Object} message The message emitted by {@see format} to print.
  */
 fdom.port.Debug.prototype.print = function(message) {
+  var debug = Boolean(this.config), args, arr = [], i = 0;
+  if (typeof this.config === 'string') {
+    debug = false;
+    args = this.config.split(' ');
+    for (i = 0; i < args.length; i++) {
+      if (args[i].indexOf('source:') === 0) {
+        if (message.source === undefined ||
+            message.source.indexOf(args[i].substr(7)) > -1) {
+          debug = true;
+          break;
+        }
+      } else {
+        if (message.msg.indexOf(args[i]) > -1) {
+          debug = true;
+          break;
+        }
+      }
+    }
+  }
+  if (!debug) {
+    return;
+  }
   if (typeof console !== 'undefined' && console !== this) {
-    var args = JSON.parse(message.msg), arr = [], i = 0;
+    args = JSON.parse(message.msg);
     while (args[i] !== undefined) {
       arr.push(args[i]);
       i += 1;

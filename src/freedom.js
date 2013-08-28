@@ -74,7 +74,7 @@ setup = function (global, freedom_src, config) {
   manager.setup(fdom.debug);
 
   // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined' && site_cfg.debug) {
+  if (typeof global.console === 'undefined') {
     global.console = fdom.debug;
   }
   
