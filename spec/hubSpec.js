@@ -1,75 +1,57 @@
 describe("fdom.Hub", function() {
   var hub;
+  fdom.debug = new fdom.port.Debug();
+
 
   beforeEach(function() {
     hub = new fdom.Hub();
   });
 
   it("routes messages", function() {
-    var registration = jasmine.createSpy('cb');
-    var channel = jasmine.createSpyObj('chan', ['postMessage']);
     var app = {
-      id: 'testApp',
-      channels: {'default': channel},
-      getChannel: function() {}
-    }; 
-    hub.on('register', registration);
+      id: 'testApp'
+    };
     hub.register(app);
+    app.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app, 'testApp', 'test');
+    
+    var msg = {test: true};
+    hub.onMessage(route, msg);
 
-    expect(registration).toHaveBeenCalled();
-    hub.onMessage(app, {
-      sourceFlow: 'default'
-    });
-    expect(channel.postMessage).toHaveBeenCalled();
+    expect(app.onMessage).toHaveBeenCalledWith('test', msg);
   });
 
-  it("prints debug messages", function() {
-    var channel = jasmine.createSpyObj('chan', ['postMessage']);
-    var app = {
-      id: 'testApp',
-      channels: {'default': channel},
-      getChannel: function() {}
-    }; 
-    hub.register(app);
+  it("goes between apps", function() {
+    var app1 = {
+      id: 'testApp'
+    };
+    var app2 = {
+      id: 'otherApp'
+    };
+    hub.register(app1);
+    hub.register(app2);
+    app2.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app1, 'otherApp', 'testx');
+    
+    var msg = {test: true};
+    hub.onMessage(route, msg);
 
-    spyOn(console, 'log');
-    hub.onMessage(app, {
-      sourceFlow: 'control',
-      request: 'debug',
-      msg: 'testdbg'
-    });
-    expect(console.log).not.toHaveBeenCalled();
-
-    hub.config.debug = true;
-    hub.onMessage(app, {
-      sourceFlow: 'control',
-      request: 'debug',
-      msg: 'testdbg'
-    });
-    expect(console.log).toHaveBeenCalled();
-    expect(console.log.mostRecentCall.args[0]).toContain('testdbg');
+    expect(app2.onMessage).toHaveBeenCalledWith('testx', msg);
   });
 
-  it("sets up new apps", function() {
-    var app = jasmine.createSpyObj('app', ['configure', 'onMessage']);
-    app.getChannel = function() {return app};
-    spyOn(fdom.app, 'External').andReturn(app);
+  it("alerts if messages are sent improperly", function() {
+    var app = {
+      id: 'testApp'
+    };
+    hub.register(app);
+    app.onMessage = jasmine.createSpy('cb');
 
-    app.id = hub.ensureApp('myApp');
-    expect(app.configure).toHaveBeenCalled();
-    spyOn(console, 'warn');
-    hub.onMessage(app, {
-      sourceFlow: 'default'
-    });
+    spyOn(fdom.debug, 'warn');
+    
+    hub.onMessage('test', "testing");
+
     expect(app.onMessage).not.toHaveBeenCalled();
-    expect(console.warn).toHaveBeenCalled();
-
-    app.manifest = {dependencies: {'self': app.id}};
-    hub.createPipe(app, 'self');
-    hub.onMessage(app, {
-      sourceFlow: 'self'
-    });
-    expect(app.onMessage).toHaveBeenCalled();
+    expect(fdom.debug.warn).toHaveBeenCalled();
   });
 });
 

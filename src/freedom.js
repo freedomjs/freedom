@@ -8,26 +8,28 @@
  * this is the primary entry function for the freedom library.
  * @for util
  * @method setup
+ * @param {Object} global The window / frame / worker context freedom is in.
+ * @param {String} freedom_src The textual code of freedom, for replication.
+ * @param {Object} config Overriding config for freedom.js
  * @static
  */
 setup = function (global, freedom_src, config) {
-  var def, hub;
-  var site_cfg = {
-    'debug': true,
-    'strongIsolation': true,
-    'stayLocal': false
-  };
-
+  var def,
+      hub = new fdom.Hub(),
+      site_cfg = {
+        'debug': true,
+        'stayLocal': false,
+        'portType': 'Worker'
+      },
+      manager = new fdom.port.Manager(hub);
+  fdom.debug = new fdom.port.Debug();
+  
   if (isAppContext()) {
-    def = new fdom.app.Internal();
-    // If you can see your parent, you're likely not fully sandboxed.
-    if (typeof global.parent !== 'undefined') {
-      site_cfg['strongIsolation'] = false;
-    }
+    site_cfg.global = global;
+    site_cfg.src = freedom_src;
+    def = new fdom.port[site_cfg.portType]();
   } else {
-    hub = new fdom.Hub();
     advertise();
-    def = new fdom.app.External(hub);
     
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
@@ -41,7 +43,7 @@ setup = function (global, freedom_src, config) {
             try {
               mixin(site_cfg, JSON.parse(script.innerText), true);
             } catch (e) {
-              global.console.warn("Failed to parse configuration: " + e);
+              fdom.debug.warn("Failed to parse configuration: " + e);
             }
           }
           return true;
@@ -52,24 +54,30 @@ setup = function (global, freedom_src, config) {
     if (!site_cfg['stayLocal']) {
       fdom.ManagerLink.get().connect();
     }
+
+    site_cfg.global = global;
+    site_cfg.src = freedom_src;
+    if(config) {
+      mixin(site_cfg, config, true);
+    }
+    def = new fdom.port.App(site_cfg.manifest);
   }
-  site_cfg.global = global;
-  site_cfg.src = freedom_src;
-  if(config) {
-    mixin(site_cfg, config, true);
-  }
-  if (hub) {
-    mixin(hub.config, site_cfg, true);
-  }
-  def.configure(site_cfg);
+  hub.emit('config', site_cfg);
+
+  manager.setup(def);
+
+  var external = new fdom.port.Proxy(fdom.proxy.EventInterface);
+  manager.setup(external);
+  manager.createLink(external, 'default', def);
+
+  // Debugging is not recorded until this point.
+  manager.setup(fdom.debug);
 
   // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined') {
-    global.console = {
-      log: def.debug.bind(def)
-    };
+  if (typeof global.console === 'undefined' && site_cfg.debug) {
+    global.console = fdom.debug;
   }
   
-  return def.getProxy();
+  return external.getInterface();
 };
 

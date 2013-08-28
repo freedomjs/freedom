@@ -14,7 +14,7 @@ describe("freedom", function() {
     };
     freedom = setup(global, undefined, {
       manifest: "spec/helper/manifest.json",
-      strongIsolation: false,
+      portType: 'Frame',
       inject: "https://raw.github.com/kriskowal/es5-shim/master/es5-shim.js",
       src: freedom_src
     });
@@ -33,7 +33,7 @@ describe("freedom", function() {
 
     waitsFor(function() {
       return called;
-    }, "Freedom should return input", 750);
+    }, "Freedom should return input", 1000);
 
     runs(function() {
       expect(cb).toHaveBeenCalledWith('roundtrip');

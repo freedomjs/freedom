@@ -8,7 +8,7 @@
     /* jshint -W069 */
 
     var freedom_src = '(function (global) {\'use strict\';(' + freedom + ')();})(this);';
-    var setup;
+    var setup, fdom;
 
     if (typeof global['freedom'] !== 'undefined') {
       return;

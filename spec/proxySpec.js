@@ -1,89 +1,41 @@
-describe("fdom.Proxy", function() {
-  var pipe;
+describe("fdom.Port.Proxy", function() {
+  var port;
   beforeEach(function() {
-    pipe = fdom.Channel.pipe();
+    port = new fdom.port.Proxy(fdom.proxy.EventInterface);
   });
 
-  it("exposes a message channel", function() {
-    spyOn(pipe[0], 'emit');
-    var proxy = new fdom.Proxy(pipe[1]);
-    proxy.emit('testEvent', 'testVal');
+  it("reports messages back to the port", function() {
+    var iface = port.getInterface();
+    expect(iface.on).toBeDefined();
+    var spy = jasmine.createSpy('cb');
+    port.on('message', spy);
 
-    expect(pipe[0].emit).toHaveBeenCalledWith('message', {
-      action: 'event',
-      type: 'testEvent',
-      data: 'testVal'
+    // setup.
+    port.onMessage('default', {
+      channel: 'message'
     });
+    expect(spy).not.toHaveBeenCalled();
 
-    var handler = jasmine.createSpy('callback');
-    proxy.on('message', handler);
-    pipe[0].postMessage({
-      action: 'event',
-      type: 'message',
-      data: 'woot'
-    });
-
-    expect(handler).toHaveBeenCalledWith('woot');
-  });
-
-  it("exposes a defined API", function() {
-    spyOn(pipe[0], 'emit');
-    var proxy = new fdom.Proxy(pipe[1], {
-      "myMethod": {type: "method"},
-    });
-
-    expect(proxy.myMethod).toBeDefined();
-    proxy.myMethod();
-    expect(pipe[0].emit).toHaveBeenCalled();
-    expect(pipe[0].emit.mostRecentCall.args[1].type).toEqual('myMethod');
-  });
-
-  it("relays events", function() {
-    spyOn(pipe[0], 'emit');
-    var proxy = new fdom.Proxy(pipe[1], {
-      "myEvent": {type: "event"},
-    });
-
-    expect(proxy.on).toBeDefined();
-    var callback = jasmine.createSpy('callback');
-    proxy.on('myEvent', callback);
-    expect(callback).not.toHaveBeenCalled();
-    // Get the flowId from when it was relayed over the channel at setup.
-    var flow = pipe[0].emit.calls[0].args[1].flowId;
-    pipe[0].postMessage({
-      flowId: flow,
-      action: 'event',
-      type: 'myEvent',
-      value: 'null'
-    });
-    expect(callback).toHaveBeenCalled();
-  });
-
-  describe("functionally", function() {
-    var definition = {
-      "myMethod": {type: "method"},
-      "myEvent": {type: "event"}
-    };
-    var consumer, producer, spy;
+    // existing interfaces won't work.
+    iface.emit('hi', 'msg');
+    expect(spy).not.toHaveBeenCalled();
     
-    beforeEach(function() {
-      producer = new fdom.Proxy(pipe[0], definition, true);
-      spy = jasmine.createSpyObj('prod', ['myMethod']);
-      producer.provideSynchronous(function() {return spy;});
-      consumer = new fdom.Proxy(pipe[1], definition);
-    });
+    // New interfaces, however, will.
+    iface = port.getInterface();
+    iface.emit('hi', 'msg');
+    expect(spy).toHaveBeenCalled();
+  });
 
-    it("relays message calls", function() {
-      consumer.myMethod();
-      expect(spy.myMethod).toHaveBeenCalled();
+  it("reports messages to the interface", function() {
+    // setup.
+    port.onMessage('default', {
+      channel: 'message'
     });
-
-    it("relays events", function() {
-      var ev = jasmine.createSpy('cb');
-      consumer.on('myEvent', ev);
-      expect(ev).not.toHaveBeenCalled();
-      spy.dispatchEvent('myEvent', null);
-      expect(ev).toHaveBeenCalled();
-    });
+    var iface = port.getInterface();
+    var spy = jasmine.createSpy('cb');
+    iface.on('message', spy);
+    
+    port.onMessage('default', {type:'message', message:'thing'});
+    expect(spy).toHaveBeenCalledWith('thing');
   });
 });

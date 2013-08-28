@@ -21,12 +21,9 @@ PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
   }
 
   // Listen for messages to/from the provided message channel.
-  this.appChannel = Core_unprivileged.bindChannel(this.appChannel.app, proxy);
+  this.appChannel = Core_unprivileged.bindChannel(this.appChannel, proxy);
   this.appChannel['on']('message', this.onIdentity.bind(this));
-  this.appChannel.postMessage({
-    'type': 'ready',
-    'action': 'event'
-  });
+  this.appChannel.emit('ready');
 
   this.setup(true);
   continuation();
@@ -86,11 +83,7 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
 
   this.connection.addEventListener('icecandidate', function(evt) {
     if(evt && evt['candidate']) {
-      this.appChannel.postMessage({
-        'type': 'message',
-        'action': 'event',
-        'data': JSON.stringify(evt['candidate'])
-      });
+      this.appChannel.emit('message', JSON.stringify(evt['candidate']));
     }
   }.bind(this), true);
 
@@ -104,11 +97,7 @@ PeerConnection_unprivileged.prototype.makeOffer = function() {
   this.connection.createOffer(function(desc) {
     this.connection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
-    this.appChannel.postMessage({
-      'type': 'message',
-      'action': 'event',
-      'data': JSON.stringify(desc)
-    });
+    this.appChannel.emit('message', JSON.stringify(desc));
   }.bind(this));
 };
 
@@ -116,19 +105,15 @@ PeerConnection_unprivileged.prototype.makeAnswer = function() {
   this.connection.createAnswer(function(desc) {
     this.connection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
-    this.appChannel.postMessage({
-      'type': 'message',
-      'action': 'event',
-      'data': JSON.stringify(desc)
-    });
+    this.appChannel.emit('message', JSON.stringify(desc));
   }.bind(this));
 };
 
 PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
   try {
-    var m = msg.data;
-    if (typeof msg.data === "string") {
-      m = JSON.parse(msg.data);
+    var m = msg;
+    if (typeof msg === "string") {
+      m = JSON.parse(msg);
     }
     if (m['candidate']) {
       var candidate = new RTCIceCandidate(m);

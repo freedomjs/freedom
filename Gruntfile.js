@@ -18,6 +18,11 @@ module.exports = function(grunt) {
     },
     concat: {
       dist: {
+        options: {
+          process: function(src) {
+            return src.replace(/\/\*jslint/g,'/*');
+          }
+        },
         src: [
           'src/util/preamble.js',
           'src/*.js',

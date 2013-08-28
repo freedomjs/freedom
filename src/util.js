@@ -240,34 +240,6 @@ function makeAbsolute(url) {
 }
 
 /**
- * Make frames to replicate freedom isolation without web-workers.
- * iFrame isolation is non-standardized, and access to the DOM within frames
- * means that they are insecure. However, debugging of webworkers is
- * painful enough that this mode of execution can be valuable for debugging.
- * @method makeFrame
- * @static
- */
-function makeFrame(src, inject) {
-  var frame = document.createElement('iframe');
-  // TODO(willscott): add sandboxing protection.
-
-  var extra = '';
-  if (inject) {
-    extra = '<script src="' + inject + '"></script>';
-  }
-  var loader = '<html>' + extra + '<script src="' +
-      forceAppContext(src) + '"></script></html>';
-  var blob = getBlob(loader, 'text/html');
-  frame.src = getURL(blob);
-
-  if (!document.body) {
-    document.appendChild(document.createElement("body"));
-  }
-  document.body.appendChild(frame);
-  return frame.contentWindow;
-}
-
-/**
  * Resolve a url against a defined base location.
  * @method resolvePath
  * @static
