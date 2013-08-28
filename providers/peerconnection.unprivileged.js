@@ -111,9 +111,9 @@ PeerConnection_unprivileged.prototype.makeAnswer = function() {
 
 PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
   try {
-    var m = msg.data;
-    if (typeof msg.data === "string") {
-      m = JSON.parse(msg.data);
+    var m = msg;
+    if (typeof msg === "string") {
+      m = JSON.parse(msg);
     }
     if (m['candidate']) {
       var candidate = new RTCIceCandidate(m);

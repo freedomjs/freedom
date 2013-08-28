@@ -142,7 +142,11 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
   }
   var outgoingName = destName || 'default',
       outgoing = this.hub.install(port, destination.id, outgoingName),
-      reverse = this.hub.install(destination, port.id, name);
+      reverse;
+
+  // Recover the port so that listeners are installed.
+  destination = this.hub.getDestination(outgoing);
+  reverse = this.hub.install(destination, port.id, name);
 
   this.hub.onMessage(this.flows[port.id], {
     name: name,

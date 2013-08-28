@@ -53,7 +53,7 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
         to: {id: flow.substr(6)},
         name: flow
       });
-      this.externalPortMap[flow] = message.reverse;
+      this.externalPortMap[flow] = message.channel;
       this.internalPortMap[flow] = false;
       return;
     }
@@ -166,6 +166,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
           this.manifest.provides.indexOf(message.name) === 0) {
         this.internalPortMap['default'] = message.channel;
       }
+
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
         type: 'bindChannel',

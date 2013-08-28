@@ -8,20 +8,25 @@ var Core_unprivileged = function(appInternal) {
 };
 
 Core_unprivileged.prototype.createChannel = function(continuation) {
-  var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
+  var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface),
+      deferred = fdom.proxy.Deferred();
   this.app.manager.setup(proxy);
+
+  proxy.once('start', function(deferred, proxy) {
+    deferred.resolve(proxy.getInterface());
+  }.bind(this, deferred, proxy));
 
   // TODO(willscott): Using proxy.id directly is probably worse that a truely
   // opaque identifier.
   continuation({
-    channel: proxy.getInterface(),
+    channel: deferred,
     identifier: [this.app.appId, proxy.id]
   });
 };
 
 Core_unprivileged.prototype.bindChannel = function(identifier, continuation) {
   var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
-    
+
   var appId = identifier[0];
   if (appId === this.app.appId) {
     this.app.manager.createLink(proxy, 'default', {id: identifier[1]});
