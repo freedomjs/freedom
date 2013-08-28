@@ -172,7 +172,8 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         type: 'bindChannel',
         channel: message.reverse
       });
-      if (message.name.indexOf('custom') === 0) {
+      if (typeof message.name === 'string' &&
+          message.name.indexOf('custom') === 0) {
         this.emit('custom');
       }
     }

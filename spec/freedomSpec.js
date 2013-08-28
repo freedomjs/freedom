@@ -33,7 +33,7 @@ describe("freedom", function() {
 
     waitsFor(function() {
       return called;
-    }, "Freedom should return input", 750);
+    }, "Freedom should return input", 1000);
 
     runs(function() {
       expect(cb).toHaveBeenCalledWith('roundtrip');
