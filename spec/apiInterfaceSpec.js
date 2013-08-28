@@ -27,12 +27,4 @@ describe("fdom.proxy.apiInterface", function() {
     expect(fdom.proxy.conform("buffer", buffer)).toEqual(buffer);
     expect(fdom.proxy.conform("buffer", "string")).toEqual(jasmine.any(ArrayBuffer));
   });
-
-  it("conforms channel movement", function() {
-    var channel = jasmine.createSpyObj('chan', ['on','postMessage']);
-    channel.flow = 'customflow';
-    channel.app = {id: 'customapp'};
-    var proxy = new fdom.Proxy(channel);
-    expect(fdom.proxy.conform("proxy", proxy)).toEqual(['customapp', 'customflow', undefined]);
-  });
 });
