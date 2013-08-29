@@ -22,15 +22,6 @@ fdom.apis.set("core.storage", {
   'change': {type: "event", value: ["string"]}
 });
 
-fdom.apis.set("core.peerconnection", {
-  'open': {type: "method", value: ["proxy"]},
-  'postMessage': {type: "method", value: [{"text": "string", "binary": "blob", "buffer": "buffer"}]},
-  'message': {type: "event", value: {"text": "string", "binary": "blob", "buffer": "buffer"}},
-
-  'close': {type: "method", value: []},
-  'onClose': {type: "event", value: []}
-});
-
 fdom.apis.set("core.socket", {
   'create': {type: "method", value: ["string", "object"]},
   'connect': {type: "method", value: ["number", "string", "number"]},

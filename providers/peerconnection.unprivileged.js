@@ -49,14 +49,14 @@ PeerConnection_unprivileged.prototype.setup = function(initiate) {
           var databuf = JSON.parse(this.buf);
           var arr = new Uint8Array(databuf['binary']);
           var blob = new Blob([arr.buffer], {"type": databuf['mime']});
-          this['dispatchEvent']('message', {"binary": blob, "buffer" : arr.buffer});
+          this['dispatchEvent']('message', {"tag": databuf['tag'], "binary": blob, "buffer" : arr.buffer});
           this.buf = "";
         }
         return;
       }
       var data = JSON.parse(m.data);
       if (data['text']) {
-        this['dispatchEvent']('message', {"text": data['text']});
+        this['dispatchEvent']('message', {"tag": data['tag'], "text": data['text']});
       } else {
         this.parts = data['binary'];
         console.log("Beginning receipt of binary data (" + this.parts + " parts)");
@@ -151,19 +151,19 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
   window.dc = this.dataChannel;
 
   if(ref['text']) {
-    this.sendQueue.push(JSON.stringify({"text":ref['text']}));
+    this.sendQueue.push(JSON.stringify({"tag": ref['tag'], "text":ref['text']}));
     console.log("Sending text: " + ref['text']);
     this._process();
   } else if(ref['binary']) {
     // TODO(willscott): implement direct blob support when available.
     console.log("Transmitting " + ref['binary'].size + " binary bytes");
     var reader = new FileReader();
-    reader.addEventListener('load', function(type, ev) {
+    reader.addEventListener('load', function(type, tag, ev) {
       var arr = [];
       arr.push.apply(arr, new Uint8Array(ev.target.result));
       // Chunk messages so that packets are below MTU.
       var MAX_LEN = 512;
-      var str = JSON.stringify({"mime": type, "binary": arr});
+      var str = JSON.stringify({"mime": type, "tag": tag, "binary": arr});
       var parts = Math.ceil(str.length / MAX_LEN);
       console.log("Sending chunked " + type + " ("+ str.length + " bytes)");
       this.sendQueue.push(JSON.stringify({"binary": parts}));
@@ -173,7 +173,7 @@ PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) 
         str = str.substr(MAX_LEN);
       }
       this._process();
-    }.bind(this, ref['binary'].type), true);
+    }.bind(this, ref['binary'].type, ref['tag']), true);
 
     reader.readAsArrayBuffer(ref['binary']);
   }
