@@ -1,5 +1,4 @@
 fdom.apis.set("identity", {
-  //Stores the 'ID' for logged in user (alice@gmail.com)
   //e.g. var id = identity.id
   'id': {type: "property", value: "string"},
   //Log into the network
@@ -31,7 +30,6 @@ fdom.apis.set("identity", {
   //      'userId': 'string',
   //      'name': 'string',
   //      'url': string,
-  //      'clients': {
   //        'client1': {          //NOTE: Key must match 'clientId' in client card
   //          'clientId': 'string',
   //          'status': 'string'
