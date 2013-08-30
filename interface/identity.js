@@ -47,6 +47,13 @@ fdom.apis.set("identity", {
   //e.g. sendMessage(String destination_id, String message)
   //Returns nothing
   'sendMessage': {type: "method", value: ["string", "string"]},
+  //Logs out of the network
+  //e.g. logout()
+  //Returns {
+  //  'success': 'boolean',
+  //  'message': 'string'
+  //}
+  'logout': {type: "method", value: []},
   //Event on change in profile
   //(includes changes to roster)
   'onChange': {type: "event", value: {
