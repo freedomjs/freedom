@@ -5,9 +5,9 @@
     "script": "main.js"
   },
   "dependencies": {
-    "identity": "identity/identity.json"
-  },
-  "permissions": [
-    "identity"
-  ]
+    "identity": {
+      "url": "identity/identity.json",
+      "api": "identity"
+    }
+  }
 }

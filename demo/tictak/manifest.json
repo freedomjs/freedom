@@ -2,12 +2,12 @@
   "name": "Tic Tak",
   "description": "Tic Tak Sample FreeDOM application",
   "app": {
-    "script": "tictak.js"
+    "script": "main.js"
   },
-  "permissions": [
-    "storage"
-  ],
   "dependencies": {
-    "storage": "storage.json"
+    "localstorage": {
+      "url": "storage.json",
+      "api": "storage"
+    }
   }
 }

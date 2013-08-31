@@ -155,11 +155,14 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
   }
   
   if (manifest.dependencies) {
-    eachProp(manifest.dependencies, function(url, name) {
+    eachProp(manifest.dependencies, function(desc, name) {
       obj = {
         name: name
       };
       if (seen.indexOf(name) < 0) {
+        if (desc.api) {
+          obj.def = fdom.apis.get(desc.api).definition;
+        }
         proxies.push(obj);
         seen.push(name);
       }

@@ -224,28 +224,26 @@ fdom.port.App.prototype.loadLinks = function() {
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
       name = this.manifest.permissions[i];
-      if (channels.indexOf(name) < 0) {
+      if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
-        if (name.indexOf('core.') === 0) {
-          dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-          dep.getInterface().provideAsynchronous(fdom.apis.getCore(name, this));
+        dep = new fdom.port.Provider(fdom.apis.get(name).definition);
+        dep.getInterface().provideAsynchronous(fdom.apis.getCore(name, this));
 
-          this.emit(this.controlChannel, {
-            type: 'Link to ' + name,
-            request: 'link',
-            name: name,
-            to: dep
-          });
-        }
+        this.emit(this.controlChannel, {
+          type: 'Link to ' + name,
+          request: 'link',
+          name: name,
+          to: dep
+        });
       }
     }
   }
   if (this.manifest.dependencies) {
-    eachProp(this.manifest.dependencies, function(url, name) {
+    eachProp(this.manifest.dependencies, function(desc, name) {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }
-      var dep = new fdom.port.App(url);
+      var dep = new fdom.port.App(desc.url);
       this.emit(this.controlChannel, {
         type: 'Link to ' + name,
         request: 'link',

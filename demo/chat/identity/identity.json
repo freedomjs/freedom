@@ -6,7 +6,5 @@
   },
   "provides": [
     "identity"
-  ],
-  "permissions": [
   ]
 }

@@ -1,11 +1,11 @@
-var storage = freedom.storage();
+var store = freedom.localstorage();
 
 var board = null;
 var playerMove = true;
 
 // Startup emission of stats.
 function stats(player, other) {
-  var promise = storage.get('stats');
+  var promise = store.get('stats');
   promise.done(function(val) {
     var nv;
     try {
@@ -19,13 +19,14 @@ function stats(player, other) {
     if (other) nv['lose'] += 1;
 
     if (nv !== val) {
-      storage.set('stats', JSON.stringify(nv));
+      store.set('stats', JSON.stringify(nv));
     }
 
     freedom.emit('stats', nv);
   });
 };
-setTimeout(stats, 0);
+//setTimeout(stats, 0);
+stats();
 
 freedom.on('move', function(val) {
   if (playerMove && board[val] == 0) {
