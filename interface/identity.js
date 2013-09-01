@@ -30,6 +30,7 @@ fdom.apis.set("identity", {
   //      'userId': 'string',
   //      'name': 'string',
   //      'url': string,
+  //      'clients': {
   //        'client1': {          //NOTE: Key must match 'clientId' in client card
   //          'clientId': 'string',
   //          'status': 'string'
