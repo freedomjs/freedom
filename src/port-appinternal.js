@@ -214,7 +214,7 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
       }
     }
   } catch(e) {
-    console.error("Error Loading ", scripts, e.message);
+    console.error("Error Loading from " + from + ": " + JSON.stringify(scripts), e.message);
   }
 };
 
