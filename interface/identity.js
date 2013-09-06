@@ -17,6 +17,7 @@ fdom.apis.set("identity", {
   //    'userId': 'string',       //ID (e.g. alice@gmail.com) username
   //    'name': 'string',         //Name (e.g. Alice Underpants)
   //    'url': 'string',          //Homepage URL
+  //    'network': 'string',      //Name of network
   //    'clients': {
   //      'client1': {              //Array of clients (NOTE: key must match 'clientId' in client card
   //        'clientId': 'string',   //ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
@@ -59,6 +60,7 @@ fdom.apis.set("identity", {
     'userId': 'string',
     'name': 'string',
     'url': 'string',
+    'network': 'string',
     'clients': 'object'
   }},
   //Event on incoming message
