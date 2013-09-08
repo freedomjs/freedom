@@ -40,6 +40,7 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
     this.emitChannel = message.channel;
     this.config = message.config.debug;
     this.console = message.config.global.console;
+    this.emit('ready');
   }
 };
 
@@ -52,6 +53,10 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
  * @private
  */
 fdom.port.Debug.prototype.format = function(severity, source, args) {
+  if (!this.emitChannel) {
+    this.on('ready', this.format.bind(this, severity, source, args));
+    return;
+  }
   this.emit(this.emitChannel, {
     severity: severity,
     source: source,

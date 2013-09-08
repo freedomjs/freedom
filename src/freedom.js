@@ -22,6 +22,8 @@ setup = function (global, freedom_src, config) {
         'portType': 'Worker'
       },
       manager = new fdom.port.Manager(hub);
+
+  // Debugging is not recorded until this point.
   fdom.debug = new fdom.port.Debug();
   
   if (isAppContext()) {
@@ -72,7 +74,6 @@ setup = function (global, freedom_src, config) {
   manager.setup(external);
   manager.createLink(external, 'default', def);
 
-  // Debugging is not recorded until this point.
   manager.setup(fdom.debug);
 
   // Enable console.log from worker contexts.
