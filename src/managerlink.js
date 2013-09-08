@@ -6,41 +6,46 @@ fdom.ManagerLink = function() {
   this.config = {};
   this.socket = null;
   this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
+  handleEvents(this);
+
+  this.connect();
 };
 
-fdom.ManagerLink.get = function() {
-  if (!fdom.ManagerLink._managerlink) {
-    fdom.ManagerLink._managerlink = new fdom.ManagerLink();
+fdom.ManagerLink.prototype.toString = function() {
+  return "[WebSocket to Local Manager]"; 
+};
+
+fdom.ManagerLink.prototype.onMessage = function(source, msg) {
+  if (this.status == 'ready') {
+    this.socket.send(JSON.stringify([source, msg]));
+  } else {
+    this.once('connected', this.onMessage.bind(this, source, msg));
   }
-  return fdom.ManagerLink._managerlink;
 };
 
 fdom.ManagerLink.prototype.connect = function() {
   if (!this.socket && this.status == 'disconnected') {
-    console.log("Manager Link connecting");
+    fdom.debug.log("Manager Link connecting");
     this.status = 'connecting';
     this.socket = new WebSocket('ws://127.0.0.1:9009');
-    this.socket.onopen = (function(msg){
-      console.log("Manager Link ready");
+    this.socket.addEventListener('open', function(msg) {
+      fdom.debug.log("Manager Link connected");
       this.status = 'ready';
-      this.socket.send("HIHIHIHI");
-    }).bind(this);
-    this.socket.onmessage = function(msg){console.log(msg);};
-    this.socket.onclose = (function(msg){
-      console.log("Manager Link disconnected");
+      this.emit('connected');
+    }.bind(this), true);
+    this.socket.addEventListener('message', this.message.bind(this), true);
+    this.socket.addEventListener('close', function() {
+      fdom.debug.log("Manager Link disconnected");
       this.status = 'disconnected';
-    }).bind(this);
-
-  //var xhr = new XMLHttpRequest();
-  //xhr.onload = this.receiveScript.bind(this);
-  //xhr.open('get', 'http://127.0.0.1:9009/script', true);
-  //xhr.send();
+    }.bind(this), true);
   }
 };
 
-fdom.ManagerLink.prototype.disconnect = function() {
-  console.log("Manager link closing");
-  this.socket.close();
-  this.socket = null;
+fdom.ManagerLink.prototype.message = function(msg) {
+  try {
+    var data = JSON.parse(msg);
+    this.emit(data[0], data[1]);
+  } catch(e) {
+    fdom.debug.warn('Unable to parse runtime message: ' + msg);
+  }
 };
-
