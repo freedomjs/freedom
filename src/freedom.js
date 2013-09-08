@@ -52,7 +52,9 @@ setup = function (global, freedom_src, config) {
     }
     //Try to talk to local FreeDOM Manager
     if (!site_cfg['stayLocal']) {
-      fdom.ManagerLink.get().connect();
+      new fdom.ManagerLink().once('connected', function() {
+        manager.setup(this);
+      });
     }
 
     site_cfg.global = global;
