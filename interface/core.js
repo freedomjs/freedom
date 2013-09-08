@@ -35,3 +35,9 @@ fdom.apis.set("core.socket", {
     "clientSocketId": "number"}},
   'getInfo': {type: "method", value: ["number"]}
 });
+
+fdom.apis.set("core.runtime", {
+  'getHubs': {type: "method", value: []},
+  'postMessage': {type: "method", value: ["string", "object"]},
+  'message': {type: "event", value: "object"}
+});
