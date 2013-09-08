@@ -3,28 +3,27 @@ fdom.apis.set("identity", {
   'id': {type: "property", value: "string"},
   //Log into the network
   //e.g. login(String agent, String version, String url)
-  //Returns {
-  //  'success': 'boolean',
-  //  'userId': 'string'
-  //  'message': 'string'
-  //}
+  //Returns nothing
   'login': {type: "method", value: ["string", "string", "string"]},
   //Gets the profile of a user
   //If id is null, return self
   //e.g. identity.getProfile(String id);
   //Returns {
   //  'me': {
-  //    'userId': 'string',       //ID (e.g. alice@gmail.com) username
-  //    'name': 'string',         //Name (e.g. Alice Underpants)
-  //    'url': 'string',          //Homepage URL
-  //    'network': 'string',      //Name of network
-  //    'clients': {
-  //      'client1': {              //Array of clients (NOTE: key must match 'clientId' in client card
-  //        'clientId': 'string',   //ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-  //        'status': 'string'      //Status (['messageable', 'online', 'offline'])
-  //      }, 
-  //      'client2': ...
-  //    }
+  //    'userMe1': {                //Must internal 'userId'
+  //    ' userId': 'string',        //ID (e.g. alice@gmail.com) username
+  //      'name': 'string',         //Name (e.g. Alice Underpants)
+  //      'url': 'string',          //Homepage URL
+  //      'network': 'string',      //Name of network
+  //      'clients': {
+  //        'client1': {              //Array of clients (NOTE: key must match 'clientId' in card)
+  //          'clientId': 'string',   //ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
+  //          'status': 'string'      //Status (['messageable', 'online', 'offline'])
+  //        }, 
+  //        'client2': ...
+  //      }
+  //    },
+  //    'userMe2': ...
   //  },
   //  'roster': {                 //List of friends
   //    'user1': {                //NOTE: Key must match 'userId' in user card
@@ -47,13 +46,15 @@ fdom.apis.set("identity", {
   //e.g. sendMessage(String destination_id, String message)
   //Returns nothing
   'sendMessage': {type: "method", value: ["string", "string"]},
-  //Logs out of the network
-  //e.g. logout()
+  //Logs out of the network associated with the given userId
+  //If userId is null, log out of all networks
+  //e.g. logout(String userId)
   //Returns {
+  //  'userId': 'string',
   //  'success': 'boolean',
   //  'message': 'string'
   //}
-  'logout': {type: "method", value: []},
+  'logout': {type: "method", value: ["string"]},
   //Event on change in profile
   //(includes changes to roster)
   'onChange': {type: "event", value: {
@@ -72,8 +73,9 @@ fdom.apis.set("identity", {
     "message": "object"       //message contents
   }},
   //Event on provider status
-  //Can be 'offline', 'online', 'connecting' or 'error'
+  //Can be 'offline', 'online', 'authenticating', 'connecting' or 'error'
   'onStatus': {type: "event", value: {
+    "userId": "string", //userId of network this is about
     "status": "string", //One of the above statuses
     "message": "string" //More detailed message about status
   }}
