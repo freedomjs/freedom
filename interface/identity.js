@@ -14,10 +14,10 @@ fdom.apis.set("identity", {
   //    ' userId': 'string',        //ID (e.g. alice@gmail.com) username
   //      'name': 'string',         //Name (e.g. Alice Underpants)
   //      'url': 'string',          //Homepage URL
-  //      'network': 'string',      //Name of network
   //      'clients': {
   //        'client1': {              //Array of clients (NOTE: key must match 'clientId' in card)
   //          'clientId': 'string',   //ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
+  //          'network': 'string',    //Name of network
   //          'status': 'string'      //Status (['messageable', 'online', 'offline'])
   //        }, 
   //        'client2': ...
@@ -33,6 +33,7 @@ fdom.apis.set("identity", {
   //      'clients': {
   //        'client1': {          //NOTE: Key must match 'clientId' in client card
   //          'clientId': 'string',
+  //          'network': 'string'
   //          'status': 'string'
   //        },
   //        'client2': ...
@@ -61,7 +62,6 @@ fdom.apis.set("identity", {
     'userId': 'string',
     'name': 'string',
     'url': 'string',
-    'network': 'string',
     'clients': 'object'
   }},
   //Event on incoming message
@@ -76,6 +76,7 @@ fdom.apis.set("identity", {
   //Can be 'offline', 'online', 'authenticating', 'connecting' or 'error'
   'onStatus': {type: "event", value: {
     "userId": "string", //userId of network this is about
+    "network": "string",//name of the network (chosen by identity provider)
     "status": "string", //One of the above statuses
     "message": "string" //More detailed message about status
   }}
