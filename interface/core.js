@@ -37,7 +37,5 @@ fdom.apis.set("core.socket", {
 });
 
 fdom.apis.set("core.runtime", {
-  'getHubs': {type: "method", value: []},
-  'postMessage': {type: "method", value: ["string", "object"]},
-  'message': {type: "event", value: "object"}
+  'createApp': {type: "method", value: ["string", "proxy"]},
 });

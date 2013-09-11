@@ -212,7 +212,7 @@ function forceAppContext(src) {
  * @static
  */
 function advertise() {
-  // TODO: Determine a better mechanism that this whitelisting.
+  // TODO: Determine a better mechanism than this whitelisting.
   if ((location.protocol === 'chrome-extension:' ||
       location.protocol == 'resource:') &&
       typeof freedomcfg !== "undefined") {

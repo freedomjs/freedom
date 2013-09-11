@@ -3,6 +3,7 @@ if (typeof fdom === 'undefined') {
 }
 
 fdom.ManagerLink = function() {
+  this.id = 'runtime';
   this.config = {};
   this.socket = null;
   this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
@@ -16,6 +17,9 @@ fdom.ManagerLink.prototype.toString = function() {
 };
 
 fdom.ManagerLink.prototype.onMessage = function(source, msg) {
+  if (source === 'control' && msg.type === 'setup') {
+    delete msg.config;
+  }
   if (this.status == 'ready') {
     this.socket.send(JSON.stringify([source, msg]));
   } else {
