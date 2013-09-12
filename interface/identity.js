@@ -1,17 +1,23 @@
 fdom.apis.set("identity", {
   //e.g. var id = identity.id
   'id': {type: "property", value: "string"},
-  //Log into the network
-  //e.g. login(String agent, String version, String url)
+  //Log into the network (See below for parameters)
+  //e.g. login(Object options)
   //Returns nothing
-  'login': {type: "method", value: ["string", "string", "string"]},
+  'login': {type: "method", value: [{
+    "network": "string",  //Network name
+    "agent": "string",    //Agent name of app
+    "version": "string",  //Version of app
+    "url": "string",      //URL of app
+    "interactive": "bool" //Prompt user?
+  }]},
   //Gets the profile of a user
   //If id is null, return self
   //e.g. identity.getProfile(String id);
   //Returns {
   //  'me': {
   //    'userMe1': {                //Must internal 'userId'
-  //    ' userId': 'string',        //ID (e.g. alice@gmail.com) username
+  //      'userId': 'string',        //ID (e.g. alice@gmail.com) username
   //      'name': 'string',         //Name (e.g. Alice Underpants)
   //      'url': 'string',          //Homepage URL
   //      'clients': {
@@ -47,15 +53,17 @@ fdom.apis.set("identity", {
   //e.g. sendMessage(String destination_id, String message)
   //Returns nothing
   'sendMessage': {type: "method", value: ["string", "string"]},
-  //Logs out of the network associated with the given userId
-  //If userId is null, log out of all networks
-  //e.g. logout(String userId)
+  //Logs out of the userId on the specific network
+  //If userId is null, but network is not - log out of all accounts on that network
+  //If networkName is null, but userId is not - log out of that account
+  //If both fields are null, log out of all accounts on all networks
+  //e.g. logout(String userId, String networkName)
   //Returns {
   //  'userId': 'string',
   //  'success': 'boolean',
   //  'message': 'string'
   //}
-  'logout': {type: "method", value: ["string"]},
+  'logout': {type: "method", value: ["string", "string"]},
   //Event on change in profile
   //(includes changes to roster)
   'onChange': {type: "event", value: {
