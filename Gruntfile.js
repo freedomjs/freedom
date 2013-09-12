@@ -44,7 +44,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    clean: ['freedom.js'],
+    clean: ['freedom.js', 'freedom.min.js'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -67,11 +67,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   // Default tasks.
-  grunt.registerTask('default', [
+  grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
     'jasmine',
     'jshint:afterconcat',
     'uglify'
   ]);
+  grunt.registerTask('default', ['freedom']);
 };
