@@ -4,7 +4,7 @@
  * @constructor
  * @private
  */
-var SctpPeerConnection_unprivileged. = function(channel) {
+var SctpPeerConnection_unprivileged = function(channel) {
   this.appChannel = channel;
   this.dataChannel = null;
   this.identity = null;
@@ -15,7 +15,8 @@ var SctpPeerConnection_unprivileged. = function(channel) {
   handleEvents(this);
 };
 
-// proxy is .
+// |proxy| is a channel to speak to a remote user to send them SDP headers/
+// negotiate the address/port to setup the peer to peer connection.
 SctpPeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
   if (this.connection) {
     continuation(false);
@@ -33,7 +34,8 @@ SctpPeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
 // When initiate is true, we initiate the peer connection.
 SctpPeerConnection_unprivileged.prototype.setup = function(initiate) {
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
-  this.connection = new RTCPeerConnection(null, {'optional': [{'DtlsSrtpKeyAgreement': true}]});
+  this.connection = new RTCPeerConnection(null,
+      {'optional': [{'DtlsSrtpKeyAgreement': true}]});
 
   var dcSetup = function() {
     this.dataChannel.addEventListener('open', function() {
@@ -43,11 +45,19 @@ SctpPeerConnection_unprivileged.prototype.setup = function(initiate) {
     // When this data channel receives data, pass it on to Freedom listeners.
     this.dataChannel.addEventListener('message', function(m) {
       // TODO: handle other types of data, e.g. text.
-      if(typeof(m.data) === 'ArrayBuffer') {
+      if(typeof(m.data) === 'string') {
+        this['dispatchEvent']('message', {"text" : m.data});
+      } else if(m.data instanceof ArrayBuffer) {
         this['dispatchEvent']('message', {"buffer" : m.data});
       } else {
-        console.error('Unkown type of data received on data channel: ',
-            typeof(m.data));
+        var typ_description;
+        if(typeof(m.data) === 'object') {
+          typ_description = "object(" + m.data.constructor.name + ")";
+        } else {
+          typ_description = typeof(m.data);
+        }
+        console.error('Unkown type of data received on data channel: ' +
+            typ_description);
       }
     }.bind(this), true);
     this.dataChannel.addEventListener('close', function(conn) {
@@ -177,4 +187,4 @@ SctpPeerConnection_unprivileged.prototype.close = function(continuation) {
   continuation();
 };
 
-fdom.apis.register("core.sct-peerconnection", SctpPeerConnection_unprivileged.);
+fdom.apis.register('core.sctp-peerconnection', SctpPeerConnection_unprivileged);
