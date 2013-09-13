@@ -44,7 +44,7 @@ setup = function (global, freedom_src, config) {
           site_cfg.manifest = manifest;
           if (script.textContent.trim().length) {
             try {
-              mixin(site_cfg, JSON.parse(script.innerText), true);
+              mixin(site_cfg, JSON.parse(script.textContent), true);
             } catch (e) {
               fdom.debug.warn("Failed to parse configuration: " + e);
             }
