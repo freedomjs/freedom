@@ -48,6 +48,7 @@ fdom.ManagerLink.prototype.connect = function() {
 fdom.ManagerLink.prototype.message = function(msg) {
   try {
     var data = JSON.parse(msg);
+    console.log('incoming message: ', data);
     this.emit(data[0], data[1]);
   } catch(e) {
     fdom.debug.warn('Unable to parse runtime message: ' + msg);
