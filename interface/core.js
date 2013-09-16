@@ -49,16 +49,20 @@ fdom.apis.set("core.peerconnection", {
   'onClose': {type: "event", value: []}
 });
 
+
 fdom.apis.set('core.sctp-peerconnection', {
-  // Open a new peer-connection.
-  'open': {type: "method",
-    // The proxy object to send/receive messages from a signalling chanel
+  // Set the freedom signalling channel for establishing the peer connection.
+  'setSignallingChannel': {type: "method",
+    // The 'proxy' object is a freedom channel identifier used to send/receive
+    // messages to/from a signalling chanel.
     value: ["proxy"]
   },
 
   // Send a message to the peer.
   'postMessage': {type: "method", value: [{
-    // Data channel id, required.
+    // Data channel id. If provided, will be used as the channel label.
+    // If the channel label doesn't already exist, a new channel will be
+    // created.
     "channelid": "string",
     // One of the bellow should be defined; this is the data to send.
     "text": "string",
@@ -66,18 +70,20 @@ fdom.apis.set('core.sctp-peerconnection', {
     "buffer": "buffer"
   }]},
 
-  // TODO: refactor to onMessage
-  // Event when we get a message from a peer.
-  'message': {type: "event", value: {
+  // Called when we get a message from the peer.
+  'onMessage': {type: "event", value: {
+    // The label/id of the data channel.
     "channelid": "string",
+    // One the below will be specified.
     "text": "string",
     "binary": "blob",
     "buffer": "buffer"
   }},
 
-  // Close the conection.
-  'close': {type: "method", value: []},
+  // Close a data channel. The argument is th channel label/id.
+  'close': {type: "method", value: ["string"]},
 
-  // onClose is called when the peer closes the connection.
-  'onClose': {type: "event", value: []}
+  // onClose is called when the peer closes a data channel connection.
+  'onClose': {type: "event", value: [{"channelid": "string"}]}
 });
+

@@ -5,108 +5,141 @@
  * @private
  */
 var SctpPeerConnection_unprivileged = function(channel) {
-  this.appChannel = channel;
-  this.dataChannel = null;
-  this.identity = null;
-  this.connection = null;
-  this.myPid = Math.random();
-  this.remotePid = 1;
-  this.sendQueue = [];
+  // A freedom channel to be connected to a freedom channel identifier that
+  // sends messages to/from the identity.
+  this.signallingChannel = channel;
+  // function to be called when ice candidates are received.
+  this.onIceCandidate = null;
+
+  // Mapping from channelid to the PeerConnection data channel for that
+  // channelid.
+  this.dataChannels = {};
+  // An array of messages, indexed by their corresponding data channel label,
+  // that are waiting to be sent on the data channel.
+  //
+  // Invaraint: key in this.dataChannels == key in this.postQueue
+  this.postQueue = {};
+
+  // The RTCPeerConnection object.
+  var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
+  this.peerConnection = new RTCPeerConnection(null,
+      {'optional': [{'DtlsSrtpKeyAgreement': true}]});
+  // TODO: should we try to handle peer connection events?
+
+  // When a setup event handling for when peer connectons are made.
+  this.peerConnection.addEventListener('datachannel', function(e) {
+      this._setupDataChannel(e['channel']);
+  }.bind(this));
+
+  // TODO: explain what kind of events are being handled here.
   handleEvents(this);
 };
 
-// |proxy| is a channel to speak to a remote user to send them SDP headers/
-// negotiate the address/port to setup the peer to peer connection.
-SctpPeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
-  if (this.connection) {
-    continuation(false);
-  }
-
+// |freedomChannelId| is a way to speak to an identity provide to send them SDP
+// headers negotiate the address/port to setup the peer to peerConnection.
+SctpPeerConnection_unprivileged.prototype.setSignallingChannel =
+    function(freedomChannelId, continuation) {
   // Listen for messages to/from the provided message channel.
-  this.appChannel = Core_unprivileged.bindChannel(this.appChannel, proxy);
-  this.appChannel['on']('message', this.onIdentity.bind(this));
-  this.appChannel.emit('ready');
+  this.signallingChannel = Core_unprivileged.bindChannel(
+      this.signallingChannel, freedomChannelId);
+  this.signallingChannel.on('message', this.onSignal.bind(this));
+  this.signallingChannel.emit('ready');
 
-  this.setup(true);
+  // Remove old event listener; and create new one for this signalling channel.
+  this.peerConnection.removeEventListener(this.onIceCandidate);
+  this.onIceCandidate = function(evt) {
+    if(evt && evt['candidate']) {
+      this.signallingChannel.emit('message', JSON.stringify(evt['candidate']));
+    }
+  }.bind(this);
+
+  // Send all ice candidates received to the signalling channel.
+  this.peerConnection.addEventListener('icecandidate', onIceCandidate, true);
+
   continuation();
 };
 
-// When initiate is true, we initiate the peer connection.
-SctpPeerConnection_unprivileged.prototype.setup = function(initiate) {
-  var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
-  this.connection = new RTCPeerConnection(null,
-      {'optional': [{'DtlsSrtpKeyAgreement': true}]});
+// Setup a data channel's event listeners and add it to the this.dataChannels
+// object that indexes channels by label.
+SctpPeerConnection_unprivileged.prototype._setupDataChannel =
+    function (dataChannel) {
+  if(this.dataChannels[dataChannel.label]) {
+    console.error('A channel with this channelid is already setup: ' + dataChannel.label);
+    return;
+  };
 
-  var dcSetup = function() {
-    this.dataChannel.addEventListener('open', function() {
-      console.log("Data channel opened.");
-      this.emit('open');
+  this.dataChannels[dataChannel.label] = dataChannel;
+  this.postQueue[dataChannel.label] = [];
+
+  // add event listener to send all messages once the channel is opened.
+  dataChannel.addEventListener('open', function() {
+      console.log("Data channel" + dataChannel.label + " opened.");
+      this._sendMessages(dataChannel.label);
     }.bind(this), true);
-    // When this data channel receives data, pass it on to Freedom listeners.
-    this.dataChannel.addEventListener('message', function(m) {
-      // TODO: handle other types of data, e.g. text.
-      if(typeof(m.data) === 'string') {
-        this['dispatchEvent']('message', {"text" : m.data});
-      } else if(m.data instanceof ArrayBuffer) {
-        this['dispatchEvent']('message', {"buffer" : m.data});
+
+  // When this data channel receives data, pass it on to Freedom listeners.
+  dataChannel.addEventListener('message', function(m) {
+    console.log("dataChannel: message event: " + JSON.stringify(m));
+    if(typeof(m.data) === 'string') {
+      this['dispatchEvent']('message',
+          {channelid: dataChannel.label, "text" : m.data});
+    } else if(m.data instanceof ArrayBuffer) {
+      this['dispatchEvent']('message',
+          {channelid: dataChannel.label, "buffer" : m.data});
+    } else if(m.data instanceof Blob) {
+      this['dispatchEvent']('message',
+          {channelid: dataChannel.label, "blob" : m.data});
+    } else {
+      // Error: unkown/unsupported type of data.
+      var typ_description;
+      if(typeof(m.data) === 'object') {
+        typ_description = "object(" + m.data.constructor.name + ")";
       } else {
-        var typ_description;
-        if(typeof(m.data) === 'object') {
-          typ_description = "object(" + m.data.constructor.name + ")";
-        } else {
-          typ_description = typeof(m.data);
-        }
-        console.error('Unkown type of data received on data channel: ' +
-            typ_description);
+        typ_description = typeof(m.data);
       }
-    }.bind(this), true);
-    this.dataChannel.addEventListener('close', function(conn) {
-      if (this.connection == conn) {
-        this['dispatchEvent']('onClose');
-        this.close(function() {});
-      }
-    }.bind(this, this.connection), true);
-  }.bind(this);
-
-  if (initiate) {
-    this.dataChannel = this.connection.createDataChannel("sendChannel", {'reliable': true});
-    dcSetup();
-  } else {
-    this.connection.addEventListener('datachannel', function(evt) {
-      this.dataChannel = evt['channel'];
-      dcSetup();
-    }.bind(this));
-  }
-
-  this.connection.addEventListener('icecandidate', function(evt) {
-    if(evt && evt['candidate']) {
-      this.appChannel.emit('message', JSON.stringify(evt['candidate']));
+      console.error('Unkown type of data received on data channel: ' +
+          typ_description);
     }
   }.bind(this), true);
 
-  this.makeOffer();
+  dataChannel.addEventListener('close', function() {
+    delete this.dataChannels[dataChannel.label];
+    this['dispatchEvent']('onClose', dataChannel.label);
+  }.bind(this), true);
 };
 
+SctpPeerConnection_unprivileged.prototype.closeDataChannel =
+    function(channelid) {
+    delete this.dataChannels[channelid];
+    delete this.postQueue[channelid];
+};
+
+// Make and send an offer to connect to the peerConnection.
 SctpPeerConnection_unprivileged.prototype.makeOffer = function() {
+  console.log("SctpPeerConnection_unprivileged.prototype.makeOffer.");
   if (this.remotePid < this.myPid) {
     return;
   }
-  this.connection.createOffer(function(desc) {
-    this.connection.setLocalDescription(desc);
+  this.peerConnection.createOffer(function(desc) {
+    this.peerConnection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
-    this.appChannel.emit('message', JSON.stringify(desc));
+    console.log("SctpPeerConnection_unprivileged.prototype.makeOffer:", desc);
+    this.signallingChannel.emit('message', JSON.stringify(desc));
   }.bind(this));
 };
 
 SctpPeerConnection_unprivileged.prototype.makeAnswer = function() {
-  this.connection.createAnswer(function(desc) {
-    this.connection.setLocalDescription(desc);
+  console.log("SctpPeerConnection_unprivileged.prototype.makeAnswer.");
+  this.peerConnection.createAnswer(function(desc) {
+    this.peerConnection.setLocalDescription(desc);
     desc['pid'] = this.myPid;
-    this.appChannel.emit('message', JSON.stringify(desc));
+    console.log("SctpPeerConnection_unprivileged.prototype.makeAnswer:", desc);
+    this.signallingChannel.emit('message', JSON.stringify(desc));
   }.bind(this));
 };
 
-SctpPeerConnection_unprivileged.prototype.onIdentity = function(msg) {
+// Called when signalling channel receives a message.
+SctpPeerConnection_unprivileged.prototype.onSignal = function(msg) {
   try {
     var m = msg;
     if (typeof msg === "string") {
@@ -114,13 +147,13 @@ SctpPeerConnection_unprivileged.prototype.onIdentity = function(msg) {
     }
     if (m['candidate']) {
       var candidate = new RTCIceCandidate(m);
-      this.connection.addIceCandidate(candidate);
+      this.peerConnection.addIceCandidate(candidate);
     } else if (m['type'] == 'offer' && m['pid'] != this.myId) {
       this.remotePid = m['pid'];
       if (this.remotePid < this.myPid) {
         this.close(function() {
-          this.setup(false);
-          this.connection.setRemoteDescription(new RTCSessionDescription(m), function() {}, function() {
+          // ??? Do we need to do more resetting?
+          this.peerConnection.setRemoteDescription(new RTCSessionDescription(m), function() {}, function() {
             console.error("Failed to set remote description");
           });
           this.makeAnswer();
@@ -130,59 +163,71 @@ SctpPeerConnection_unprivileged.prototype.onIdentity = function(msg) {
       }
     } else if (m['type'] == 'answer' && m['pid'] != this.myId) {
       this.remotePid = m['pid'];
-      this.connection.setRemoteDescription(new RTCSessionDescription(m));
+      this.peerConnection.setRemoteDescription(new RTCSessionDescription(m));
+    } else {
+      console.warn("SctpPeerConnection_unprivileged.prototype.onSignal: ignored message:" + JSON.stringify(msg));
     }
   } catch(e) {
-    console.error("Couldn't understand identity message: " + JSON.stringify(msg) + ": -> " + e.message);
+    console.error("Error with signalling message: " + JSON.stringify(msg) + ": -> " + e.message);
   }
 };
 
-SctpPeerConnection_unprivileged.prototype.postMessage =
-    function(m, continuation) {
-  if (!this.connection) {
-    return continuation(false);
-  }
-  // Queue until open.
-  if (!this.dataChannel || this.dataChannel.readyState != "open") {
-    return this.once('open', this.postMessage.bind(this, m, continuation));
-  }
-  // For debugging
-  // window.dc = this.dataChannel;
-
-  this.dataChannel.send(m['buffer']);
-
-  continuation();
-};
-
-SctpPeerConnection_unprivileged.prototype._process = function(scheduled) {
-  if (this.scheduled && !scheduled) {
+// Send all messages on a given channelid.
+SctpPeerConnection_unprivileged.prototype._sendMessage =
+    function (channelid) {
+  if (!channelid in this.dataChannels) {
+    console.error('No such channel in _sendMessage for given channelid: ' + channelid);
     return;
   }
 
-  var next = this.sendQueue.shift();
-  this.dataChannel.send(next);
+  for(var i = 0; i++; i < this.postQueue[channelid].size) {
+    var msg = this.postQueue[channelid].pop();
+    if(msg.text) {
+      this.dataChannels[channelid].send(msg.text);
+    } else if(msg.buffer) {
+      this.dataChannels[channelid].send(msg.buffer);
+    } else {
+      console.error("postMessage got unsupported msg to send over the " +
+          "data channel." + JSON.stringify(msg));
+    }
+  }
+}
 
-  if (this.scheduled) {
-    clearTimeout(this.scheduled);
-    delete this.scheduled;
+// Called to send a message over a datachannel to a peer.
+SctpPeerConnection_unprivileged.prototype.postMessage =
+    function(msg, continuation) {
+  // The data channel for this message to be posted on.
+  var dataChannel;
+
+  if (msg.channelid in this.dataChannels) {
+    dataChannel = this.dataChannels[msg.channelid];
+  } else {
+    var dataChannel = this.peerConnection.createDataChannel(msg.channelid,
+        {'reliable': true});
   }
 
-  if (this.sendQueue.length) {
-    this.scheduled = setTimeout(this._process.bind(this, true), 0);
+  this.postQueue[msg.channelid].push({msg: msg, continuation: continuation}));
+  if (dataChannel.readyState != 'open') {
+    // Queue until open if channel is not ready.
+    console.log("Delaying posting of message for data channel to be open.");
+  } else {
+    // sendMessages is responsible for calling the continutaion.
+    this._sendMessage(msg.channelid);
   }
 };
 
+// Called to close all connections.
 SctpPeerConnection_unprivileged.prototype.close = function(continuation) {
   delete this.dataChannel;
 
-  if (this.connection) {
+  if (this.peerConnection) {
     try {
-      this.connection.close();
+      this.peerConnection.close();
     } catch(e) {
-      console.warn('Closed an already closed connection.', e);
+      console.warn('Trying to closed an already closed peerConnection.', e);
       // Ignore already-closed errors.
     }
-    delete this.connection;
+    delete this.peerConnection;
   }
   continuation();
 };

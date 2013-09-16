@@ -10,8 +10,19 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
-      beforeconcat: ['src/*.js', 'src/proxy/*.js'],
+      beforeconcat: [
+          'src/*.js',
+          'src/proxy/*.js',
+          'providers/*.js',
+          'interface/*.js',
+      ],
       afterconcat: ['freedom.js'],
+      files: [
+          'src/*.js',
+          'src/proxy/*.js',
+          'providers/*.js',
+          'interface/*.js',
+      ],
       options: {
         '-W069': true
       }
