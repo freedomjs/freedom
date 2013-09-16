@@ -214,7 +214,11 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
       }
     }
   } catch(e) {
-    console.error("Error Loading from " + from + ": " + JSON.stringify(scripts), e.message);
+    if (typeof scripts === 'string') {
+      console.error("Error loading " + scripts + " for " + from, e.message);
+    } else {
+      console.error("Error loading " + scripts[i] + " for " + from, e.message);
+    }
   }
 };
 
