@@ -26,9 +26,14 @@ var SctpPeerConnection_unprivileged = function(channel) {
       {'optional': [{'DtlsSrtpKeyAgreement': true}]});
   // TODO: should we try to handle peer connection events?
 
-  // When a setup event handling for when peer connectons are made.
+  // When a data channel is created, this peer connection will receive an event
+  // and should then setup the data channel.
+  //
+  // TODO: should we do some kind of check, in case we want to reject it? e.g.
+  // if the key doesn't match or we havn't allowed peer connection to this peer?
   this.peerConnection.addEventListener('datachannel', function(e) {
-      this._setupDataChannel(e['channel']);
+    console.log('peerConnection datachannel event receieved for datachannel labeled: ' +  e['channel'].label);
+    this._setupDataChannel(e['channel']);
   }.bind(this));
 
   // TODO: explain what kind of events are being handled here.
@@ -52,9 +57,9 @@ SctpPeerConnection_unprivileged.prototype.setSignallingChannel =
       this.signallingChannel.emit('message', JSON.stringify(evt['candidate']));
     }
   }.bind(this);
-
   // Send all ice candidates received to the signalling channel.
-  this.peerConnection.addEventListener('icecandidate', onIceCandidate, true);
+  this.peerConnection.addEventListener('icecandidate',
+      this.onIceCandidate, true);
 
   continuation();
 };
@@ -63,17 +68,19 @@ SctpPeerConnection_unprivileged.prototype.setSignallingChannel =
 // object that indexes channels by label.
 SctpPeerConnection_unprivileged.prototype._setupDataChannel =
     function (dataChannel) {
+  console.log('Setting up datachannel: ' + dataChannel.label);
+
   if(this.dataChannels[dataChannel.label]) {
     console.error('A channel with this channelid is already setup: ' + dataChannel.label);
     return;
-  };
+  }
 
   this.dataChannels[dataChannel.label] = dataChannel;
   this.postQueue[dataChannel.label] = [];
 
   // add event listener to send all messages once the channel is opened.
   dataChannel.addEventListener('open', function() {
-      console.log("Data channel" + dataChannel.label + " opened.");
+      console.log("Data channel " + dataChannel.label + " opened.");
       this._sendMessages(dataChannel.label);
     }.bind(this), true);
 
@@ -172,10 +179,11 @@ SctpPeerConnection_unprivileged.prototype.onSignal = function(msg) {
   }
 };
 
-// Send all messages on a given channelid.
+// Send all messages on a given channelid. Assumes the channelid corresponds to
+// an opened datachannel.
 SctpPeerConnection_unprivileged.prototype._sendMessage =
     function (channelid) {
-  if (!channelid in this.dataChannels) {
+  if (!(channelid in this.dataChannels)) {
     console.error('No such channel in _sendMessage for given channelid: ' + channelid);
     return;
   }
@@ -191,25 +199,25 @@ SctpPeerConnection_unprivileged.prototype._sendMessage =
           "data channel." + JSON.stringify(msg));
     }
   }
-}
+};
 
 // Called to send a message over a datachannel to a peer.
 SctpPeerConnection_unprivileged.prototype.postMessage =
     function(msg, continuation) {
-  // The data channel for this message to be posted on.
-  var dataChannel;
-
-  if (msg.channelid in this.dataChannels) {
-    dataChannel = this.dataChannels[msg.channelid];
-  } else {
-    var dataChannel = this.peerConnection.createDataChannel(msg.channelid,
-        {'reliable': true});
+  console.log('postMessage to dataChannel: ' + msg.channelid);
+  // If dataChanel doesn't already exist with this id, make it.
+  if (!(msg.channelid in this.dataChannels)) {
+    console.log('setting up new dataChannel: ' + msg.channelid);
+    this._setupDataChannel(this.peerConnection
+        .createDataChannel(msg.channelid, {'reliable': true}));
   }
 
-  this.postQueue[msg.channelid].push({msg: msg, continuation: continuation}));
-  if (dataChannel.readyState != 'open') {
+  this.postQueue[msg.channelid].push({msg: msg, continuation: continuation});
+  if (this.dataChannels[msg.channelid].readyState != 'open') {
     // Queue until open if channel is not ready.
-    console.log("Delaying posting of message for data channel to be open.");
+    console.log("Data channel " + msg.channelid +
+        "is not open (readyState: " +
+        this.dataChannels[msg.channelid].readyState + "), delaying send.");
   } else {
     // sendMessages is responsible for calling the continutaion.
     this._sendMessage(msg.channelid);
