@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, resolvePath */
+/*globals fdom:true, handleEvents, mixin, eachProp */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -194,11 +194,13 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
  * @param {String[]} scripts The URLs of the scripts to load.
  */
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
-  var i, importer = this.config.global.importScripts;
+  var i, importer = function(script) {
+    this.config.global.importScripts(script);
+  }.bind(this);
   this.emit(this.appChannel, {
     type: 'ready'
   });
-  if (!importer) {
+  if (!this.config.global.importScripts) {
     importer = function(url) {
       var script = this.config.global.document.createElement('script');
       script.src = url;
@@ -207,17 +209,17 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
   }
   try {
     if (typeof scripts === 'string') {
-      importer(resolvePath(scripts, from));
+      fdom.resources.get(from, scripts).done(importer);
     } else {
       for (i = 0; i < scripts.length; i += 1) {
-        importer(resolvePath(scripts[i], from));
+        fdom.resources.get(from, scripts[i]).done(importer);
       }
     }
   } catch(e) {
     if (typeof scripts === 'string') {
-      console.error("Error loading " + scripts + " for " + from, e.message);
+      console.error("Error loading " + scripts + " for " + from, e);
     } else {
-      console.error("Error loading " + scripts[i] + " for " + from, e.message);
+      console.error("Error loading " + scripts[i] + " for " + from, e);
     }
   }
 };

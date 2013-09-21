@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, XMLHttpRequest, resolvePath */
+/*globals fdom:true, handleEvents, mixin, XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -22,6 +22,7 @@ fdom.port.Manager = function(hub) {
   
   this.hub.on('config', function(config) {
     mixin(this.config, config);
+    this.emit('config');
   }.bind(this));
   
   handleEvents(this);
@@ -108,13 +109,19 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
 fdom.port.Manager.prototype.setup = function(port) {
   if (!port.id) {
     console.warn("Refusing to setup unidentified port ");
-    return;
+    return false;
   }
 
   if(this.flows[port.id]) {
     console.warn("Refusing to re-initialize port " + port.id);
+    return false;
+  }
+
+  if (!this.config.global) {
+    this.once('config', this.setup.bind(this, port));
     return;
   }
+
   this.hub.register(port);
   var flow = this.hub.install(this, port.id, "control"),
       reverse = this.hub.install(port, this.id, port.id);
@@ -125,6 +132,8 @@ fdom.port.Manager.prototype.setup = function(port) {
     channel: reverse,
     config: this.config
   });
+
+  return true;
 };
 
 /**
@@ -137,8 +146,15 @@ fdom.port.Manager.prototype.setup = function(port) {
  * @param {String} [destName] The flow name for messages to the destination.
  */
 fdom.port.Manager.prototype.createLink = function(port, name, destination, destName) {
+  if (!this.config.global) {
+    this.once('config', this.createLink.bind(this, port, name, destination, destName));
+    return; 
+  }
+
   if (!this.flows[destination.id]) {
-    this.setup(destination);
+    if(this.setup(destination) === false) {
+      return;
+    }
   }
   var outgoingName = destName || 'default',
       outgoing = this.hub.install(port, destination.id, outgoingName),

@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, makeAbsolute */
+/*globals fdom:true, Util:true, handleEvents, mixin, eachProp */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -23,6 +23,11 @@ fdom.port.App = function(manifestURL) {
 
   handleEvents(this);
 };
+
+/**
+ * Apps are relocatable.
+ */
+fdom.port.App.prototype.relocatable = true;
 
 /**
  * Receive an external application for the Application.
@@ -154,7 +159,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       this.appInternal = message.channel;
       this.port.onMessage(this.appInternal, {
         type: 'Initialization',
-        id: makeAbsolute(this.manifestId),
+        id: this.manifestId,
         appId: this.id,
         manifest: this.manifest,
         channel: message.reverse
@@ -192,26 +197,17 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
  * @private
  */
 fdom.port.App.prototype.loadManifest = function() {
-  // Request the manifest
-  var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function() {
-    if (ref.readyState === 4 && ref.responseText) {
-      var resp = {};
-      try {
-        resp = JSON.parse(ref.responseText);
-      } catch(err) {
-        console.warn("Failed to load manifest " + this.manifestId + ": " + err);
-        return;
-      }
-      this.manifest = resp;
-      this.start();
-    } else if (ref.readyState === 4) {
-      console.warn("Failed to load manifest " + this.manifestId + ": " + ref.status);
+  fdom.resources.getContents(this.manifestId).done(function(data) {
+    var resp = {};
+    try {
+      resp = JSON.parse(data);
+    } catch(err) {
+      console.warn("Failed to load " + this.manifestId + ": " + err);
+      return;
     }
-  }.bind(this), false);
-  ref.overrideMimeType('application/json');
-  ref.open("GET", this.manifestId, true);
-  ref.send();
+    this.manifest = resp;
+    this.start();
+  }.bind(this));
 };
 
 /**
@@ -257,4 +253,14 @@ fdom.port.App.prototype.loadLinks = function() {
     this.externalPortMap[channels[i]] = this.externalPortMap[channels[i]] || false;
     this.internalPortMap[channels[i]] = false;
   }
+};
+
+fdom.port.App.prototype.serialize = function() {
+  return JSON.serialize({
+    manifestId: this.manifestId,
+    externalPortMap: this.externalPortMap,
+    internalPortMap: this.internalPortMap,
+    manifest: this.manifest,
+    controlChannel: this.controlChannel
+  });
 };

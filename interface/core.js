@@ -38,4 +38,6 @@ fdom.apis.set("core.socket", {
 
 fdom.apis.set("core.runtime", {
   'createApp': {type: "method", value: ["string", "proxy"]},
+  'resolve': {type: "method", value: ["string", "string"]},
+  'needFile': {type: 'event', value: ["string", "string"]}
 });
