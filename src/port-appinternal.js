@@ -196,7 +196,7 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
  * @param {String[]} scripts The URLs of the scripts to load.
  */
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
-  var i, importer = function(script) {
+  var i, importer = function importScripts(script) {
     this.config.global.importScripts(script);
   }.bind(this);
   this.emit(this.appChannel, {
@@ -218,6 +218,7 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
       }
     }
   } catch(e) {
+    console.warn(e.stack);
     if (typeof scripts === 'string') {
       console.error("Error loading " + scripts + " for " + from, e);
     } else {

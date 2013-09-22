@@ -79,9 +79,15 @@ fdom.port.Proxy.prototype.getInterfaceConstructor = function() {
   var id = fdom.port.Proxy.nextId();
   return this.interfaceCls.bind({}, function(id, binder) {
     this.emits[id] = binder;
-  }.bind(this, id), function(chan, msg) {
-    this.emit(chan, msg);
-  }.bind(this, this.emitChannel), id);  
+  }.bind(this, id), this.doEmit.bind(this), id);  
+};
+
+fdom.port.Proxy.prototype.doEmit = function(msg) {
+  if (this.emitChannel) {
+    this.emit(this.emitChannel, msg);
+  } else {
+    this.once('start', this.doEmit.bind(this, msg));
+  }
 };
 
 /**

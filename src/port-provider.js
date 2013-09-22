@@ -48,6 +48,8 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       this.providerInstances[message.to](message);
     } else if (message.to && message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
+    } else {
+      console.warn(this.toString() + ' dropping message ' + message);
     }
   }
 };

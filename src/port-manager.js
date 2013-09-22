@@ -58,7 +58,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     return;
   }
   origin = this.hub.getDestination(reverseFlow);
-  
+
   if (this.delegate && reverseFlow !== this.delegate && this.toDelegate[flow]) {
     // Ship off to the delegee
     this.emit(this.delegate, {
@@ -81,7 +81,6 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   if (message.request === 'link') {
     this.createLink(origin, message.name, message.to, message.overrideDest);
   } else if (message.request === 'create') {
-    console.log('setting up ' + origin.id);
     this.setup(origin);
   } else if (message.request === 'port') {
     if (message.exposeManager) {

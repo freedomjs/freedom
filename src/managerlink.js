@@ -18,10 +18,14 @@ fdom.ManagerLink.prototype.toString = function() {
 
 fdom.ManagerLink.prototype.onMessage = function(source, msg) {
   if (source === 'control' && msg.type === 'setup') {
-    delete msg.config.global;
+    var config = {};
+    mixin(config, msg.config);
+    delete config.global;
     //TODO: support long msgs.
-    delete msg.config.src;
+    delete config.src;
+    msg.config = config;
     this.controlChannel = msg.channel;
+    this.emit('ready');
   }
   if (this.status == 'ready') {
     console.log('about to send message ', msg);
@@ -39,8 +43,8 @@ fdom.ManagerLink.prototype.connect = function() {
     this.socket.addEventListener('open', function(msg) {
       fdom.debug.log("Manager Link connected");
       this.status = 'ready';
-      this.registerRuntime();
       this.emit('connected');
+      this.registerRuntime();
     }.bind(this), true);
     this.socket.addEventListener('message', this.message.bind(this), true);
     this.socket.addEventListener('close', function() {
@@ -51,10 +55,14 @@ fdom.ManagerLink.prototype.connect = function() {
 };
 
 fdom.ManagerLink.prototype.registerRuntime = function() {
+  if (!this.controlChannel) {
+    this.once('ready', this.registerRuntime.bind(this));
+    return;
+  }
   var runtime = fdom.apis.get('core.runtime').definition;
   var runtimeProxy = new fdom.port.Proxy(
       fdom.proxy.ApiInterface.bind({}, runtime));
-  
+
   fdom.apis.register('core.runtime', runtimeProxy.getInterfaceConstructor());
   this.emit(this.controlChannel, {
     type: 'core.runtime provider',
