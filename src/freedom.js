@@ -70,6 +70,7 @@ setup = function (global, freedom_src, config) {
 
     site_cfg.global = global;
     site_cfg.src = freedom_src;
+    site_cfg.resources = fdom.resources;
     if(config) {
       mixin(site_cfg, config, true);
     }

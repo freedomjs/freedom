@@ -19,6 +19,7 @@ fdom.port.AppInternal = function(manager) {
   
   this.id = 'environment' + Math.random();
   this.pendingPorts = 0;
+  this.requests = {};
 
   handleEvents(this);
 };
@@ -38,7 +39,7 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
       this.controlChannel = message.channel;
       mixin(this.config, message.config);
     }
-  } else if (flow === 'default') {
+  } else if (flow === 'default' && !this.appId) {
     // Recover the app:
     this.port = this.manager.hub.getDestination(message.channel);
     this.appChannel = message.channel;
@@ -49,6 +50,8 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
     this.once('start', this.loadScripts.bind(this, message.id, 
         message.manifest.app.script));
     this.loadLinks(objects);
+  } else if (flow === 'default' && this.requests[message.id]) {
+    this.requests[message.id].resolve(message.data);
   }
 };
 
@@ -107,6 +110,18 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
     this.pendingPorts += 1;
     proxy.once('start', this.attach.bind(this, items[i].name, proxy));
   }
+  
+  // Allow resolution of files by parent.
+  fdom.resources.addResolver(function(manifest, url, deferred) {
+    var id = Math.random();
+    this.emit(this.appChannel, {
+      type: 'resolve',
+      id: id,
+      data: url
+    });
+    this.requests[id] = deferred;
+    return true;
+  }.bind(this));
 
   // Attach Core.
   this.pendingPorts += 1;

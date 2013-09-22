@@ -185,6 +185,14 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
   } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
     this.started = true;
     this.emit('start');
+  } else if (name === 'AppInternal' && message.type === 'resolve') {
+    fdom.resources.get(this.manifestId, message.data).done(function(id, data) {
+      this.port.onMessage(this.appInternal, {
+        type: 'resolve response',
+        id: id,
+        data: data
+      });
+    }.bind(this, message.id));
   } else {
     this.emit(this.externalPortMap[name], message);
   }

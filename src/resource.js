@@ -34,7 +34,7 @@ Resource.prototype.get = function(manifest, url) {
   if (this.files[key]) {
     deferred.resolve(this.files[key]);
   } else {
-    this.resolve(manifest, url).then(function(key, deferred, address) {
+    this.resolve(manifest, url).always(function(key, deferred, address) {
       this.files[key] = address;
       deferred.resolve(address);
     }.bind(this, key, deferred));
@@ -76,7 +76,7 @@ Resource.prototype.getContents = function(url) {
 Resource.prototype.resolve = function(manifest, url) {
   var deferred = fdom.proxy.Deferred(),
       i = 0;
-  for (i = this.resolvers.length - 1; i >= 0; i -= 1) {
+  for (i = 0; i < this.resolvers.length; i += 1) {
     if(this.resolvers[i](manifest, url, deferred)) {
       break;
     }
