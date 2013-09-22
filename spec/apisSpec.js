@@ -18,7 +18,11 @@ describe("fdom.apis", function() {
 
     api.register('customCore', provider);
     var channel = api.getCore('customCore', null);
-    expect(channel).toEqual(null);
+    var failed = 0;
+    channel.fail(function() {
+      failed += 1;
+    });
+    expect(failed).toEqual(1);
   });
 
   it("should register core providers", function() {
@@ -27,8 +31,30 @@ describe("fdom.apis", function() {
     api.set('customCore', provider);
     api.register('customCore', provider);
     var channel = api.getCore('customCore', 12);
-    var obj = new channel();
+    var obj;
+    channel.done(function(prov) {
+      obj = new prov();
+    });
 
     expect(obj.arg).toEqual(12);
+  });
+
+  it("allows late registration of core providers", function() {
+    var provider = function(arg) { this.arg = arg };
+
+    api.set('customCore', provider);
+    var channel = api.getCore('customCore', 12);
+
+    var arg = 0;
+    channel.done(function(prov) {
+      var mine = new prov();
+      arg = mine.arg;
+    });
+
+    expect(arg).toEqual(0);
+    
+    api.register('customCore', provider);
+    
+    expect(arg).toEqual(12);
   });
 });

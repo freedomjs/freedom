@@ -59,7 +59,7 @@ Resource.prototype.getContents = function(url) {
     }
   }
 
-  deferred = new fdom.Proxy.Deferred();
+  deferred = fdom.proxy.Deferred();
   deferred.reject();
   return deferred.promise();
 };

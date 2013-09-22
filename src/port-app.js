@@ -216,14 +216,17 @@ fdom.port.App.prototype.loadManifest = function() {
  * @private
  */
 fdom.port.App.prototype.loadLinks = function() {
-  var i, channels = ['default'], name, dep;
+  var i, channels = ['default'], name, dep,
+      finishLink = function(dep, provider) {
+        dep.getInterface().provideAsynchronous(provider);
+      };
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
       name = this.manifest.permissions[i];
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
         dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-        dep.getInterface().provideAsynchronous(fdom.apis.getCore(name, this));
+        fdom.apis.getCore(name, this).done(finishLink.bind(this, dep));
 
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,
@@ -239,13 +242,15 @@ fdom.port.App.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }
-      var dep = new fdom.port.App(desc.url);
-      this.emit(this.controlChannel, {
-        type: 'Link to ' + name,
-        request: 'link',
-        name: name,
-        to: dep
-      });
+      fdom.resources.get(this.manifestId, desc.url).done(function (url) {
+        var dep = new fdom.port.App(url);
+        this.emit(this.controlChannel, {
+          type: 'Link to ' + name,
+          request: 'link',
+          name: name,
+          to: dep
+        });
+      }.bind(this));
     }.bind(this));
   }
   // Note that messages can be synchronous, so some ports may already be bound.

@@ -113,7 +113,9 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
 
   core = fdom.apis.get('core').definition;
   provider = new fdom.port.Provider(core);
-  provider.getInterface().provideAsynchronous(fdom.apis.getCore('core', this));
+  fdom.apis.getCore('core', this).done(function(coreProv) {
+    provider.getInterface().provideAsynchronous(coreProv);
+  });
 
   this.emit(this.controlChannel, {
     type: 'Link to core',

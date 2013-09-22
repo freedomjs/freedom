@@ -66,12 +66,22 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
  * id: string is the Identifier for this interface.
  */
 fdom.port.Proxy.prototype.getInterface = function() {
+  var Iface = this.getInterfaceConstructor();
+  return new Iface();
+};
+
+/**
+ * Provides a bound class for creating a proxy.Interface associated
+ * with this proxy. This partial level of construction can be used
+ * to allow the proxy to be used as a provider for another API.
+ */
+fdom.port.Proxy.prototype.getInterfaceConstructor = function() {
   var id = fdom.port.Proxy.nextId();
-  return new this.interfaceCls(function(id, binder) {
+  return this.interfaceCls.bind({}, function(id, binder) {
     this.emits[id] = binder;
   }.bind(this, id), function(chan, msg) {
     this.emit(chan, msg);
-  }.bind(this, this.emitChannel), id);
+  }.bind(this, this.emitChannel), id);  
 };
 
 /**

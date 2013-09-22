@@ -13,7 +13,7 @@ fdom.ManagerLink = function() {
 };
 
 fdom.ManagerLink.prototype.toString = function() {
-  return "[WebSocket to Local Manager]"; 
+  return "[Port to Priviledged Runtime]"; 
 };
 
 fdom.ManagerLink.prototype.onMessage = function(source, msg) {
@@ -21,6 +21,7 @@ fdom.ManagerLink.prototype.onMessage = function(source, msg) {
     delete msg.config.global;
     //TODO: support long msgs.
     delete msg.config.src;
+    this.controlChannel = msg.channel;
   }
   if (this.status == 'ready') {
     console.log('about to send message ', msg);
@@ -38,6 +39,7 @@ fdom.ManagerLink.prototype.connect = function() {
     this.socket.addEventListener('open', function(msg) {
       fdom.debug.log("Manager Link connected");
       this.status = 'ready';
+      this.registerRuntime();
       this.emit('connected');
     }.bind(this), true);
     this.socket.addEventListener('message', this.message.bind(this), true);
@@ -46,6 +48,20 @@ fdom.ManagerLink.prototype.connect = function() {
       this.status = 'disconnected';
     }.bind(this), true);
   }
+};
+
+fdom.ManagerLink.prototype.registerRuntime = function() {
+  var runtime = fdom.apis.get('core.runtime').definition;
+  var runtimeProxy = new fdom.port.Proxy(
+      fdom.proxy.ApiInterface.bind({}, runtime));
+  
+  fdom.apis.register('core.runtime', runtimeProxy.getInterfaceConstructor());
+  this.emit(this.controlChannel, {
+    type: 'core.runtime provider',
+    request: 'link',
+    name: 'core.runtime',
+    to: runtimeProxy
+  });
 };
 
 fdom.ManagerLink.prototype.message = function(msg) {
