@@ -94,8 +94,12 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
       this.delegate = reverseFlow;
     }
     this.toDelegate[message.flow] = true;
+  } else if (message.request === 'resource') {
+    fdom.resources.addResolver(message.args[0]);
+    fdom.resources.addRetriever(message.service, message.args[1]);
   } else {
     console.warn("Unknown control request: " + message.request);
+    console.log(JSON.stringify(message));
     return;
   }
 };

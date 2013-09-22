@@ -44,7 +44,7 @@ fdom.ManagerLink.prototype.connect = function() {
       fdom.debug.log("Manager Link connected");
       this.status = 'ready';
       this.emit('connected');
-      this.registerRuntime();
+      fdom.apis.register('core.runtime', this.runtime.bind(this, this));
     }.bind(this), true);
     this.socket.addEventListener('message', this.message.bind(this), true);
     this.socket.addEventListener('close', function() {
@@ -54,22 +54,20 @@ fdom.ManagerLink.prototype.connect = function() {
   }
 };
 
-fdom.ManagerLink.prototype.registerRuntime = function() {
-  if (!this.controlChannel) {
-    this.once('ready', this.registerRuntime.bind(this));
-    return;
-  }
-  var runtime = fdom.apis.get('core.runtime').definition;
-  var runtimeProxy = new fdom.port.Proxy(
-      fdom.proxy.ApiInterface.bind({}, runtime));
+fdom.ManagerLink.prototype.runtime = function(link, app) {
+  this.link = link;
+  this.app = app;
+};
 
-  fdom.apis.register('core.runtime', runtimeProxy.getInterfaceConstructor());
-  this.emit(this.controlChannel, {
-    type: 'core.runtime provider',
-    request: 'link',
-    name: 'core.runtime',
-    to: runtimeProxy
-  });
+fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, proxy) {
+  fdom.resources.get(this.app.manifestId, manifest).done(function(url) {
+    this.link.onMessage('runtime', {
+      request: 'createApp',
+      from: this.app.manifestId,
+      to: url,
+      channel: proxy
+    });
+  }.bind(this));
 };
 
 fdom.ManagerLink.prototype.message = function(msg) {
@@ -78,18 +76,19 @@ fdom.ManagerLink.prototype.message = function(msg) {
     var data = JSON.parse(msg.data);
     // Handle runtime support requests.
     if (data[0] === 'runtime' && data[1].request === 'load') {
-      var file = resolvePath(data[1].url, data[1].from);
-      Util.loadFile(file, function(data) {
+      fdom.resources.getContents(data[1].url).done(function(url, from, data) {
         this.onMessage('runtime', {
           response: 'load',
-          file: file,
+          file: url,
+          from: from,
           data: data
         });
-      }.bind(this));
+      }.bind(this, data[1].url, data[1].from));
       return;
     }
     this.emit(data[0], data[1]);
   } catch(e) {
+    console.warn(e.stack);
     fdom.debug.warn('Unable to parse runtime message: ' + msg);
   }
 };

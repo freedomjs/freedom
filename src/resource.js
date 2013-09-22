@@ -50,16 +50,17 @@ Resource.prototype.get = function(manifest, url) {
  * @returns {fdom.Proxy.Deferred} A promise for the resource contents.
  */
 Resource.prototype.getContents = function(url) {
-  var prop, deferred;
+  var prop,
+      deferred = fdom.proxy.Deferred();
   for (prop in this.contentRetreivers) {
     if (this.contentRetreivers.hasOwnProperty(prop)) {
       if (url.indexOf(prop + "://") === 0) {
-        return this.contentRetreivers[prop](url);
+        this.contentRetreivers[prop](url, deferred);
+        return deferred.promise();
       }
     }
   }
 
-  deferred = fdom.proxy.Deferred();
   deferred.reject();
   return deferred.promise();
 };
@@ -159,9 +160,8 @@ Resource.prototype.httpResolver = function(manifest, url, deferred) {
  * @param {String} manifest The Manifest URL
  * @returns {fdom.Proxy.Deferred} A promise with the contents of the resource
  */
-Resource.prototype.manifestRetriever = function(manifest) {
-  var data, deferred;
-  deferred = fdom.proxy.Deferred();
+Resource.prototype.manifestRetriever = function(manifest, deferred) {
+  var data;
   try {
     data = manifest.substr(11);
     deferred.resolve(JSON.parse(data));
@@ -169,7 +169,6 @@ Resource.prototype.manifestRetriever = function(manifest) {
     console.warn("Invalid manifest URL referenced:" + manifest);
     deferred.reject();
   }
-  return deferred.promise();
 };
 
 /**
@@ -178,9 +177,8 @@ Resource.prototype.manifestRetriever = function(manifest) {
  * @param {String} url The resource to fetch.
  * @returns {fdom.Proxy.Deferred} A promise with the contents of the resource
  */
-Resource.prototype.xhrRetriever = function(url) {
-  var ref = new XMLHttpRequest(),
-      deferred = fdom.proxy.Deferred();
+Resource.prototype.xhrRetriever = function(url, deferred) {
+  var ref = new XMLHttpRequest();
   ref.addEventListener('readystatechange', function(deferred) {
     if (ref.readyState === 4 && ref.responseText) {
       deferred.resolve(ref.responseText);
@@ -192,8 +190,6 @@ Resource.prototype.xhrRetriever = function(url) {
   ref.overrideMimeType('application/json');
   ref.open("GET", url, true);
   ref.send();
-
-  return deferred.promise();
 };
 
 /**
