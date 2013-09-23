@@ -89,6 +89,8 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
   if (!this.apps[source.id]) {
     console.warn("Unwilling to generate a source for " + source.id);
     return;
+  } else {
+    source = this.apps[source.id];
   }
   if (!destination) {
     console.warn("Unwilling to generate a flow to nowhere from " + source.id);

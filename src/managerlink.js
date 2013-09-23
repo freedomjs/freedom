@@ -5,6 +5,7 @@ if (typeof fdom === 'undefined') {
 fdom.ManagerLink = function() {
   this.id = 'runtime';
   this.config = {};
+  this.runtimes = {};
   this.socket = null;
   this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
   handleEvents(this);
@@ -55,8 +56,10 @@ fdom.ManagerLink.prototype.connect = function() {
 };
 
 fdom.ManagerLink.prototype.runtime = function(link, app) {
+  this.id = Math.random();
   this.link = link;
   this.app = app;
+  this.link.runtimes[this.id] = this;
 };
 
 fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, proxy) {
@@ -65,8 +68,18 @@ fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, prox
       request: 'createApp',
       from: this.app.manifestId,
       to: url,
-      channel: proxy
+      id: this.id
     });
+    var iface = Core_unprivileged.bindChannel(this.link, proxy);
+    iface.on(function(flow, msg) {
+      this.link.onMessage('runtime', {
+        request: 'message',
+        id: this.id,
+        data: [flow, msg]
+      });
+      return false;
+    }.bind(this));
+    this.channel = iface;
   }.bind(this));
 };
 
@@ -85,6 +98,9 @@ fdom.ManagerLink.prototype.message = function(msg) {
         });
       }.bind(this, data[1].url, data[1].from));
       return;
+    } else if (data[0] === 'runtime' && data[1].request === 'message') {
+      var runtime = this.runtimes[data[1].id];
+      runtime.channel.emit(data[1].data[0], data[1].data[1]);
     }
     this.emit(data[0], data[1]);
   } catch(e) {

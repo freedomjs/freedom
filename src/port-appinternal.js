@@ -211,12 +211,23 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
  * @param {String[]} scripts The URLs of the scripts to load.
  */
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
-  var i, importer = function importScripts(script) {
-    this.config.global.importScripts(script);
-  }.bind(this);
-  this.emit(this.appChannel, {
-    type: 'ready'
-  });
+  var i = 0,
+      importer = function importScripts(script) {
+        this.config.global.importScripts(script);
+      }.bind(this),
+      urls = [],
+      outstanding = 0,
+      load = function(url) {
+        urls.push(url);
+        outstanding -= 1;
+        if (outstanding === 0) {
+          this.emit(this.appChannel, {
+            type: 'ready'
+          });
+          this.tryLoad(importer, urls);
+        }
+      }.bind(this);
+
   if (!this.config.global.importScripts) {
     importer = function(url) {
       var script = this.config.global.document.createElement('script');
@@ -224,21 +235,33 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
       this.config.global.document.body.appendChild(script);
     }.bind(this);
   }
-  try {
-    if (typeof scripts === 'string') {
-      fdom.resources.get(from, scripts).done(importer);
-    } else {
-      for (i = 0; i < scripts.length; i += 1) {
-        fdom.resources.get(from, scripts[i]).done(importer);
-      }
-    }
-  } catch(e) {
-    console.warn(e.stack);
-    if (typeof scripts === 'string') {
-      console.error("Error loading " + scripts + " for " + from, e);
-    } else {
-      console.error("Error loading " + scripts[i] + " for " + from, e);
+
+  if (typeof scripts === 'string') {
+    outstanding = 1;
+    fdom.resources.get(from, scripts).done(load);
+  } else {
+    outstanding = scripts.length;
+    for (i = 0; i < scripts.length; i += 1) {
+      fdom.resources.get(from, scripts[i]).done(load);
     }
   }
 };
 
+/**
+ * Attempt to load resolved scripts into the namespace.
+ * @method tryLoad
+ * @private
+ * @param {Function} importer The actual import function
+ * @param {String[]} urls The resoved URLs to load.
+ */
+fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
+  var i;
+  try {
+    for (i = 0; i < urls.length; i += 1) {
+      importer(urls[i]);
+    }
+  } catch(e) {
+    console.warn(e.stack);
+    console.error("Error loading " + urls[i], e);
+  }
+};
