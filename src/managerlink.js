@@ -9,8 +9,6 @@ fdom.ManagerLink = function() {
   this.socket = null;
   this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
   handleEvents(this);
-
-  this.connect();
 };
 
 fdom.ManagerLink.prototype.toString = function() {
@@ -26,7 +24,7 @@ fdom.ManagerLink.prototype.onMessage = function(source, msg) {
     delete config.src;
     msg.config = config;
     this.controlChannel = msg.channel;
-    this.emit('ready');
+    this.connect();
   }
   if (this.status == 'ready') {
     console.log('about to send message ', msg);
@@ -40,7 +38,7 @@ fdom.ManagerLink.prototype.connect = function() {
   if (!this.socket && this.status == 'disconnected') {
     fdom.debug.log("Manager Link connecting");
     this.status = 'connecting';
-    this.socket = new WebSocket('ws://127.0.0.1:9009');
+    this.socket = new WebSocket('ws://127.0.0.1:' + (this.config.runtimePort || 9009));
     this.socket.addEventListener('open', function(msg) {
       fdom.debug.log("Manager Link connected");
       this.status = 'ready';
