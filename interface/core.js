@@ -51,11 +51,17 @@ fdom.apis.set("core.peerconnection", {
 
 
 fdom.apis.set('core.sctp-peerconnection', {
-  // Set the freedom signalling channel for establishing the peer connection.
-  'setSignallingChannel': {type: "method",
+  'setup': {type: "method", value: [{
+    "debugId": "string"
+  }]},
+
+  // Open a peer connection via the freedom signalling channel (used to speak
+  // to the peer).
+  'startup': {type: "method",
     // The 'proxy' object is a freedom channel identifier used to send/receive
-    // messages to/from a signalling chanel.
-    value: ["proxy"]
+    // messages to/from a signalling chanel. TODO: The string is meant to be a
+    // boolean, but Freedom doesn't support it yet.
+    value: ["proxy", "string"]
   },
 
   // Send a message to the peer.
@@ -71,17 +77,20 @@ fdom.apis.set('core.sctp-peerconnection', {
   }]},
 
   // Called when we get a message from the peer.
-  'onMessage': {type: "event", value: {
+  'onMessage': {type: "event", value: [{
     // The label/id of the data channel.
     "channelid": "string",
     // One the below will be specified.
     "text": "string",
     "binary": "blob",
     "buffer": "buffer"
-  }},
+  }]},
 
-  // Close a data channel. The argument is th channel label/id.
-  'close': {type: "method", value: ["string"]},
+  // Close a data channel. The argument is the channel label/id.
+  'closeDataChannel': {type: "method", value: ["string"]},
+
+  // Close the peer connection.
+  'shutdown': {type: "method", value: []},
 
   // onClose is called when the peer closes a data channel connection.
   'onClose': {type: "event", value: [{"channelid": "string"}]}

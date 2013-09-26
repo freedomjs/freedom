@@ -62,7 +62,8 @@ Api.prototype.getCore = function(name, from) {
   if (this.apis[name]) {
     return this.providers[name].bind({}, from);
   } else {
-    console.warn('Refusing to create core provider without an interface.');
+    console.warn('Refusing to create core provider without an interface.' +
+        'API name: ' + name);
     return null;
   }
 };
