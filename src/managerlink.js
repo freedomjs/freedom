@@ -9,6 +9,7 @@ fdom.ManagerLink = function() {
   this.socket = null;
   this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
   handleEvents(this);
+  this.n =0 ;
 };
 
 fdom.ManagerLink.prototype.toString = function() {
@@ -28,6 +29,12 @@ fdom.ManagerLink.prototype.onMessage = function(source, msg) {
   }
   if (this.status == 'ready') {
     console.log('about to send message ', msg);
+    if (msg.request === 'message' && this.n < 3) {
+      if (this.n != 1) {
+        console.error('render req sent at ' + window.performance.now());
+      }
+      this.n++;
+    }
     this.socket.send(JSON.stringify([source, msg]));
   } else {
     this.once('connected', this.onMessage.bind(this, source, msg));
@@ -40,6 +47,7 @@ fdom.ManagerLink.prototype.connect = function() {
     this.status = 'connecting';
     this.socket = new WebSocket('ws://127.0.0.1:' + (this.config.runtimePort || 9009));
     this.socket.addEventListener('open', function(msg) {
+      fdom.debug.error('Manager link active at ' + window.performance.now());
       fdom.debug.log("Manager Link connected");
       this.status = 'ready';
       this.emit('connected');
@@ -58,9 +66,11 @@ fdom.ManagerLink.prototype.runtime = function(link, app) {
   this.link = link;
   this.app = app;
   this.link.runtimes[this.id] = this;
+  this.n = 0;
 };
 
 fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, proxy) {
+  console.error("app creation at " + window.performance.now());
   fdom.resources.get(this.app.manifestId, manifest).done(function(url) {
     this.link.onMessage('runtime', {
       request: 'createApp',
@@ -83,7 +93,6 @@ fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, prox
 
 fdom.ManagerLink.prototype.message = function(msg) {
   try {
-    console.log('incoming message: ', msg.data);
     var data = JSON.parse(msg.data);
     // Handle runtime support requests.
     if (data[0] === 'runtime' && data[1].request === 'load') {
@@ -98,6 +107,13 @@ fdom.ManagerLink.prototype.message = function(msg) {
       return;
     } else if (data[0] === 'runtime' && data[1].request === 'message') {
       var runtime = this.runtimes[data[1].id];
+      if (runtime.n === 0) {
+        console.error('first page responded @ ' + window.performance.now());
+        runtime.n++;
+      } else if (runtime.n == 1) {
+        console.error('seond page responded @ ' + window.performance.now());
+        runtime.n++;
+      }
       runtime.channel.emit(data[1].data[0], data[1].data[1]);
     }
     this.emit(data[0], data[1]);
