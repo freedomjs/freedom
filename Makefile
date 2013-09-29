@@ -4,8 +4,8 @@ SOURCES = src/*.js src/proxy/*.js interface/*.js providers/*.js
 
 all: freedom.js
 
-freedom.js: $(SOURCES) src/util/preamble.js src/util/postamble.js
-	cat src/util/preamble.js $(SOURCES) src/util/postamble.js > $@
+freedom.js: src/libs/*.js $(SOURCES) src/util/preamble.js src/util/postamble.js
+	cat src/libs/*.js src/util/preamble.js $(SOURCES) src/util/postamble.js > $@
 
 demo: freedom.js
 	python -m SimpleHTTPServer

@@ -35,6 +35,7 @@ module.exports = function(grunt) {
           }
         },
         src: [
+          'src/libs/*.js'
           'src/util/preamble.js',
           'src/*.js',
           'src/proxy/*.js',

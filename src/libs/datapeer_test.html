@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Sctp Multi-Datachannel tester</title>
+<style>
+/* button {
+  font: 12px sans-serif;
+  padding: 5px;
+} */
+textarea {
+  font-family: monospace;
+}
+#logDiv {
+  font-family: monospace;
+  white-space: pre;
+}
+</style>
+</head>
+<body>
+  Open the JS console, then here's some things to type to play with  SimpleDataPeer which wraps PeerConnection's data channels into a simpler Connection data channels...
+  <div id="logDiv">
+  var peerA, peerB;
+
+  peerA = new DataPeer({debug: true, debugPeerName: "peerAlice"});
+  peerB = new DataPeer({debug: true, debugPeerName: "peerBob"});
+
+  peerA.setSendSignalMessage(peerB.handleSignalMessage.bind(peerB));
+  peerB.setSendSignalMessage(peerA.handleSignalMessage.bind(peerA));
+
+  peerA.newDataChannel("a");
+  peerB.send("e","hello");
+  peerA.send("b","hello on b from a");
+
+  setTimeout(function() {
+      peerA.newDataChannel("c");
+      peerB.send("b", "after 1/2 second on b from b");
+  }, 500);
+
+  setTimeout(function() {
+      peerA.send("a", "after 1 second on a from a");
+      peerA.send("c", "after 1 second on c from a");
+  }, 1000);
+
+  setTimeout(function() {
+      peerA.close();
+      peerA.close();
+  }, 2000);
+  </div>
+<!-- END OF HTML -->
+<script type="text/javascript" src="datapeer.js"></script>
+
+<script>
+'strict';
+// Top level variables to play with in the console.
+var peer1, peer2;
+var callbacks;
+
+window.onload = function () {
+  callbacks = {
+
+  peerA = new DataPeer({debug: true, debugPeerName: "peerA"}, callbacks);
+  peerB = new DataPeer({debug: true, debugPeerName: "peerB"});
+
+  peerA.setSendSignalMessage(peerB.handleSignalMessage.bind(peerB));
+  peerB.setSendSignalMessage(peerA.handleSignalMessage.bind(peerA));
+
+  var arr = new Uint8Array((2 << 18) - 1000);
+  peerA.send("a",arr);
+}
+</script>
+</body></html>
+
