@@ -65,7 +65,7 @@ setup = function (global, freedom_src, config) {
     }
     //Try to talk to local FreeDOM Manager
     if (!site_cfg['stayLocal']) {
-      link = new fdom.ManagerLink();
+      link = new fdom.port.Runtime();
       manager.setup(link);
     }
 

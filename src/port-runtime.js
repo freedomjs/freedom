@@ -1,22 +1,37 @@
+/*globals fdom:true, handleEvents, mixin, WebSocket */
+/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
+fdom.port = fdom.port || {};
 
-fdom.ManagerLink = function() {
+/**
+ * A client communication port to a priviledged web-server capable
+ * remote instance of freedom.js
+ * @class Runtime
+ * @extends Port
+ * @uses handleEvents
+ * @constructor
+ */
+fdom.port.Runtime = function() {
   this.id = 'runtime';
   this.config = {};
   this.runtimes = {};
   this.socket = null;
   this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
   handleEvents(this);
-  this.n =0 ;
 };
 
-fdom.ManagerLink.prototype.toString = function() {
+/**
+ * Get the textual description of this port.
+ * @method toString
+ * @returns {String} The description of this port.
+ */
+fdom.port.Runtime.prototype.toString = function() {
   return "[Port to Priviledged Runtime]"; 
 };
 
-fdom.ManagerLink.prototype.onMessage = function(source, msg) {
+fdom.port.Runtime.prototype.onMessage = function(source, msg) {
   if (source === 'control' && msg.type === 'setup') {
     var config = {};
     mixin(config, msg.config);
@@ -27,25 +42,20 @@ fdom.ManagerLink.prototype.onMessage = function(source, msg) {
     this.controlChannel = msg.channel;
     this.connect();
   }
-  if (this.status == 'ready') {
-    console.log('about to send message ', msg);
-    if (msg.request === 'message' && this.n < 3) {
-      if (this.n != 1) {
-        console.error('render req sent at ' + window.performance.now());
-      }
-      this.n++;
-    }
+  if (this.status === 'ready') {
     this.socket.send(JSON.stringify([source, msg]));
   } else {
     this.once('connected', this.onMessage.bind(this, source, msg));
   }
 };
 
-fdom.ManagerLink.prototype.connect = function() {
-  if (!this.socket && this.status == 'disconnected') {
+fdom.port.Runtime.prototype.connect = function() {
+  var host = this.config.runtimeHost || '127.0.0.1',
+      port = this.config.runtimePort || 9009;
+  if (!this.socket && this.status === 'disconnected') {
     fdom.debug.log("Manager Link connecting");
     this.status = 'connecting';
-    this.socket = new WebSocket('ws://127.0.0.1:' + (this.config.runtimePort || 9009));
+    this.socket = new WebSocket('ws://' + host + ':' + port);
     this.socket.addEventListener('open', function(msg) {
       fdom.debug.error('Manager link active at ' + window.performance.now());
       fdom.debug.log("Manager Link connected");
@@ -61,16 +71,14 @@ fdom.ManagerLink.prototype.connect = function() {
   }
 };
 
-fdom.ManagerLink.prototype.runtime = function(link, app) {
+fdom.port.Runtime.prototype.runtime = function(link, app) {
   this.id = Math.random();
   this.link = link;
   this.app = app;
   this.link.runtimes[this.id] = this;
-  this.n = 0;
 };
 
-fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, proxy) {
-  console.error("app creation at " + window.performance.now());
+fdom.port.Runtime.prototype.runtime.prototype.createApp = function(manifest, proxy) {
   fdom.resources.get(this.app.manifestId, manifest).done(function(url) {
     this.link.onMessage('runtime', {
       request: 'createApp',
@@ -78,6 +86,7 @@ fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, prox
       to: url,
       id: this.id
     });
+    // The created channel gets terminated here, and tunneled through this port.
     var iface = Core_unprivileged.bindChannel(this.link, proxy);
     iface.on(function(flow, msg) {
       this.link.onMessage('runtime', {
@@ -91,7 +100,7 @@ fdom.ManagerLink.prototype.runtime.prototype.createApp = function(manifest, prox
   }.bind(this));
 };
 
-fdom.ManagerLink.prototype.message = function(msg) {
+fdom.port.Runtime.prototype.message = function(msg) {
   try {
     var data = JSON.parse(msg.data);
     // Handle runtime support requests.
@@ -106,15 +115,10 @@ fdom.ManagerLink.prototype.message = function(msg) {
       }.bind(this, data[1].url, data[1].from));
       return;
     } else if (data[0] === 'runtime' && data[1].request === 'message') {
-      var runtime = this.runtimes[data[1].id];
-      if (runtime.n === 0) {
-        console.error('first page responded @ ' + window.performance.now());
-        runtime.n++;
-      } else if (runtime.n == 1) {
-        console.error('seond page responded @ ' + window.performance.now());
-        runtime.n++;
+      if (!this.runtimes[data[1].id]) {
+        fdom.debug.warn('Asked to relay to non-existant runtime:' + data[1].id);
       }
-      runtime.channel.emit(data[1].data[0], data[1].data[1]);
+      this.runtimes[data[1].id].channel.emit(data[1].data[0], data[1].data[1]);
     }
     this.emit(data[0], data[1]);
   } catch(e) {
