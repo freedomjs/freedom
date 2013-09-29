@@ -82,7 +82,7 @@ Api.prototype.getCore = function(name, from) {
       this.waiters[name].push([deferred, from]);
     }
   } else {
-    console.warn('Refusing to create core provider without an interface.');
+    fdom.debug.warn('Refusing to get core provider without an interface.');
     deferred.reject();
   }
   return deferred.promise();

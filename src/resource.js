@@ -23,8 +23,9 @@ var Resource = function() {
 };
 
 /**
- * Get a resource.
+ * Resolve a resurce URL requested from a module.
  * @method get
+ * @param {String} manifest The canonical address of the module requesting.
  * @param {String} url The resource to get.
  * @returns {fdom.Proxy.Deferred} A promise for the resource address.
  */
@@ -66,30 +67,33 @@ Resource.prototype.getContents = function(url) {
 };
 
 /**
- * Resolve a resource using known resolvers.
+ * Resolve a resource using known resolvers. Unlike get, resolve does
+ * not cache resolved resources.
  * @method resolve
  * @private
  * @param {String} manifest The module requesting the resource.
  * @param {String} url The resource to resolve;
- * @returns {fdom.Proxy.Deferred} A promise for the resource address.
+ * @returns {fdom.proxy.Deferred} A promise for the resource address.
  */
 Resource.prototype.resolve = function(manifest, url) {
   var deferred = fdom.proxy.Deferred(),
       i = 0;
   for (i = 0; i < this.resolvers.length; i += 1) {
     if(this.resolvers[i](manifest, url, deferred)) {
-      break;
+      return deferred.promise();
     }
   }
+  deferred.reject();
   return deferred.promise();
 };
 
 /**
  * Register resolvers: code that knows how to get resources
- * needed by the runtime. A resolver will be called with two
- * arguments, the absolute manifest of the requester, and the
- * resource being requested. It returns a boolean of whether or
- * not it can resolve the requested resource.
+ * needed by the runtime. A resolver will be called with three
+ * arguments: the absolute manifest of the requester, the
+ * resource being requested, and a deferred object to populate.
+ * It returns a boolean of whether or not it can resolve the requested
+ * resource.
  * @method addResolver
  * @param {Function} resolver The resolver to add.
  */
@@ -114,11 +118,12 @@ Resource.prototype.addRetriever = function(proto, retriever) {
 };
 
 /**
- * Resolve an HTTP URL in relation to the module resuting that
- * URL.
+ * Resolve URLs which can be accessed using standard HTTP requests.
  * @method httpResolver
- * @param {String} manifest The Manifest URL
+ * @private
+ * @param {String} manifest The Manifest URL.
  * @param {String} url The URL to resolve.
+ * @param {fdom.proxy.Deferred} deferred The deferred object to populate.
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.httpResolver = function(manifest, url, deferred) {
@@ -157,8 +162,9 @@ Resource.prototype.httpResolver = function(manifest, url, deferred) {
  * These urls are used to reference a manifest without requiring subsequent,
  * potentially non-CORS requests.
  * @method manifestRetriever
+ * @private
  * @param {String} manifest The Manifest URL
- * @returns {fdom.Proxy.Deferred} A promise with the contents of the resource
+ * @param {fdom.proxy.Deferred} deferred The deferred object to populate.
  */
 Resource.prototype.manifestRetriever = function(manifest, deferred) {
   var data;
@@ -174,8 +180,9 @@ Resource.prototype.manifestRetriever = function(manifest, deferred) {
 /**
  * Retrieve resource contents using an XHR request.
  * @method xhrRetriever
+ * @private
  * @param {String} url The resource to fetch.
- * @returns {fdom.Proxy.Deferred} A promise with the contents of the resource
+ * @param {fdom.proxy.Deferred} deferred The deferred object to populate.
  */
 Resource.prototype.xhrRetriever = function(url, deferred) {
   var ref = new XMLHttpRequest();
@@ -193,6 +200,6 @@ Resource.prototype.xhrRetriever = function(url, deferred) {
 };
 
 /**
- * Defines fdom.resources for file management.
+ * Defines fdom.resources as a singleton registry for file management.
  */
 fdom.resources = new Resource();
