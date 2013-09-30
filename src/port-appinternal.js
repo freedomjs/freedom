@@ -212,8 +212,10 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
  */
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
   var i = 0,
-      importer = function importScripts(script) {
+      safe = true,
+      importer = function importScripts(script, deferred) {
         this.config.global.importScripts(script);
+        deferred.resolve();
       }.bind(this),
       urls = [],
       outstanding = 0,
@@ -221,17 +223,27 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
         urls.push(url);
         outstanding -= 1;
         if (outstanding === 0) {
-          this.emit(this.appChannel, {
-            type: 'ready'
-          });
-          this.tryLoad(importer, urls);
+          if (safe) {
+            this.emit(this.appChannel, {
+              type: 'ready'
+            });
+            this.tryLoad(importer, urls);
+          } else {
+            this.tryLoad(importer, urls).done(function() {
+              this.emit(this.appChannel, {
+                type: 'ready'
+              });
+            }.bind(this));
+          }
         }
       }.bind(this);
 
   if (!this.config.global.importScripts) {
-    importer = function(url) {
+    safe = false;
+    importer = function(url, deferred) {
       var script = this.config.global.document.createElement('script');
       script.src = url;
+      script.addEventListener('load', deferred.resolve.bind(deferred), true);
       this.config.global.document.body.appendChild(script);
     }.bind(this);
   }
@@ -253,16 +265,29 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
  * @private
  * @param {Function} importer The actual import function
  * @param {String[]} urls The resoved URLs to load.
+ * @returns {fdom.proxy.Deferred} completion of load
  */
 fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
-  console.warn('loading: ' + urls);
-  var i;
+  var i,
+      deferred = fdom.proxy.Deferred(),
+      def,
+      left = urls.length,
+      finished = function() {
+        left -= 1;
+        if (left === 0) {
+          console.error('All files loaded in frame');
+          deferred.resolve();
+        }
+      };
   try {
     for (i = 0; i < urls.length; i += 1) {
-      importer(urls[i]);
+      def = fdom.proxy.Deferred();
+      def.done(finished);
+      importer(urls[i], def);
     }
   } catch(e) {
     console.warn(e.stack);
     console.error("Error loading " + urls[i], e);
   }
+  return deferred.promise();
 };

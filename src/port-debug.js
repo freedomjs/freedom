@@ -53,8 +53,12 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
  * @private
  */
 fdom.port.Debug.prototype.format = function(severity, source, args) {
+  var i, alist = [];
+  for (i = 0; i < args.length; i += 1) {
+    alist.push(args[i]);
+  }
   if (!this.emitChannel) {
-    this.on('ready', this.format.bind(this, severity, source, args));
+    this.on('ready', this.format.bind(this, severity, source, alist));
     return;
   }
   this.emit(this.emitChannel, {
@@ -62,7 +66,7 @@ fdom.port.Debug.prototype.format = function(severity, source, args) {
     source: source,
     quiet: true,
     request: 'debug',
-    msg: args
+    msg: JSON.stringify(alist)
   });
 };
 
@@ -76,7 +80,7 @@ fdom.port.Debug.prototype.print = function(message) {
   if (typeof this.config === 'string') {
     debug = false;
     args = this.config.split(' ');
-    for (i = 0; i < args.length; i++) {
+    for (i = 0; i < args.length; i += 1) {
       if (args[i].indexOf('source:') === 0) {
         if (message.source === undefined ||
             message.source.indexOf(args[i].substr(7)) > -1) {
@@ -113,7 +117,7 @@ fdom.port.Debug.prototype.print = function(message) {
  * @method log
  */
 fdom.port.Debug.prototype.log = function() {
-  this.format('log', undefined, JSON.stringify(arguments));
+  this.format('log', undefined, arguments);
 };
 
 /**
@@ -121,7 +125,7 @@ fdom.port.Debug.prototype.log = function() {
  * @method warn
  */
 fdom.port.Debug.prototype.warn = function() {
-  this.format('warn', undefined, JSON.stringify(arguments));
+  this.format('warn', undefined, arguments);
 };
 
 /**
@@ -129,5 +133,5 @@ fdom.port.Debug.prototype.warn = function() {
  * @method error
  */
 fdom.port.Debug.prototype.error = function() {
-  this.format('error', undefined, JSON.stringify(arguments));
+  this.format('error', undefined, arguments);
 };

@@ -74,12 +74,19 @@ fdom.port.Frame.prototype.emitMessage = function(flow, message) {
 
 /**
  * Set up an iFrame with an isolated freedom.js context inside.
- * @method setupWorker
+ * @method setupFrame
  */
 fdom.port.Frame.prototype.setupFrame = function() {
   var frame;
-  frame = this.makeFrame(this.config.src, this.config.inject);
-  frame.addEventListener('message', function(frame, msg) {
+  frame = this.makeFrame(this.config.src, this.config.inject);  
+  
+  if (!document.body) {
+    document.appendChild(document.createElement("body"));
+  }
+  document.body.appendChild(frame);
+
+  frame.contentWindow.addEventListener('message', function(frame, msg) {
+    console.log('got message from frame: ' + msg);
     if (!this.obj) {
       this.obj = frame;
       this.emit('started');
@@ -87,7 +94,7 @@ fdom.port.Frame.prototype.setupFrame = function() {
     if (msg.data.src !== 'out') {
       this.emitMessage(msg.data.flow, msg.data.message);
     }
-  }.bind(this, frame), true);
+  }.bind(this, frame.contentWindow), true);
 };
 
 /**
@@ -116,11 +123,7 @@ fdom.port.Frame.prototype.makeFrame = function(src, inject) {
   blob = getBlob(loader, 'text/html');
   frame.src = getURL(blob);
 
-  if (!document.body) {
-    document.appendChild(document.createElement("body"));
-  }
-  document.body.appendChild(frame);
-  return frame.contentWindow;
+  return frame;
 };
 
 /**

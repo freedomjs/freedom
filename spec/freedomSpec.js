@@ -16,8 +16,7 @@ describe("freedom", function() {
     // Setup resource loading for the test environment, which uses file:// urls.
     fdom.resources = new Resource();
     fdom.resources.addResolver(function(manifest, url, deferred) {
-      if (manifest.indexOf('file://') === 0 &&
-          url.indexOf('relative://') === 0) {
+      if (url.indexOf('relative://') === 0) {
         var dirname = manifest.substr(0, manifest.lastIndexOf('/'));
         deferred.resolve(dirname + '/' + url.substr(11));
         return true;
@@ -33,6 +32,13 @@ describe("freedom", function() {
       src: freedom_src
     });
   });
+  
+  afterEach(function() {
+    var frames = document.getElementsByTagName('iframe');
+    for (var i = 0; i < frames.length; i++) {
+      frames[i].parentNode.removeChild(frames[i]);
+    }
+  });
 
   it("creates modules", function() {
     var cb = jasmine.createSpy('cb');
@@ -47,7 +53,7 @@ describe("freedom", function() {
 
     waitsFor(function() {
       return called;
-    }, "Freedom should return input", 1000);
+    }, "Freedom should return input", 4000);
 
     runs(function() {
       expect(cb).toHaveBeenCalledWith('roundtrip');

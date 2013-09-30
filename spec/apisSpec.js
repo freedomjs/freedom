@@ -3,6 +3,7 @@ describe("fdom.apis", function() {
 
   beforeEach(function() {
     api = new Api();
+    fdom.debug = new fdom.port.Debug();
   });
 
   it("should return registered providers", function() {

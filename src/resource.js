@@ -144,7 +144,8 @@ Resource.prototype.httpResolver = function(manifest, url, deferred) {
   }
   
   for (i = 0; i < protocols.length; i += 1) {
-    if (manifest.indexOf(protocols[i] + "://") === 0) {
+    if (manifest.indexOf(protocols[i] + "://") === 0 &&
+       url.indexOf("://") === -1) {
       dirname = manifest.substr(0, manifest.lastIndexOf("/"));
       protocolIdx = dirname.indexOf("://");
       pathIdx = protocolIdx + 3 + dirname.substr(protocolIdx + 3).indexOf("/");

@@ -1,4 +1,8 @@
 describe("fdom.proxy.apiInterface", function() {
+  beforeEach(function() {
+    fdom.debug = new fdom.port.Debug();
+  });
+
   it("conforms simple arguments", function() {
     expect(fdom.proxy.conform("string", "mystring")).toEqual("mystring");
     expect(fdom.proxy.conform("number", "mystring")).toEqual(jasmine.any(Number));
