@@ -15,6 +15,7 @@ fdom.port = fdom.port || {};
 fdom.port.Frame = function() {
   this.id = 'Frame ' + Math.random();
   this.config = {};
+  this.src = null;
 
   handleEvents(this);
 };
@@ -27,8 +28,10 @@ fdom.port.Frame = function() {
 fdom.port.Frame.prototype.start = function() {
   if (isAppContext()) {
     this.setupListener();
+    this.src = 'in';
   } else {
     this.setupFrame();
+    this.src = 'out';
   }
 };
 
@@ -49,7 +52,9 @@ fdom.port.Frame.prototype.toString = function() {
 fdom.port.Frame.prototype.setupListener = function() {
   this.obj = this.config.global;
   this.config.global.addEventListener('message', function(msg) {
-    this.emitMessage(msg.data.flow, msg.data.message);
+    if (msg.data.src !== 'in') {
+      this.emitMessage(msg.data.flow, msg.data.message);
+    }
   }.bind(this), true);
   this.emit('started');
 };
@@ -79,7 +84,9 @@ fdom.port.Frame.prototype.setupFrame = function() {
       this.obj = frame;
       this.emit('started');
     }
-    this.emitMessage(msg.data.flow, msg.data.message);
+    if (msg.data.src !== 'out') {
+      this.emitMessage(msg.data.flow, msg.data.message);
+    }
   }.bind(this, frame), true);
 };
 
@@ -134,6 +141,7 @@ fdom.port.Frame.prototype.onMessage = function(flow, message) {
     if (this.obj) {
       //fdom.debug.log('message sent to worker: ', flow, message);
       this.obj.postMessage({
+        src: this.src,
         flow: flow,
         message: message
       }, '*');
