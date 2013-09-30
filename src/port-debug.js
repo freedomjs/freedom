@@ -54,8 +54,12 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
  */
 fdom.port.Debug.prototype.format = function(severity, source, args) {
   var i, alist = [];
-  for (i = 0; i < args.length; i += 1) {
-    alist.push(args[i]);
+  if (typeof args === "string") {
+    alist.push(args);
+  } else {
+    for (i = 0; i < args.length; i += 1) {
+      alist.push(args[i]);
+    }
   }
   if (!this.emitChannel) {
     this.on('ready', this.format.bind(this, severity, source, alist));
@@ -100,9 +104,13 @@ fdom.port.Debug.prototype.print = function(message) {
   }
   if (typeof console !== 'undefined' && console !== this) {
     args = JSON.parse(message.msg);
-    while (args[i] !== undefined) {
-      arr.push(args[i]);
-      i += 1;
+    if (typeof args === "string") {
+      arr.push(args);
+    } else {
+      while (args[i] !== undefined) {
+        arr.push(args[i]);
+        i += 1;
+      }
     }
     if (message.source) {
       arr.unshift('color: red');

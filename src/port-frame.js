@@ -86,7 +86,6 @@ fdom.port.Frame.prototype.setupFrame = function() {
   document.body.appendChild(frame);
 
   frame.contentWindow.addEventListener('message', function(frame, msg) {
-    console.log('got message from frame: ' + msg);
     if (!this.obj) {
       this.obj = frame;
       this.emit('started');

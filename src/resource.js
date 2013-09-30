@@ -37,6 +37,7 @@ Resource.prototype.get = function(manifest, url) {
   } else {
     this.resolve(manifest, url).always(function(key, deferred, address) {
       this.files[key] = address;
+      fdom.debug.log('Resolved ' + key + ' to ' + address);
       deferred.resolve(address);
     }.bind(this, key, deferred));
   }
