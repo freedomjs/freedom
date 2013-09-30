@@ -23,6 +23,17 @@ describe("freedom", function() {
       }
       return false;
     });
+    fdom.resources.addResolver(function(manifest, url, deferred) {
+      if (manifest.indexOf('file://') === 0) {
+        manifest = 'http' + manifest.substr(4);
+        fdom.resources.resolve(manifest, url).done(function(addr) {
+          addr = 'file' + addr.substr(4);
+          deferred.resolve(addr);
+        });
+        return true;
+      }
+      return false;
+    });
     fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
 
     freedom = setup(global, undefined, {
