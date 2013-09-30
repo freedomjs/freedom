@@ -174,7 +174,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
 
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
-        type: 'bindChannel',
+        type: 'channel announcement',
         channel: message.reverse
       });
       if (typeof message.name === 'string' &&

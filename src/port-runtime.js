@@ -1,5 +1,5 @@
 /*globals fdom:true, handleEvents, mixin, WebSocket */
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
+/*jslint indent:2, white:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -17,9 +17,23 @@ fdom.port.Runtime = function() {
   this.id = 'runtime';
   this.config = {};
   this.runtimes = {};
+  this.core = null;
   this.socket = null;
-  this.status = 'disconnected';  //'disconnected', 'connecting', 'ready'
+  this.status = fdom.port.Runtime.status.disconnected;
   handleEvents(this);
+};
+
+/**
+ * Possible states of the Runtime port. Determines where in the
+ * setup process the port is.
+ * @property status
+ * @protected
+ * @static
+ */
+fdom.port.Runtime.status = {
+  disconnected: 0,
+  connecting: 1,
+  connected: 2
 };
 
 /**
@@ -41,8 +55,11 @@ fdom.port.Runtime.prototype.onMessage = function(source, msg) {
     msg.config = config;
     this.controlChannel = msg.channel;
     this.connect();
+    fdom.apis.getCore('core', this).done(function(core) {
+      this.core = core;
+    }.bind(this));
   }
-  if (this.status === 'ready') {
+  if (this.status === fdom.port.Runtime.status.connected) {
     this.socket.send(JSON.stringify([source, msg]));
   } else {
     this.once('connected', this.onMessage.bind(this, source, msg));
@@ -52,21 +69,20 @@ fdom.port.Runtime.prototype.onMessage = function(source, msg) {
 fdom.port.Runtime.prototype.connect = function() {
   var host = this.config.runtimeHost || '127.0.0.1',
       port = this.config.runtimePort || 9009;
-  if (!this.socket && this.status === 'disconnected') {
+  if (!this.socket && this.status === fdom.port.Runtime.status.disconnected) {
     fdom.debug.log("Manager Link connecting");
-    this.status = 'connecting';
+    this.status = fdom.port.Runtime.status.connecting;
     this.socket = new WebSocket('ws://' + host + ':' + port);
     this.socket.addEventListener('open', function(msg) {
-      fdom.debug.error('Manager link active at ' + window.performance.now());
       fdom.debug.log("Manager Link connected");
-      this.status = 'ready';
+      this.status = fdom.port.Runtime.status.connected;
       this.emit('connected');
       fdom.apis.register('core.runtime', this.runtime.bind(this, this));
     }.bind(this), true);
     this.socket.addEventListener('message', this.message.bind(this), true);
     this.socket.addEventListener('close', function() {
       fdom.debug.log("Manager Link disconnected");
-      this.status = 'disconnected';
+      this.status = fdom.port.Runtime.status.disconnected;
     }.bind(this), true);
   }
 };
@@ -87,7 +103,7 @@ fdom.port.Runtime.prototype.runtime.prototype.createApp = function(manifest, pro
       id: this.id
     });
     // The created channel gets terminated here, and tunneled through this port.
-    var iface = Core_unprivileged.bindChannel(this.link, proxy);
+    var iface = this.link.core.bindChannel(this.link, proxy);
     iface.on(function(flow, msg) {
       this.link.onMessage('runtime', {
         request: 'message',
@@ -122,7 +138,7 @@ fdom.port.Runtime.prototype.message = function(msg) {
     }
     this.emit(data[0], data[1]);
   } catch(e) {
-    console.warn(e.stack);
+    fdom.debug.warn(e.stack);
     fdom.debug.warn('Unable to parse runtime message: ' + msg);
   }
 };

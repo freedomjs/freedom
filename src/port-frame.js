@@ -100,7 +100,9 @@ fdom.port.Frame.prototype.makeFrame = function(src, inject) {
   // TODO(willscott): survive name mangling.
   src = src.replace("'portType': 'Worker'", "'portType': 'Frame'");
   if (inject) {
-    extra = '<script src="' + inject + '"></script>';
+    extra = '<script src="' + inject + '" onerror="' +
+      'throw new Error(\'Injection of ' + inject +' Failed!\');' +
+      '"></script>';
   }
   loader = '<html>' + extra + '<script src="' +
       forceAppContext(src) + '"></script></html>';

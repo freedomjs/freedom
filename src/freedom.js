@@ -14,9 +14,6 @@
  * @static
  */
 setup = function (global, freedom_src, config) {
-  if (global.console && global.performance) {
-    global.console.error('freedom running at ' + global.performance.now());
-  }
   var hub = new fdom.Hub(),
       site_cfg = {
         'debug': true,

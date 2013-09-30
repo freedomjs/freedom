@@ -255,6 +255,7 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
  * @param {String[]} urls The resoved URLs to load.
  */
 fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
+  console.warn('loading: ' + urls);
   var i;
   try {
     for (i = 0; i < urls.length; i += 1) {

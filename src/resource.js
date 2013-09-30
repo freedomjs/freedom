@@ -53,6 +53,11 @@ Resource.prototype.get = function(manifest, url) {
 Resource.prototype.getContents = function(url) {
   var prop,
       deferred = fdom.proxy.Deferred();
+  if (!url) {
+    fdom.debug.warn("Asked to get contents of undefined URL.");
+    deferred.reject();
+    return deferred.promise();
+  }
   for (prop in this.contentRetreivers) {
     if (this.contentRetreivers.hasOwnProperty(prop)) {
       if (url.indexOf(prop + "://") === 0) {

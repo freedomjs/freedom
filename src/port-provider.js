@@ -11,7 +11,7 @@ fdom.port = fdom.port || {};
  * @extends Port
  * @uses handleEvents
  * @param {Object} def The interface of the provider.
- * @constructor
+ * @contructor
  */
 fdom.port.Provider = function(def) {
   this.id = fdom.port.Proxy.nextId();
@@ -34,7 +34,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
     this.emit(this.emitChannel, {
-      type: 'bindChannel',
+      type: 'channel announcment',
       channel: message.reverse
     });
     this.emit('start');
@@ -49,7 +49,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
     } else if (message.to && message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
     } else {
-      console.warn(this.toString() + ' dropping message ' + message);
+      fdom.debug.warn(this.toString() + ' dropping message ' + message);
     }
   }
 };
@@ -88,7 +88,7 @@ fdom.port.Provider.prototype.getInterface = function() {
  */
 fdom.port.Provider.prototype.getProvider = function(identifier) {
   if (!this.providerCls) {
-    console.warn('Cannot instantiate provider, since it is not provided');
+    fdom.debug.warn('Cannot instantiate provider, since it is not provided');
     return null;
   }
   var instance = new this.providerCls(),
@@ -117,7 +117,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
   return function(port, msg) {
     if (msg.action === 'method') {
       if (typeof this[msg.type] !== 'function') {
-        console.log("Provider does not implement " + msg.type + "()!");
+        fdom.debug.warn("Provider does not implement " + msg.type + "()!");
         return;
       }
       var args = msg.value,

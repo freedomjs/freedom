@@ -1,5 +1,5 @@
 /*globals fdom:true, handleEvents, eachProp */
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
+/*jslint indent:2, white:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -31,7 +31,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
     this.emit(this.emitChannel, {
-      type: 'bindChannel',
+      type: 'channel announcement',
       channel: message.reverse
     });
     this.emit('start');
@@ -47,7 +47,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       if (this.emits[message.to]) {
         this.emits[message.to](message.type, message.message);
       } else {
-        console.warn('Could not deliver message, no such interface.');
+        fdom.debug.warn('Could not deliver message, no such interface.');
       }
     } else {
       eachProp(this.emits, function(iface) {
