@@ -1,7 +1,7 @@
 // A FreeDOM interface to a WebRTC Peer Connection via the peerdata wrapper.
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
-var SctpPeerConnection = function(appPort) {
+var SctpPeerConnection = function(portApp) {
   this.options = {
     // a (hopefully unique) ID for debugging.
     debugPeerName: "p" + Math.random(),
@@ -12,9 +12,11 @@ var SctpPeerConnection = function(appPort) {
   window.datapeers = window.datapeers || {};
   window.datapeers[this.debugPeerName] = this;
 
-  // A freedom channel id to be connected to a freedom channel identifier that
-  // sends messages to/from the identity.
-  this._appPort = appPort;
+  // This is the portApp (defined in freedom/src/port-app.js). A way to speak
+  // to freedom.
+  this._portApp = portApp;
+
+  // This is the a channel to send signalling messages.
   this._signallingChannel = null;
 
   // The DataPeer object for talking to the peer.
@@ -87,11 +89,12 @@ SctpPeerConnection.prototype.setup =
 
   // Setup link between Freedom messaging and _peer's signalling.
   this._signallingChannel = Core_unprivileged.bindChannel(
-      this._appPort, signallingChannelId);
+      this._portApp, signallingChannelId);
   this._peer.setSendSignalMessage(
       this._signallingChannel.emit.bind(null, "message"));
   this._signallingChannel.on('message',
       this._peer.handleSignalMessage.bind(this._peer));
+  this._signallingChannel.emit('ready');
 
   continuation();
 };
