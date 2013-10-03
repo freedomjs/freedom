@@ -24,7 +24,7 @@ var SctpPeerConnection = function(portApp) {
 
   // This makes the constructed object (this) intro a core freedom module with
   // "on", "emit", and "once" methods.
-  handleEvents(this);
+  // handleEvents(this);  // Not needed as we don't use them.
 };
 
 // Start a peer connection using the given freedomChannelId as the way to
@@ -99,6 +99,7 @@ SctpPeerConnection.prototype.setup =
   continuation();
 };
 
+// TODO: delay continuation until the open callback rom _peer is called.
 SctpPeerConnection.prototype.openDataChannel =
     function(channelId, continuation) {
   this._peer.openDataChannel(channelId);
