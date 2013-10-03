@@ -1,8 +1,7 @@
 /**
  * DataPeer
  */
-
-'strict'
+'use strict';
 
 var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
 

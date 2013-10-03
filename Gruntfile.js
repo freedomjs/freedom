@@ -3,7 +3,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     jasmine: {
       freedom: {
-        src: ['src/*.js', 'src/proxy/*.js'],
+        src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js'],
         options: {
           specs: 'spec/*Spec.js'
         }
@@ -11,6 +11,7 @@ module.exports = function(grunt) {
     },
     jshint: {
       beforeconcat: [
+          'src/libs/*.js'
           'src/*.js',
           'src/proxy/*.js',
           'providers/*.js',
@@ -18,6 +19,7 @@ module.exports = function(grunt) {
       ],
       afterconcat: ['freedom.js'],
       files: [
+          'src/libs/*.js'
           'src/*.js',
           'src/proxy/*.js',
           'providers/*.js',
