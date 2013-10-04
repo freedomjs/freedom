@@ -19,6 +19,8 @@ fdom.apis.set("core.view", {
 fdom.apis.set("core.storage", {
   'set': {type: "method", value: ["string", "string"]},
   'get': {type: "method", value: ["string"]},
+  'remove': {type: "method", value: ["string"]},
+  'clear': {type: "method", value: []},
   'change': {type: "event", value: ["string"]}
 });
 

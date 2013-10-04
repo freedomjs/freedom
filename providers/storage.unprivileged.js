@@ -23,4 +23,14 @@ Storage_unprivileged.prototype.set = function(key, value, continuation) {
   continuation();
 };
 
+Storage_unprivileged.prototype.remove = function(key, continuation) {
+  localStorage.removeItem(this.app.manifestId + key);
+  continuation();
+};
+
+Storage_unprivileged.prototype.clear = function(continuation) {
+  localStorage.clear();
+  continuation();
+};
+
 fdom.apis.register("core.storage", Storage_unprivileged);
