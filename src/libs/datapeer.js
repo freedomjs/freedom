@@ -36,11 +36,8 @@ var SimpleDataPeerState = {
   CONNECTED: 'CONNECTED'
 };
 
-function SimpleDataPeer(options) {
-  if (options) {
-    this.peerName = options.peerName;
-    this._debug = options.debug;
-  }
+function SimpleDataPeer(peerName) {
+  this.peerName = peerName;
 
   // depending on environment, select implementation.
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
@@ -244,12 +241,8 @@ var SmartDataChannelState =  {
   CLOSED : 'closed' // channel was closed.
 };
 
-function SmartDataChannel(channel, options, callbacks) {
-  if (options) {
-    this.peerName = options.peerName;
-  } else {
-    this.peerName = "";
-  }
+function SmartDataChannel(channel, peerName, callbacks) {
+  this.peerName = peerName;
   this.dataChannel = channel;
   this.state = SmartDataChannelState.PENDING;
   // queue of messages to send when the channel is ready.
@@ -400,9 +393,9 @@ SmartDataChannel.prototype.close = function () {
 //   onMessageFn: function (smartDataChannel, event) {...},
 //   onErrorFn: function (smartDataChannel, error) {...},
 // };
-function DataPeer(options, dataChannelCallbacks) {
-  this.options = options;
-  this._simplePeer = new SimpleDataPeer(this.options);
+function DataPeer(peerName, dataChannelCallbacks) {
+  this.peerName = peerName;
+  this._simplePeer = new SimpleDataPeer(this.peerName);
   this._pc = this._simplePeer._pc;
   // All channels created and in this peer connection.
   this._smartChannels = {};
@@ -420,7 +413,7 @@ DataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
 // Called when a peer has opened up a data channel to us.
 DataPeer.prototype._onDataChannel = function (event) {
   this._smartChannels[event.channel.label] =
-      new SmartDataChannel(event.channel, this.options,
+      new SmartDataChannel(event.channel, this.peerName,
           this._dataChannelCallbacks);
 };
 
@@ -428,7 +421,7 @@ DataPeer.prototype._onDataChannel = function (event) {
 DataPeer.prototype.openDataChannel = function (channelId) {
   this._smartChannels[channelId] =
       new SmartDataChannel(this._pc.createDataChannel(channelId, {}),
-          this.options, this._dataChannelCallbacks);
+          this.peerName, this._dataChannelCallbacks);
 };
 
 // If channel doesn't already exist, start a new channel.
@@ -441,7 +434,7 @@ DataPeer.prototype.send = function (channelId, message) {
 
 DataPeer.prototype.closeChannel = function (channelId) {
   if(!(channelId in this._smartChannels)) {
-    trace.warn(this.options.peerName + ": " + "Trying to close a data channel id (" + channelId + ") that does not exist.");
+    trace.warn(this.peerName + ": " + "Trying to close a data channel id (" + channelId + ") that does not exist.");
     return;
   }
   this._smartChannels[channelId].close();
@@ -452,7 +445,7 @@ DataPeer.prototype.close = function () {
   for(var channelId in this._smartChannels) {
     this.closeChannel(channelId);
   }
-  trace.log(this.options.peerName + ": " + "Closed DataPeer.");
+  trace.log(this.peerName + ": " + "Closed DataPeer.");
   this._pc.close();
 };
 
@@ -462,5 +455,4 @@ DataPeer.prototype.handleSignalMessage = function (message) {
 
 // Export to the environment
 exports.DataPeer = DataPeer;
-
 }(window));

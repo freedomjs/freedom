@@ -2,15 +2,13 @@
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
 function SctpPeerConnection(portApp) {
-  this.options = {
+
     // a (hopefully unique) ID for debugging.
-    debugPeerName: "p" + Math.random(),
-    debug: false
-  };
+  this.peerName = "p" + Math.random();
 
   // For debugging.
   window.datapeers = window.datapeers || {};
-  window.datapeers[this.debugPeerName] = this;
+  window.datapeers[this.peerName] = this;
 
   // This is the portApp (defined in freedom/src/port-app.js). A way to speak
   // to freedom.
@@ -33,14 +31,12 @@ function SctpPeerConnection(portApp) {
 // setup the peer to peerConnection.
 //
 // options: {
-//   debugPeerName: string,   // For pretty printing messages about this peer.
+//   peerName: string,   // For pretty printing messages about this peer.
 //   debug: boolean           // should we add extra
 // }
 SctpPeerConnection.prototype.setup =
-    function(signallingChannelId, options, continuation) {
-
-  for (var k in options) { this.options[k] = options[k]; }
-
+    function(signallingChannelId, peerName, continuation) {
+  this.peerName = peerName;
   var self = this;
   var dataChannelCallbacks = {
     // onOpenFn is called at the point messages will actually get through.
@@ -48,13 +44,15 @@ SctpPeerConnection.prototype.setup =
       console.log(smartDataChannel.peerName + ": dataChannel(" +
         smartDataChannel.dataChannel.label +
         "): onOpenFn");
-      self.dispatchEvent("onOpenDataChannel", event.channel.label);
+      self.dispatchEvent("onOpenDataChannel",
+          smartDataChannel.dataChannel.label);
     },
     onCloseFn: function (smartDataChannel) {
       console.log(smartDataChannel.peerName + ": dataChannel(" +
         smartDataChannel.dataChannel.label +
         "): onCloseFn");
-      self.dispatchEvent("onCloseDataChannel", event.channel.label);
+      self.dispatchEvent("onCloseDataChannel",
+          smartDataChannel.dataChannel.label);
     },
     // Default on real message prints it to console.
     onMessageFn: function (smartDataChannel, event) {
@@ -66,12 +64,16 @@ SctpPeerConnection.prototype.setup =
         console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
           "): " + "Got ArrayBuffer data: ", data);
-        self.dispatchEvent('onMessage', {'buffer': event.data});
+        self.dispatchEvent('onReceived',
+            { 'channelLabel': smartDataChannel.dataChannel.label,
+              'buffer': event.data });
       } else if (typeof(event.data) == 'string') {
         console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
           "): " + "Got string data: ", event.data);
-        self.dispatchEvent('onMessage', {'text': event.data});
+        self.dispatchEvent('onReceived',
+            { 'channelLabel': smartDataChannel.dataChannel.label,
+              'text': event.data });
       } else {
         console.error(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
@@ -85,7 +87,7 @@ SctpPeerConnection.prototype.setup =
     }
   };
 
-  this._peer = new DataPeer(this.options, dataChannelCallbacks);
+  this._peer = new DataPeer(this.peerName, dataChannelCallbacks);
 
   // Setup link between Freedom messaging and _peer's signalling.
   this._signallingChannel = Core_unprivileged.bindChannel(
@@ -114,9 +116,13 @@ SctpPeerConnection.prototype.closeDataChannel =
 
 // Called to send a message over the given datachannel to a peer. If the data
 // channel doesn't already exist, the DataPeer creates it.
-SctpPeerConnection.prototype.send =
-    function(channelId, message, continuation) {
-  this._peer.send(channelId, message);
+SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
+  var objToSend = sendInfo.text || sendInfo.buffer || sendInfo.binary;
+  if (typeof objToSend === 'undefined') {
+    console.error("No valid data to send has been provided.", sendInfo);
+    return;
+  }
+  this._peer.send(sendInfo.channelLabel, objToSend);
   continuation();
 };
 

@@ -58,10 +58,9 @@ fdom.apis.set('core.sctp-peerconnection', {
       // messages to/from a signalling chanel. TODO: The string is meant to be a
       // boolean, but Freedom doesn't support it yet.
       "proxy",
-      // options (mostly for debugging)
-      { "debugPeerName": "string",
-        "debug": "bool"
-      }]
+      // the peerName, used debugging and console messages.
+      "string",
+      ]
   },
 
   // Send a message to the peer.
@@ -77,7 +76,7 @@ fdom.apis.set('core.sctp-peerconnection', {
   }]},
 
   // Called when we get a message from the peer.
-  'onReceive': {type: "event", value: [{
+  'onReceived': {type: "event", value: [{
     // The label/id of the data channel.
     "channelLabel": "string",
     // One the below will be specified.
