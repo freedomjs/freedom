@@ -24,16 +24,12 @@ Storage_unprivileged.prototype.set = function(key, value, continuation) {
 };
 
 Storage_unprivileged.prototype.remove = function(key, continuation) {
-<<<<<<< HEAD
-  delete localStorage[this.app.manifestId + key];
-=======
   localStorage.removeItem(this.app.manifestId + key);
   continuation();
 };
 
 Storage_unprivileged.prototype.clear = function(continuation) {
   localStorage.clear();
->>>>>>> 0a57eca206f27838f091dd6fa94bcd8f74ceda01
   continuation();
 };
 
