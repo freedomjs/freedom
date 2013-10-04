@@ -252,8 +252,7 @@ SctpPeerConnection.prototype._sendMessages =
   console.log("SctpPeerConnection(" + this.debugId + "): " +
       "_sendMessages on dataChannel(" + channelid + "): " +
       "length: " + this.msgQueue[channelid].length);
-
-  for(var i = 0; i < this.msgQueue[channelid].length; i++) {
+  while(this.msgQueue[channelid].length > 0) {
     var msg = this.msgQueue[channelid].shift();
     console.log("SctpPeerConnection(" + this.debugId + "): " +
         "_sendMessages on dataChannel(" + channelid + "): " +
