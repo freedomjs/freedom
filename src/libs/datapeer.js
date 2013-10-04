@@ -1,9 +1,9 @@
 /**
  * DataPeer
+ * Assumes that RTCPeerConnection is defined.
  */
-'use strict';
-
-var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
+ (function (exports) {
+   "use strict";
 
 //-----------------------------------------------------------------------------
 // Console debugging utilities
@@ -41,6 +41,10 @@ function SimpleDataPeer(options) {
     this.peerName = options.peerName;
     this._debug = options.debug;
   }
+
+  // depending on environment, select implementation.
+  var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
+
   // A way to speak to the peer to send SDP headers etc.
   this._sendSignalMessage = null;
   // The peer connection.
@@ -61,7 +65,7 @@ function SimpleDataPeer(options) {
         trace.log(this.peerName + ": " + "_onSignalingStateChange: ",
             this._pc.signalingState);
         if (this._pc.signalingState == "stable") {
-          this._pcState = SimpleDataPeerState.CONNECTED
+          this._pcState = SimpleDataPeerState.CONNECTED;
         }
       }.bind(this));
   // Note: to actually do something with data channels opened by a peer, we
@@ -72,13 +76,13 @@ SimpleDataPeer.prototype._onSignalingStateChange = function () {
   trace.log(this.peerName + ": " + "_onSignalingStateChange: ",
       this._pc.signalingState);
   if (this._pc.signalingState == "stable") {
-    this._pcState = SimpleDataPeerState.CONNECTED
+    this._pcState = SimpleDataPeerState.CONNECTED;
   }
-}
+};
 
 SimpleDataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
   this._sendSignalMessage = sendSignalMessageFn;
-}
+};
 
 // Handle a message send on the signalling channel to this peer.
 SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
@@ -113,7 +117,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
     trace.warn(this.peerName + ": " +
         "handleSignalMessage got unexpected message: ", message);
   }
-}
+};
 
 // Connect to the peer by the signalling channel.
 SimpleDataPeer.prototype.negotiateConnection = function () {
@@ -125,7 +129,7 @@ SimpleDataPeer.prototype.negotiateConnection = function () {
         "createOffer failed: ", e.toString());
       this._pcState = SimpleDataPeerState.DISCONNECTED;
     }.bind(this));
-}
+};
 
 // When we get our description, we set it to be our local description and
 // send it to the peer.
@@ -142,12 +146,12 @@ SimpleDataPeer.prototype._onDescription = function (description) {
   } else {
     trace.error(this.peerName + ": " + "_onDescription: _sendSignalMessage is not set, so we did not set the local description. ");
   }
-}
+};
 
 SimpleDataPeer.prototype.close = function() {
   this._pc.close();
   trace.log(this.peerName + ": " + "Closed peer connection.");
-}
+};
 
 //
 SimpleDataPeer.prototype._onNegotiationNeeded = function (e) {
@@ -200,7 +204,7 @@ SimpleDataPeer.prototype._onNegotiationNeeded = function (e) {
     return;
   }
   this.negotiateConnection();
-}
+};
 
 SimpleDataPeer.prototype._onIceCallback = function (event) {
   if (event.candidate) {
@@ -212,7 +216,7 @@ SimpleDataPeer.prototype._onIceCallback = function (event) {
       trace.warn(this.peerName + ": " + "_onDescription: _sendSignalMessage is not set.");
     }
   }
-}
+};
 
 //-----------------------------------------------------------------------------
 // Smart wrapper for a data channels, including real notion of open an queuing
@@ -227,11 +231,12 @@ SimpleDataPeer.prototype._onIceCallback = function (event) {
 // combined with the bad channel name sending bug, this will have problems if
 // the channel name is PING or PONG. Note: using \b (backspace) to make it
 // unlikely that a channel name will clash.
-PingPongMessage =  {
+var PingPongMessage =  {
   PING: '\bping',
   PONG : '\bpong'
 };
-SmartDataChannelState =  {
+
+var SmartDataChannelState =  {
   PENDING : 'pending', // waiting for channel to open.
   PINGED : 'pinged',  // I got a ping (and sent a pong)
   PONGED : 'ponged',  // I never got a ping message, but I got a pong.
@@ -301,7 +306,7 @@ SmartDataChannel.prototype._startPingPong = function () {
   trace.log(this.peerName + ": dataChannel(" + this.dataChannel.label +
       "): Sending PING");
   this.dataChannel.send(PingPongMessage.PING);
-}
+};
 
 // This logic is complex. :(  TODO: this should not be needed; when a data
 // channel is open, this should guarentee that the message will get to the other
@@ -337,11 +342,11 @@ SmartDataChannel.prototype._onPingPongMessage = function (event) {
     //   https://code.google.com/p/webrtc/issues/detail?id=2439
     // TODO: When that bug is fixed, add a warning here.
   }
-}
+};
 
 SmartDataChannel.prototype._onError = function (e) {
   this._callbacks(this,e);
-}
+};
 
 SmartDataChannel.prototype._onConnected = function () {
   trace.log(this.peerName + ": dataChannel(" + this.dataChannel.label +
@@ -351,22 +356,19 @@ SmartDataChannel.prototype._onConnected = function () {
   this.dataChannel.addEventListener("message", this._onMessage.bind(this));
   this._callbacks.onOpenFn(this);
   this._sendQueuedMessages();
-}
+};
 
 SmartDataChannel.prototype._sendQueuedMessages = function () {
-  var message;
-  while(message = this.queue.shift()) {
-    this.dataChannel.send(message);
-  }
-}
+  while(this.queue.length > 0) { this.dataChannel.send(this.queue.shift()); }
+};
 
 SmartDataChannel.prototype._onMessage = function (event) {
   this._callbacks.onMessageFn(this, event);
-}
+};
 
 SmartDataChannel.prototype._onClose = function () {
   this.close();
-}
+};
 
 // Given an ArrayBuffer, a string, or a Blob, send it on the underlying data
 // channel. If not connected, queues the message and sends it when connected.
@@ -376,16 +378,15 @@ SmartDataChannel.prototype.send = function (message) {
   } else {
     this.queue.push(message);
   }
-}
+};
 
 SmartDataChannel.prototype.close = function () {
   if(this.dataChannel.readyState != "closed") {
     this.dataChannel.close();
   }
-  this.state == SmartDataChannelState.CLOSED;
+  this.state = SmartDataChannelState.CLOSED;
   this._callbacks.onCloseFn(this);
-}
-
+};
 
 //-----------------------------------------------------------------------------
 // A nicer wrapper for P2P data channels that uses SmartDataChannel and
@@ -410,33 +411,33 @@ function DataPeer(options, dataChannelCallbacks) {
   // point when sending messages will actualy work.
   this._dataChannelCallbacks = dataChannelCallbacks;
   this._pc.addEventListener("datachannel", this._onDataChannel.bind(this));
-};
+}
 
 DataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
   this._simplePeer.setSendSignalMessage(sendSignalMessageFn);
-}
+};
 
 // Called when a peer has opened up a data channel to us.
 DataPeer.prototype._onDataChannel = function (event) {
   this._smartChannels[event.channel.label] =
       new SmartDataChannel(event.channel, this.options,
           this._dataChannelCallbacks);
-}
+};
 
 // Called to establish a new data channel with our peer.
 DataPeer.prototype.openDataChannel = function (channelId) {
   this._smartChannels[channelId] =
       new SmartDataChannel(this._pc.createDataChannel(channelId, {}),
           this.options, this._dataChannelCallbacks);
-}
+};
 
 // If channel doesn't already exist, start a new channel.
 DataPeer.prototype.send = function (channelId, message) {
   if(!(channelId in this._smartChannels)) {
-    this.openDataChannel(channelId)
+    this.openDataChannel(channelId);
   }
   this._smartChannels[channelId].send(message);
-}
+};
 
 DataPeer.prototype.closeChannel = function (channelId) {
   if(!(channelId in this._smartChannels)) {
@@ -445,16 +446,21 @@ DataPeer.prototype.closeChannel = function (channelId) {
   }
   this._smartChannels[channelId].close();
   delete this._smartChannels[channelId];
-}
+};
 
 DataPeer.prototype.close = function () {
   for(var channelId in this._smartChannels) {
-    this.closeChannel(channelId)
+    this.closeChannel(channelId);
   }
   trace.log(this.options.peerName + ": " + "Closed DataPeer.");
   this._pc.close();
-}
+};
 
 DataPeer.prototype.handleSignalMessage = function (message) {
   this._simplePeer.handleSignalMessage(message);
 };
+
+// Export to the environment
+exports.DataPeer = DataPeer;
+
+}(window));
