@@ -70,6 +70,7 @@ fdom.apis.set("identity", {
     'userId': 'string',
     'name': 'string',
     'url': 'string',
+    'imageData': 'string',
     'clients': 'object'
   }},
   //Event on incoming message
