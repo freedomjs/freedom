@@ -5,7 +5,7 @@ module.exports = function(grunt) {
       freedom: {
         src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js'],
         options: {
-          specs: 'spec/*Spec.js'
+          specs: ['spec/*Spec.js', 'spec/providers/*Spec.js']
         }
       }
     },
