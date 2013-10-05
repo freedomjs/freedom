@@ -94,7 +94,7 @@ SctpPeerConnection.prototype.setup =
   this._signallingChannel = Core_unprivileged.bindChannel(
       this._portApp, signallingChannelId);
   this._peer.setSendSignalMessage(
-      this._signallingChannel.emit.bind(null, "message"));
+      this._signallingChannel.emit.bind(this._signallingChannel, "message"));
   this._signallingChannel.on('message',
       this._peer.handleSignalMessage.bind(this._peer));
   this._signallingChannel.emit('ready');
