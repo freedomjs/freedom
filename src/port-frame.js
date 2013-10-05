@@ -15,6 +15,7 @@ fdom.port = fdom.port || {};
 fdom.port.Frame = function() {
   this.id = 'Frame ' + Math.random();
   this.config = {};
+  this.src = null;
 
   handleEvents(this);
 };
@@ -27,8 +28,10 @@ fdom.port.Frame = function() {
 fdom.port.Frame.prototype.start = function() {
   if (isAppContext()) {
     this.setupListener();
+    this.src = 'in';
   } else {
     this.setupFrame();
+    this.src = 'out';
   }
 };
 
@@ -49,7 +52,9 @@ fdom.port.Frame.prototype.toString = function() {
 fdom.port.Frame.prototype.setupListener = function() {
   this.obj = this.config.global;
   this.config.global.addEventListener('message', function(msg) {
-    this.emitMessage(msg.data.flow, msg.data.message);
+    if (msg.data.src !== 'in') {
+      this.emitMessage(msg.data.flow, msg.data.message);
+    }
   }.bind(this), true);
   this.emit('started');
 };
@@ -69,18 +74,26 @@ fdom.port.Frame.prototype.emitMessage = function(flow, message) {
 
 /**
  * Set up an iFrame with an isolated freedom.js context inside.
- * @method setupWorker
+ * @method setupFrame
  */
 fdom.port.Frame.prototype.setupFrame = function() {
   var frame;
-  frame = this.makeFrame(this.config.src, this.config.inject);
-  frame.addEventListener('message', function(frame, msg) {
+  frame = this.makeFrame(this.config.src, this.config.inject);  
+  
+  if (!document.body) {
+    document.appendChild(document.createElement("body"));
+  }
+  document.body.appendChild(frame);
+
+  frame.contentWindow.addEventListener('message', function(frame, msg) {
     if (!this.obj) {
       this.obj = frame;
       this.emit('started');
     }
-    this.emitMessage(msg.data.flow, msg.data.message);
-  }.bind(this, frame), true);
+    if (msg.data.src !== 'out') {
+      this.emitMessage(msg.data.flow, msg.data.message);
+    }
+  }.bind(this, frame.contentWindow), true);
 };
 
 /**
@@ -100,18 +113,16 @@ fdom.port.Frame.prototype.makeFrame = function(src, inject) {
   // TODO(willscott): survive name mangling.
   src = src.replace("'portType': 'Worker'", "'portType': 'Frame'");
   if (inject) {
-    extra = '<script src="' + inject + '"></script>';
+    extra = '<script src="' + inject + '" onerror="' +
+      'throw new Error(\'Injection of ' + inject +' Failed!\');' +
+      '"></script>';
   }
   loader = '<html>' + extra + '<script src="' +
       forceAppContext(src) + '"></script></html>';
   blob = getBlob(loader, 'text/html');
   frame.src = getURL(blob);
 
-  if (!document.body) {
-    document.appendChild(document.createElement("body"));
-  }
-  document.body.appendChild(frame);
-  return frame.contentWindow;
+  return frame;
 };
 
 /**
@@ -132,6 +143,7 @@ fdom.port.Frame.prototype.onMessage = function(flow, message) {
     if (this.obj) {
       //fdom.debug.log('message sent to worker: ', flow, message);
       this.obj.postMessage({
+        src: this.src,
         flow: flow,
         message: message
       }, '*');

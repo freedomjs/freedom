@@ -1,5 +1,5 @@
 /**
- * A FreeDOM interface to WebRTC Peer Connections
+ * A freedom.js interface to WebRTC Peer Connections
  * @param Channel channel a channel for emitting events.
  * @constructor
  * @private

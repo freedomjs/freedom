@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, makeAbsolute */
+/*globals fdom:true, Util:true, handleEvents, mixin, eachProp */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -23,6 +23,11 @@ fdom.port.App = function(manifestURL) {
 
   handleEvents(this);
 };
+
+/**
+ * Apps are relocatable.
+ */
+fdom.port.App.prototype.relocatable = true;
 
 /**
  * Receive an external application for the Application.
@@ -154,7 +159,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       this.appInternal = message.channel;
       this.port.onMessage(this.appInternal, {
         type: 'Initialization',
-        id: makeAbsolute(this.manifestId),
+        id: this.manifestId,
         appId: this.id,
         manifest: this.manifest,
         channel: message.reverse
@@ -169,7 +174,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
 
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
-        type: 'bindChannel',
+        type: 'channel announcement',
         channel: message.reverse
       });
       if (typeof message.name === 'string' &&
@@ -180,6 +185,14 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
   } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
     this.started = true;
     this.emit('start');
+  } else if (name === 'AppInternal' && message.type === 'resolve') {
+    fdom.resources.get(this.manifestId, message.data).done(function(id, data) {
+      this.port.onMessage(this.appInternal, {
+        type: 'resolve response',
+        id: id,
+        data: data
+      });
+    }.bind(this, message.id));
   } else {
     this.emit(this.externalPortMap[name], message);
   }
@@ -192,26 +205,17 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
  * @private
  */
 fdom.port.App.prototype.loadManifest = function() {
-  // Request the manifest
-  var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function() {
-    if (ref.readyState === 4 && ref.responseText) {
-      var resp = {};
-      try {
-        resp = JSON.parse(ref.responseText);
-      } catch(err) {
-        console.warn("Failed to load manifest " + this.manifestId + ": " + err);
-        return;
-      }
-      this.manifest = resp;
-      this.start();
-    } else if (ref.readyState === 4) {
-      console.warn("Failed to load manifest " + this.manifestId + ": " + ref.status);
+  fdom.resources.getContents(this.manifestId).done(function(data) {
+    var resp = {};
+    try {
+      resp = JSON.parse(data);
+    } catch(err) {
+      console.warn("Failed to load " + this.manifestId + ": " + err);
+      return;
     }
-  }.bind(this), false);
-  ref.overrideMimeType('application/json');
-  ref.open("GET", this.manifestId, true);
-  ref.send();
+    this.manifest = resp;
+    this.start();
+  }.bind(this));
 };
 
 /**
@@ -220,14 +224,17 @@ fdom.port.App.prototype.loadManifest = function() {
  * @private
  */
 fdom.port.App.prototype.loadLinks = function() {
-  var i, channels = ['default'], name, dep;
+  var i, channels = ['default'], name, dep,
+      finishLink = function(dep, provider) {
+        dep.getInterface().provideAsynchronous(provider);
+      };
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
       name = this.manifest.permissions[i];
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
         dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-        dep.getInterface().provideAsynchronous(fdom.apis.getCore(name, this));
+        fdom.apis.getCore(name, this).done(finishLink.bind(this, dep));
 
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,
@@ -243,13 +250,15 @@ fdom.port.App.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }
-      var dep = new fdom.port.App(desc.url);
-      this.emit(this.controlChannel, {
-        type: 'Link to ' + name,
-        request: 'link',
-        name: name,
-        to: dep
-      });
+      fdom.resources.get(this.manifestId, desc.url).done(function (url) {
+        var dep = new fdom.port.App(url);
+        this.emit(this.controlChannel, {
+          type: 'Link to ' + name,
+          request: 'link',
+          name: name,
+          to: dep
+        });
+      }.bind(this));
     }.bind(this));
   }
   // Note that messages can be synchronous, so some ports may already be bound.
@@ -257,4 +266,14 @@ fdom.port.App.prototype.loadLinks = function() {
     this.externalPortMap[channels[i]] = this.externalPortMap[channels[i]] || false;
     this.internalPortMap[channels[i]] = false;
   }
+};
+
+fdom.port.App.prototype.serialize = function() {
+  return JSON.serialize({
+    manifestId: this.manifestId,
+    externalPortMap: this.externalPortMap,
+    internalPortMap: this.internalPortMap,
+    manifest: this.manifest,
+    controlChannel: this.controlChannel
+  });
 };

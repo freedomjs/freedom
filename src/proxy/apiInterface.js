@@ -127,6 +127,6 @@ fdom.proxy.conform = function(template, value) {
     });
     return val;
   }
-  console.log('Conform ignoring value for template:' + template);
-  console.log(value);
+  fdom.debug.log('Conform ignoring value for template:' + template);
+  fdom.debug.log(value);
 };

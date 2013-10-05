@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, resolvePath */
+/*globals fdom:true, handleEvents, mixin, eachProp */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -19,6 +19,7 @@ fdom.port.AppInternal = function(manager) {
   
   this.id = 'environment' + Math.random();
   this.pendingPorts = 0;
+  this.requests = {};
 
   handleEvents(this);
 };
@@ -38,7 +39,7 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
       this.controlChannel = message.channel;
       mixin(this.config, message.config);
     }
-  } else if (flow === 'default') {
+  } else if (flow === 'default' && !this.appId) {
     // Recover the app:
     this.port = this.manager.hub.getDestination(message.channel);
     this.appChannel = message.channel;
@@ -49,6 +50,8 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
     this.once('start', this.loadScripts.bind(this, message.id, 
         message.manifest.app.script));
     this.loadLinks(objects);
+  } else if (flow === 'default' && this.requests[message.id]) {
+    this.requests[message.id].resolve(message.data);
   }
 };
 
@@ -107,13 +110,27 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
     this.pendingPorts += 1;
     proxy.once('start', this.attach.bind(this, items[i].name, proxy));
   }
+  
+  // Allow resolution of files by parent.
+  fdom.resources.addResolver(function(manifest, url, deferred) {
+    var id = Math.random();
+    this.emit(this.appChannel, {
+      type: 'resolve',
+      id: id,
+      data: url
+    });
+    this.requests[id] = deferred;
+    return true;
+  }.bind(this));
 
   // Attach Core.
   this.pendingPorts += 1;
 
   core = fdom.apis.get('core').definition;
   provider = new fdom.port.Provider(core);
-  provider.getInterface().provideAsynchronous(fdom.apis.getCore('core', this));
+  fdom.apis.getCore('core', this).done(function(coreProv) {
+    provider.getInterface().provideAsynchronous(coreProv);
+  });
 
   this.emit(this.controlChannel, {
     type: 'Link to core',
@@ -194,31 +211,83 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
  * @param {String[]} scripts The URLs of the scripts to load.
  */
 fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
-  var i, importer = this.config.global.importScripts;
-  this.emit(this.appChannel, {
-    type: 'ready'
-  });
-  if (!importer) {
-    importer = function(url) {
+  var i = 0,
+      safe = true,
+      importer = function importScripts(script, deferred) {
+        this.config.global.importScripts(script);
+        deferred.resolve();
+      }.bind(this),
+      urls = [],
+      outstanding = 0,
+      load = function(url) {
+        urls.push(url);
+        outstanding -= 1;
+        if (outstanding === 0) {
+          if (safe) {
+            this.emit(this.appChannel, {
+              type: 'ready'
+            });
+            this.tryLoad(importer, urls);
+          } else {
+            this.tryLoad(importer, urls).done(function() {
+              this.emit(this.appChannel, {
+                type: 'ready'
+              });
+            }.bind(this));
+          }
+        }
+      }.bind(this);
+
+  if (!this.config.global.importScripts) {
+    safe = false;
+    importer = function(url, deferred) {
       var script = this.config.global.document.createElement('script');
       script.src = url;
+      script.addEventListener('load', deferred.resolve.bind(deferred), true);
       this.config.global.document.body.appendChild(script);
     }.bind(this);
   }
-  try {
-    if (typeof scripts === 'string') {
-      importer(resolvePath(scripts, from));
-    } else {
-      for (i = 0; i < scripts.length; i += 1) {
-        importer(resolvePath(scripts[i], from));
-      }
-    }
-  } catch(e) {
-    if (typeof scripts === 'string') {
-      console.error("Error loading " + scripts + " for " + from, e.message);
-    } else {
-      console.error("Error loading " + scripts[i] + " for " + from, e.message);
+
+  if (typeof scripts === 'string') {
+    outstanding = 1;
+    fdom.resources.get(from, scripts).done(load);
+  } else {
+    outstanding = scripts.length;
+    for (i = 0; i < scripts.length; i += 1) {
+      fdom.resources.get(from, scripts[i]).done(load);
     }
   }
 };
 
+/**
+ * Attempt to load resolved scripts into the namespace.
+ * @method tryLoad
+ * @private
+ * @param {Function} importer The actual import function
+ * @param {String[]} urls The resoved URLs to load.
+ * @returns {fdom.proxy.Deferred} completion of load
+ */
+fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
+  var i,
+      deferred = fdom.proxy.Deferred(),
+      def,
+      left = urls.length,
+      finished = function() {
+        left -= 1;
+        if (left === 0) {
+          console.error('All files loaded in frame');
+          deferred.resolve();
+        }
+      };
+  try {
+    for (i = 0; i < urls.length; i += 1) {
+      def = fdom.proxy.Deferred();
+      def.done(finished);
+      importer(urls[i], def);
+    }
+  } catch(e) {
+    console.warn(e.stack);
+    console.error("Error loading " + urls[i], e);
+  }
+  return deferred.promise();
+};

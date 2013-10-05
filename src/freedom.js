@@ -14,23 +14,30 @@
  * @static
  */
 setup = function (global, freedom_src, config) {
-  var def,
-      hub = new fdom.Hub(),
+  var hub = new fdom.Hub(),
       site_cfg = {
         'debug': true,
         'stayLocal': false,
         'portType': 'Worker'
       },
       manager = new fdom.port.Manager(hub),
+      external = new fdom.port.Proxy(fdom.proxy.EventInterface),
+      setupApp = function(app) {
+        manager.setup(app);
+        manager.createLink(external, 'default', app);
+      },
       link;
-
+  
   // Debugging is not recorded until this point.
   fdom.debug = new fdom.port.Debug();
+
+  manager.setup(external);
+  manager.setup(fdom.debug);
   
   if (isAppContext()) {
     site_cfg.global = global;
     site_cfg.src = freedom_src;
-    def = new fdom.port[site_cfg.portType]();
+    setupApp(new fdom.port[site_cfg.portType]());
   } else {
     advertise();
     
@@ -55,28 +62,22 @@ setup = function (global, freedom_src, config) {
     }
     //Try to talk to local FreeDOM Manager
     if (!site_cfg['stayLocal']) {
-      link = new fdom.ManagerLink();
-      link.once('connected', function() {
-        manager.setup(link);
-      });
+      link = new fdom.port.Runtime();
+      manager.setup(link);
     }
 
     site_cfg.global = global;
     site_cfg.src = freedom_src;
+    site_cfg.resources = fdom.resources;
     if(config) {
       mixin(site_cfg, config, true);
     }
-    def = new fdom.port.App(site_cfg.manifest);
+    link = location.protocol + "//" + location.host + location.pathname;
+    fdom.resources.get(link, site_cfg.manifest).done(function(url) {
+      setupApp(new fdom.port.App(url));
+    });
   }
   hub.emit('config', site_cfg);
-
-  manager.setup(def);
-
-  var external = new fdom.port.Proxy(fdom.proxy.EventInterface);
-  manager.setup(external);
-  manager.createLink(external, 'default', def);
-
-  manager.setup(fdom.debug);
 
   // Enable console.log from worker contexts.
   if (typeof global.console === 'undefined') {
@@ -85,4 +86,3 @@ setup = function (global, freedom_src, config) {
   
   return external.getInterface();
 };
-

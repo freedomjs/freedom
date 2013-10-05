@@ -3,7 +3,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     jasmine: {
       freedom: {
-        src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js'],
+        src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js'],
         options: {
           specs: ['spec/*Spec.js', 'spec/providers/*Spec.js']
         }

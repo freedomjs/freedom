@@ -16,14 +16,14 @@ describe("fdom.Port.Proxy", function() {
     });
     expect(spy).not.toHaveBeenCalled();
 
-    // existing interfaces won't work.
-    iface.emit('hi', 'msg');
-    expect(spy).not.toHaveBeenCalled();
-    
-    // New interfaces, however, will.
-    iface = port.getInterface();
+    // existing interfaces now work.
     iface.emit('hi', 'msg');
     expect(spy).toHaveBeenCalled();
+    
+    // New interfaces also will.
+    iface = port.getInterface();
+    iface.emit('hi', 'msg');
+    expect(spy.callCount).toEqual(2);
   });
 
   it("reports messages to the interface", function() {

@@ -5,6 +5,7 @@
  */
 var Util = {};
 
+
 /**
  * Helper function for iterating over an array backwards. If the func
  * returns a true value, it will break out of the loop.

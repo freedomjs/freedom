@@ -1,5 +1,5 @@
 /*globals fdom:true, handleEvents, eachProp */
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
+/*jslint indent:2, white:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -31,7 +31,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
     this.emit(this.emitChannel, {
-      type: 'bindChannel',
+      type: 'channel announcement',
       channel: message.reverse
     });
     this.emit('start');
@@ -47,7 +47,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       if (this.emits[message.to]) {
         this.emits[message.to](message.type, message.message);
       } else {
-        console.warn('Could not deliver message, no such interface.');
+        fdom.debug.warn('Could not deliver message, no such interface.');
       }
     } else {
       eachProp(this.emits, function(iface) {
@@ -66,12 +66,28 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
  * id: string is the Identifier for this interface.
  */
 fdom.port.Proxy.prototype.getInterface = function() {
+  var Iface = this.getInterfaceConstructor();
+  return new Iface();
+};
+
+/**
+ * Provides a bound class for creating a proxy.Interface associated
+ * with this proxy. This partial level of construction can be used
+ * to allow the proxy to be used as a provider for another API.
+ */
+fdom.port.Proxy.prototype.getInterfaceConstructor = function() {
   var id = fdom.port.Proxy.nextId();
-  return new this.interfaceCls(function(id, binder) {
+  return this.interfaceCls.bind({}, function(id, binder) {
     this.emits[id] = binder;
-  }.bind(this, id), function(chan, msg) {
-    this.emit(chan, msg);
-  }.bind(this, this.emitChannel), id);
+  }.bind(this, id), this.doEmit.bind(this), id);  
+};
+
+fdom.port.Proxy.prototype.doEmit = function(msg) {
+  if (this.emitChannel) {
+    this.emit(this.emitChannel, msg);
+  } else {
+    this.once('start', this.doEmit.bind(this, msg));
+  }
 };
 
 /**

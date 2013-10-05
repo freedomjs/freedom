@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, XMLHttpRequest, resolvePath */
+/*globals fdom:true, handleEvents, mixin, XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -22,6 +22,7 @@ fdom.port.Manager = function(hub) {
   
   this.hub.on('config', function(config) {
     mixin(this.config, config);
+    this.emit('config');
   }.bind(this));
   
   handleEvents(this);
@@ -45,7 +46,9 @@ fdom.port.Manager.prototype.toString = function() {
  * 2. link. Creates a link between the source and a provided destination port.
  * 3. create. Registers the provided port with the hub.
  * 4. port. Creates a link between the source and a described port type.
- * 5. delegate. Routes a defined set of control messages to another location.
+ * 5. bindapp. Binds a custom channel from a defined source to described port type.
+ * 6. delegate. Routes a defined set of control messages to another location.
+ * 7. resource. Registers the source as a resource resolver.
  * @method onMessage
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
@@ -57,7 +60,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     return;
   }
   origin = this.hub.getDestination(reverseFlow);
-  
+
   if (this.delegate && reverseFlow !== this.delegate && this.toDelegate[flow]) {
     // Ship off to the delegee
     this.emit(this.delegate, {
@@ -80,7 +83,6 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   if (message.request === 'link') {
     this.createLink(origin, message.name, message.to, message.overrideDest);
   } else if (message.request === 'create') {
-    console.log('setting up ' + origin.id);
     this.setup(origin);
   } else if (message.request === 'port') {
     if (message.exposeManager) {
@@ -88,14 +90,24 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     }
     this.createLink(origin, message.name, 
         new fdom.port[message.service](message.args));
+  } else if (message.request === 'bindport') {
+    this.createLink({id: message.id},
+                    'custom' + message.port,
+                    new fdom.port[message.service](message.args),
+                    'default',
+                    true);
   } else if (message.request === 'delegate') {
     // Initate Delegation.
     if (this.delegate === null) {
       this.delegate = reverseFlow;
     }
     this.toDelegate[message.flow] = true;
+  } else if (message.request === 'resource') {
+    fdom.resources.addResolver(message.args[0]);
+    fdom.resources.addRetriever(message.service, message.args[1]);
   } else {
     console.warn("Unknown control request: " + message.request);
+    console.log(JSON.stringify(message));
     return;
   }
 };
@@ -108,13 +120,19 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
 fdom.port.Manager.prototype.setup = function(port) {
   if (!port.id) {
     console.warn("Refusing to setup unidentified port ");
-    return;
+    return false;
   }
 
   if(this.flows[port.id]) {
     console.warn("Refusing to re-initialize port " + port.id);
+    return false;
+  }
+
+  if (!this.config.global) {
+    this.once('config', this.setup.bind(this, port));
     return;
   }
+
   this.hub.register(port);
   var flow = this.hub.install(this, port.id, "control"),
       reverse = this.hub.install(port, this.id, port.id);
@@ -125,6 +143,8 @@ fdom.port.Manager.prototype.setup = function(port) {
     channel: reverse,
     config: this.config
   });
+
+  return true;
 };
 
 /**
@@ -135,10 +155,18 @@ fdom.port.Manager.prototype.setup = function(port) {
  * @param {String} name The flow for messages from destination to port.
  * @param {Port} destiantion The destination port.
  * @param {String} [destName] The flow name for messages to the destination.
+ * @param {Boolean} [toDest] Tell the destination rather than source about the link.
  */
-fdom.port.Manager.prototype.createLink = function(port, name, destination, destName) {
+fdom.port.Manager.prototype.createLink = function(port, name, destination, destName, toDest) {
+  if (!this.config.global) {
+    this.once('config', this.createLink.bind(this, port, name, destination, destName));
+    return; 
+  }
+
   if (!this.flows[destination.id]) {
-    this.setup(destination);
+    if(this.setup(destination) === false) {
+      return;
+    }
   }
   var outgoingName = destName || 'default',
       outgoing = this.hub.install(port, destination.id, outgoingName),
@@ -148,10 +176,19 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
   destination = this.hub.getDestination(outgoing);
   reverse = this.hub.install(destination, port.id, name);
 
-  this.hub.onMessage(this.flows[port.id], {
-    name: name,
-    type: 'createLink',
-    channel: outgoing,
-    reverse: reverse
-  });
+  if (toDest) {
+    this.hub.onMessage(this.flows[destination.id], {
+      type: 'createLink',
+      name: outgoingName,
+      channel: reverse,
+      reverse: outgoing
+    });
+  } else {
+    this.hub.onMessage(this.flows[port.id], {
+      name: name,
+      type: 'createLink',
+      channel: outgoing,
+      reverse: reverse
+    });
+  }
 };

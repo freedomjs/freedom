@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, makeAbsolute */
+/*globals fdom:true, handleEvents, mixin, eachProp, makeAbsolute */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -13,6 +13,7 @@ if (typeof fdom === 'undefined') {
 var Api = function() {
   this.apis = {};
   this.providers = {};
+  this.waiters = {};
 };
 
 /**
@@ -48,7 +49,17 @@ Api.prototype.set = function(name, definition) {
  * @param {Function} constructor the function to create a provider for the API.
  */
 Api.prototype.register = function(name, constructor) {
+  var i;
+
   this.providers[name] = constructor;
+
+  if (this.waiters[name]) {
+    for (i = 0; i < this.waiters[name].length; i += 1) {
+      this.waiters[name][i][0].resolve(constructor.bind({},
+          this.waiters[name][i][1]));
+    }
+    delete this.waiters[name];
+  }
 };
 
 /**
@@ -56,16 +67,25 @@ Api.prototype.register = function(name, constructor) {
  * @method getCore
  * @param {String} name the API to retrieve.
  * @param {port.App} from The instantiating App.
- * @returns {CoreProvider} A fdom.App look-alike to a local API definition.
+ * @returns {fdom.proxy.Deferred} A promise of a fdom.App look-alike matching
+ * a local API definition.
  */
 Api.prototype.getCore = function(name, from) {
+  var deferred = fdom.proxy.Deferred();
   if (this.apis[name]) {
-    return this.providers[name].bind({}, from);
+    if (this.providers[name]) {
+      deferred.resolve(this.providers[name].bind({}, from));
+    } else {
+      if (!this.waiters[name]) {
+        this.waiters[name] = [];
+      }
+      this.waiters[name].push([deferred, from]);
+    }
   } else {
-    console.warn('Refusing to create core provider without an interface.' +
-        'API name: ' + name);
-    return null;
+    fdom.debug.warn('Api.getCore asked for unknown core: ' + name);
+    deferred.reject();
   }
+  return deferred.promise();
 };
 
 /**

@@ -1,10 +1,9 @@
 describe("fdom.Hub", function() {
   var hub;
-  fdom.debug = new fdom.port.Debug();
-
 
   beforeEach(function() {
     hub = new fdom.Hub();
+    fdom.debug = new fdom.port.Debug();
   });
 
   it("routes messages", function() {
