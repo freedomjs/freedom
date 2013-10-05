@@ -93,7 +93,7 @@ fdom.apis.set('core.sctp-peerconnection', {
   'closeDataChannel': {type: "method", value: ["string"]},
 
   // A channel with this id has been opened.
-  'onOpenDataChannel': {type: "event", value: {"channelId": "string"},
+  'onOpenDataChannel': {type: "event", value: {"channelId": "string"}},
   // The channale with this id has been closed.
   'onCloseDataChannel': {type: "event", value: {"channelId": "string"}},
 
