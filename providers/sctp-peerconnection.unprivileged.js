@@ -38,6 +38,7 @@ SctpPeerConnection.prototype.setup =
     function(signallingChannelId, peerName, continuation) {
   this.peerName = peerName;
   var self = this;
+
   var dataChannelCallbacks = {
     // onOpenFn is called at the point messages will actually get through.
     onOpenFn: function (smartDataChannel) {
@@ -63,14 +64,14 @@ SctpPeerConnection.prototype.setup =
         var data = new Uint8Array(event.data);
         console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got ArrayBuffer data: ", data);
+          "): " + "Got ArrayBuffer (onReceived) data: ", data);
         self.dispatchEvent('onReceived',
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'buffer': event.data });
       } else if (typeof(event.data) == 'string') {
         console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got string data: ", event.data);
+          "): " + "Got string (onReceived) data: ", event.data);
         self.dispatchEvent('onReceived',
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'text': event.data });

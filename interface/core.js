@@ -78,6 +78,9 @@ fdom.apis.set('core.sctp-peerconnection', {
   }]},
 
   // Called when we get a message from the peer.
+  'onTest': {type: "event", value: [{ "foo": "string" }]},
+
+  // Called when we get a message from the peer.
   'onReceived': {type: "event", value: [{
     // The label/id of the data channel.
     "channelLabel": "string",
