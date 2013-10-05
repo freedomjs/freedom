@@ -48,7 +48,7 @@ fdom.apis.set("core.peerconnection", {
   'message': {type: "event", value: {"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}},
 
   'close': {type: "method", value: []},
-  'onClose': {type: "event", value: []}
+  'onClose': {type: "event", value: {}}
 });
 
 
@@ -78,17 +78,14 @@ fdom.apis.set('core.sctp-peerconnection', {
   }]},
 
   // Called when we get a message from the peer.
-  'onTest': {type: "event", value: [{ "foo": "string" }]},
-
-  // Called when we get a message from the peer.
-  'onReceived': {type: "event", value: [{
+  'onReceived': {type: "event", value: {
     // The label/id of the data channel.
     "channelLabel": "string",
     // One the below will be specified.
     "text": "string",
     "binary": "blob",
     "buffer": "buffer"
-  }]},
+  }},
 
   // Open the data channel with this label.
   'openDataChannel': {type: "method", value: ["string"]},
@@ -96,13 +93,13 @@ fdom.apis.set('core.sctp-peerconnection', {
   'closeDataChannel': {type: "method", value: ["string"]},
 
   // A channel with this id has been opened.
-  'onOpenDataChannel': {type: "event", value: ["string"]},
+  'onOpenDataChannel': {type: "event", value: {"channelId": "string"},
   // The channale with this id has been closed.
-  'onCloseDataChannel': {type: "event", value: ["string"]},
+  'onCloseDataChannel': {type: "event", value: {"channelId": "string"}},
 
   // Close the peer connection.
   'close': {type: "method", value: []},
   // The peer connection has been closed.
-  'onClose': {type: "event", value: []},
+  'onClose': {type: "event", value: {}},
 });
 
