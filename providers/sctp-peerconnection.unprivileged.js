@@ -21,8 +21,8 @@ function SctpPeerConnection(portApp) {
   this._peer = null;
 
   // The Core object for managing channels.
-  this._portApp.once('core', function(core) {
-    this._core = new core();
+  this._portApp.once('core', function(Core) {
+    this._core = new Core();
   }.bind(this));
   this._portApp.emit(this._portApp.controlChannel, {
     type: 'core request delegated to peerconnection',
