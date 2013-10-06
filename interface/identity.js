@@ -25,7 +25,7 @@ fdom.apis.set("identity", {
   //          'clientId': 'string',   //ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
   //          'network': 'string',    //Name of network
   //          'status': 'string'      //Status (['messageable', 'online', 'offline'])
-  //        }, 
+  //        },
   //        'client2': ...
   //      }
   //    },
@@ -67,6 +67,7 @@ fdom.apis.set("identity", {
   //Event on change in profile
   //(includes changes to roster)
   'onChange': {type: "event", value: {
+    // TODO: add network
     'userId': 'string',
     'name': 'string',
     'url': 'string',
@@ -75,6 +76,7 @@ fdom.apis.set("identity", {
   }},
   //Event on incoming message
   'onMessage': {type: "event", value: {
+    // TODO: add network
     "fromUserId": "string",   //userId of user message is from
     "fromClientId": "string", //clientId of user message is from
     "toUserId": "string",     //userId of user message is to
