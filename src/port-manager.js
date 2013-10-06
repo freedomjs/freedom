@@ -49,6 +49,7 @@ fdom.port.Manager.prototype.toString = function() {
  * 5. bindapp. Binds a custom channel from a defined source to described port type.
  * 6. delegate. Routes a defined set of control messages to another location.
  * 7. resource. Registers the source as a resource resolver.
+ * 8. core. Generates a core provider for the requester. 
  * @method onMessage
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
@@ -105,6 +106,17 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   } else if (message.request === 'resource') {
     fdom.resources.addResolver(message.args[0]);
     fdom.resources.addRetriever(message.service, message.args[1]);
+  } else if (message.request === 'core') {
+    if (this.core && reverseFlow === this.delegate) {
+      (new this.core()).onMessage(origin, message.message);
+      return;
+    }
+    this.getCore(function(to, core) {
+      this.hub.onMessage(to, {
+        type: 'core',
+        core: core
+      });
+    }.bind(this, reverseFlow));
   } else {
     console.warn("Unknown control request: " + message.request);
     console.log(JSON.stringify(message));
@@ -192,3 +204,15 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
     });
   }
 };
+
+fdom.port.Manager.prototype.getCore = function(cb) {
+  if (this.core) {
+    cb(this.core);
+  } else {
+    fdom.apis.getCore('core', this).done(function(core) {
+      this.core = core;
+      cb(this.core);
+    }.bind(this));
+  }
+};
+

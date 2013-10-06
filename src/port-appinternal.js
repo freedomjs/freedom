@@ -128,7 +128,7 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
 
   core = fdom.apis.get('core').definition;
   provider = new fdom.port.Provider(core);
-  fdom.apis.getCore('core', this).done(function(coreProv) {
+  this.manager.getCore(function(coreProv) {
     provider.getInterface().provideAsynchronous(coreProv);
   });
 
@@ -275,7 +275,6 @@ fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
       finished = function() {
         left -= 1;
         if (left === 0) {
-          console.error('All files loaded in frame');
           deferred.resolve();
         }
       };

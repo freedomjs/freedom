@@ -20,9 +20,14 @@ function SctpPeerConnection(portApp) {
   // The DataPeer object for talking to the peer.
   this._peer = null;
 
-  // This makes the constructed object (this) intro a core freedom module with
-  // "on", "emit", and "once" methods.
-  // handleEvents(this);  // Not needed as we don't use them.
+  // The Core object for managing channels.
+  this._portApp.once('core', function(core) {
+    this._core = new core();
+  }.bind(this));
+  this._portApp.emit(this._portApp.controlChannel, {
+    type: 'core request delegated to peerconnection',
+    request: 'core'
+  });
 }
 
 // Start a peer connection using the given freedomChannelId as the way to
@@ -91,13 +96,14 @@ SctpPeerConnection.prototype.setup =
   this._peer = new DataPeer(this.peerName, dataChannelCallbacks);
 
   // Setup link between Freedom messaging and _peer's signalling.
-  this._signallingChannel = Core_unprivileged.bindChannel(
-      this._portApp, signallingChannelId);
-  this._peer.setSendSignalMessage(
-      this._signallingChannel.emit.bind(this._signallingChannel, "message"));
-  this._signallingChannel.on('message',
-      this._peer.handleSignalMessage.bind(this._peer));
-  this._signallingChannel.emit('ready');
+  this._core.bindChannel(signallingChannelId, function(channel) {
+    this._signallingChannel = channel;
+    this._peer.setSendSignalMessage(
+        this._signallingChannel.emit.bind(this._signallingChannel, "message"));
+    this._signallingChannel.on('message',
+        this._peer.handleSignalMessage.bind(this._peer));
+    this._signallingChannel.emit('ready');
+  }.bind(this));
 
   continuation();
 };

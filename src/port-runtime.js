@@ -64,9 +64,12 @@ fdom.port.Runtime.prototype.onMessage = function(source, msg) {
     msg.config = config;
     this.controlChannel = msg.channel;
     this.connect();
-    fdom.apis.getCore('core', this).done(function(core) {
-      this.core = core;
-    }.bind(this));
+    this.emit(this.controlChannel, {
+      type: 'Get Core Provider',
+      request: 'core'
+    });
+  } else if (source === 'control' && msg.type === 'core' && !this.core) {
+    this.core = msg.core;
   }
   if (this.status === fdom.port.Runtime.status.connected) {
     this.socket.send(JSON.stringify([source, msg]));
@@ -180,15 +183,16 @@ fdom.port.Runtime.prototype.runtime.prototype.createApp = function(manifest, pro
     // The created channel gets terminated with the runtime port.
     // Messages are then tunneled to the runtime.
     // Messages from the runtime are delivered in Runtime.message.
-    var iface = this.link.core.bindChannel(this.link, proxy);
-    iface.on(function(flow, msg) {
-      this.link.onMessage('runtime', {
-        request: 'message',
-        id: this.id,
-        data: [flow, msg]
-      });
-      return false;
+    this.link.core.bindChannel(proxy).done(function(iface) {
+      iface.on(function(flow, msg) {
+        this.link.onMessage('runtime', {
+          request: 'message',
+          id: this.id,
+          data: [flow, msg]
+        });
+        return false;
+      }.bind(this));
+      this.channel = iface;
     }.bind(this));
-    this.channel = iface;
   }.bind(this));
 };

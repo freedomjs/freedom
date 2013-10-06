@@ -70,6 +70,16 @@ function mixin(target, source, force) {
 }
 
 /**
+ * Get a globally unique ID
+ * @method getId
+ * @static
+ */
+function getId() {
+  // TODO: make better.
+  return 'getid-' + Math.random();
+}
+
+/**
  * Add 'on' and 'emit' methods to an object, which act as a light weight
  * event handling structure.
  * @class handleEvents

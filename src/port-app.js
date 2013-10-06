@@ -40,6 +40,10 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
       mixin(this.config, message.config);
+      this.emit(this.controlChannel, {
+        type: 'Core Provider',
+        request: 'core'
+      });
       this.start();
     } else if (!this.port && message.channel) {
       this.externalPortMap[message.name] = message.channel;
@@ -47,6 +51,9 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
         type: 'default channel announcement',
         channel: message.reverse
       });
+    } else if (message.core) {
+      this.core = new message.core();
+      this.emit('core', message.core);
     } else {
       this.port.onMessage(flow, message);
     }
@@ -114,6 +121,11 @@ fdom.port.App.prototype.start = function() {
       request: 'delegate',
       flow: 'debug'
     });
+    this.port.onMessage('control', {
+      type: 'Redirect',
+      request: 'delegate',
+      flow: 'core'
+    });
     
     // Tell the remote location to instantate the app.
     this.port.onMessage('control', {
@@ -155,6 +167,11 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
       fdom.debug.format(message.message.severity,
           this.toString(),
           message.message.msg);
+    } else if (message.flow === 'core' && message.message) {
+      if (message.message.type === 'register') {
+        message.message.reply = this.port.onMessage.bind(this.port, 'control');
+      }
+      this.core.onMessage(this, message.message);
     } else if (message.name === 'AppInternal' && !this.appInternal) {
       this.appInternal = message.channel;
       this.port.onMessage(this.appInternal, {
