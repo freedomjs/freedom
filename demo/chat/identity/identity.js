@@ -7,28 +7,45 @@ function IdentityProvider() {
   this.version = null;
   this.url = null;
   this.id = null;
-  this.status = 'offline'     //offline, online, connecting, error
-  this.loginCallback = null;
+  //this._sendStatus('offline');  //offline, online, connecting, error
+  setTimeout(this._sendStatus.bind(this,'offline'),0);
   this.roster = {};
 };
 
-IdentityProvider.prototype.login = function(agent, version, url, continuation) {
-  this.conn = new WebSocket(WS_URL+agent);
+IdentityProvider.prototype.login = function(loginOpts, continuation) {
+  this.conn = new WebSocket(WS_URL+loginOpts.agent);
   //this.conn = new WebSocket(WS_URL);
-  this.status = 'connecting';
-  //this.dispatchEvent('onStatus', {status: this.status, message: "WS Connecting"});
+  this._sendStatus('connecting');
   this.conn.onopen = (function(msg) {
-    this.status = 'online';
+    this._sendStatus('online');
     this.conn.send(JSON.stringify({}));
-    this.dispatchEvent('onStatus', {status: this.status, message: "WS Connected"});
   }).bind(this);
   this.conn.onmessage = this._onMessage.bind(this);
   this.conn.onclose = (function (msg) {
-    this.status = 'offline';
-    this.dispatchEvent('onStatus', {status: this.status, message: "WS Disconnected"});
+    this._sendStatus('offline');
     this.conn = null;
   }).bind(this);
-  this.loginCallback = continuation;
+};
+
+IdentityProvider.prototype.logout = function(userId, network, cont) {
+  this._sendStatus('offline');
+  this.conn.close();
+  this.conn = null;
+  cont({
+    userId: this.id,
+    success: true,
+    message: ''
+  });
+};
+
+IdentityProvider.prototype._sendStatus = function(stat) {
+  this.status = stat;
+  this.dispatchEvent('onStatus', {
+    userId: this.id,
+    network: 'websockets',
+    status: stat,
+    message: 'WS '+stat
+  });
 };
 
 IdentityProvider.prototype._addToRoster = function(id) {
@@ -55,7 +72,7 @@ IdentityProvider.prototype._onMessage = function(msg) {
     for (var i=0; i<msg.msg.length; i++) {
       this._addToRoster(msg.msg[i]);
     }
-    this.loginCallback({success: true, userId: msg.id, message: ''});
+    this._sendStatus('online');
   } else if (msg.from && msg.msg) {
     this._addToRoster(msg.from);
     this.dispatchEvent('onMessage', {
@@ -63,27 +80,17 @@ IdentityProvider.prototype._onMessage = function(msg) {
       fromClientId: msg.from,
       toUserId: this.id,
       toClientId: this.id,
+      network: 'websockets',
       message: msg.msg
     });
   } else if (msg.from) {
     this._addToRoster(msg.from);
   }
-  /**
-  this.dispatchEvent('onChange', {
-    userId: asdf,
-    name: asdf,
-    url: '',
-    clients: {
-      clientId: asdf,
-      status: 'messageable'
-    }
-  });
-  **/
 };
 
 //TODO: implement
 IdentityProvider.prototype.getProfile = function(id, continuation) {
-  continuation();
+  continuation({});
 };
 
 IdentityProvider.prototype.sendMessage = function(to, msg, continuation) {

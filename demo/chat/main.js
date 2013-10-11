@@ -8,6 +8,9 @@ freedom.on('send-message', function(val) {
 
 identity.on('onStatus', function(msg) {
   freedom.emit('onStatus', msg);
+  if (msg.userId) {
+    freedom.emit('recv-uid', msg.userId);
+  }
 });
 
 identity.on('onMessage', function(data) {
@@ -28,11 +31,13 @@ identity.on('onChange', function(data) {
 
 var onload = function() {
   //Fetch UID
-  identity
-    .login('chatdemo', '0.1', '')
-    .done(function(data) {
-      freedom.emit('recv-uid', data.userId);
-    });
+  identity.login({
+    network: 'websockets',
+    agent: 'chatdemo', 
+    version: '0.1', 
+    url: '',
+    interactive: false
+  });
 };
 setTimeout(onload,0);
 //onload();

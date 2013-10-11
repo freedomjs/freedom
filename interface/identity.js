@@ -67,9 +67,7 @@ fdom.apis.set('identity', {
   //Event on change in profile
   //(includes changes to roster)
   'onChange': {type: 'event', value: {
-    // TODO: add network
     'userId': 'string',
-    'network': 'string',
     'name': 'string',
     'url': 'string',
     'imageData': 'string',
@@ -77,13 +75,12 @@ fdom.apis.set('identity', {
   }},
   //Event on incoming message
   'onMessage': {type: 'event', value: {
-    // TODO: add network
     'fromUserId': 'string',   //userId of user message is from
     'fromClientId': 'string', //clientId of user message is from
     'toUserId': 'string',     //userId of user message is to
     'toClientId': 'string',   //clientId of user message is to
     'network': 'string',      // the network id the message came from.
-    'message': 'object'       //message contents // TODO: why not stirng???
+    'message': 'string'       //message contents
   }},
   //Event on provider status
   //Can be 'offline', 'online', 'authenticating', 'connecting' or 'error'
