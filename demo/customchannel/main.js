@@ -12,7 +12,8 @@ freedom.on('create', function() {
   core.createChannel().done(function(id, cinfo) {
     cinfo.channel.done(function(id, chan) {
       channels[id] = chan;
-      chan.on('message', function(msg) {freedom.emit('message', msg)})
+      chan.on('message', function(msg) {freedom.emit('message', msg);});
+      chan.on('ready', function(){freedom.emit('message', ' replied ready');})
     }.bind(this, id));
     friend.emit('message', {
       cmd: 'create',
@@ -34,6 +35,7 @@ freedom.on('destroy', function(id) {
 freedom.on('message', function(id) {
   freedom.emit('message', 'sending message to ' + id);
   channels[id].emit('message', 'Message to chan ' + id);
+  channels[id].emit('ready');
 });
 
 friend.on('message', function(str) {
