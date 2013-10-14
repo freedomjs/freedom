@@ -67,6 +67,9 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
     if (this.externalPortMap[flow] === false && message.channel) {
       //console.log('handling channel announcement for ' + flow);
       this.externalPortMap[flow] = message.channel;
+      if (this.internalPortMap[flow] === undefined) {
+        this.internalPortMap[flow] = false;
+      }
       if (this.manifest.provides && flow === 'default') {
         this.externalPortMap[this.manifest.provides[0]] = message.channel;
       }
