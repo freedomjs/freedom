@@ -75,7 +75,7 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
       this.once('start', this.onMessage.bind(this, flow, message));
     } else {
       if (this.internalPortMap[flow] === false) {
-        this.once('bound', this.onMessage.bind(this, flow, message));
+        this.once('internalChannelReady', this.onMessage.bind(this, flow, message));
       } else {
         this.port.onMessage(this.internalPortMap[flow], message);
       }
@@ -148,7 +148,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
     console.log('bound for ' + name);
     this.internalPortMap[name] = message.channel;
-    this.emit('bound');
+    this.emit('internalChannelReady');
     return;
   }
   // Terminate debug redirection requested in start().
