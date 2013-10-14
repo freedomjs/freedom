@@ -58,18 +58,20 @@ SctpPeerConnection.prototype.setup =
         smartDataChannel.dataChannel.label +
         "): onCloseFn");
       self.dispatchEvent("onCloseDataChannel",
-          smartDataChannel.dataChannel.label);
+                         { channelId: smartDataChannel.dataChannel.label});
     },
     // Default on real message prints it to console.
     onMessageFn: function (smartDataChannel, event) {
-      console.log(smartDataChannel.peerName + ": dataChannel(" +
+      // These were filling the console, and causing the console to
+      // hog the CPU.
+/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): onMessageFn", event);
+          "): onMessageFn", event); */
       if (event.data instanceof ArrayBuffer) {
         var data = new Uint8Array(event.data);
-        console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*        console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got ArrayBuffer (onReceived) data: ", data);
+          "): " + "Got ArrayBuffer (onReceived) data: ", data); */
         self.dispatchEvent('onReceived',
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'buffer': event.data });
@@ -118,7 +120,7 @@ SctpPeerConnection.prototype.openDataChannel =
 
 SctpPeerConnection.prototype.closeDataChannel =
     function(channelId, continuation) {
-  this._peer.closeDataChannel(channelId);
+  this._peer.closeChannel(channelId);
   continuation();
 };
 
@@ -140,6 +142,3 @@ SctpPeerConnection.prototype.shutdown = function(continuation) {
 };
 
 fdom.apis.register('core.sctp-peerconnection', SctpPeerConnection);
-
-
-
