@@ -112,7 +112,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
     this._pc.addIceCandidate(new RTCIceCandidate(json.candidate));
   } else {
     trace.warn(this.peerName + ": " +
-        "handleSignalMessage got unexpected message: ", message);
+        "handleSignalMessage got unexpected message: ", messageText);
   }
 };
 
