@@ -91,8 +91,8 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   }
 
   if (toBind && toBind.local) {
-    console.log('doing local binding for' + source);
-    this.manager.createLink(source, 'default', toBind.proxy);
+    console.log('doing local binding with ' + source);
+    this.manager.createLink(source, identifier, toBind.proxy, 'default'); //, toBind.proxy);
     delete Core_unprivileged.unboundChannels[identifier];
     if (this.manager.delegate && this.manager.toDelegate['core']) {
       this.manager.emit(this.manager.delegate, {
@@ -107,7 +107,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
     }
   } else if (toBind && toBind.remote) {
     console.log('doing remote binding downward');
-    this.manager.createLink(source, identifier, toBind.source);
+    this.manager.createLink(source, identifier, toBind.source, identifier);
     toBind.resolve({
       type: 'Bind Channel',
       request:'core',
@@ -121,11 +121,6 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   } else if (this.manager.delegate && this.manager.toDelegate['core']) {
     console.log('doing remote binding upwards');
     console.warn('delegating bind request, since i havent seen ' + identifier, Core_unprivileged.unboundChannels);
-    this.manager.createLink(source, identifier, this.manager.delegate);
-    delete Core_unprivileged.unboundChannels[identifier];
-    source.once('start', function(p, cb) {
-      cb(p.getInterface());
-    }.bind(this, source, continuation));
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -135,6 +130,11 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
         id: identifier
       }
     });
+    source.once('start', function(p, cb) {
+      cb(p.getInterface());
+    }.bind(this, source, continuation));
+    this.manager.createLink(source, 'default', this.manager.hub.getDestination(this.manager.delegate), identifier);
+    delete Core_unprivileged.unboundChannels[identifier];
     return;
   } else {
     console.warn('Asked to bind unknown channel: ' + identifier);

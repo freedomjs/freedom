@@ -8,6 +8,7 @@ freedom.on('create', function() {
   var thisid = id;
   id += 1;
 
+  freedom.emit('message', 'creating custom channel ' + thisid);
   core.createChannel().done(function(id, cinfo) {
     cinfo.channel.done(function(id, chan) {
       channels[id] = chan;
@@ -21,6 +22,7 @@ freedom.on('create', function() {
 });
 
 freedom.on('destroy', function(id) {
+  freedom.emit('message', 'destroying channel ' + id);
   delete channels[id];
   friend.emit('message', {
     cmd: 'destroy',
@@ -29,6 +31,7 @@ freedom.on('destroy', function(id) {
 });
 
 freedom.on('message', function(id) {
+  freedom.emit('message', 'sending message to ' + id);
   channels[id].emit('message', 'Message to chan ' + id);
 });
 
