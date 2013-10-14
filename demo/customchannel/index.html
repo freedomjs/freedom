@@ -17,17 +17,24 @@
 		document.getElementById('log').innerHTML += msg + '\r\n';
 	});
 
+	var n = 0;
 	window.addEventListener('load', function() {
 		document.getElementById('create').addEventListener('click', function() {
+                        var m = n;
+			n++;
+			var msger = document.createElement('button');
+			msger.innerHTML = 'Message ' + m;
+			msger.onclick = freedom.emit.bind({}, 'message', m);
+			document.body.appendChild(msger);
+			var deleter = document.createElement('button');
+			deleter.innerHTML = 'Delete ' + m;
+			deleter.onclick = function(m) {
+				document.body.removeChild(msger);
+				document.body.removeChild(deleter);
+				freedom.emit('destroy', m);
+			}.bind({}, m);
+			document.body.appendChild(deleter);
 			freedom.emit('create');
-		}, true);
-
-		document.getElementById('destroy').addEventListener('click', function() {
-			freedom.emit('destroy', document.getElementById('num').value);
-		}, true);
-
-		document.getElementById('message').addEventListener('click', function() {
-			freedom.emit('message', document.getElementById('num').value);
 		}, true);
 	}, true);
   </script>
@@ -36,9 +43,6 @@
   <header>
 	Runtime Channel Control:
 	<button id='create'>Create</button>
-	<button id='destroy'>Destroy</button>
-	<button id='message'>Message</button>
-	<input type='text' id='num' />
 	<pre id='log'></pre>
   </header>
 </body>
