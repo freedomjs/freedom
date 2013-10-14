@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>FreeDOM Sample</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <script type="text/javascript"
+      src="../../freedom.js"
+      data-manifest="manifest.json">
+{
+  "stayLocal": true,
+  "debug": true,
+  "strongIsolation": true
+}
+  </script>
+  <script type="text/javascript">
+	freedom.on('message', function(msg) {
+		document.getElementById('log').innerHTML += msg + '\r\n';
+	});
+
+	window.addEventListener('load', function() {
+		document.getElementById('create').addEventListener('click', function() {
+			freedom.emit('create');
+		}, true);
+
+		document.getElementById('destroy').addEventListener('click', function() {
+			freedom.emit('destroy', document.getElementById('num').value);
+		}, true);
+
+		document.getElementById('message').addEventListener('click', function() {
+			freedom.emit('message', document.getElementById('num').value);
+		}, true);
+	}, true);
+  </script>
+</head>
+<body>
+  <header>
+	Runtime Channel Control:
+	<button id='create'>Create</button>
+	<button id='destroy'>Destroy</button>
+	<button id='message'>Message</button>
+	<input type='text' id='num' />
+	<pre id='log'></pre>
+  </header>
+</body>
+</html>
+

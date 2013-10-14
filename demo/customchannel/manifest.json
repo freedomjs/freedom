@@ -1,0 +1,12 @@
+{
+  "name": "Custom Channels",
+  "description": "Custom Channels Sample FreeDOM application",
+  "app": {
+    "script": "main.js"
+  },
+  "dependencies": {
+    "friend": {
+      "url": "friend.json"
+    }
+  }
+}
