@@ -103,9 +103,9 @@ SctpPeerConnection.prototype.setup =
     this._signallingChannel.on('message',
         this._peer.handleSignalMessage.bind(this._peer));
     this._signallingChannel.emit('ready');
+    continuation();
   }.bind(this));
 
-  continuation();
 };
 
 // TODO: delay continuation until the open callback rom _peer is called.
