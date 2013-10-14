@@ -12,6 +12,7 @@ freedom.on('create', function() {
   core.createChannel().done(function(id, cinfo) {
     cinfo.channel.done(function(id, chan) {
       channels[id] = chan;
+      chan.on('message', function(msg) {freedom.emit('message', msg)})
     }.bind(this, id));
     friend.emit('message', {
       cmd: 'create',
