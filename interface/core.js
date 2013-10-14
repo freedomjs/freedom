@@ -53,6 +53,12 @@ fdom.apis.set("core.peerconnection", {
   'onClose': {type: "event", value: {}}
 });
 
+fdom.apis.set('core.echo', {
+  'setup': {type: "method", value: ["proxy"]},
+  'send': {type: "method", value: ["string"]},
+  'message': {type: "event", value: "string"}
+});
+
 
 fdom.apis.set('core.sctp-peerconnection', {
   // Setup the link to the peer and options for this peer connection.

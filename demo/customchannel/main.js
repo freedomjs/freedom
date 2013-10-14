@@ -13,7 +13,6 @@ freedom.on('create', function() {
     cinfo.channel.done(function(id, chan) {
       channels[id] = chan;
       chan.on('message', function(msg) {freedom.emit('message', msg);});
-      chan.on('ready', function(){freedom.emit('message', ' replied ready');})
     }.bind(this, id));
     friend.emit('message', {
       cmd: 'create',
@@ -33,11 +32,38 @@ freedom.on('destroy', function(id) {
 });
 
 freedom.on('message', function(id) {
-  freedom.emit('message', 'sending message to ' + id);
-  channels[id].emit('message', 'Message to chan ' + id);
-  channels[id].emit('ready');
+  if(channels[id].peer) {
+   freedom.emit('message', 'sending message to peer ' + id);
+   channels[id].send({'channelLabel':'test', 'text':'message to peer ' + id});
+ } else {
+    freedom.emit('message', 'sending message to ' + id);
+    channels[id].emit('message', 'Message to chan ' + id);
+  }
+});
+
+freedom.on('peer', function() {
+  var thisid = id;
+  id++;
+  core.createChannel().done(function(cinfo) {
+    var peer = freedom['core.echo']();
+    peer.on('message', function(str) { 
+      freedom.emit('message', "from provider: " + JSON.stringify(str));
+    });
+ 
+    cinfo.channel.done(function(chan) {
+      channels[thisid] = chan;
+      chan.on('message', function(m) {
+        freedom.emit('message', "from custom: " + JSON.stringify(m));
+      });
+    });
+
+    peer.setup(cinfo.identifier);
+    channels[thisid] = peer;
+    channels[thisid].peer = true;
+  });
 });
 
 friend.on('message', function(str) {
   freedom.emit('message', str);
 });
+
