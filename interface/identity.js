@@ -66,6 +66,8 @@ fdom.apis.set('identity', {
   'logout': {type: 'method', value: ['string', 'string']},
   //Event on change in profile
   //(includes changes to roster)
+  //You will receive an onChange event with your own id; this will tell you
+  //your name, url, and imageData.
   'onChange': {type: 'event', value: {
     'userId': 'string',
     'name': 'string',
@@ -84,6 +86,12 @@ fdom.apis.set('identity', {
   }},
   //Event on provider status
   //Can be 'offline', 'online', 'authenticating', 'connecting' or 'error'
+  //userId is only there when status = online | connecting.
+  //All other parameters are always there.
+  //
+  //TODO: consider userId for when offline happens. What if you're connected
+  //to the same network with multiple userIds. Then you need to know which are
+  //online and which are not!
   'onStatus': {type: 'event', value: {
     'userId': 'string', //userId of network this is about
     'network': 'string',//name of the network (chosen by identity provider)
