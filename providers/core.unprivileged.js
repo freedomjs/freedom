@@ -82,9 +82,10 @@ Core_unprivileged.prototype.onMessage = function(source, msg) {
  * @param {Function} continuation A function to be called with the proxy.
  */
 Core_unprivileged.prototype.bindChannel = function(identifier, continuation, source) {
-  var toBind = Core_unprivileged.unboundChannels[identifier];
+  var toBind = Core_unprivileged.unboundChannels[identifier],
+      newSource = !source;
 
-  if (!source) {
+  if (newSource) {
     console.log('making local proxy for core binding');
     source = new fdom.port.Proxy(fdom.proxy.EventInterface);
     this.manager.setup(source);
@@ -107,7 +108,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
     }
   } else if (toBind && toBind.remote) {
     console.log('doing remote binding downward');
-    this.manager.createLink(source, identifier, toBind.source, identifier);
+    this.manager.createLink(source, newSource ? 'default' : identifier, toBind.source, identifier);
     toBind.resolve({
       type: 'Bind Channel',
       request:'core',
