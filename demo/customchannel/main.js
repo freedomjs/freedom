@@ -45,36 +45,21 @@ freedom.on('peer', function() {
   var thisid = id;
   id++;
   core.createChannel().done(function(cinfo) {
-    core.createChannel().done(function(cinfo, c2info) {
-      var peerEnd1 = freedom['core.sctp-peerconnection']();
-      var peerEnd2 = freedom['core.sctp-peerconnection']();
-
-      peerEnd1.peer = true;
-      channels[thisid] = peerEnd1;
-
-      peerEnd2.on('onReceive', function(str) {
-        freedom.emit('message', "from Peer Connection Round Trip: " + JSON.stringify(str));
-      });
-
+    var peer = freedom['core.echo']();
+    peer.on('message', function(str) { 
+      freedom.emit('message', "from provider: " + JSON.stringify(str));
+    });
  
-      c2info.channel.done(function(chan) {
-        channels[thisid].c2 = chan;
-        chan.on('message', function(m) {
-          channels[thisid].c.emit('message', m);
-        });
+    cinfo.channel.done(function(chan) {
+      channels[thisid] = chan;
+      chan.on('message', function(m) {
+        freedom.emit('message', "from custom: " + JSON.stringify(m));
       });
+    });
 
-      cinfo.channel.done(function(chan) {
-        channels[thisid].c = chan;
-        chan.on('message', function(m) {
-          channels[thisid].c2.emit('message', m);
-        });
-      });
-
-      // Set them up.
-      peerEnd1.setup(cinfo.identifier);
-      peerEnd2.setup(c2info.identifier);
-    }.bind(this, cinfo));
+    peer.setup(cinfo.identifier);
+    channels[thisid] = peer;
+    channels[thisid].peer = true;
   });
 });
 

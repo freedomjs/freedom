@@ -10,6 +10,6 @@
     }
   },
   "permissions": [
-    "core.sctp-peerconnection"
+    "core.echo"
   ]
 }
