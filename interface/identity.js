@@ -68,6 +68,8 @@ fdom.apis.set('identity', {
   //(includes changes to roster)
   //You will receive an onChange event with your own id; this will tell you
   //your name, url, and imageData.
+  //Current contract is that clients grows monotonically, when clients go
+  //offline, they are kept in the clients and have |status| "offline".
   'onChange': {type: 'event', value: {
     'userId': 'string',
     'name': 'string',
