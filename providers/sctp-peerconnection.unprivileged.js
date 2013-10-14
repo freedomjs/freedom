@@ -96,6 +96,7 @@ SctpPeerConnection.prototype.setup =
   this._peer = new DataPeer(this.peerName, dataChannelCallbacks);
 
   // Setup link between Freedom messaging and _peer's signalling.
+  // Note: the signalling channel should only be sending receiveing strings.
   this._core.bindChannel(signallingChannelId, function(channel) {
     this._signallingChannel = channel;
     this._peer.setSendSignalMessage(
