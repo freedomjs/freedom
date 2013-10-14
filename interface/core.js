@@ -65,10 +65,9 @@ fdom.apis.set('core.sctp-peerconnection', {
   'setup': {type: "method",
     value: [
       // The 'proxy' object is a freedom channel identifier used to send/receive
-      // messages to/from a signalling chanel. TODO: The string is meant to be a
-      // boolean, but Freedom doesn't support it yet.
+      // text messages to/from a signalling chanel.
       "proxy",
-      // the peerName, used debugging and console messages.
+      // The peerName, used debugging and console messages.
       "string",
       ]
   },
