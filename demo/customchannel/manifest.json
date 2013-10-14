@@ -8,5 +8,8 @@
     "friend": {
       "url": "friend.json"
     }
-  }
+  },
+  "permissions": [
+    "core.echo"
+  ]
 }

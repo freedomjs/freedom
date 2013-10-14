@@ -45,37 +45,27 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
         request: 'core'
       });
       this.start();
-    } else if (!this.port && message.channel) {
+      return;
+    } else if (message.type === 'createLink' && message.channel) {
       this.externalPortMap[message.name] = message.channel;
+      if (this.internalPortMap[message.name] === undefined) {
+        this.internalPortMap[message.name] = false;
+      }
       this.emit(message.channel, {
         type: 'default channel announcement',
         channel: message.reverse
       });
+      return;
     } else if (message.core) {
       this.core = new message.core();
       this.emit('core', message.core);
+      return;
     } else {
       this.port.onMessage(flow, message);
     }
-  } else if (flow.indexOf('custom') === 0) {
-    if (this.internalPortMap[flow] === undefined) {
-      this.port.onMessage('control', {
-        request: 'link',
-        type: 'Custom Binding',
-        to: {id: flow.substr(6)},
-        name: flow
-      });
-      this.externalPortMap[flow] = message.channel;
-      this.internalPortMap[flow] = false;
-      return;
-    }
-    if (!this.internalPortMap[flow]) {
-      this.on('custom', this.onMessage.bind(this, flow, message));
-    } else {
-      this.port.onMessage(this.internalPortMap[flow], message);
-    }
   } else {
     if (this.externalPortMap[flow] === false && message.channel) {
+      //console.log('handling channel announcement for ' + flow);
       this.externalPortMap[flow] = message.channel;
       if (this.manifest.provides && flow === 'default') {
         this.externalPortMap[this.manifest.provides[0]] = message.channel;
@@ -84,7 +74,6 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
     } else if (!this.started) {
       this.once('start', this.onMessage.bind(this, flow, message));
     } else {
-//      console.log('mapping for ' + flow + ' was ' + this.internalPortMap[flow]);
       if (this.internalPortMap[flow] === false) {
         this.once('bound', this.onMessage.bind(this, flow, message));
       } else {
@@ -157,6 +146,7 @@ fdom.port.App.prototype.toString = function() {
  */
 fdom.port.App.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
+    console.log('bound for ' + name);
     this.internalPortMap[name] = message.channel;
     this.emit('bound');
     return;
@@ -170,6 +160,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
     } else if (message.flow === 'core' && message.message) {
       if (message.message.type === 'register') {
         message.message.reply = this.port.onMessage.bind(this.port, 'control');
+        this.externalPortMap[message.message.id] = false;
       }
       this.core.onMessage(this, message.message);
     } else if (message.name === 'AppInternal' && !this.appInternal) {
@@ -194,10 +185,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         type: 'channel announcement',
         channel: message.reverse
       });
-      if (typeof message.name === 'string' &&
-          message.name.indexOf('custom') === 0) {
-        this.emit('custom');
-      }
+      this.emit('internalChannelReady');
     }
   } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
     this.started = true;
