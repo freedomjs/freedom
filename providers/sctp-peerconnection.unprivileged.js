@@ -47,16 +47,16 @@ SctpPeerConnection.prototype.setup =
   var dataChannelCallbacks = {
     // onOpenFn is called at the point messages will actually get through.
     onOpenFn: function (smartDataChannel) {
-      console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
         smartDataChannel.dataChannel.label +
-        "): onOpenFn");
+        "): onOpenFn"); */
       self.dispatchEvent("onOpenDataChannel",
           smartDataChannel.dataChannel.label);
     },
     onCloseFn: function (smartDataChannel) {
-      console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
         smartDataChannel.dataChannel.label +
-        "): onCloseFn");
+        "): onCloseFn"); */
       self.dispatchEvent("onCloseDataChannel",
                          { channelId: smartDataChannel.dataChannel.label});
     },
@@ -76,16 +76,16 @@ SctpPeerConnection.prototype.setup =
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'buffer': event.data });
       } else if (typeof(event.data) == 'string') {
-        console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*        console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got string (onReceived) data: ", event.data);
+          "): " + "Got string (onReceived) data: ", event.data); */
         self.dispatchEvent('onReceived',
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'text': event.data });
       } else {
-        console.error(smartDataChannel.peerName + ": dataChannel(" +
+/*        console.error(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got unkown data :( ");
+          "): " + "Got unkown data :( "); */
       }
     },
     // Default on error, prints it.
