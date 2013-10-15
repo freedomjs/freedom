@@ -45,7 +45,9 @@ function SimpleDataPeer(peerName) {
   // A way to speak to the peer to send SDP headers etc.
   this._sendSignalMessage = null;
   // The peer connection.
-  this._pc = new RTCPeerConnection(null,
+  //TODO wire up STUN/TURN server config from options page
+  var pc_config = {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]};
+  this._pc = new RTCPeerConnection(pc_config,
       {optional: [{DtlsSrtpKeyAgreement: true}]});
 
   // This state variable is used to fake offer/answer when they are wrongly
