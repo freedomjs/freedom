@@ -46,7 +46,14 @@ function SimpleDataPeer(peerName) {
   this._sendSignalMessage = null;
   // The peer connection.
   //TODO wire up STUN/TURN server config from options page
-  var pc_config = {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]};
+  var pc_config = {"iceServers": [{"urls": [
+    "stun:stun.l.google.com:19302",
+    "stun1.l.google.com:19302",
+    "stun2.l.google.com:19302",
+    "stun3.l.google.com:19302",
+    "stun4.l.google.com:19302",
+    "turn:stun.l.google.com:19302"
+  ]}]};
   this._pc = new RTCPeerConnection(pc_config,
       {optional: [{DtlsSrtpKeyAgreement: true}]});
 
