@@ -107,8 +107,11 @@ function SimpleDataPeer(peerName) {
     }
   }.bind(this);
   var request_key = Math.floor(Math.random() * 1e8);
-  this._turnRequest.open('GET',
-                         'https://computeengineondemand.appspot.com/turn?username=UProxy&key=' + request_key);
+  console.log('Requesting TURN from ' +
+      'https://computeengineondemand.appspot.com/turn?username=UProxy&key=' + request_key);
+  this._turnRequest.open(
+      'GET', 'https://computeengineondemand.appspot.com/turn?username=UProxy&key=' +
+      request_key);
   this._turnRequest.send(null);
   // This state variable is used to fake offer/answer when they are wrongly
   // requested and we really just need to reuse what we already have.
