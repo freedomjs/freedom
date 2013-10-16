@@ -114,8 +114,7 @@ SctpPeerConnection.prototype.setup =
 // TODO: delay continuation until the open callback rom _peer is called.
 SctpPeerConnection.prototype.openDataChannel =
     function(channelId, continuation) {
-  this._peer.openDataChannel(channelId);
-  continuation();
+  this._peer.openDataChannel(channelId, continuation);
 };
 
 SctpPeerConnection.prototype.closeDataChannel =
@@ -132,8 +131,7 @@ SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
     console.error("No valid data to send has been provided.", sendInfo);
     return;
   }
-  this._peer.send(sendInfo.channelLabel, objToSend);
-  continuation();
+  this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
 
 SctpPeerConnection.prototype.shutdown = function(continuation) {
