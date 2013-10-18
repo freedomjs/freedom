@@ -3,7 +3,7 @@ fdom.apis.set('identity', {
   'id': {type: 'property', value: 'string'},
   //Log into the network (See below for parameters)
   //e.g. login(Object options)
-  //Returns nothing
+  //Returns same schema as onStatus
   'login': {type: 'method', value: [{
     'network': 'string',  //Network name
     'agent': 'string',    //Agent name of app
@@ -58,11 +58,7 @@ fdom.apis.set('identity', {
   //If networkName is null, but userId is not - log out of that account
   //If both fields are null, log out of all accounts on all networks
   //e.g. logout(String userId, String networkName)
-  //Returns {
-  //  'userId': 'string',
-  //  'success': 'boolean',
-  //  'message': 'string'
-  //}
+  //Returns same schema as onStatus
   'logout': {type: 'method', value: ['string', 'string']},
   //Event on change in profile
   //(includes changes to roster)

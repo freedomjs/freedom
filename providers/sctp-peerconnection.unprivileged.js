@@ -47,43 +47,45 @@ SctpPeerConnection.prototype.setup =
   var dataChannelCallbacks = {
     // onOpenFn is called at the point messages will actually get through.
     onOpenFn: function (smartDataChannel) {
-      console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
         smartDataChannel.dataChannel.label +
-        "): onOpenFn");
+        "): onOpenFn"); */
       self.dispatchEvent("onOpenDataChannel",
           smartDataChannel.dataChannel.label);
     },
     onCloseFn: function (smartDataChannel) {
-      console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
         smartDataChannel.dataChannel.label +
-        "): onCloseFn");
+        "): onCloseFn"); */
       self.dispatchEvent("onCloseDataChannel",
-          smartDataChannel.dataChannel.label);
+                         { channelId: smartDataChannel.dataChannel.label});
     },
     // Default on real message prints it to console.
     onMessageFn: function (smartDataChannel, event) {
-      console.log(smartDataChannel.peerName + ": dataChannel(" +
+      // These were filling the console, and causing the console to
+      // hog the CPU.
+/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): onMessageFn", event);
+          "): onMessageFn", event); */
       if (event.data instanceof ArrayBuffer) {
         var data = new Uint8Array(event.data);
-        console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*        console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got ArrayBuffer (onReceived) data: ", data);
+          "): " + "Got ArrayBuffer (onReceived) data: ", data); */
         self.dispatchEvent('onReceived',
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'buffer': event.data });
       } else if (typeof(event.data) == 'string') {
-        console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*        console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got string (onReceived) data: ", event.data);
+          "): " + "Got string (onReceived) data: ", event.data); */
         self.dispatchEvent('onReceived',
             { 'channelLabel': smartDataChannel.dataChannel.label,
               'text': event.data });
       } else {
-        console.error(smartDataChannel.peerName + ": dataChannel(" +
+/*        console.error(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
-          "): " + "Got unkown data :( ");
+          "): " + "Got unkown data :( "); */
       }
     },
     // Default on error, prints it.
@@ -112,13 +114,12 @@ SctpPeerConnection.prototype.setup =
 // TODO: delay continuation until the open callback rom _peer is called.
 SctpPeerConnection.prototype.openDataChannel =
     function(channelId, continuation) {
-  this._peer.openDataChannel(channelId);
-  continuation();
+  this._peer.openDataChannel(channelId, continuation);
 };
 
 SctpPeerConnection.prototype.closeDataChannel =
     function(channelId, continuation) {
-  this._peer.closeDataChannel(channelId);
+  this._peer.closeChannel(channelId);
   continuation();
 };
 
@@ -130,8 +131,7 @@ SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
     console.error("No valid data to send has been provided.", sendInfo);
     return;
   }
-  this._peer.send(sendInfo.channelLabel, objToSend);
-  continuation();
+  this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
 
 SctpPeerConnection.prototype.shutdown = function(continuation) {
@@ -140,6 +140,3 @@ SctpPeerConnection.prototype.shutdown = function(continuation) {
 };
 
 fdom.apis.register('core.sctp-peerconnection', SctpPeerConnection);
-
-
-
