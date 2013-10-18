@@ -76,6 +76,17 @@ fdom.port.Provider.prototype.getInterface = function() {
       }.bind(this)
     };
 
+    eachProp(this.definiton, function(prop, name) {
+      switch(prop.type) {
+      case "constant":
+        Object.defineProperty(this.iface, name, {
+          value: prop.value,
+          writable: false
+        });
+        break;
+      }
+    }.bind(this));
+
     return this.iface;
   }
 };

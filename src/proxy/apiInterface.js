@@ -42,6 +42,11 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
       }
       events[name] = prop;
       break;
+    case 'constant':
+      Object.defineProperty(this, name, {
+        value: prop.value,
+        writable: false
+      });
     }
   }.bind(this));
 
