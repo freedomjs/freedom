@@ -1,4 +1,10 @@
 fdom.apis.set('identity', {
+  'errors': {type: 'constant', value: {
+    'SUCCESS': 0,
+    'ERR_UNKNOWN': 1,
+    'ERR_AUTH': 2,
+    'ERR_MISSING_SERVER': 3
+  }}
   //e.g. var id = identity.id
   'id': {type: 'property', value: 'string'},
   //Log into the network (See below for parameters)
