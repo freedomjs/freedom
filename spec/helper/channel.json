@@ -1,0 +1,15 @@
+{
+  "name": "Custom Channel Bouncer",
+  "description": "Custom Channels Sample FreeDOM application",
+  "app": {
+    "script": "channel.js"
+  },
+  "dependencies": {
+    "friend": {
+      "url": "friend.json"
+    }
+  },
+  "permissions": [
+    "core.echo"
+  ]
+}

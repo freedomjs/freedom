@@ -161,6 +161,10 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
           this.toString(),
           message.message.msg);
     } else if (message.flow === 'core' && message.message) {
+      if (!this.core) {
+        this.once('core', this.emitMessage.bind(this, name, message));
+        return;
+      }
       if (message.message.type === 'register') {
         message.message.reply = this.port.onMessage.bind(this.port, 'control');
         this.externalPortMap[message.message.id] = false;
