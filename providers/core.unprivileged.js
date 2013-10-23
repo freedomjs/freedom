@@ -1,5 +1,6 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, makeAbsolute */
-/*jslint indent:2,white:true,sloppy:true */
+/*globals fdom:true, handleEvents, mixin, eachProp, makeAbsolute, getId */
+/*jslint indent:2,white:true,sloppy:true,sub:true */
+
 
 /**
  * Core freedom services available to all modules.
@@ -56,16 +57,26 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
   });
 };
 
+/**
+ * Receive a message from another core instance.
+ * Note: Core_unprivileged is not registered on the hub. it is a provider,
+ *     as it's location and name would indicate. This function is called by
+ *     port-app to relay messages up to higher levels.  More generally, the
+ *     messages emitted by the core to 'this.manager.emit(this.mananage.delegate'
+ *     Should be onMessaged to the controlling core.
+ * @param {String} source The source of the message.
+ * @param {Object} msg The messsage from an isolated core provider.
+ */
 Core_unprivileged.prototype.onMessage = function(source, msg) {
-  if (msg.type == 'register') {
+  if (msg.type === 'register') {
     Core_unprivileged.unboundChannels[msg.id] = {
       remote: true,
       resolve: msg.reply,
       source: source
     };
-  } else if (msg.type == 'clear') {
+  } else if (msg.type === 'clear') {
     delete Core_unprivileged.unboundChannels[msg.id];
-  } else if (msg.type == 'bind') {
+  } else if (msg.type === 'bind') {
     if (Core_unprivileged.unboundChannels[msg.id]) {
       this.bindChannel(msg.id, function() {}, source);
     }
@@ -86,14 +97,14 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       newSource = !source;
 
   if (newSource) {
-    console.log('making local proxy for core binding');
+    fdom.debug.log('making local proxy for core binding');
     source = new fdom.port.Proxy(fdom.proxy.EventInterface);
     this.manager.setup(source);
   }
 
   if (toBind && toBind.local) {
-    console.log('doing local binding with ' + source);
-    this.manager.createLink(source, identifier, toBind.proxy, 'default'); //, toBind.proxy);
+    fdom.debug.log('doing local binding with ' + source);
+    this.manager.createLink(source, identifier, toBind.proxy, 'default');
     delete Core_unprivileged.unboundChannels[identifier];
     if (this.manager.delegate && this.manager.toDelegate['core']) {
       this.manager.emit(this.manager.delegate, {
@@ -107,8 +118,12 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       });
     }
   } else if (toBind && toBind.remote) {
-    console.log('doing remote binding downward');
-    this.manager.createLink(source, newSource ? 'default' : identifier, toBind.source, identifier);
+    fdom.debug.log('doing remote binding downward');
+    this.manager.createLink(
+        source,
+        newSource ? 'default' : identifier,
+        toBind.source,
+        identifier);
     toBind.resolve({
       type: 'Bind Channel',
       request:'core',
@@ -120,8 +135,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
     });
     delete Core_unprivileged.unboundChannels[identifier];
   } else if (this.manager.delegate && this.manager.toDelegate['core']) {
-    console.log('doing remote binding upwards');
-    console.warn('delegating bind request, since i havent seen ' + identifier, Core_unprivileged.unboundChannels);
+    fdom.debug.warn('delegating bind request for unseen ID:' + identifier);
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -134,12 +148,15 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
     source.once('start', function(p, cb) {
       cb(p.getInterface());
     }.bind(this, source, continuation));
-    this.manager.createLink(source, 'default', this.manager.hub.getDestination(this.manager.delegate), identifier);
+    this.manager.createLink(source,
+        'default',
+        this.manager.hub.getDestination(this.manager.delegate),
+        identifier);
     delete Core_unprivileged.unboundChannels[identifier];
     return;
   } else {
-    console.warn('Asked to bind unknown channel: ' + identifier);
-    console.log(Core_unprivileged.unboundChannels);
+    fdom.debug.warn('Asked to bind unknown channel: ' + identifier);
+    fdom.debug.log(Core_unprivileged.unboundChannels);
     continuation();
     return;
   }
