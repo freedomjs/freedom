@@ -1,0 +1,22 @@
+{
+  "name": "freedom",
+  "version": "0.1.0",
+  "homepage": "https://github.com/UWNetworksLab/freedom",
+  "authors": [
+    "Will Scott <wrs@cs.washington.edu>",
+    "Raymond Cheng <ryscheng@cs.washington.edu>"
+  ],
+  "description": "Embracing a Distributed Web",
+  "main": "freedom.js",
+  "license": "Apache",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "spec",
+    "demo",
+    "tools"
+  ]
+}

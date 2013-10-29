@@ -1,6 +1,11 @@
+### Built files
 /freedom.js
 /freedom.min.js
+
+### Auto-generated
 tools/doc
 node_modules
+
+### Demo dependencies
 demo/chat/server/tornado/
 demo/texteditor/server/tornado/

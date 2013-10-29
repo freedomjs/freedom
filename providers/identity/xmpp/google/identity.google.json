@@ -1,0 +1,15 @@
+{
+  "name": "Google Hangouts Identity",
+  "description": "Communication and discovery service for Google contacts.",
+  "app": {
+    "script": ["identity.google.js", "../xmppidentityprovider.js", "../node-xmpp-browser.js"]
+  },
+  "provides": [
+    "identity"
+  ],
+  "permissions": [
+    "core.socket",
+    "core.view",
+    "core.storage"
+  ]
+}
