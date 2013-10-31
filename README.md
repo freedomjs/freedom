@@ -33,12 +33,15 @@ and then visiting [```http://localhost:8000/demo```](http://localhost:8000/demo)
 
 Or, browse the demos online [here](https://homes.cs.washington.edu/~wrs/demo/).
 
+Note: FreeDOM has only been tested using Chrome and Firefox.
+Other browsers may experience issues.
+
 Development
 ---------
 
-FreeDOM can be compiled locally by runing
+FreeDOM can be compiled locally by running
 
-    LOCAL=yes make
+    make
 
 or by running
 

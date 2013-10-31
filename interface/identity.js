@@ -1,9 +1,12 @@
 fdom.apis.set('identity', {
-  'errors': {type: 'constant', value: {
-    'SUCCESS': 0,
-    'ERR_UNKNOWN': 1,
-    'ERR_AUTH': 2,
-    'ERR_MISSING_SERVER': 3
+  //Can be 'offline', 'online', 'authenticating', 'connecting' or 'error'
+  'status_codes': {type: 'constant', value: {
+    'OFFLINE': 0,
+    'AUTHENTICATING': 1,
+    'CONNECTING': 2,
+    'ONLINE': 3,
+    'ERR_AUTHENTICATION': -1,
+    'ERR_NO_SERVER': -2
   }},
   //e.g. var id = identity.id
   'id': {type: 'property', value: 'string'},
@@ -89,17 +92,15 @@ fdom.apis.set('identity', {
     'message': 'string'       //message contents
   }},
   //Event on provider status
-  //Can be 'offline', 'online', 'authenticating', 'connecting' or 'error'
-  //userId is only there when status = online | connecting.
+  //NOTE: userId is not guaranteed to be present
+  //  e.g. if status == ONLINE | CONNECTING, it should be present
+  //       if status == OFFLINE, it could be missing if the user hasn't logged in yet
+  //                    if could be present if the user just logged off
   //All other parameters are always there.
-  //
-  //TODO: consider userId for when offline happens. What if you're connected
-  //to the same network with multiple userIds. Then you need to know which are
-  //online and which are not!
   'onStatus': {type: 'event', value: {
     'userId': 'string', //userId of network this is about
     'network': 'string',//name of the network (chosen by identity provider)
-    'status': 'string', //One of the above statuses
+    'status': 'number', //One of the constants defined in 'status_codes'
     'message': 'string' //More detailed message about status
   }}
 });
