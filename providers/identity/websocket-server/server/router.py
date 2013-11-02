@@ -8,7 +8,7 @@ Send messages to server to be broadcast to all connected clients from the same o
   unless 'to' attribute is populated - then directed to just that client
  
 Received messages
-  On connect: {id: string, site: string, from: int, msg: [connecteduserids]}
+  On initial connection: {id: string, site: string, from: int, msg: [connecteduserids]}
   On message: {from: string, site: string, ...}
 """
 import os, sys, inspect
@@ -59,7 +59,6 @@ class MainHandler(tornado.websocket.WebSocketHandler):
       'from':0,
       'msg':MainHandler.sites[site]
     });
-
 
   def on_finish(self):
     self.on_close()
