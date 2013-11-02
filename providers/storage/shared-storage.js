@@ -1,6 +1,6 @@
 function StorageProvider() {
   this.store = freedom['core.storage']();
-  console.log("Storage Provider, running in worker " + self.location.href);
+  console.log("Shared Storage Provider, running in worker " + self.location.href);
 }
 
 StorageProvider.prototype.keys = function(continuation) {

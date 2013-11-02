@@ -1,0 +1,13 @@
+{
+  "name": "Shared Storage",
+  "description": "All instances of this provider within an app share a common store (regardless of parent)",
+  "app": {
+    "script": "shared-storage.js"
+  },
+  "provides": [
+    "storage"
+  ],
+  "permissions": [
+    "core.storage"
+  ]
+}

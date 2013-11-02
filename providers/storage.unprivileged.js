@@ -45,7 +45,8 @@ Storage_unprivileged.prototype.clear = function(continuation) {
  * INTERNAL METHODS
  **/
 Storage_unprivileged.prototype.toGlobalKey = function(key) {
-  return (this.app.manifestId + key);
+  //return (this.app.manifestId + key);
+  return key;
 };
 
 /** REGISTER PROVIDER **/
