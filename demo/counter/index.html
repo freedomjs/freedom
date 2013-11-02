@@ -3,11 +3,14 @@
 <head>
   <title>FreeDOM Sample</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <!-- Load FreeDOM and point it to the root module -->
   <script type="text/javascript"
       src="../../freedom.js"
       data-manifest="manifest.json">
   </script>
   <script type="text/javascript">
+  // After loading freedom.js, the window is populated with a 'freedom'
+  // object, which is used as a message passing channel to the root module
   window.onload = function() {
     //Forward click events to the root FreeDOM module
     document.getElementById('click').onclick = function() {
