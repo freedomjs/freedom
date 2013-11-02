@@ -1,9 +1,26 @@
 /**
  * SOCIAL API
  *
- * API for connecting to a social network of other users
- * The implementation (provider) behind this API has full control
- * over which users to expose to other users in their roster
+ * API for connecting to social networks and messaging of users.
+ * Note that the following properties depend on the specific implementation (provider)
+ * behind this API that you choose.
+ * Depending on the Social provider, it may also expose multiple networks simultaneously.
+ * In this case, you may 'login' to each separately and receive multiple <user cards> for yourself.
+ * Note that the network identifier will be exposed in 'onStatus' events.
+ * It is highly advised to react to 'onStatus' events, as opposed to hardcoding in network identifiers,
+ * as these identifiers are subject to change.
+ *
+ * Variable properties dependent on choice of provider:
+ * - Edges in the social network (who is on your roster)
+ * - Reliable message passing (or unreliable)
+ * - In-order message delivery (or out of order)
+ * - Persistent clientId - Whether your clientId changes between logins when
+ *    connecting from the same device
+ *
+ * Invariants across all providers:
+ * - The userId for each user does not change between logins
+ * - The Social provider should output an 'onStatus' event upon initialization (after constructor)
+ *   with its current state.
  *
  * Define a <client card>, as the following:
  * - Information related to a specific device or client of a user
@@ -43,93 +60,124 @@ fdom.apis.set('social', {
     // There are no guarantees other methods or events will work until
     // the user calls 'login'
     'OFFLINE': 0,
-    // 
+    // Fetching login credentials or authorization tokens
     'AUTHENTICATING': 1,
+    // Connecting to the social network
     'CONNECTING': 2,
+    // Online!
     'ONLINE': 3,
+    // Error with authenticating to the server
     'ERR_AUTHENTICATION': -1,
     'ERR_NO_SERVER': -2
   }},
 
-  // Store
-  // e.g. var id = social.id
-  'id': {type: 'property', value: 'string'},
+  /**
+   * Stores a list of your userId's
+   * NOTE: This is not yet implemented because 'property' is not working
+   * e.g. var id = social.id
+   **/
+  'id': {type: 'property', value: ['string']},
 
-  //Log into the network (See below for parameters)
-  //e.g. login(Object options)
-  //Returns same schema as onStatus
+  /**
+   * Log into the network (See below for parameters)
+   * e.g. social.login(Object options)
+   *
+   * @method login
+   * @param {Object} loginOptions - See below
+   * @return {Object} status - Same schema as 'onStatus' events
+   **/
   'login': {type: 'method', value: [{
-    'network': 'string',  //Network name
-    'agent': 'string',    //Agent name of app
-    'version': 'string',  //Version of app
-    'url': 'string',      //URL of app
-    'interactive': 'bool' //Prompt user?
+    'network': 'string',  //Network name (as emitted by 'onStatus' events)
+    'agent': 'string',    //Name of the application
+    'version': 'string',  //Version of application
+    'url': 'string',      //URL of application
+    'interactive': 'bool' //Prompt user for login if credentials not cached?
   }]},
 
-  //Gets the profile of a user
-  //If id is null, return self
-  //e.g. social.getProfile(String id);
-  //Returns {
-  //  'me': { // List of my cards (one for each network), indexed by userId
-  //    'userMe1': <user card>,
-  //    ...
-  //  },
-  //  'roster': { // List of my friends, indexed by userId
-  //    'friend1': <user card>,
-  //    'friend2': <user card>,
-  //    ...
-  //  }
-  //}
-  'getProfile': {type: 'method', value: ['string']},
+  /**
+   * Returns all the <user card>s that we've seen so far (from 'onChange' events)
+   * Note: the user's own <user card> will be somewhere in this list
+   * e.g. social.getRoster();
+   *
+   * @method getRoster
+   * @return {Object} { List of <user cards> indexed by userId
+   *    'userId1': <user card>,
+   *    'userId2': <user card>,
+   *     ...
+   * }
+   **/
+  'getRoster': {type: 'method', value: []},
 
-  //Send a message to user on your network
-  //e.g. sendMessage(String destination_id, String message)
-  //Returns nothing
+  /** 
+   * Send a message to user on your network
+   * If the message is sent to a userId, it is sent to all clients
+   * If the message is sent to a clientId, it is sent to just that one client
+   * If the destination is not specified or invalid, the message is dropped
+   * e.g. sendMessage(String destination_id, String message)
+   * 
+   * @method sendMessage
+   * @param {String} destination_id - target
+   * @return nothing
+   **/
   'sendMessage': {type: 'method', value: ['string', 'string']},
 
-  //Logs out of the userId on the specific network
-  //If userId is null, but network is not - log out of all accounts on that network
-  //If networkName is null, but userId is not - log out of that account
-  //If both fields are null, log out of all accounts on all networks
-  //e.g. logout(String userId, String networkName)
-  //Returns same schema as onStatus
-  'logout': {type: 'method', value: ['string', 'string']},
+  /**
+   * Logs out the specific user of the specified network
+   * If userId is null, but network is not - log out of all accounts on that network
+   * If networkName is null, but userId is not - log out of that account
+   * If both fields are null, log out of all accounts on all networks
+   * e.g. logout(Object options)
+   * 
+   * @method logout
+   * @param {Object} logoutOptions - see below 
+   * @return {Object} status - same schema as 'onStatus' events
+   **/
+  'logout': {type: 'method', value: [{
+    'network': 'string',  // Network to log out of
+    'userId': 'string'    // User to log out
+  }]},
 
-  //Event on change in profile
-  //(includes changes to roster)
-  //You will receive an onChange event with your own id; this will tell you
-  //your name, url, and imageData.
-  //Current contract is that clients grows monotonically, when clients go
-  //offline, they are kept in the clients and have |status| "offline".
+  /**
+   * Event that is sent on changes to a <user card> 
+   * (for either yourself or one of your friends)
+   * This event must match the schema for an entire <user card> (see above)
+   * 
+   * Current contract is that clients grows monotonically, when clients go
+   * offline, they are kept in the clients and have |status| "offline".
+   **/
   'onChange': {type: 'event', value: {
-    'userId': 'string',
-    'name': 'string',
-    'url': 'string',
-    'imageData': 'string',
-    'clients': 'object'
+    'userId': 'string',     // Unique identifier of the user (e.g. alice@gmail.com)
+    'name': 'string',       // Display name (e.g. Alice Foo)
+    'url': 'string',        // Homepage URL (e.g. https://alice.com)
+    'imageData': 'string',  // Data URI of image binary (e.g. data:image/png;base64,adkwe3...)
+    'clients': 'object'     // List of clients keyed by clientId
   }},
 
-  //Event on incoming message
+  /**
+   * Event on incoming messages
+   **/
   'onMessage': {type: 'event', value: {
-    'fromUserId': 'string',   //userId of user message is from
-    'fromClientId': 'string', //clientId of user message is from
-    'toUserId': 'string',     //userId of user message is to
-    'toClientId': 'string',   //clientId of user message is to
+    'fromUserId': 'string',   // userId of user message is from
+    'fromClientId': 'string', // clientId of user message is from
+    'toUserId': 'string',     // userId of user message is to
+    'toClientId': 'string',   // clientId of user message is to
     'network': 'string',      // the network id the message came from.
-    'message': 'string'       //message contents
+    'message': 'string'       // message contents
   }},
 
-  //Event on provider status
-  //NOTE: userId is not guaranteed to be present
-  //  e.g. if status == ONLINE | CONNECTING, it should be present
-  //       if status == OFFLINE, it could be missing if the user hasn't logged in yet
-  //                    if could be present if the user just logged off
-  //All other parameters are always there.
+  /**
+   * Events describing the connection status of a particular network
+   * NOTE: userId is not guaranteed to be present
+   * e.g. if status == ONLINE | CONNECTING, it should be present
+   *      if status == OFFLINE, it could be missing if the user hasn't logged in yet
+   *                     if could be present if the user just logged off
+   * All other parameters are always there.
+   **/
   'onStatus': {type: 'event', value: {
-    'userId': 'string', //userId of network this is about
-    'network': 'string',//name of the network (chosen by social provider)
-    'status': 'number', //One of the constants defined in 'status_codes'
-    'message': 'string' //More detailed message about status
+    'network': 'string',  // Name of the network (chosen by social provider)
+    'userId': 'string',   // userId of myself on this network
+    'status': 'number',   // One of the constants defined in 'status_codes'
+    'message': 'string'   // More detailed message about status
   }}
 
 });
