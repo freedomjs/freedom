@@ -1,23 +1,23 @@
-var identity = freedom.identity();
+var social = freedom.socialprovider();
 var activeJid;
 var roster = {};
 
 freedom.on('send-message', function(val) {
-  identity.sendMessage(val.to, val.message);
+  social.sendMessage(val.to, val.message);
 });
 
-identity.on('onStatus', function(msg) {
+social.on('onStatus', function(msg) {
   freedom.emit('onStatus', msg);
   if (msg.userId) {
     freedom.emit('recv-uid', msg.userId);
   }
 });
 
-identity.on('onMessage', function(data) {
+social.on('onMessage', function(data) {
   freedom.emit('recv-message', data.message);
 });
 
-identity.on('onChange', function(data) {
+social.on('onChange', function(data) {
   roster[data.userId] = data;
   var buddylist = [];
   for (var k in roster) {
@@ -31,7 +31,7 @@ identity.on('onChange', function(data) {
 
 var onload = function() {
   //Fetch UID
-  identity.login({
+  social.login({
     network: 'websockets',
     agent: 'chatdemo', 
     version: '0.1', 

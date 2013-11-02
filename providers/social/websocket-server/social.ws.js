@@ -1,7 +1,7 @@
 //var WS_URL = 'ws://localhost:8082/route/';
 var WS_URL = 'ws://p2pbr.com:8082/route/';
 
-function IdentityProvider() {
+function SocialProvider() {
   this.conn = null;
   this.agent = null;
   this.version = null;
@@ -12,7 +12,7 @@ function IdentityProvider() {
   this.roster = {};
 };
 
-IdentityProvider.prototype.login = function(loginOpts, continuation) {
+SocialProvider.prototype.login = function(loginOpts, continuation) {
   this.conn = new WebSocket(WS_URL+loginOpts.agent);
   //this.conn = new WebSocket(WS_URL);
   this._sendStatus('connecting');
@@ -27,7 +27,7 @@ IdentityProvider.prototype.login = function(loginOpts, continuation) {
   }).bind(this);
 };
 
-IdentityProvider.prototype.logout = function(userId, network, cont) {
+SocialProvider.prototype.logout = function(userId, network, cont) {
   this._sendStatus('offline');
   this.conn.close();
   this.conn = null;
@@ -38,7 +38,7 @@ IdentityProvider.prototype.logout = function(userId, network, cont) {
   });
 };
 
-IdentityProvider.prototype._sendStatus = function(stat) {
+SocialProvider.prototype._sendStatus = function(stat) {
   this.status = stat;
   this.dispatchEvent('onStatus', {
     userId: this.id,
@@ -48,7 +48,7 @@ IdentityProvider.prototype._sendStatus = function(stat) {
   });
 };
 
-IdentityProvider.prototype._addToRoster = function(id) {
+SocialProvider.prototype._addToRoster = function(id) {
   if (!this.roster[id]){
     var c = {};
     c[id] = {
@@ -65,7 +65,7 @@ IdentityProvider.prototype._addToRoster = function(id) {
   }
 };
 
-IdentityProvider.prototype._onMessage = function(msg) {
+SocialProvider.prototype._onMessage = function(msg) {
   msg = JSON.parse(msg.data);
   if (msg.id && msg.from == 0) {
     this.id = msg.id;
@@ -89,14 +89,14 @@ IdentityProvider.prototype._onMessage = function(msg) {
 };
 
 //TODO: implement
-IdentityProvider.prototype.getProfile = function(id, continuation) {
+SocialProvider.prototype.getProfile = function(id, continuation) {
   continuation({});
 };
 
-IdentityProvider.prototype.sendMessage = function(to, msg, continuation) {
+SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   this.conn.send(JSON.stringify({to: to, msg: msg}));
   continuation();
 };
 
-var identity = freedom.identity();
-identity.provideAsynchronous(IdentityProvider);
+var social = freedom.social();
+social.provideAsynchronous(SocialProvider);
