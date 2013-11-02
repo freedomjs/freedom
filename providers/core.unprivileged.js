@@ -96,12 +96,15 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   var toBind = Core_unprivileged.unboundChannels[identifier],
       newSource = !source;
 
+  // when bindChannel is called directly, source will be undefined.
+  // When it is propogated by onMessage, a source for binding will already exist.
   if (newSource) {
     fdom.debug.log('making local proxy for core binding');
     source = new fdom.port.Proxy(fdom.proxy.EventInterface);
     this.manager.setup(source);
   }
 
+  // If this is a known identifier and is in the same context, binding is easy.
   if (toBind && toBind.local) {
     fdom.debug.log('doing local binding with ' + source);
     this.manager.createLink(source, identifier, toBind.proxy, 'default');

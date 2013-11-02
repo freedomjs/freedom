@@ -70,13 +70,27 @@ function mixin(target, source, force) {
 }
 
 /**
- * Get a globally unique ID
+ * Get a unique ID.
  * @method getId
  * @static
  */
 function getId() {
-  // TODO: make better.
-  return 'getid-' + Math.random();
+  var guid = 'guid',
+      domain = 12;
+  if (typeof crypto === 'object') {
+    var buffer = new Uint8Array(domain);
+    crypto.getRandomValues(buffer);
+    eachReverse(buffer, function(n) {
+      guid += '-' + n;
+    });
+  } else {
+    while (domain > 0) {
+      guid += '-' + Math.ceil(255 * Math.random());
+      domain -= 1;
+    }
+  }
+
+  return guid;
 }
 
 /**
@@ -204,8 +218,9 @@ function getURL(blob) {
 }
 
 /**
- * Provide a source URL which to generate an AppContext compatible with
- * the current instance of freedom.
+ * Provide a version of src where the 'isAppContext' function will return true.
+ * Used for creating app contexts which may not be able to determine that they
+ * need to start up as applications by themselves.
  * @method forceAppContext
  * @static
  */
@@ -217,8 +232,8 @@ function forceAppContext(src) {
 }
 
 /**
- * Advertise freedom when running in a priviledged context for registration
- * of context specific providers.
+ * When running in a priviledged context, honor a global
+ * 'freedomcfg' function to allow registration of additional API providers.
  * @method advertise
  * @static
  */
