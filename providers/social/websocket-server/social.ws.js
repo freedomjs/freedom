@@ -18,12 +18,15 @@ var NETWORK_ID = 'websockets';
 
 function SocialProvider() {
   console.log("WS Social Provider at " + self.location.href);
-  this.conn = null;
-  this.id = null;
-  this.roster = {};
+  this.conn = null;   // Web Socket
+  this.id = null;     // userId of this user
+  this.roster = {};   // List of seen users
   setTimeout(this._sendStatus.bind(this,'OFFLINE', 'offline'),0);
 };
 
+/**
+ * Connect to the Web Socket rendezvous server
+ **/
 SocialProvider.prototype.login = function(loginOpts, continuation) {
   this.conn = new WebSocket(WS_URL+loginOpts.agent);
   this._sendStatus('CONNECTING', 'connecting');
@@ -42,7 +45,6 @@ SocialProvider.prototype.login = function(loginOpts, continuation) {
   }).bind(this, continuation);
 };
 
-//TODO: implement
 SocialProvider.prototype.getRoster = function(continuation) {
   continuation(this.roster);
 };
@@ -62,8 +64,16 @@ SocialProvider.prototype.logout = function(logoutOpts, continuation) {
  * INTERNAL METHODS
  **/
 
+/**
+ * Dispatch an 'onStatus' event with the following status
+ *
+ * @method _sendStatus
+ * @param {String} stat - One of the error codes in STATUS_NETWORK
+ * @param {String} message - Display message in the event
+ * @return {Object} - same schema as 'onStatus' event
+ **/
 SocialProvider.prototype._sendStatus = function(stat, message) {
-  //@TODO CHANGE STATUS TO USE STATUS_CODES
+  //@TODO CHANGE STATUS TO USE STATUS_NETWORK
   var result = {
     network: NETWORK_ID,
     userId: this.id,
@@ -74,12 +84,21 @@ SocialProvider.prototype._sendStatus = function(stat, message) {
   return result;
 };
 
+/**
+ * Add the following ID to the roster
+ * All users only have 1 client which is always messageable
+ *
+ * @method _addToRoster
+ * @param {String} id - userId of user
+ * @return nothing
+ **/
 SocialProvider.prototype._addToRoster = function(id) {
-  if (!this.roster[id]){
+  if (!this.roster[id]) {
     var c = {};
+    //@TODO CHANGE STATUS TO USE STATUS_CLIENT
     c[id] = {
       clientId: id,
-      status: "messageable"
+      status: "MESSAGEABLE"
     };
     this.roster[id] = {
       userId: id,
@@ -90,8 +109,20 @@ SocialProvider.prototype._addToRoster = function(id) {
   }
 };
 
+/**
+ * Interpret messages from the server
+ * There are 2 types of messages
+ * - Directed messages from friends
+ * - State information from the server on initialization
+ *
+ * @method _onMessage
+ * @param {String} msg - message from the server (see server/router.py for schema)
+ * @return nothing
+ **/
 SocialProvider.prototype._onMessage = function(msg) {
   msg = JSON.parse(msg.data);
+  // If state information from the server
+  // Store my own ID and all known users at the time
   if (msg.id && msg.from == 0) {
     this.id = msg.id;
     this._addToRoster(this.id);
@@ -99,6 +130,7 @@ SocialProvider.prototype._onMessage = function(msg) {
       this._addToRoster(msg.msg[i]);
     }
     this._sendStatus('ONLINE', 'online');
+  // If directed message, emit event
   } else if (msg.from && msg.msg) {
     this._addToRoster(msg.from);
     this.dispatchEvent('onMessage', {
@@ -109,6 +141,7 @@ SocialProvider.prototype._onMessage = function(msg) {
       network: NETWORK_ID,
       message: msg.msg
     });
+  // No idea what this message is, but let's keep track of who it's from
   } else if (msg.from) {
     this._addToRoster(msg.from);
   }

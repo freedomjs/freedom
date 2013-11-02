@@ -27,11 +27,7 @@
  * {
  *   'clientId': 'string',  // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
  *   'network': 'string',   // Name of network this client is logged into
- *   'status': 'string'     // Status (['messageable', 'online', 'offline'])
- *                          // 'messageable' - This client runs the same FreeDOM app as you and is online
- *                          // 'online' - This client is online, but does not run the same app
- *                          //            (i.e. can be useful to invite others to your FreeDOM app)
- *                          // 'offline' - Not logged in
+ *   'status': 'number'     // Status of the client. See the 'STATUS_CLIENT' constants
  * }
  *
  * Define a <user card>, as the following:
@@ -55,7 +51,7 @@ fdom.apis.set('social', {
    * events. Because 'login' and 'logout' methods turn 'onStatus'
    * events, those use the same codes
   **/
-  'status_codes': {type: 'constant', value: {
+  'STATUS_NETWORK': {type: 'constant', value: {
     // Not connected to any social network.
     // There are no guarantees other methods or events will work until
     // the user calls 'login'
@@ -70,6 +66,19 @@ fdom.apis.set('social', {
     'ERR_AUTHENTICATION': -1,
     // Error with connecting to the server
     'ERR_CONNECTION': -2
+  }},
+  
+  /**
+   * List of possible statuses in the <client card>
+   **/
+  'STATUS_CLIENT': {type: 'constant', value: {
+    // Not logged in
+    'OFFLINE': 0,
+    // This client is online, but does not run the same app
+    // (i.e. can be useful to invite others to your FreeDOM app)
+    'ONLINE': 1,
+    // This client runs the same FreeDOM app as you and is online
+    'MESSAGEABLE': 2
   }},
 
   /**
@@ -177,7 +186,7 @@ fdom.apis.set('social', {
   'onStatus': {type: 'event', value: {
     'network': 'string',  // Name of the network (chosen by social provider)
     'userId': 'string',   // userId of myself on this network
-    'status': 'number',   // One of the constants defined in 'status_codes'
+    'status': 'number',   // One of the constants defined in 'STATUS_NETWORK'
     'message': 'string'   // More detailed message about status
   }}
 
