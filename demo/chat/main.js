@@ -1,3 +1,7 @@
+/**
+ *
+ **/
+
 var social = freedom.socialprovider();
 var activeJid;
 var roster = {};
@@ -41,5 +45,3 @@ var onload = function() {
 };
 setTimeout(onload,0);
 //onload();
-
-

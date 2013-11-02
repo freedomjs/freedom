@@ -1,3 +1,7 @@
+/**
+ * Implementation of a Social provider
+ **/
+
 //var WS_URL = 'ws://localhost:8082/route/';
 var WS_URL = 'ws://p2pbr.com:8082/route/';
 
