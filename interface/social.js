@@ -68,7 +68,8 @@ fdom.apis.set('social', {
     'ONLINE': 3,
     // Error with authenticating to the server
     'ERR_AUTHENTICATION': -1,
-    'ERR_NO_SERVER': -2
+    // Error with connecting to the server
+    'ERR_CONNECTION': -2
   }},
 
   /**
