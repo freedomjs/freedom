@@ -1,3 +1,10 @@
+/**
+ * Implementation of the Storage provider that thin-wraps freedom['core.storage']();
+ * Behavior:
+ * - Namespace is shared with all instances of this provider.
+ *   e.g. Both modules A and B use this storage provider. They'd be able to access the same keys
+ **/
+
 function StorageProvider() {
   this.store = freedom['core.storage']();
   console.log("Shared Storage Provider, running in worker " + self.location.href);
