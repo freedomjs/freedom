@@ -74,7 +74,7 @@ setup = function (global, freedom_src, config) {
     }
     link = location.protocol + "//" + location.host + location.pathname;
     fdom.resources.get(link, site_cfg.manifest).done(function(url) {
-      setupApp(new fdom.port.App(url));
+      setupApp(new fdom.port.App(url, []));
     });
   }
   hub.emit('config', site_cfg);
