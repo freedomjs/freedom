@@ -14,8 +14,8 @@
 var social = freedom.social();
 var STATUS_NETWORK = social.STATUS_NETWORK;
 var STATUS_CLIENT = social.STATUS_CLIENT;
-var WS_URL = 'ws://localhost:8082/route/';
-//var WS_URL = 'ws://p2pbr.com:8082/route/';
+//var WS_URL = 'ws://localhost:8082/route/';
+var WS_URL = 'ws://p2pbr.com:8082/route/';
 var NETWORK_ID = 'websockets';
 
 function SocialProvider() {
@@ -28,6 +28,12 @@ function SocialProvider() {
 
 /**
  * Connect to the Web Socket rendezvous server
+ * e.g. social.login(Object options)
+ * The only login option needed is 'agent', used to determine which group to join in the server
+ *
+ * @method login
+ * @param {Object} loginOptions
+ * @return {Object} status - Same schema as 'onStatus' events
  **/
 SocialProvider.prototype.login = function(loginOpts, continuation) {
   this.conn = new WebSocket(WS_URL+loginOpts.agent);
@@ -47,15 +53,47 @@ SocialProvider.prototype.login = function(loginOpts, continuation) {
   }).bind(this, continuation);
 };
 
+/**
+ * Returns all the <user card>s that we've seen so far (from 'onChange' events)
+ * Note: the user's own <user card> will be somewhere in this list
+ * All user cards will only consist of 1 client, where the clientId is the same as the userId
+ * e.g. social.getRoster();
+ *
+ * @method getRoster
+ * @return {Object} { List of <user cards> indexed by userId
+ *    'userId1': <user card>,
+ *    'userId2': <user card>,
+ *     ...
+ * }
+ **/
 SocialProvider.prototype.getRoster = function(continuation) {
   continuation(this.roster);
 };
 
+/** 
+ * Send a message to user on your network
+ * If the destination is not specified or invalid, the message is dropped
+ * Note: userId and clientId are the same for this provider
+ * e.g. sendMessage(String destination_id, String message)
+ * 
+ * @method sendMessage
+ * @param {String} destination_id - target
+ * @return nothing
+ **/
 SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   this.conn.send(JSON.stringify({to: to, msg: msg}));
   continuation();
 };
 
+/**
+   * Disconnects from the Web Socket server
+   * e.g. logout(Object options)
+   * No options needed
+   * 
+   * @method logout
+   * @param {Object} logoutOptions
+   * @return {Object} status - same schema as 'onStatus' events
+   **/
 SocialProvider.prototype.logout = function(logoutOpts, continuation) {
   this.conn.close();
   this.conn = null;

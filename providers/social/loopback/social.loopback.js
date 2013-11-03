@@ -1,7 +1,24 @@
-var window = {};
+/**
+ * Implementation of a Social provider with a fake buddylist
+ * 'Other User' echos everything you send to it back to you
+ * This is particularly useful when you're debugging UIs with multi-user interactions
+ *
+ * The provider offers
+ * - a buddylist of fake users
+ * - no reliability of message delivery
+ * - in-order delivery
+ * - clients are statically defined in the class
+ * - 'Other User' is a special buddy that echos what you say back to you
+ **/
 
-function IdentityProvider() {
-  console.log("Loopback Identity provider");
+var window = {};
+var social = freedom.social();
+var STATUS_NETWORK = social.STATUS_NETWORK;
+var STATUS_CLIENT = social.STATUS_CLIENT;
+var NETWORK_ID = 'loopback';
+
+function SocialProvider() {
+  console.log("Loopback Social provider");
   this.status = 'offline';
   this.userId = 'Test User';
   this.profile = {
@@ -74,7 +91,7 @@ function makeRosterEntry(userId, opts) {
   return entry;
 }
 
-IdentityProvider.prototype.login = function(opts, continuation) {
+SocialProvider.prototype.login = function(opts, continuation) {
   this.status = 'online';
   this.dispatchEvent('onStatus', {
     userId: this.userId,
@@ -91,7 +108,7 @@ IdentityProvider.prototype.login = function(opts, continuation) {
   continuation();
 };
 
-IdentityProvider.prototype.getProfile = function(id, continuation) {
+SocialProvider.prototype.getProfile = function(id, continuation) {
   //TODO get profiles for other users
   if (id == undefined) {
     continuation(this.profile);
@@ -103,7 +120,7 @@ IdentityProvider.prototype.getProfile = function(id, continuation) {
 };
 
 // Send a message to someone.
-IdentityProvider.prototype.sendMessage = function(to, msg, continuation) {
+SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   this.dispatchEvent('onMessage', {
     fromUserId: "Other User",
     fromClientId: "Other User.0", 
@@ -115,7 +132,7 @@ IdentityProvider.prototype.sendMessage = function(to, msg, continuation) {
   continuation();
 };
 
-IdentityProvider.prototype.logout = function(userId, networkName, continuation) {
+SocialProvider.prototype.logout = function(userId, networkName, continuation) {
   this.status = 'offline'; 
   this.dispatchEvent('onStatus', {
     userId: this.userId,
@@ -140,5 +157,4 @@ IdentityProvider.prototype.logout = function(userId, networkName, continuation) 
   });
 };
 
-var identity = freedom.identity();
-identity.provideAsynchronous(IdentityProvider);
+social.provideAsynchronous(SocialProvider);
