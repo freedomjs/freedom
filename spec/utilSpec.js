@@ -112,6 +112,21 @@ describe("util", function() {
     expect(resolvePath("test.html", "http://test.com/base/name.json")).
       toEqual("http://test.com/base/test.html");
   });
+  
+  it("Can freeze objects", function () {
+    var obj = {
+      a: 1,
+      b: {
+        c: 2
+      }
+    };
+    var frozen = recursiveFreezeObject(obj);
+    frozen.a = 5;
+    frozen.b = 5;
+    frozen.c = 5;
+    expect(frozen.a).toEqual(1);
+    expect(frozen.b.c).toEqual(2);
+  });
 
   // TODO: Verify appcontext / makeFrame behavior.
 });
