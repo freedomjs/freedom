@@ -19,12 +19,9 @@ module.exports = function(grunt) {
           'interface/*.js',
       ],
       afterconcat: ['freedom.js'],
-      files: [
-          'src/libs/*.js',
-          'src/*.js',
-          'src/proxy/*.js',
-          'providers/*.js',
-          'interface/*.js',
+      providers: [
+          'providers/storage/*.js',
+          'providers/social/websocket-server/*.js',
       ],
       options: {
         '-W069': true
@@ -87,6 +84,7 @@ module.exports = function(grunt) {
     'concat',
     'jasmine',
     'jshint:afterconcat',
+    'jshint:providers',
     'uglify'
   ]);
   grunt.registerTask('default', ['freedom']);

@@ -7,7 +7,7 @@ tools/doc
 node_modules
 
 ### Demo dependencies
-providers/identity/websocket-server/server/tornado/
+providers/social/websocket-server/server/tornado/
 
 ### Scrap
 .*.swp

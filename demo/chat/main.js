@@ -22,6 +22,7 @@ social.on('onMessage', function(data) {
 });
 
 social.on('onChange', function(data) {
+  console.log("!!!!" + JSON.stringify(data));
   roster[data.userId] = data;
   var buddylist = [];
   for (var k in roster) {

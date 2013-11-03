@@ -71,7 +71,7 @@ StorageProvider.prototype.fromStoredKey = function(key) {
 // Check if this stored key is in my partition
 StorageProvider.prototype.isMyKey = function(storedKey) {
   return (storeKey.substr(0, this.magic.length) == this.magic);
-}
+};
 
 /** REGISTER PROVIDER **/
 freedom.storage().provideAsynchronous(StorageProvider);
