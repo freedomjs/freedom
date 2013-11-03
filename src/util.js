@@ -290,3 +290,28 @@ function resolvePath(url, from) {
   }
 }
 
+/**
+ * Recursively traverse a [nested] object and freeze its keys from being writable.
+ * Note, the result can have new keys added to it, but existing ones cannot be overwritten.
+ * Doesn't do anything for arrays or other collections.
+ * 
+ * @method recursiveFreezeObject
+ * @static
+ * @param {Object} obj - object to be frozen
+ * @return {Object} obj
+ **/
+function recursiveFreezeObject(obj) {
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+  var ret = {};
+  for (var k in obj) {
+    if (obj.hasOwnProperty(k)) {
+      Object.defineProperty(ret, k, {
+        value: recursiveFreezeObject(obj[k]),
+        writable: false
+      });
+    }
+  }
+  return ret;
+}

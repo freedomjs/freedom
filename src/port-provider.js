@@ -76,11 +76,11 @@ fdom.port.Provider.prototype.getInterface = function() {
       }.bind(this)
     };
 
-    eachProp(this.definiton, function(prop, name) {
+    eachProp(this.definition, function(prop, name) {
       switch(prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
-          value: prop.value,
+          value: recursiveFreezeObject(prop.value),
           writable: false
         });
         break;
