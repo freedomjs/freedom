@@ -15,11 +15,12 @@ var social = freedom.social();
 var STATUS_NETWORK = social.STATUS_NETWORK;
 var STATUS_CLIENT = social.STATUS_CLIENT;
 var NETWORK_ID = 'loopback';
-var USER_ID = 'Test User';
-var CLIENT_ID = 'Test User.0';
+var USER_ID = 'Test User';      //My userId
+var CLIENT_ID = 'Test User.0';  //My clientId
 
 function SocialProvider() {
   console.log("Loopback Social provider");
+  //Populate a fake roster
   this.roster = {
     USER_ID: {
       userId: USER_ID,
@@ -50,6 +51,7 @@ function SocialProvider() {
     'Swedish Chef': makeRosterEntry('Swedish Chef'),
     'Yosemite Sam': makeRosterEntry('Yosemite Sam')
   };
+  // Send an offline status on start
   setTimeout((function() {
     this.dispatchEvent('onStatus', {
       network: NETWORK_ID,
@@ -60,8 +62,9 @@ function SocialProvider() {
   }).bind(this), 0);
 }
 
+// Autocreates fake rosters with variable numbers of clients
+// and random statuses
 var STATUSES = ['MESSAGEABLE', 'ONLINE', 'OFFLINE'];
-
 function makeRosterEntry(userId, opts) {
   opts = opts || {};
   var entry = {
@@ -86,6 +89,8 @@ function makeRosterEntry(userId, opts) {
   return entry;
 }
 
+// Log in. Options are ignored
+// Roster is only emitted to caller after log in
 SocialProvider.prototype.login = function(opts, continuation) {
   var ret = {
     network: NETWORK_ID,
@@ -102,11 +107,13 @@ SocialProvider.prototype.login = function(opts, continuation) {
   continuation(ret);
 };
 
+// Return the roster
 SocialProvider.prototype.getRoster = function(continuation) {
   continuation(this.roster);
 };
 
 // Send a message to someone.
+// All messages will be echoed back to self as if sent by 'Other User'
 SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   this.dispatchEvent('onMessage', {
     fromUserId: "Other User",
@@ -119,6 +126,8 @@ SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   continuation();
 };
 
+// Log out. All users in the roster will go offline
+// Options are ignored
 SocialProvider.prototype.logout = function(opts, continuation) {
   var ret = {
     network: NETWORK_ID,
