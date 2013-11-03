@@ -24,9 +24,13 @@ freedom.on('send-message', function(val) {
  * If we see our userId, send that as a separate event
  **/
 social.on('onStatus', function(msg) {
-  freedom.emit('onStatus', msg);
   if (msg.userId) {
     freedom.emit('recv-uid', msg.userId);
+  }
+  if (msg.status == social.STATUS_NETWORK["ONLINE"]) {
+    freedom.emit('recv-status', 'online');
+  } else {
+    freedom.emit('recv-status', msg.message);
   }
 });
 
@@ -35,7 +39,7 @@ social.on('onStatus', function(msg) {
  * Just forward it to the outer page
  */
 social.on('onMessage', function(data) {
-  freedom.emit('recv-message', data.message);
+  freedom.emit('recv-message', data);
 });
 
 /**
