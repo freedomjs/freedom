@@ -5,6 +5,6 @@
     "script": ["social.loopback.js"]
   },
   "provides": [
-    "identity"
+    "social"
   ]
 }
