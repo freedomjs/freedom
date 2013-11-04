@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>File Drop</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+  <style type="text/css">
+  body {
+    padding-top: 20px;
+    padding-bottom: 40px;
+  }
+
+  /* Custom container */
+  .container-narrow {
+    margin: 0 auto;
+    max-width: 700px;
+  }
+  .container-narrow > hr {
+    margin: 30px 0;
+  }
+
+  /* Main marketing message and sign up button */
+  .jumbotron {
+    margin: 60px 0;
+    text-align: center;
+
+    border: 2px dashed #555;
+    border-radius: 20px;
+    cursor: default;
+    padding: 1em 0;
+  }
+  .jumbotron h1 {
+    font-size: 72px;
+    line-height: 1;
+  }
+  .jumbotron .btn {
+    font-size: 21px;
+    padding: 14px 24px;
+  }
+
+  </style>
+  <!-- Load FreeDOM and point it to the root module -->
+  <script type="text/javascript"
+      src="/freedom.js"
+      data-manifest="manifest.json">
+    {
+      "stayLocal": true,
+      "debug": true,
+      "strongIsolation": true
+    }
+  </script>
+</head>
+<body>
+  <div class="container-narrow">
+    <div class="masthead">
+      <h3 class="muted">FreeDOM File Drop</h3>
+    </div>
+    <hr>
+    <!-- div class="jumbotron">
+      <h1>Receive a File</h1>
+      <p class="lead">Copy descriptor here to fetch a file</p>
+      <input class="input-xxlarge" type="text" placeholder="Paste descriptor here…"><br>
+      <a class="btn btn-large btn-success" href="#">Fetch!</a>
+    </div -->
+    <div id='drop' class="jumbotron">
+      <h1>Send a File</h1>
+      <p id='dropstatus' class="lead">Drag a file into this square to send a file</p>
+      <p>Note: Only supports 1 file at a time, so zip it up yourself!</p>
+      <img width='20%' src='file.png'/>
+    </div>
+    <!-- Modal for after file is uploaded -->
+    <div id='dropModal' class="modal hide fade">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Let's do this!</h3>
+      </div>
+      <div class="modal-body">
+        <div class="progress progress-striped">
+          <div id='dropProgress' class="bar" style="width: 0%;"></div>
+        </div>
+        <p id='dropMessage'></p>
+      </div>
+      <div class="modal-footer">
+        <p id='dropUrl'></p>
+      </div>
+    </div>
+  </div>
+  The counter is at <span id='count'>0</span>. <button id='click'>+1</button>
+</body>
+
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+  // After loading freedom.js, the window is populated with a 'freedom'
+  // object, which is used as a message passing channel to the root module
+  window.onload = function() {
+    var popoverState = false;
+
+    if (!window.FileReader) {
+      document.body.innerHTML = "Your browser does not support HTML5 FileReader";
+    }
+
+    $('#drop').popover({
+      placement: 'top',
+      content: 'Drop it here!',
+      trigger: 'manual'
+    });
+
+    function hoverDrop(e) {
+      if (e.preventDefault) { e.preventDefault(); }
+      if (!popoverState) {
+        popoverState = true;
+        $('#drop').popover('show');
+        setTimeout(function() {
+          popoverState = false;
+          $('#drop').popover('hide');
+        }, 5000);
+      }
+      return false;
+    }
+
+    function fileError(e) {
+      var errorMsg = 'An error occurred while reading this file';
+      switch(evt.target.error.code) {
+        case evt.target.error.NOT_FOUND_ERR:
+          errorMsg = 'File Not Found!';
+          break;
+        case evt.target.error.NOT_READABLE_ERR:
+          errorMsg = 'File is not readable';
+          break;
+        case evt.target.error.ABORT_ERR:
+          break; // noop
+      };
+
+      $('#dropMessage')[0].innerText = errorMsg;
+    }
+
+    function fileLoad(evt) {
+      $('#dropProgress')[0].style.width = "100%";
+      console.log("READ DONE");
+      window.freedom.emit('serve-data', evt.target.result);
+    }
+
+    function fileProgress(evt) {
+      if (evt.lengthComputable) {
+        var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+        if (percentLoaded < 100) {
+          $('#dropProgress')[0].style.width = percentLoaded + "%";
+        }
+      }
+    }
+
+
+    function handleFile(e) {
+      e = e || window.event; // get window.event if e argument missing (in IE)   
+      if (e.preventDefault) { e.preventDefault(); } // stops the browser from redirecting off to the image.
+      var dt = e.dataTransfer;
+      var files = dt.files;
+      var file = files[0];
+      var reader = new FileReader();
+      reader.onload = fileLoad;
+      reader.onerror = fileError;
+      reader.onprogress = fileProgress;
+      reader.onloadstart = function(evt) {
+        //Get rid of the popover
+        popoverState = false;
+        $('#drop').popover('hide');
+        //Show our drop modal
+        $('#dropModal').modal({});
+      };
+      reader.readAsArrayBuffer(file);
+      return false;
+    }
+
+    $("#drop")[0].addEventListener('dragover', hoverDrop, false);
+    $("#drop")[0].addEventListener('dragenter', hoverDrop, false);
+    $("#drop")[0].addEventListener('drop', handleFile, false);
+
+    //Forward click events to the root FreeDOM module
+    document.getElementById('click').onclick = function() {
+      window.freedom.emit('click', 1);
+    }
+
+    window.freedom.on('serve-url', function(val) {
+      $("#dropMessage")[0].innerText = "Share the following URL with your friends. You must keep this window open while file transfer is happening";
+      $("#dropUrl")[0].innerText = window.location + "#" + val
+    });
+
+    window.freedom.on('serve-error', function(val) {
+      $("#dropMessage")[0].innerText = val;
+    });
+
+    //Display numbers from the root FreeDOM module
+    window.freedom.on('number', function(n) {
+      document.getElementById('count').innerHTML = n;
+    });
+
+    //Initialize the counter on start with 0
+    window.freedom.emit('click', 0);
+  }
+  </script>
+</html>
+

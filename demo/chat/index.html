@@ -99,18 +99,21 @@
   }
   </script>
   <style type='text/css'>
-  body {border: 1px solid black; float:left; position:relative; width:800px;font-family: Helvetica, Arial, serif;}
+  body {border: 1px solid black; float:left; position:relative; width:800px;font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, serif;}
   #uid {font-family: helvetica; float:left;}
   #uid:after {content: " <-> ";}
   #status {float:right;}
   #status:after {content: "▼"; color:#888;}
   #clear {clear:both; border-bottom:1px solid #888;}
-  #buddylist {position:absolute; right:0; z-index:2; background:white; padding:5px; top:25px;}
+  #buddylist {position:absolute; right:0; z-index:2; background:white; padding:5px; top:50px;}
   #msg-input {width:700px; margin:0;}
   #messagelist {min-height: 400px;}
   </style>
 </head>
 <body>
+  <header>
+    <b>FreeDOM Chat</b>
+  </header>
   <div id='uid'>No UID</div>
   <div id='status'>Unknown</div>
   <div id='buddylist'></div>

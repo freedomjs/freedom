@@ -6,7 +6,7 @@
   <!-- Include freedom.js and point to the root module -->
   <!-- Note that you can specify a JSON object of options to FreeDOM -->
   <script type="text/javascript"
-      src="../../freedom.js"
+      src="/freedom.js"
       data-manifest="manifest.json">
     {
       "stayLocal": true,
@@ -67,10 +67,14 @@
     font-size: 2em;
     font-family: helvetica;
   }
+  h1 {
+    font-size: 1em;
+  }
   </style>
 </head>
 <body>
   <header>
+    <h1>FreeDOM TicTakToe</h1>
     Win: <span id='win'>..</span> Lose: <span id='lose'>..</span>
   </header>
   <section>

@@ -9,6 +9,7 @@
 
 var social = freedom.socialprovider();
 var roster = {};    //Keep track of the roster
+var networks = {};
 
 /** 
  * on a 'send-message' event from the parent (the outer page)
@@ -24,6 +25,18 @@ freedom.on('send-message', function(val) {
  * If we see our userId, send that as a separate event
  **/
 social.on('onStatus', function(msg) {
+  //If never seen this network before, try logging in
+  if (!networks.hasOwnProperty(msg.network)) {
+    social.login({
+      network: msg.network,
+      agent: 'chatdemo', 
+      version: '0.1', 
+      url: '',
+      interactive: true 
+    });
+  }
+  networks[msg.network] = msg;
+
   if (msg.userId) {
     freedom.emit('recv-uid', msg.userId);
   }
@@ -32,6 +45,7 @@ social.on('onStatus', function(msg) {
   } else {
     freedom.emit('recv-status', msg.message);
   }
+
 });
 
 /**
@@ -57,6 +71,7 @@ social.on('onChange', function(data) {
   freedom.emit('recv-buddylist', buddylist);
 });
 
+
 /**
  * Iterate over a <user card> (see interface/social.js for schema)
  * and check for a client that's online
@@ -78,16 +93,3 @@ function hasOnlineClient(data) {
   return false;
 }
 
-// Try to log in once we start
-var onload = function() {
-  //Fetch UID
-  social.login({
-    network: 'websockets',
-    agent: 'chatdemo', 
-    version: '0.1', 
-    url: '',
-    interactive: false
-  });
-};
-setTimeout(onload,0);
-//onload();
