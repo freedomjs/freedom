@@ -154,10 +154,12 @@ social.on('onMessage', function(data) {
     return;
   }
   console.log(msg);
-  if (data.fromClientId && msg.cmd && msg.cmd == 'fetch') {
+  if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'fetch') {
     var key = msg.data;
     //SEND IT
     setupConnection(data.fromClientId);
+  } else if (msg.fromClientId && msg.cmd && msg.data && msg.cmd == 'signal') {
+    //Process signals!
   } else {
     console.log("Unrecognized message: " + data);
   }
