@@ -9,27 +9,36 @@ if (!window) {
   window = {};
 }
 var n = 0;
-var file = null;
+var files = {};
 var social = freedom.socialprovider();
 var networks = {};
 var roster = {};
+var userId = null;
 console.log('File Drop root module');
-
-// On 'click' events, add it to our global count
-// and emit the total back to the outer page
-freedom.on('click', function(num) {
-	if (num == undefined) {
-		num = 1;
-	}
-	n += num;
-  freedom.emit('number', n);
-});
 
 freedom.on('serve-data', function(data) {
   file = data;
+  var key = Math.random() + "";
+  files[key] = data;
+  if (userId) {
+    freedom.emit('serve-url', {
+      userId: userId,
+      key: key
+    });
+    // DEBUG - remove later
+    freedom.emit('stats', {
+      key: key,
+      inprogress: 1,
+      done: 10
+    });
+    //
+  } else {
+    freedom.emit('serve-error', "Error connecting to server.");
+  }
+});
 
-  freedom.emit('serve-url', 'yo');
-
+freedom.on('download', function(data) {
+  window.current = data;
 });
 
 social.on('onStatus', function(msg) {
@@ -41,6 +50,9 @@ social.on('onStatus', function(msg) {
       url: '',
       interactive: true 
     });
+  }
+  if (msg.userId) {
+    userId = msg.userId;
   }
   networks[msg.network] = msg;
 });

@@ -38,6 +38,14 @@
     padding: 14px 24px;
   }
 
+  /** Drop overlay **/
+  div.overlaytext {
+    background-color:black;
+    color:white;  
+    opacity:0.6; /* transparency */  
+    filter:alpha(opacity=60); /* IE transparency */  
+  }
+
   </style>
   <!-- Load FreeDOM and point it to the root module -->
   <script type="text/javascript"
@@ -56,18 +64,19 @@
       <h3 class="muted">FreeDOM File Drop</h3>
     </div>
     <hr>
-    <!-- div class="jumbotron">
-      <h1>Receive a File</h1>
-      <p class="lead">Copy descriptor here to fetch a file</p>
-      <input class="input-xxlarge" type="text" placeholder="Paste descriptor here…"><br>
-      <a class="btn btn-large btn-success" href="#">Fetch!</a>
-    </div -->
+    <!-- Main drop box for files-->
     <div id='drop' class="jumbotron">
       <h1>Send a File</h1>
       <p id='dropstatus' class="lead">Drag a file into this square to send a file</p>
       <p>Note: Only supports 1 file at a time, so zip it up yourself!</p>
       <img width='20%' src='file.png'/>
     </div>
+
+    <!-- Display file transfer status -->
+    <h4 id='servingheader'> Actively serving: </h4>
+    <div id="stats">
+    </div>
+
     <!-- Modal for after file is uploaded -->
     <div id='dropModal' class="modal hide fade">
       <div class="modal-header">
@@ -79,13 +88,13 @@
           <div id='dropProgress' class="bar" style="width: 0%;"></div>
         </div>
         <p id='dropMessage'></p>
+        <input id='dropUrl' class='input-xxlarge' type="text" readonly>
       </div>
       <div class="modal-footer">
-        <p id='dropUrl'></p>
+        <button id='closeModal' type="button" class="btn btn-primary">Close</a>
       </div>
     </div>
   </div>
-  The counter is at <span id='count'>0</span>. <button id='click'>+1</button>
 </body>
 
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
@@ -95,31 +104,14 @@
   // After loading freedom.js, the window is populated with a 'freedom'
   // object, which is used as a message passing channel to the root module
   window.onload = function() {
-    var popoverState = false;
-
     if (!window.FileReader) {
       document.body.innerHTML = "Your browser does not support HTML5 FileReader";
     }
 
-    $('#drop').popover({
-      placement: 'top',
-      content: 'Drop it here!',
-      trigger: 'manual'
-    });
-
-    function hoverDrop(e) {
-      if (e.preventDefault) { e.preventDefault(); }
-      if (!popoverState) {
-        popoverState = true;
-        $('#drop').popover('show');
-        setTimeout(function() {
-          popoverState = false;
-          $('#drop').popover('hide');
-        }, 5000);
-      }
-      return false;
-    }
-
+    document.getElementById('closeModal').onclick = function() {
+      $('#dropModal').modal('hide');
+    };
+    
     function fileError(e) {
       var errorMsg = 'An error occurred while reading this file';
       switch(evt.target.error.code) {
@@ -132,12 +124,11 @@
         case evt.target.error.ABORT_ERR:
           break; // noop
       };
-
-      $('#dropMessage')[0].innerText = errorMsg;
+      $('#dropMessage').text(errorMsg);
     }
 
     function fileLoad(evt) {
-      $('#dropProgress')[0].style.width = "100%";
+      $('#dropProgress').css('width' , "100%");
       console.log("READ DONE");
       window.freedom.emit('serve-data', evt.target.result);
     }
@@ -146,16 +137,15 @@
       if (evt.lengthComputable) {
         var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
         if (percentLoaded < 100) {
-          $('#dropProgress')[0].style.width = percentLoaded + "%";
+          $('#dropProgress').css('width', percentLoaded + "%");
         }
       }
     }
 
-
     function handleFile(e) {
       e = e || window.event; // get window.event if e argument missing (in IE)   
       if (e.preventDefault) { e.preventDefault(); } // stops the browser from redirecting off to the image.
-      var dt = e.dataTransfer;
+      var dt = e.originalEvent.dataTransfer;
       var files = dt.files;
       var file = files[0];
       var reader = new FileReader();
@@ -163,9 +153,9 @@
       reader.onerror = fileError;
       reader.onprogress = fileProgress;
       reader.onloadstart = function(evt) {
-        //Get rid of the popover
-        popoverState = false;
-        $('#drop').popover('hide');
+        //Get rid of the overlay
+        within_dragenter = false;
+        $("#drop").removeClass('overlaytext');
         //Show our drop modal
         $('#dropModal').modal({});
       };
@@ -173,31 +163,66 @@
       return false;
     }
 
-    $("#drop")[0].addEventListener('dragover', hoverDrop, false);
-    $("#drop")[0].addEventListener('dragenter', hoverDrop, false);
-    $("#drop")[0].addEventListener('drop', handleFile, false);
-
-    //Forward click events to the root FreeDOM module
-    document.getElementById('click').onclick = function() {
-      window.freedom.emit('click', 1);
-    }
+    var within_dragenter = false;
+    $(document.body).bind('dragenter', function(e) {
+      if (e.preventDefault) { e.preventDefault(); }
+      within_dragenter = true;
+      setTimeout(function() {within_dragenter=false;},0);
+      $("#drop").addClass('overlaytext');
+    });
+    $(document.body).bind('dragover', function(e) {
+      if (e.preventDefault) { e.preventDefault(); }
+    });
+    $(document.body).bind('dragleave', function(e) {
+      if (! within_dragenter) {
+        $("#drop").removeClass('overlaytext');
+      }
+      within_dragenter = false;
+    });
+    $(document.body).bind('drop', handleFile);
 
     window.freedom.on('serve-url', function(val) {
-      $("#dropMessage")[0].innerText = "Share the following URL with your friends. You must keep this window open while file transfer is happening";
-      $("#dropUrl")[0].innerText = window.location + "#" + val
+      var displayUrl = window.location + "#" + JSON.stringify(val);
+      var key = val.key;
+      $("#dropMessage").text("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
+      $("#dropUrl").val(displayUrl);
+      //Create a new stat monitor
+      $("#servingheader").show();
+      var div = document.createElement('div');
+      var input = document.createElement('input');
+      input.className = 'input-xxlarge';
+      input.type = 'text';
+      input.readOnly = true;
+      input.value = displayUrl;
+      var stat = document.createElement('div');
+      stat.id = val.key;
+      div.appendChild(input);
+      div.appendChild(stat);
+      div.appendChild(document.createElement('br'));
+      $("#stats").append(div);
     });
 
     window.freedom.on('serve-error', function(val) {
-      $("#dropMessage")[0].innerText = val;
+      $("#dropMessage").text(val);
     });
 
-    //Display numbers from the root FreeDOM module
-    window.freedom.on('number', function(n) {
-      document.getElementById('count').innerHTML = n;
+    window.freedom.on('stats', function(val) {
+      var elt = document.getElementById(val.key)
+      while (elt.hasChildNodes()) {
+        elt.removeChild(lastChild);
+      }
+      elt.appendChild(document.createElement('p').appendChild(document.createTextNode('Downloads in Progress: ' + val.inprogress)));
+      elt.appendChild(document.createElement('br'));
+      elt.appendChild(document.createElement('p').appendChild(document.createTextNode('Downloads Completed: ' + val.done)));
     });
 
-    //Initialize the counter on start with 0
-    window.freedom.emit('click', 0);
+    try {
+      var hash = JSON.parse(window.location.hash.substr(1));
+      freedom.emit('download', hash);
+    } catch (e) {
+      console.log("No parseable hash. Don't download");
+    }
+    $("#servingheader").hide();   
   }
   </script>
 </html>
