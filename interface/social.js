@@ -127,6 +127,7 @@ fdom.apis.set('social', {
    * 
    * @method sendMessage
    * @param {String} destination_id - target
+   * @param {String} message
    * @return nothing
    **/
   'sendMessage': {type: 'method', value: ['string', 'string']},
@@ -186,6 +187,7 @@ fdom.apis.set('social', {
   'onStatus': {type: 'event', value: {
     'network': 'string',  // Name of the network (chosen by social provider)
     'userId': 'string',   // userId of myself on this network
+    'clientId': 'string', // clientId of my client on this network
     'status': 'number',   // One of the constants defined in 'STATUS_NETWORK'
     'message': 'string'   // More detailed message about status
   }}

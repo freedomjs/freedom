@@ -9,7 +9,7 @@ var n = 0;
 // On 'click' events, add it to our global count
 // and emit the total back to the outer page
 freedom.on('click', function(num) {
-	if (num == undefined) {
+	if (num === undefined) {
 		num = 1;
 	}
 	n += num;

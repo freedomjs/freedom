@@ -41,13 +41,13 @@ function stats(player, other) {
     // This sends the game stats to the frontend to display
     freedom.emit('stats', nv);
   });
-};
+}
 //setTimeout(stats, 0);
 stats();
 
 // Receive moves from the frontend page
 freedom.on('move', function(val) {
-  if (playerMove && board[val] == 0) {
+  if (playerMove && board[val] === 0) {
     board[val] = 1;
     checkWin();
     playerMove = false;
@@ -75,7 +75,7 @@ function AIMove() {
     return;
   }
   // Center Move is good.
-  if (board[4] == 0) {
+  if (board[4] === 0) {
     board[4] = 2;
     checkWin();
     playerMove = true;
@@ -86,7 +86,7 @@ function AIMove() {
   for (var s = 0; s < sets.length; s++) {
     var set = sets[s].split("");
     for (var p = 0; p < 3; p++) {
-      if (board[set[p == 0? 1 : 0]] == 1 && board[set[p!= 2 ? 2 : 1]] == 1 && board[set[p]] == 0) {
+      if (board[set[p === 0? 1 : 0]] == 1 && board[set[p!= 2 ? 2 : 1]] == 1 && board[set[p]] === 0) {
         board[set[p]] = 2;
         checkWin();
         playerMove = true;
@@ -97,8 +97,8 @@ function AIMove() {
   
   // Random move.
   while(!playerMove) {
-    var m = Math.floor(Math.random() * 9)
-    if(board[m] == 0) {
+    var m = Math.floor(Math.random() * 9);
+    if(board[m] === 0) {
       board[m] = 2;
       checkWin();
       playerMove = true;
@@ -115,7 +115,7 @@ function checkWin() {
     if (board[set[0]] == board[set[1]] && board[set[1]] == board[set[2]] && board[set[2]] == 1) {
       //playerwin
       stats(1, 0);
-      reset()
+      reset();
     } else if (board[set[0]] == board[set[1]] && board[set[1]] == board[set[2]] && board[set[2]] == 2) {
       //otherwin
       stats(0, 1);
@@ -124,11 +124,11 @@ function checkWin() {
   }
   var open = 0;
   for (var i = 0; i < 9; i++) {
-    if (board[i] == 0) {
+    if (board[i] === 0) {
       open = 1;
     }
   }
-  if (open == 0) {
+  if (open === 0) {
     stats(0,0);
     reset();
   }

@@ -5,7 +5,7 @@ IdentityProvider.prototype.getProfile = function(continuation) {
   });
   promise.done(function() {
     view.show();
-  })
+  });
 
   var retVal = false;
 
@@ -23,7 +23,7 @@ IdentityProvider.prototype.getProfile = function(continuation) {
     
     continuation(identity);
   });
-}
+};
 
 freedom.identity().provideAsynchronous(IdentityProvider);
 

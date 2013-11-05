@@ -53,13 +53,19 @@ function SocialProvider() {
   };
   // Send an offline status on start
   setTimeout((function() {
-    this.dispatchEvent('onStatus', {
-      network: NETWORK_ID,
-      userId: USER_ID,
-      status: STATUS_NETWORK['OFFLINE'],
-      message: "Woo!"
-    });
+    this.dispatchEvent('onStatus', makeOnStatus('OFFLINE'));
   }).bind(this), 0);
+}
+
+// Generate an 'onStatus' message
+function makeOnStatus(stat) {
+  return {
+    network: NETWORK_ID,
+    userId: USER_ID,
+    clientId: CLIENT_ID,
+    status: STATUS_NETWORK[stat],
+    message: "Woo!"
+  };
 }
 
 // Autocreates fake rosters with variable numbers of clients
@@ -92,12 +98,7 @@ function makeRosterEntry(userId, opts) {
 // Log in. Options are ignored
 // Roster is only emitted to caller after log in
 SocialProvider.prototype.login = function(opts, continuation) {
-  var ret = {
-    network: NETWORK_ID,
-    userId: USER_ID,
-    status: STATUS_NETWORK["ONLINE"],
-    message: "Woo!"
-  };
+  var ret = makeOnStatus('ONLINE');
   for (var id in this.roster) {
     if (this.roster.hasOwnProperty(id)) {
       this.dispatchEvent('onChange', this.roster[id]);
@@ -129,12 +130,7 @@ SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 // Log out. All users in the roster will go offline
 // Options are ignored
 SocialProvider.prototype.logout = function(opts, continuation) {
-  var ret = {
-    network: NETWORK_ID,
-    userId: USER_ID,
-    status: STATUS_NETWORK['OFFLINE'],
-    message: 'Woo!'
-  };
+  var ret = makeOnStatus('OFFLINE');
   // Remove all clients in the roster and emit these changes
   for (var id in this.roster) {
     if (this.roster.hasOwnProperty(id)) {

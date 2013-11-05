@@ -20,7 +20,7 @@ window.onload = function() {
         break;
       case evt.target.error.ABORT_ERR:
         break; // noop
-    };
+    }
     $('#dropMessage').text(errorMsg);
   }
 
@@ -103,8 +103,22 @@ window.onload = function() {
     $("#dropMessage").text(val);
   });
 
+  window.freedom.on('download-progress', function(val) {
+    //val is an integer with a percentage
+    $('#dropModal').modal('show');
+    $('#dropProgress').css('width' , val+"%");
+  });
+  
+  window.freedom.on('download-data', function(val) {
+    console.log("Download complete"); 
+  });
+  window.freedom.on('download-error', function(val) {
+    $('#dropModal').modal('show');
+    $("#dropMessage").text(val);
+  });
+
   window.freedom.on('stats', function(val) {
-    var elt = document.getElementById(val.key)
+    var elt = document.getElementById(val.key);
     while (elt.hasChildNodes()) {
       elt.removeChild(lastChild);
     }

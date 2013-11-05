@@ -8,6 +8,11 @@
     "socialprovider": {
       "url": "/providers/social/websocket-server/social.ws.json",
       "api": "social"
+    },
+    "storageprovider": {
+      "url": "/providers/storage/isolated-storage.json",
+      "api": "storage"
     }
-  }
+  },
+  "permissions": ["core.sctp-peerconnection"]
 }

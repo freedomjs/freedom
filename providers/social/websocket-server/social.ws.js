@@ -116,6 +116,7 @@ SocialProvider.prototype._sendStatus = function(stat, message) {
   var result = {
     network: NETWORK_ID,
     userId: this.id,
+    clientId: this.id,
     status: STATUS_NETWORK[stat],
     message: message
   };
