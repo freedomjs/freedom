@@ -15,6 +15,7 @@ var social = freedom.socialprovider();
 var storage = freedom.storageprovider();
 var networks = {};
 var roster = {};
+var fetchQueue = [];
 
 // PC
 var connections = {};
@@ -26,7 +27,8 @@ console.log('File Drop root module');
 function getClientIds() {
   var result = [];
   for (var k in networks) {
-    if (networks.hasOwnProperty(k) && networks[k].clientId) {
+    if (networks.hasOwnProperty(k) && networks[k].clientId && 
+        networks[k].status && networks[k].status == social.STATUS_NETWORK['ONLINE']) {
       result.push(networks[k].clientId);
     }
   }
@@ -92,9 +94,17 @@ function setupConnection(targetId) {
   });
 }
 
-freedom.on('download', function(data) {
+function isOnline() {
+  for (var k in networks) {
+    if (networks.hasOwnProperty(k) && networks[k].status && networks[k].status == social.STATUS_NETWORK['ONLINE']) {
+      return true;
+    }
+  }
+  return false;
+} 
+
+function fetch(data) {
   //@todo smarter way to choose a target in the future
-  window.current = data;
   var serverId = data.targetId[0];
   var key = data.key;
   //Tell 'em I'm comin' for them
@@ -102,7 +112,15 @@ freedom.on('download', function(data) {
     cmd: 'fetch',
     data: key
   }));
-  //setupConnection(serverId);
+  setupConnection(serverId);
+}
+
+freedom.on('download', function(data) {
+  if (isOnline()) {
+    fetch(data);
+  } else {
+    fetchQueue.push(data);
+  }
 });
 
 social.on('onStatus', function(msg) {
@@ -116,6 +134,11 @@ social.on('onStatus', function(msg) {
     });
   }
   networks[msg.network] = msg;
+  if (msg.status && msg.status == social.STATUS_NETWORK['ONLINE']) {
+    while (fetchQueue.length > 0) {
+      fetch(fetchQueue.shift());
+    }
+  }
 });
 
 social.on('onChange', function(data) {
@@ -123,5 +146,20 @@ social.on('onChange', function(data) {
 });
 
 social.on('onMessage', function(data) {
+  var msg;
+  try {
+    msg = JSON.parse(data.message);
+  } catch (e) {
+    console.log("Error parsing message: " + data);
+    return;
+  }
+  console.log(msg);
+  if (data.fromClientId && msg.cmd && msg.cmd == 'fetch') {
+    var key = msg.data;
+    //SEND IT
+    setupConnection(data.fromClientId);
+  } else {
+    console.log("Unrecognized message: " + data);
+  }
   
 });

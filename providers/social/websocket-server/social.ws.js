@@ -81,7 +81,11 @@ SocialProvider.prototype.getRoster = function(continuation) {
  * @return nothing
  **/
 SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
-  this.conn.send(JSON.stringify({to: to, msg: msg}));
+  if (this.conn) {
+    this.conn.send(JSON.stringify({to: to, msg: msg}));
+  } else {
+    console.error('WS Social Provider: trying to sendMessage when connection not established');
+  }
   continuation();
 };
 
