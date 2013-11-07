@@ -17,9 +17,7 @@ fdom.port.App = function(manifestURL, creator) {
   this.config = {};
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
-  this.lineage = [];
-  this.lineage.push(this.manifestId);
-  this.lineage = this.lineage.concat(creator);
+  this.lineage = [this.manifestId].concat(creator);
   this.loadManifest();
   this.externalPortMap = {};
   this.internalPortMap = {};
@@ -181,6 +179,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         id: this.manifestId,
         appId: this.id,
         manifest: this.manifest,
+        lineage: this.lineage,
         channel: message.reverse
       });
     } else {
