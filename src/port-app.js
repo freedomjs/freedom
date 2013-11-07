@@ -10,12 +10,16 @@ fdom.port = fdom.port || {};
  * @class App
  * @extends Port
  * @param {String} manifestURL The manifest this module loads.
+ * @param {String[]} creator The lineage of creation for this module.
  * @constructor
  */
-fdom.port.App = function(manifestURL) {
+fdom.port.App = function(manifestURL, creator) {
   this.config = {};
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
+  this.lineage = [];
+  this.lineage.push(this.manifestId);
+  this.lineage = this.lineage.concat(creator);
   this.loadManifest();
   this.externalPortMap = {};
   this.internalPortMap = {};
@@ -149,7 +153,7 @@ fdom.port.App.prototype.toString = function() {
  */
 fdom.port.App.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
-    console.log('bound for ' + name);
+    fdom.debug.log('bound for ' + name);
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
     return;
@@ -222,7 +226,7 @@ fdom.port.App.prototype.loadManifest = function() {
     try {
       resp = JSON.parse(data);
     } catch(err) {
-      console.warn("Failed to load " + this.manifestId + ": " + err);
+      fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
       return;
     }
     this.manifest = resp;
@@ -263,7 +267,7 @@ fdom.port.App.prototype.loadLinks = function() {
         channels.push(name);
       }
       fdom.resources.get(this.manifestId, desc.url).done(function (url) {
-        var dep = new fdom.port.App(url);
+        var dep = new fdom.port.App(url, this.lineage);
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,
           request: 'link',

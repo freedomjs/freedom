@@ -36,10 +36,13 @@ describe("channels", function() {
     });
     fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
 
+    var path = window.location.href,
+        dir_idx = path.lastIndexOf('/'),
+        dir = path.substr(0, dir_idx) + '/';
     freedom = setup(global, undefined, {
       manifest: "relative://spec/helper/channel.json",
       portType: 'Frame',
-      inject: "https://raw.github.com/kriskowal/es5-shim/master/es5-shim.js",
+      inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src
     });
   });
