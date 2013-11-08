@@ -49,7 +49,8 @@ freedom.on('serve-data', function(data) {
   if (clientIds.length > 0) {
     freedom.emit('serve-descriptor', {
       targetId: clientIds,
-      key: data.key
+      key: data.key,
+      name: data.name    
     });
     // DEBUG - remove later
     freedom.emit('stats', {

@@ -19,10 +19,8 @@ var Modal = {
     $("#dropUrl").show();
     $("#dropUrl").val(val);
   },
-  displayDownload: function(val) {
+  displayDownload: function() {
     $("#dropDownload").show();
-    var link = document.getElementById('dropDownload');
-    link.href = val;
   },
   close: function () {
     $("#dropModal").modal('hide');
@@ -45,14 +43,15 @@ var FileRead = {
     }
     Modal.displayMessage(errorMsg);
   },
-  onLoad: function(evt) {
+  onLoad: function(file, evt) {
     console.log("File Read Done");
     Modal.displayProgress(100);
     // Send data to be served. Expect a 'serve-url' response with our descriptor
     var key = Math.random() + "";
     window.freedom.emit('serve-data', {
       key: key,
-      value: evt.target.result
+      value: evt.target.result,
+      name: file.name
     });
   },
   onProgress: function(evt) {
@@ -75,7 +74,7 @@ var DragNDrop = {
     var files = dt.files;
     var file = files[0];
     var reader = new FileReader();
-    reader.onload = FileRead.onLoad;
+    reader.onload = FileRead.onLoad.bind({}, file);
     reader.onerror = FileRead.onError;
     reader.onprogress = FileRead.onProgress;
     reader.onloadstart = function(evt) {
@@ -83,6 +82,7 @@ var DragNDrop = {
       DragNDrop.within = false;
       $("#drop").removeClass('overlaytext');
       Modal.open();
+      Modal.displayMessage('Uploading');
     };
     reader.readAsArrayBuffer(file);
     return false;
@@ -184,7 +184,15 @@ window.onload = function() {
     Modal.open();
     var blob = new Blob([val]);
     Modal.displayMessage("Gotcha!");
-    Modal.displayDownload(window.URL.createObjectURL(blob));
+    document.getElementById('dropDownload').onclick = function () {
+      if (window.filedrop_name) {
+        saveAs(blob, window.filedrop_name);
+      } else {
+        saveAs(blob, 'unnamed');
+      }
+    };
+    Modal.displayDownload();
+    //Modal.displayDownload(window.URL.createObjectURL(blob));
   });
 
   window.freedom.on('download-error', function(val) {
@@ -198,8 +206,11 @@ window.onload = function() {
   try {
     var hash = JSON.parse(window.location.hash.substr(1));
     Modal.open();
-    Modal.displayMessage('Loading');
+    Modal.displayMessage('Downloading');
     freedom.emit('download', hash);
+    if (hash.name) {
+      window.filedrop_name = hash.name;
+    }
   } catch (e) {
     console.log("No parseable hash. Don't download");
   }
