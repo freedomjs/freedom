@@ -8,11 +8,13 @@ var window;
 if (!window) {
   window = {};
 }
-var n = 0;
-var files = {};
+// FreeDOM APIs
 var core = freedom.core();
 var social = freedom.socialprovider();
 var storage = freedom.storageprovider();
+
+// Internal State
+var files = {};
 var networks = {};
 var roster = {};
 var fetchQueue = [];
@@ -61,7 +63,7 @@ function setupConnection(targetId) {
   connections[targetId] = freedom['core.sctp-peerconnection']();
   connections[targetId].on('onReceived', function(message) {
     if (message.buffer) {
-      freedom.emit('download-error', "Got some datas");
+      freedom.emit('download-data', message.buffer);
     } else if (message.text) {
       freedom.emit('download-error', message.text);
     } else {
@@ -153,15 +155,32 @@ social.on('onMessage', function(data) {
     console.log("Error parsing message: " + data);
     return;
   }
-  console.log(msg);
+  console.log(JSON.stringify(msg));
   if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'fetch') {
     var key = msg.data;
+    var targetId = data.fromClientId;
+    setupConnection(targetId);
     //SEND IT
-    setupConnection(data.fromClientId);
-  } else if (msg.fromClientId && msg.cmd && msg.data && msg.cmd == 'signal') {
-    //Process signals!
+    if (files[msg.data]) {
+      console.log("Sending " + msg.data + " to " + targetId);
+      connections[targetId].send({'channelLabel': 'filedrop', 'buffer': files[msg.data]});
+    } else {
+      social.sendMessage(targetId, JSON.stringify({
+        cmd: 'error',
+        data: 'File missing'
+      }));
+    }
+  } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'error') {
+    freedom.emit('download-error', msg.data);
+  } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'signal') {
+    var targetId = data.fromClientId;
+    if (signallingChannels[targetId]) {
+      signallingChannels[targetId].emit('message', msg.data);
+    } else {
+      messageQueues[targetId].push(msg.data);
+    }
   } else {
-    console.log("Unrecognized message: " + data);
+    console.log("Unrecognized message: " + JSON.stringify(data));
   }
   
 });

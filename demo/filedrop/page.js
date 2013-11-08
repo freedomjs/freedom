@@ -111,6 +111,27 @@ window.onload = function() {
   
   window.freedom.on('download-data', function(val) {
     console.log("Download complete"); 
+    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.MozBlobBuilder;
+    window.URL = window.URL || window.webkitURL;
+    var blob = new Blob([val]);
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.appendChild(document.createTextNode('Click here to download'));
+    $("#dropMessageBox").append(link);
+    $('#dropModal').modal('show');
+    /**
+    rfs = window.requestFileSystem || window.webkitRequestFileSystem;
+    rfs(TEMPORARY, 1024 * 1024, function(fs) {
+      fs.root.getFile('image.png', {create: true}, function(fileEntry) {
+        fileEntry.createWriter(function(writer) {
+          writer.onwrite = function(e) { };
+          writer.onerror = function(e) { };
+          var blob = new Blob([xhr.response], {type: 'image/png'});
+          writer.write(blob);
+        }, onError);
+      }, onError);
+    }, onError);
+    **/
   });
   window.freedom.on('download-error', function(val) {
     $('#dropModal').modal('show');
