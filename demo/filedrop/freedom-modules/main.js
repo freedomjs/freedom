@@ -149,6 +149,7 @@ social.on('onChange', function(data) {
 
 social.on('onMessage', function(data) {
   var msg;
+  var targetId;
   try {
     msg = JSON.parse(data.message);
   } catch (e) {
@@ -158,7 +159,7 @@ social.on('onMessage', function(data) {
   console.log(JSON.stringify(msg));
   if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'fetch') {
     var key = msg.data;
-    var targetId = data.fromClientId;
+    targetId = data.fromClientId;
     setupConnection(targetId);
     //SEND IT
     if (files[msg.data]) {
@@ -173,7 +174,7 @@ social.on('onMessage', function(data) {
   } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'error') {
     freedom.emit('download-error', msg.data);
   } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'signal') {
-    var targetId = data.fromClientId;
+    targetId = data.fromClientId;
     if (signallingChannels[targetId]) {
       signallingChannels[targetId].emit('message', msg.data);
     } else {
