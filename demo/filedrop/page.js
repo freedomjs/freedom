@@ -48,7 +48,12 @@ var FileRead = {
   onLoad: function(evt) {
     console.log("File Read Done");
     Modal.displayProgress(100);
-    window.freedom.emit('serve-data', evt.target.result);
+    // Send data to be served. Expect a 'serve-url' response with our descriptor
+    var key = Math.random() + "";
+    window.freedom.emit('serve-data', {
+      key: key,
+      value: evt.target.result
+    });
   },
   onProgress: function(evt) {
     if (evt.lengthComputable) {
@@ -155,7 +160,7 @@ window.onload = function() {
   $(document.body).bind('drop', DragNDrop.onFile);
 
   // Setup FreeDOM listeners
-  window.freedom.on('serve-url', function(val) {
+  window.freedom.on('serve-descriptor', function(val) {
     var displayUrl = window.location + "#" + JSON.stringify(val);
     Modal.open();
     Modal.displayMessage("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
@@ -178,6 +183,7 @@ window.onload = function() {
     console.log("Download complete"); 
     Modal.open();
     var blob = new Blob([val]);
+    Modal.displayMessage("Gotcha!");
     Modal.displayDownload(window.URL.createObjectURL(blob));
   });
 
@@ -191,6 +197,8 @@ window.onload = function() {
   // See if there's a hash with a descriptor we can download
   try {
     var hash = JSON.parse(window.location.hash.substr(1));
+    Modal.open();
+    Modal.displayMessage('Loading');
     freedom.emit('download', hash);
   } catch (e) {
     console.log("No parseable hash. Don't download");

@@ -14,10 +14,10 @@ var social = freedom.socialprovider();
 var storage = freedom.storageprovider();
 
 // Internal State
-var files = {};
 var networks = {};
 var roster = {};
-var fetchQueue = [];
+var files = {};       // Files served from this node
+var fetchQueue = [];  // Files on queue to be downloaded
 
 // PC
 var connections = {};
@@ -26,7 +26,7 @@ var messageQueues = {};
 
 console.log('File Drop root module');
 
-function getClientIds() {
+function getMyClientIds() {
   var result = [];
   for (var k in networks) {
     if (networks.hasOwnProperty(k) && networks[k].clientId && 
@@ -38,18 +38,22 @@ function getClientIds() {
 }
 
 freedom.on('serve-data', function(data) {
-  file = data;
-  var key = Math.random() + "";
-  files[key] = data;
-  var clientIds = getClientIds();
+  if (!data.key || !data.value) {
+    console.log('serve-data: malformed request ' + JSON.stringify(data));
+    return;
+  }
+
+  console.log('serve-data: now serving ' + data.key);
+  files[data.key] = data.value;
+  var clientIds = getMyClientIds();
   if (clientIds.length > 0) {
-    freedom.emit('serve-url', {
+    freedom.emit('serve-descriptor', {
       targetId: clientIds,
-      key: key
+      key: data.key
     });
     // DEBUG - remove later
     freedom.emit('stats', {
-      key: key,
+      key: data.key,
       inprogress: 1,
       done: 10
     });
@@ -96,6 +100,7 @@ function setupConnection(targetId) {
   });
 }
 
+// Am I online some Social network right now?
 function isOnline() {
   for (var k in networks) {
     if (networks.hasOwnProperty(k) && networks[k].status && networks[k].status == social.STATUS_NETWORK['ONLINE']) {
@@ -109,6 +114,8 @@ function fetch(data) {
   //@todo smarter way to choose a target in the future
   var serverId = data.targetId[0];
   var key = data.key;
+  
+  console.log("fetch: downloading " + key + " from " + serverId);
   //Tell 'em I'm comin' for them
   social.sendMessage(serverId, JSON.stringify({
     cmd: 'fetch',
@@ -127,6 +134,7 @@ freedom.on('download', function(data) {
 
 social.on('onStatus', function(msg) {
   if (!networks.hasOwnProperty(msg.network)) {
+    console.log('Logging into ' + msg.network);
     social.login({
       network: msg.network,
       agent: 'filedrop', 
@@ -137,6 +145,7 @@ social.on('onStatus', function(msg) {
   }
   networks[msg.network] = msg;
   if (msg.status && msg.status == social.STATUS_NETWORK['ONLINE']) {
+    console.log('social.onStatus: ONLINE!');
     while (fetchQueue.length > 0) {
       fetch(fetchQueue.shift());
     }
@@ -150,30 +159,38 @@ social.on('onChange', function(data) {
 social.on('onMessage', function(data) {
   var msg;
   var targetId;
+  var key;
+
+  // Try parsing message
   try {
     msg = JSON.parse(data.message);
   } catch (e) {
     console.log("Error parsing message: " + data);
     return;
   }
-  console.log(JSON.stringify(msg));
+  
   if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'fetch') {
-    var key = msg.data;
+    key = msg.data;
     targetId = data.fromClientId;
+
+    console.log("social.onMessage: Received request for " + key + " from " + targetId);
     setupConnection(targetId);
     //SEND IT
-    if (files[msg.data]) {
-      console.log("Sending " + msg.data + " to " + targetId);
-      connections[targetId].send({'channelLabel': 'filedrop', 'buffer': files[msg.data]});
+    if (files[key]) {
+      console.log("social.onMessage: Sending " + key + " to " + targetId);
+      connections[targetId].send({'channelLabel': 'filedrop', 'buffer': files[key]});
     } else {
+      console.log("social.onMessage: I don't have key: " + key);
       social.sendMessage(targetId, JSON.stringify({
         cmd: 'error',
-        data: 'File missing'
+        data: 'File missing!'
       }));
     }
   } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'error') {
+    console.log('social.onMessage: ' + msg.data);
     freedom.emit('download-error', msg.data);
   } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'signal') {
+    console.log('social.onMessage: signalling message');
     targetId = data.fromClientId;
     if (signallingChannels[targetId]) {
       signallingChannels[targetId].emit('message', msg.data);
@@ -181,7 +198,7 @@ social.on('onMessage', function(data) {
       messageQueues[targetId].push(msg.data);
     }
   } else {
-    console.log("Unrecognized message: " + JSON.stringify(data));
+    console.log("social.onMessage: Unrecognized message: " + JSON.stringify(data));
   }
   
 });
