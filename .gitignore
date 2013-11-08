@@ -9,3 +9,4 @@ node_modules
 ### Demo dependencies
 demo/chat/server/tornado/
 demo/texteditor/server/tornado/
+providers/social/websocket-server/server/tornado
