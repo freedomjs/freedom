@@ -1,15 +1,37 @@
 // After loading freedom.js, the window is populated with a 'freedom'
 // object, which is used as a message passing channel to the root module
-window.onload = function() {
-  if (!window.FileReader) {
-    document.body.innerHTML = "Your browser does not support HTML5 FileReader";
-  }
 
-  document.getElementById('closeModal').onclick = function() {
-    $('#dropModal').modal('hide');
-  };
-    
-  function fileError(e) {
+// Controls the modal on the screen
+// by default, the dropDownload and dropUrl elements are hidden
+var Modal = {
+  open: function() {
+    $('#dropModal').modal('show');
+    $("#dropDownload").hide();
+    $("#dropUrl").hide();
+  },
+  displayMessage: function(val) {
+    $("#dropMessage").text(val);
+  },
+  displayProgress: function(val) {
+    $('#dropProgress').css('width' , val+"%");
+  },
+  displayUrl: function(val) {
+    $("#dropUrl").show();
+    $("#dropUrl").val(val);
+  },
+  displayDownload: function(val) {
+    $("#dropDownload").show();
+    var link = document.getElementById('dropDownload');
+    link.href = val;
+  },
+  close: function () {
+    $("#dropModal").modal('hide');
+  }
+};
+
+// Controls file reads
+var FileRead = {
+  onError: function(evt) {
     var errorMsg = 'An error occurred while reading this file';
     switch(evt.target.error.code) {
       case evt.target.error.NOT_FOUND_ERR:
@@ -21,70 +43,66 @@ window.onload = function() {
       case evt.target.error.ABORT_ERR:
         break; // noop
     }
-    $('#dropMessage').text(errorMsg);
-  }
-
-  function fileLoad(evt) {
-    $('#dropProgress').css('width' , "100%");
-    console.log("READ DONE");
+    Modal.displayMessage(errorMsg);
+  },
+  onLoad: function(evt) {
+    console.log("File Read Done");
+    Modal.displayProgress(100);
     window.freedom.emit('serve-data', evt.target.result);
-  }
-
-  function fileProgress(evt) {
+  },
+  onProgress: function(evt) {
     if (evt.lengthComputable) {
       var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
       if (percentLoaded < 100) {
-        $('#dropProgress').css('width', percentLoaded + "%");
+        Modal.displayProgress(percentLoaded);
       }
     }
   }
+};
 
-  function handleFile(e) {
+// Controls behavior of drag and drop to the screen
+var DragNDrop = {
+  within: false,
+  onFile: function(e) {
     e = e || window.event; // get window.event if e argument missing (in IE)   
     if (e.preventDefault) { e.preventDefault(); } // stops the browser from redirecting off to the image.
     var dt = e.originalEvent.dataTransfer;
     var files = dt.files;
     var file = files[0];
     var reader = new FileReader();
-    reader.onload = fileLoad;
-    reader.onerror = fileError;
-    reader.onprogress = fileProgress;
+    reader.onload = FileRead.onLoad;
+    reader.onerror = FileRead.onError;
+    reader.onprogress = FileRead.onProgress;
     reader.onloadstart = function(evt) {
       //Get rid of the overlay
-      within_dragenter = false;
+      DragNDrop.within = false;
       $("#drop").removeClass('overlaytext');
-      //Show our drop modal
-      $('#dropModal').modal({});
+      Modal.open();
     };
     reader.readAsArrayBuffer(file);
     return false;
-  }
-
-  var within_dragenter = false;
-  $(document.body).bind('dragenter', function(e) {
+  },
+  onEnter: function(e) {
     if (e.preventDefault) { e.preventDefault(); }
-    within_dragenter = true;
-    setTimeout(function() {within_dragenter=false;},0);
+    DragNDrop.within = true;
+    setTimeout(function() {DragNDrop.within=false;},0);
     $("#drop").addClass('overlaytext');
-  });
-  $(document.body).bind('dragover', function(e) {
-    if (e.preventDefault) { e.preventDefault(); }
-  });
-  $(document.body).bind('dragleave', function(e) {
-    if (! within_dragenter) {
+  },
+  onLeave: function(e) {
+    if (! DragNDrop.within) {
       $("#drop").removeClass('overlaytext');
     }
-    within_dragenter = false;
-  });
-  $(document.body).bind('drop', handleFile);
+    DragNDrop.within = false;
+  },
+  onOver: function(e) {
+    if (e.preventDefault) { e.preventDefault(); }
+  }
+};
 
-  window.freedom.on('serve-url', function(val) {
-    var displayUrl = window.location + "#" + JSON.stringify(val);
-    var key = val.key;
-    $("#dropMessage").text("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
-    $("#dropUrl").val(displayUrl);
-    //Create a new stat monitor
-    $("#servingheader").show();
+// Controls the stats on the main page
+var Stats = {
+  initialize: function(key, displayUrl) {
+    $("#statsHeader").show();
     var div = document.createElement('div');
     var input = document.createElement('input');
     input.className = 'input-xxlarge';
@@ -92,53 +110,13 @@ window.onload = function() {
     input.readOnly = true;
     input.value = displayUrl;
     var stat = document.createElement('div');
-    stat.id = val.key;
+    stat.id = key;
     div.appendChild(input);
     div.appendChild(stat);
     div.appendChild(document.createElement('br'));
     $("#stats").append(div);
-  });
-
-  window.freedom.on('serve-error', function(val) {
-    $("#dropMessage").text(val);
-  });
-
-  window.freedom.on('download-progress', function(val) {
-    //val is an integer with a percentage
-    $('#dropModal').modal('show');
-    $('#dropProgress').css('width' , val+"%");
-  });
-  
-  window.freedom.on('download-data', function(val) {
-    console.log("Download complete"); 
-    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.MozBlobBuilder;
-    window.URL = window.URL || window.webkitURL;
-    var blob = new Blob([val]);
-    var link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.appendChild(document.createTextNode('Click here to download'));
-    $("#dropMessageBox").append(link);
-    $('#dropModal').modal('show');
-    /**
-    rfs = window.requestFileSystem || window.webkitRequestFileSystem;
-    rfs(TEMPORARY, 1024 * 1024, function(fs) {
-      fs.root.getFile('image.png', {create: true}, function(fileEntry) {
-        fileEntry.createWriter(function(writer) {
-          writer.onwrite = function(e) { };
-          writer.onerror = function(e) { };
-          var blob = new Blob([xhr.response], {type: 'image/png'});
-          writer.write(blob);
-        }, onError);
-      }, onError);
-    }, onError);
-    **/
-  });
-  window.freedom.on('download-error', function(val) {
-    $('#dropModal').modal('show');
-    $("#dropMessage").text(val);
-  });
-
-  window.freedom.on('stats', function(val) {
+  },
+  update: function(val) {
     var elt = document.getElementById(val.key);
     while (elt.hasChildNodes()) {
       elt.removeChild(lastChild);
@@ -146,14 +124,78 @@ window.onload = function() {
     elt.appendChild(document.createElement('p').appendChild(document.createTextNode('Downloads in Progress: ' + val.inprogress)));
     elt.appendChild(document.createElement('br'));
     elt.appendChild(document.createElement('p').appendChild(document.createTextNode('Downloads Completed: ' + val.done)));
+  }
+};
+
+window.onload = function() {
+  // Get HTML5 stuff
+  window.URL = window.URL || window.webkitURL;
+  
+  // Check for support
+  if (!window.FileReader) {
+    document.body.innerHTML = "Your browser does not support HTML5 FileReader";
+    return;
+  } else if (!window.URL) {
+    document.body.innerHTML = "Your browser does not support window.URL";
+    return;
+  } else if (!window.Blob) {
+    document.body.innerHTML = "Your browser does not support Blobs";
+    return;
+  }
+
+  // Setup the modal's close button
+  document.getElementById('closeModal').onclick = function() {
+    Modal.close();
+  };
+
+  // Setup file drag and drop
+  $(document.body).bind('dragenter', DragNDrop.onEnter);
+  $(document.body).bind('dragover', DragNDrop.onOver);
+  $(document.body).bind('dragleave', DragNDrop.onLeave);
+  $(document.body).bind('drop', DragNDrop.onFile);
+
+  // Setup FreeDOM listeners
+  window.freedom.on('serve-url', function(val) {
+    var displayUrl = window.location + "#" + JSON.stringify(val);
+    Modal.open();
+    Modal.displayMessage("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
+    Modal.displayUrl(displayUrl);
+    Stats.initialize(val.key, displayUrl);
   });
 
+  window.freedom.on('serve-error', function(val) {
+    Modal.open();
+    Modal.displayMessage(val);
+  });
+
+  window.freedom.on('download-progress', function(val) {
+    //val is an integer with a percentage
+    Modal.open();
+    Modal.displayProgress(val);
+  });
+  
+  window.freedom.on('download-data', function(val) {
+    console.log("Download complete"); 
+    Modal.open();
+    var blob = new Blob([val]);
+    Modal.displayDownload(window.URL.createObjectURL(blob));
+  });
+
+  window.freedom.on('download-error', function(val) {
+    Modal.open();
+    Modal.displayMessage(val);
+  });
+
+  window.freedom.on('stats', Stats.update);
+
+  // See if there's a hash with a descriptor we can download
   try {
     var hash = JSON.parse(window.location.hash.substr(1));
     freedom.emit('download', hash);
   } catch (e) {
     console.log("No parseable hash. Don't download");
   }
-  $("#servingheader").hide();   
+  // Hide the stats header at first
+  $("#statsHeader").hide();   
 };
 

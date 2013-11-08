@@ -11,46 +11,54 @@
       data-manifest="freedom-modules/manifest.json">
     {
       "stayLocal": true,
-      "debug": true,
+      "debug": false,
       "strongIsolation": true
     }
   </script>
 </head>
 <body>
   <div class="container-narrow">
+
+    <!-- Header -->
     <div class="masthead">
       <h3 class="muted">FreeDOM File Drop</h3>
     </div>
     <hr>
+
     <!-- Main drop box for files-->
     <div id='drop' class="jumbotron">
       <h1>Send a File</h1>
-      <p id='dropstatus' class="lead">Drag a file into this square to send a file</p>
+      <p class="lead">Drag a file into this square to send a file</p>
       <p>Note: Only supports 1 file at a time, so zip it up yourself!</p>
       <img width='20%' src='file.png'/>
     </div>
 
     <!-- Display file transfer status -->
-    <h4 id='servingheader'> Actively serving: </h4>
-    <div id="stats">
-    </div>
+    <h4 id='statsHeader'> Actively serving: </h4>
+    <div id="stats"></div>
 
-    <!-- Modal for after file is uploaded -->
+    <!-- Modal for post-upload, or current download -->
     <div id='dropModal' class="modal hide fade">
+      <!-- Modal Header -->
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h3>Let's do this!</h3>
       </div>
+      <!-- Modal Body -->
       <div class="modal-body">
+        <!-- Progress Bar -->
         <div class="progress progress-striped">
           <div id='dropProgress' class="bar" style="width: 0%;"></div>
         </div>
+        <!-- Modal Contents -->
         <div id='dropMessageBox'>
           <p id='dropMessage'></p>
           <input id='dropUrl' class='input-xxlarge' type="text" readonly>
+          <a id='dropDownload' href='#'>Click here to download</a>
         </div>
       </div>
-      <div class="modal-footer">
+      <!-- Modal Footer -->
+      <div id='modalFooter' class="modal-footer">
         <button id='closeModal' type="button" class="btn btn-primary">Close</a>
       </div>
     </div>
