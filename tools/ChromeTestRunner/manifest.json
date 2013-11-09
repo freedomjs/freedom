@@ -1,0 +1,14 @@
+{
+	"name": "Chrome Test Runner",
+	"description": "Runs tests using Jasmine",
+	"version": "0.1",
+	"app": {
+		"background": {
+			"scripts": ["background.js"]
+		}
+	},
+	"icons": {
+		"16": "tester-256.png",
+		"128": "tester-256.png"
+	}
+}
