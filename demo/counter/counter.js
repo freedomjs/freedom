@@ -5,6 +5,7 @@
  * is used as a message-passing channel to its parent (the outer webpage)
  **/
 var n = 0;
+console.log("Hello World!");
 
 // On 'click' events, add it to our global count
 // and emit the total back to the outer page
