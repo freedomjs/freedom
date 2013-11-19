@@ -48,6 +48,7 @@ mkdir "$RUNTIME_INCLUDES"
 cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers,interface}/*.js > "$TEST_APP/runtimeIncludes/freedomSetup.js" # Defines the setup(...) function.
 cp "$FREEDOM_ROOT_DIR/freedom.js" "$TEST_APP/runtimeIncludes/freedom.js"
 cp -r "$FREEDOM_ROOT_DIR/spec/helper" "$TEST_APP/runtimeIncludes/"
+cp -r "$FREEDOM_ROOT_DIR/node_modules/grunt-contrib-jasmine/vendor/jasmine-1.3.0" "$TEST_APP/runtimeIncludes/"
 
 # Pull in all the tests to run
 cat `find $FREEDOM_ROOT_DIR -iname "*spec.js"` > "$TEST_APP/runtimeIncludes/specs.js" # Cat all specs together into a giant spec
