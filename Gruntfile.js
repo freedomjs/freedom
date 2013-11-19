@@ -81,6 +81,19 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
+  // Custom Task for Chrome Test Runner
+  grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
+    grunt.util.spawn({
+      cmd: 'bash',
+      args: ['tools/chromeTestRunner.sh'],
+    }, function done(error, result, code) {
+      grunt.log.ok('Failed to execute shell script:'+
+        "\n\t"+error+
+        "\n\tResult: "+result+
+        "\n\tCode: "+code);
+    });
+  });
+
   // Default tasks.
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
