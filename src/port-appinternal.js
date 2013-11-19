@@ -44,6 +44,7 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
     this.port = this.manager.hub.getDestination(message.channel);
     this.appChannel = message.channel;
     this.appId = message.appId;
+    this.appLineage = message.lineage;
 
     var objects = this.mapProxies(message.manifest);
 
@@ -128,9 +129,10 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
 
   core = fdom.apis.get('core').definition;
   provider = new fdom.port.Provider(core);
-  this.manager.getCore(function(coreProv) {
-    provider.getInterface().provideAsynchronous(coreProv);
-  });
+  this.manager.getCore(function(CoreProv) {
+    new CoreProv(this.manager).setId(this.appLineage);
+    provider.getInterface().provideAsynchronous(CoreProv);
+  }.bind(this));
 
   this.emit(this.controlChannel, {
     type: 'Link to core',
