@@ -16,6 +16,8 @@ var Core_unprivileged = function(manager) {
 
 Core_unprivileged.unboundChannels = {};
 
+Core_unprivileged.contextId = undefined;
+
 /**
  * Create a custom channel.
  * Returns the structure {channel: fdom.proxy.Deferred, identifier: Object},
@@ -169,6 +171,29 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   } else {
     continuation();
   }
+};
+
+/**
+ * Get the ID of the current freedom.js context.  Provides an
+ * array of module URLs, the lineage of the current context.
+ * When not in an application context, the ID is the lineage
+ * of the current View.
+ * @method getId
+ * @param {Function} callback The function called with ID information.
+ */
+Core_unprivileged.prototype.getId = function(callback) {
+  // TODO: make sure contextID is properly frozen.
+  callback(Core_unprivileged.contextId);
+};
+
+/**
+ * Set the ID of the current freedom.js context.
+ * @method setId
+ * @private
+ * @param {String[]} id The lineage of the current context.
+ */
+Core_unprivileged.prototype.setId = function(id) {
+  Core_unprivileged.contextId = id;
 };
 
 fdom.apis.register("core", Core_unprivileged);

@@ -1,6 +1,7 @@
 fdom.apis.set("core", {
   'createChannel': {type: "method", value: []},
-  'bindChannel': {type: "method", value: ["proxy"]}
+  'bindChannel': {type: "method", value: ["proxy"]},
+  'getId': {type: "method", value: []}
 });
 
 fdom.apis.set("core.view", {
