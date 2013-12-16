@@ -108,6 +108,29 @@ function handleEvents(obj) {
   };
 
   /**
+   * Filter a list based on a predicate. The list is filtered in place, with
+   * selected items removed and returned by the function.
+   * @method
+   * @param {Array} list The list to filter
+   * @param {Function} predicate The method to run on each item.
+   * @returns {Array} Selected items
+   */
+  var filter = function(list, predicate) {
+    var ret = [], i;
+
+    if (!list || !list.length) {
+      return [];
+    }
+
+    for (i = list.length - 1; i >= 0; i--) {
+      if (predicate(list[i])) {
+        ret.push(list.splice(i, 1));
+      }
+    }
+    return ret;
+  };
+
+  /**
    * Register a method to be executed when an event of a specific type occurs.
    * @method on
    * @param {String|Function} type The type of event to register against.
@@ -171,6 +194,44 @@ function handleEvents(obj) {
         var cond = this.onceConditional.splice(i, 1);
         cond[0][1](data);
       }
+    }
+  }.bind(eventState);
+
+  /**
+   * Remove an event handler
+   * @method off
+   * @param {String} type The type of event to remove.
+   * @param {Function?} handler The handler to remove.
+   */
+  obj['off'] = function(type, handler) {
+    var i;
+    if (!type) {
+      this.listeners = {};
+      this.conditional = [];
+      this.oneshots = {};
+      this.onceConditional = [];
+      return;
+    }
+
+    if (typeof type === 'function') {
+      filter(this.onceConditional, function(item) {
+        return item[0] === type && (!handler || item[1] === handler);
+      });
+      filter(this.conditional, function(item) {
+        return item[0] === type && (!handler || item[1] === handler);
+      });
+    }
+
+    if (!handler) {
+      delete this.listeners[type];
+      delete this.oneshots[type];
+    } else {
+      filter(this.listeners[type], function(item) {
+        return item === handler;
+      });
+      filter(this.oneshots[type], function(item) {
+        return item === handler;
+      });
     }
   }.bind(eventState);
 }

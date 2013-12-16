@@ -101,6 +101,23 @@ describe("util", function() {
       expect(cb).toHaveBeenCalledWith('yes');
       expect(cb.calls.length).toEqual(1);
     });
+
+    it("can unregister events", function() {
+      object.on('msg', cb);
+      object.off('msg', cb);
+      object.emit('msg', 'value');
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it("can unregister conditional events", function() {
+      var func = function(type, val) {
+        return val == 'yes';
+      };
+      object.once(func, cb);
+      object.off(func);
+      object.emit('msg', 'yes');
+      expect(cb).not.toHaveBeenCalled();
+    })
   });
 
   it("Can make urls absolute", function() {
