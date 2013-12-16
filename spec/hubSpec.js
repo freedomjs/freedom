@@ -52,5 +52,31 @@ describe("fdom.Hub", function() {
     expect(app.onMessage).not.toHaveBeenCalled();
     expect(fdom.debug.warn).toHaveBeenCalled();
   });
+
+  it("removes routes", function() {
+    spyOn(fdom.debug, 'warn');
+    var app1 = {
+      id: 'testApp'
+    };
+    var app2 = {
+      id: 'otherApp'
+    };
+    hub.register(app1);
+    hub.register(app2);
+    app2.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app1, 'otherApp', 'testx');
+    
+    var msg = {test: true};
+    hub.onMessage(route, msg);
+
+    expect(app2.onMessage).toHaveBeenCalledWith('testx', msg);
+
+    hub.uninstall(app1, route);
+
+    expect(fdom.debug.warn).not.toHaveBeenCalled();
+
+    hub.onMessage(route, msg);
+    expect(fdom.debug.warn).toHaveBeenCalled();
+  });
 });
 

@@ -15,7 +15,10 @@ fdom.port = fdom.port || {};
 fdom.port.Manager = function(hub) {
   this.id = 'control';
   this.config = {};
-  this.flows = {};
+  this.controlFlows = {};
+  this.dataFlows = {};
+  this.dataFlows[this.id] = [];
+  this.reverseFlowMap = {};
   this.hub = hub;
   this.delegate = null;
   this.toDelegate = {};
@@ -55,7 +58,7 @@ fdom.port.Manager.prototype.toString = function() {
  * @param {Object} message The received message.
  */
 fdom.port.Manager.prototype.onMessage = function(flow, message) {
-  var reverseFlow = this.flows[flow], origin;
+  var reverseFlow = this.controlFlows[flow], origin;
   if (!reverseFlow) {
     console.warn("Unknown message source: " + flow);
     return;
@@ -135,7 +138,7 @@ fdom.port.Manager.prototype.setup = function(port) {
     return false;
   }
 
-  if(this.flows[port.id]) {
+  if(this.controlFlows[port.id]) {
     console.warn("Refusing to re-initialize port " + port.id);
     return false;
   }
@@ -148,7 +151,10 @@ fdom.port.Manager.prototype.setup = function(port) {
   this.hub.register(port);
   var flow = this.hub.install(this, port.id, "control"),
       reverse = this.hub.install(port, this.id, port.id);
-  this.flows[port.id] = flow;
+  this.controlFlows[port.id] = flow;
+  this.dataFlows[port.id] = [reverse];
+  this.reverseFlowMap[flow] = reverse;
+  this.reverseFlowMap[reverse] = flow;
 
   this.hub.onMessage(flow, {
     type: 'setup',
@@ -157,6 +163,29 @@ fdom.port.Manager.prototype.setup = function(port) {
   });
 
   return true;
+};
+
+/**
+ * Tear down a port on the hub.
+ * @method destroy
+ * @apram {Port} port The port to unregister.
+ */
+fdom.port.Manager.prototype.destroy = function(port) {
+  if (!port.id) {
+    console.warn("Unable to tear down unidentified port");
+    return false;
+  }
+
+  // Remove associated links.
+  var i;
+  for (i = this.dataFlows[port.id].length; i >= 0; i--) {
+    this.removeLink(port, this.dataFlows[port.id][i]);
+  }
+
+  // Remove the port.
+  delete this.controlFlows[port.id];
+  delete this.dataFlows[port.id];
+  this.hub.deregister(port);
 };
 
 /**
@@ -175,7 +204,7 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
     return; 
   }
 
-  if (!this.flows[destination.id]) {
+  if (!this.controlFlows[destination.id]) {
     if(this.setup(destination) === false) {
       return;
     }
@@ -188,15 +217,20 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
   destination = this.hub.getDestination(outgoing);
   reverse = this.hub.install(destination, port.id, name);
 
+  this.reverseFlowMap[outgoing] = reverse;
+  this.dataFlows[port.id].push(outgoing);
+  this.reverseFlowMap[reverse] = outgoing;
+  this.dataFlows[destination.id].push(reverse);
+
   if (toDest) {
-    this.hub.onMessage(this.flows[destination.id], {
+    this.hub.onMessage(this.controlFlows[destination.id], {
       type: 'createLink',
       name: outgoingName,
       channel: reverse,
       reverse: outgoing
     });
   } else {
-    this.hub.onMessage(this.flows[port.id], {
+    this.hub.onMessage(this.controlFlows[port.id], {
       name: name,
       type: 'createLink',
       channel: outgoing,
@@ -205,6 +239,47 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
   }
 };
 
+/**
+ * Remove a link between to ports. The reverse link will also be removed.
+ * @method removeLink
+ * @param {Port} port The source port.
+ * @param {String} name The flow to be removed.
+ */
+fdom.port.Manager.prototype.removeLink = function(port, name) {
+  var reverse = this.hub.getDestination(name),
+      rflow = this.reverseFlowMap[name],
+      i;
+
+  if (!reverse || !rflow) {
+    console.warn("Improperly registered flow to remove: " + name);
+    return;
+  }
+
+  this.hub.uninstall(port, name);
+  this.hub.uninstall(reverse, rflow);
+
+  delete this.reverseFlowMap[name];
+  delete this.reverseFlowMap[rflow];
+  for (i = 0; i < this.dataFlows[reverse.id].length; i++) {
+    if (this.dataFlows[reverse.id][i] === rflow) {
+      this.dataFlows[reverse.id].splice(i, 1);
+      break;
+    }
+  }
+  for (i = 0; i < this.dataFlows[port.id].length; i++) {
+    if (this.dataFlows[port.id][i] === name) {
+      this.dataFlows[port.id].splice(i, 1);
+      break;
+    }
+  }
+};
+
+/**
+ * Get the core freedom.js API active on the current hub.
+ * @method getCore
+ * @private
+ * @param {Function} cb Callback to fire with the core object.
+ */
 fdom.port.Manager.prototype.getCore = function(cb) {
   if (this.core) {
     cb(this.core);
