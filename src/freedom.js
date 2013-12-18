@@ -14,6 +14,8 @@
  * @static
  */
 setup = function (global, freedom_src, config) {
+  fdom.debug = new fdom.port.Debug();
+
   var hub = new fdom.Hub(),
       site_cfg = {
         'debug': true,
@@ -27,18 +29,18 @@ setup = function (global, freedom_src, config) {
         manager.createLink(external, 'default', app);
       },
       link;
-  
-  // Debugging is not recorded until this point.
-  fdom.debug = new fdom.port.Debug();
 
   manager.setup(external);
-  manager.setup(fdom.debug);
   
   if (isAppContext()) {
     site_cfg.global = global;
     site_cfg.src = freedom_src;
     setupApp(new fdom.port[site_cfg.portType]());
+
+    // Delay debug messages until delegation to the parent context is setup.
+    manager.once('delegate', manager.setup.bind(manager, fdom.debug));
   } else {
+    manager.setup(fdom.debug);
     advertise();
     
     // Configure against data-manifest.

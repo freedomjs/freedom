@@ -104,13 +104,13 @@ fdom.Hub.prototype.deregister = function(app) {
  */
 fdom.Hub.prototype.install = function(source, destination, flow) {
   if (!this.apps[source.id]) {
-    console.warn("Unwilling to generate a source for " + source.id);
+    fdom.debug.warn("Unwilling to generate a source for " + source.id);
     return;
   } else {
     source = this.apps[source.id];
   }
   if (!destination) {
-    console.warn("Unwilling to generate a flow to nowhere from " + source.id);
+    fdom.debug.warn("Unwilling to generate a flow to nowhere from " + source.id);
     return;
   }
 
@@ -136,7 +136,7 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
  */
 fdom.Hub.prototype.uninstall = function(source, flow) {
   if (!this.apps[source.id]) {
-    console.warn("Unable to find routes for unknown source " + source.id);
+    fdom.debug.warn("Unable to find routes for unknown source " + source.id);
     return false;
   } else {
     source = this.apps[source.id];
@@ -145,7 +145,7 @@ fdom.Hub.prototype.uninstall = function(source, flow) {
   if (!route) {
     return false;
   } else if (route.source != source.id) {
-    console.warn("Flow " + flow + " does not belong to port " + source.id);
+    fdom.debug.warn("Flow " + flow + " does not belong to port " + source.id);
     return false;
   }
 
