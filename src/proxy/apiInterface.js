@@ -5,7 +5,7 @@ if (typeof fdom === 'undefined') {
 }
 fdom.proxy = fdom.proxy || {};
 
-fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
+fdom.proxy.ApiInterface = function(def, onMsg, emit, close, id) {
   var inflight = {},
       events = null,
       emitter = null,

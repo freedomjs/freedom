@@ -59,11 +59,15 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
 
 /**
  * Create a proxy.Interface associated with this proxy.
- * an interface is returned, and is passed three arguments
- * at construction: onMsg: function(binder) is allows registration
- * of a function to be called when messages for this interface arrive.
+ * An interface is returned, which is supplied with important control of the
+ * proxy via constructor arguments: (bound below in getInterfaceConstructor)
+ * 
+ * onMsg: function(binder) sets the function to call when messages for this
+ *    interface arrive on the channel,
  * emit: function(msg) allows this interface to emit messages,
+ * close: function() allows this interface to close the channel,
  * id: string is the Identifier for this interface.
+ * @method getInterface
  */
 fdom.port.Proxy.prototype.getInterface = function() {
   var Iface = this.getInterfaceConstructor();
@@ -74,20 +78,40 @@ fdom.port.Proxy.prototype.getInterface = function() {
  * Provides a bound class for creating a proxy.Interface associated
  * with this proxy. This partial level of construction can be used
  * to allow the proxy to be used as a provider for another API.
+ * @method getInterfaceConstructor
  */
 fdom.port.Proxy.prototype.getInterfaceConstructor = function() {
   var id = fdom.port.Proxy.nextId();
   return this.interfaceCls.bind({}, function(id, binder) {
     this.emits[id] = binder;
-  }.bind(this, id), this.doEmit.bind(this), id);  
+  }.bind(this, id), this.doEmit.bind(this), this.doClose.bind(this), id);  
 };
 
+/**
+ * Emit a message on the channel once setup is complete.
+ * @method doEmit
+ * @private
+ * @param {Object} msg The message to emit
+ */
 fdom.port.Proxy.prototype.doEmit = function(msg) {
   if (this.emitChannel) {
     this.emit(this.emitChannel, msg);
   } else {
     this.once('start', this.doEmit.bind(this, msg));
   }
+};
+
+/**
+ * Close / teardown the route that this proxy is one
+ * endpoint of.
+ * @method doClose
+ */
+fdom.port.Proxy.prototype.doClose = function() {
+  this.emit(this.controlChannel, {
+    type: 'Channel Closing',
+    request: 'close'
+  });
+  console.warn('proxy asked to close!');
 };
 
 /**

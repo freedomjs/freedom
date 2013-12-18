@@ -24,6 +24,7 @@ freedom.on('create', function() {
 
 freedom.on('destroy', function(id) {
   freedom.emit('message', 'destroying channel ' + id);
+  channels[id].close();
   delete channels[id];
   friend.emit('message', {
     cmd: 'destroy',

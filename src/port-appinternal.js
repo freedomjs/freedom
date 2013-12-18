@@ -79,6 +79,7 @@ fdom.port.AppInternal.prototype.attach = function(name, proxy) {
     exp[name] = function(p) {
       return p.getInterface();
     }.bind({}, proxy);
+    exp[name].close = proxy.doClose.bind(proxy);
   }
 
   this.pendingPorts -= 1;

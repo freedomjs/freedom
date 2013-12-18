@@ -47,12 +47,13 @@ fdom.port.Manager.prototype.toString = function() {
  * identified by the request property.  The actions are:
  * 1. debug. Prints the message to the console.
  * 2. link. Creates a link between the source and a provided destination port.
- * 3. create. Registers the provided port with the hub.
+ * 3. create. registers the provided port with the hub.
  * 4. port. Creates a link between the source and a described port type.
  * 5. bindapp. Binds a custom channel from a defined source to described port type.
  * 6. delegate. Routes a defined set of control messages to another location.
  * 7. resource. Registers the source as a resource resolver.
- * 8. core. Generates a core provider for the requester. 
+ * 8. core. Generates a core provider for the requester.
+ * 9. close. Tears down routes involing the requesting port.
  * @method onMessage
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
@@ -60,7 +61,7 @@ fdom.port.Manager.prototype.toString = function() {
 fdom.port.Manager.prototype.onMessage = function(flow, message) {
   var reverseFlow = this.controlFlows[flow], origin;
   if (!reverseFlow) {
-    console.warn("Unknown message source: " + flow);
+    fdom.debug.warn("Unknown message source: " + flow);
     return;
   }
   origin = this.hub.getDestination(reverseFlow);
@@ -106,6 +107,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
       this.delegate = reverseFlow;
     }
     this.toDelegate[message.flow] = true;
+    this.emit('delegate');
   } else if (message.request === 'resource') {
     fdom.resources.addResolver(message.args[0]);
     fdom.resources.addRetriever(message.service, message.args[1]);
@@ -120,9 +122,12 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
         core: core
       });
     }.bind(this, reverseFlow));
+  } else if (message.request === 'close') {
+    fdom.debug.warn("Destroying Port id " + origin.id);
+    this.destroy(origin);
   } else {
-    console.warn("Unknown control request: " + message.request);
-    console.log(JSON.stringify(message));
+    fdom.debug.warn("Unknown control request: " + message.request);
+    fdom.debug.log(JSON.stringify(message));
     return;
   }
 };
@@ -134,12 +139,12 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
  */
 fdom.port.Manager.prototype.setup = function(port) {
   if (!port.id) {
-    console.warn("Refusing to setup unidentified port ");
+    fdom.debug.warn("Refusing to setup unidentified port ");
     return false;
   }
 
   if(this.controlFlows[port.id]) {
-    console.warn("Refusing to re-initialize port " + port.id);
+    fdom.debug.warn("Refusing to re-initialize port " + port.id);
     return false;
   }
 
@@ -172,7 +177,7 @@ fdom.port.Manager.prototype.setup = function(port) {
  */
 fdom.port.Manager.prototype.destroy = function(port) {
   if (!port.id) {
-    console.warn("Unable to tear down unidentified port");
+    fdom.debug.warn("Unable to tear down unidentified port");
     return false;
   }
 
@@ -251,7 +256,7 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
       i;
 
   if (!reverse || !rflow) {
-    console.warn("Improperly registered flow to remove: " + name);
+    fdom.debug.warn("Could not find metadata to remove flow: " + name);
     return;
   }
 

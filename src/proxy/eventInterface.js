@@ -5,7 +5,7 @@ if (typeof fdom === 'undefined') {
 }
 fdom.proxy = fdom.proxy || {};
 
-fdom.proxy.EventInterface = function(onMsg, emit) {
+fdom.proxy.EventInterface = function(onMsg, emit, close) {
   handleEvents(this);
   
   onMsg(this.emit.bind(this));
@@ -13,4 +13,6 @@ fdom.proxy.EventInterface = function(onMsg, emit) {
   this.emit = function(emitter, type, msg) {
     emitter({type: type, message: msg});
   }.bind({}, emit);
+
+  this.close = close;
 };
