@@ -47,13 +47,12 @@ fdom.port.Manager.prototype.toString = function() {
  * identified by the request property.  The actions are:
  * 1. debug. Prints the message to the console.
  * 2. link. Creates a link between the source and a provided destination port.
- * 3. create. registers the provided port with the hub.
- * 4. port. Creates a link between the source and a described port type.
- * 5. bindapp. Binds a custom channel from a defined source to described port type.
- * 6. delegate. Routes a defined set of control messages to another location.
- * 7. resource. Registers the source as a resource resolver.
- * 8. core. Generates a core provider for the requester.
- * 9. close. Tears down routes involing the requesting port.
+ * 3. port. Creates a link between the source and a described port type.
+ * 4. bindapp. Binds a custom channel from a defined source to described port type.
+ * 5. delegate. Routes a defined set of control messages to another location.
+ * 6. resource. Registers the source as a resource resolver.
+ * 7. core. Generates a core provider for the requester.
+ * 8. close. Tears down routes involing the requesting port.
  * @method onMessage
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
@@ -87,8 +86,6 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
 
   if (message.request === 'link') {
     this.createLink(origin, message.name, message.to, message.overrideDest);
-  } else if (message.request === 'create') {
-    this.setup(origin);
   } else if (message.request === 'port') {
     if (message.exposeManager) {
       message.args = this;
@@ -211,6 +208,7 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
 
   if (!this.controlFlows[destination.id]) {
     if(this.setup(destination) === false) {
+      fdom.debug.warn('Could not find or setup destination.');
       return;
     }
   }
