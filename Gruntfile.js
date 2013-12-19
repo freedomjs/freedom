@@ -4,7 +4,8 @@ module.exports = function(grunt) {
     jasmine: {
       freedom: {
         src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
-              'providers/core.unprivileged.js', 'providers/echo.unprivileged.js'],
+              'providers/core.unprivileged.js', 'providers/echo.unprivileged.js',
+              'spec/util.js'],
         options: {
           specs: ['spec/*Spec.js', 'spec/providers/*Spec.js']
         }
