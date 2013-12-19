@@ -111,7 +111,8 @@ fdom.port.Proxy.prototype.doClose = function() {
     type: 'Channel Closing',
     request: 'close'
   });
-  console.warn('proxy asked to close!');
+
+  this.emitChannel = null;
 };
 
 /**
