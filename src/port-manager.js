@@ -48,11 +48,10 @@ fdom.port.Manager.prototype.toString = function() {
  * 1. debug. Prints the message to the console.
  * 2. link. Creates a link between the source and a provided destination port.
  * 3. port. Creates a link between the source and a described port type.
- * 4. bindapp. Binds a custom channel from a defined source to described port type.
- * 5. delegate. Routes a defined set of control messages to another location.
- * 6. resource. Registers the source as a resource resolver.
- * 7. core. Generates a core provider for the requester.
- * 8. close. Tears down routes involing the requesting port.
+ * 4. delegate. Routes a defined set of control messages to another location.
+ * 5. resource. Registers the source as a resource resolver.
+ * 6. core. Generates a core provider for the requester.
+ * 7. close. Tears down routes involing the requesting port.
  * @method onMessage
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
@@ -92,12 +91,6 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     }
     this.createLink(origin, message.name, 
         new fdom.port[message.service](message.args));
-  } else if (message.request === 'bindport') {
-    this.createLink({id: message.id},
-                    'custom' + message.port,
-                    new fdom.port[message.service](message.args),
-                    'default',
-                    true);
   } else if (message.request === 'delegate') {
     // Initate Delegation.
     if (this.delegate === null) {
