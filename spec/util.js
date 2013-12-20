@@ -1,32 +1,31 @@
 var createTestPort = function(id) {
   var port = {
     id: id,
-    messages: []
-  }
-  handleEvents(port);
-
-  port.onMessage = function(from, msg) {
-    this.messages.push([from, msg]);
-    this.emit('onMessage', msg);
-  };
-
-  port.gotMessage = function(from, match) {
-    var okay;
-    for (var i = 0; i < messages.length; i++) {
-      if (messages[i][0] === from) {
-        okay = true;
-        for (var j in match) {
-          if (messages[i][1][j] !== match[j]) {
-            okay = false;
+    messages: [],
+    onMessage: function(from, msg) {
+      this.messages.push([from, msg]);
+      this.emit('onMessage', msg);
+    },
+    gotMessage: function(from, match) {
+      var okay;
+      for (var i = 0; i < this.messages.length; i++) {
+        if (this.messages[i][0] === from) {
+          okay = true;
+          for (var j in match) {
+            if (this.messages[i][1][j] !== match[j]) {
+              okay = false;
+            }
+          }
+          if (okay) {
+            return this.messages[i][1];
           }
         }
-        if (okay) {
-          return true;
-        }
       }
+      return false;
     }
-    return false;
   };
+
+  handleEvents(port);
 
   return port;
 };

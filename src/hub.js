@@ -58,6 +58,9 @@ fdom.Hub.prototype.onMessage = function(source, message) {
  */
 fdom.Hub.prototype.getDestination = function(source) {
   var destination = this.routes[source];
+  if (!destination) {
+    return null;
+  }
   return this.apps[destination.app];
 };
 
