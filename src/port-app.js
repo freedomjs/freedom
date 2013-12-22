@@ -27,11 +27,6 @@ fdom.port.App = function(manifestURL, creator) {
 };
 
 /**
- * Apps are relocatable.
- */
-fdom.port.App.prototype.relocatable = true;
-
-/**
  * Receive an external application for the Application.
  * @method onMessage
  * @param {String} flow The origin of the message.
