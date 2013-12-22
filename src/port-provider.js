@@ -38,8 +38,13 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       channel: message.reverse
     });
     this.emit('start');
-  } else if (source === 'control' && message.channel) {
+  } else if (source === 'control' && message.type === 'setup') {
     this.controlChannel = message.channel;
+  } else if (source === 'control' && message.type === 'close') {
+    if (message.channel === 'control') {
+      delete this.controlChannel;
+    }
+    this.close();
   } else if (source === 'default') {
     if (!this.emitChannel && message.channel) {
       this.emitChannel = message.channel;
@@ -66,8 +71,10 @@ fdom.port.Provider.prototype.close = function() {
       type: 'Provider Closing',
       request: 'close'
     });
+    delete this.controlChannel;
   }
 
+  this.providerInstances = {};
   this.emitChannel = null;
 };
 

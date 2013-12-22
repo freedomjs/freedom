@@ -42,6 +42,7 @@ describe("fdom.Port.Proxy", function() {
   it("closes the interface when asked", function() {
     // setup.
     port.onMessage('control', {
+      type: 'setup',
       channel: 'control'
     });
     port.onMessage('default', {

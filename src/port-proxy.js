@@ -35,8 +35,13 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       channel: message.reverse
     });
     this.emit('start');
-  } else if (source === 'control' && message.channel) {
+  } else if (source === 'control' && message.type === 'setup') {
     this.controlChannel = message.channel;
+  } else if (source === 'control' && message.type === 'close') {
+    if (message.channel === 'control') {
+      delete this.controlChannel;
+    }
+    this.doClose();
   } else if (source === 'default') {
     if (!this.emitChannel && message.channel) {
       this.emitChannel = message.channel;
@@ -112,6 +117,7 @@ fdom.port.Proxy.prototype.doClose = function() {
       request: 'close'
     });
   }
+  this.emits = {};
 
   this.emitChannel = null;
 };
