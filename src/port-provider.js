@@ -41,7 +41,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
   } else if (source === 'control' && message.type === 'setup') {
     this.controlChannel = message.channel;
   } else if (source === 'control' && message.type === 'close') {
-    if (message.channel === 'control') {
+    if (message.channel === this.controlChannel) {
       delete this.controlChannel;
     }
     this.close();

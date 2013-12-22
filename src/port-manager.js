@@ -52,6 +52,7 @@ fdom.port.Manager.prototype.toString = function() {
  * 5. resource. Registers the source as a resource resolver.
  * 6. core. Generates a core provider for the requester.
  * 7. close. Tears down routes involing the requesting port.
+ * 8. unlink. Tears down a route from the requesting port.
  * @method onMessage
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
@@ -113,8 +114,9 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
       });
     }.bind(this, reverseFlow));
   } else if (message.request === 'close') {
-    fdom.debug.warn("Destroying Port id " + origin.id);
     this.destroy(origin);
+  } else if (message.request === 'unlink') {
+    this.removeLink(origin, message.to);
   } else {
     fdom.debug.warn("Unknown control request: " + message.request);
     fdom.debug.log(JSON.stringify(message));
@@ -171,14 +173,16 @@ fdom.port.Manager.prototype.destroy = function(port) {
     return false;
   }
 
+  // Remove the port.
+  delete this.controlFlows[port.id];
+
   // Remove associated links.
   var i;
-  for (i = this.dataFlows[port.id].length; i >= 0; i--) {
+  for (i = this.dataFlows[port.id].length - 1; i >= 0; i--) {
     this.removeLink(port, this.dataFlows[port.id][i]);
   }
 
   // Remove the port.
-  delete this.controlFlows[port.id];
   delete this.dataFlows[port.id];
   this.hub.deregister(port);
 };
@@ -251,15 +255,26 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
     return;
   }
 
+  if (this.hub.getDestination(rflow).id !== port.id) {
+    fdom.debug.warn("Source port does not own flow " + name);
+    return;
+  }
+
   // Notify ports that a channel is closing.
-  this.hub.onMessage(this.controlFlows[port.id], {
-    type: 'close',
-    channel: name
-  });
-  this.hub.onMessage(this.controlFlows[reverse.id], {
-    type: 'close',
-    channel: rflow
-  });
+  i = this.controlFlows[port.id];
+  if (i) {
+    this.hub.onMessage(i, {
+      type: 'close',
+      channel: name
+    });
+  }
+  i = this.controlFlows[reverse.id];
+  if (i) {
+    this.hub.onMessage(i, {
+      type: 'close',
+      channel: rflow
+    });
+  }
 
   // Uninstall the channel.
   this.hub.uninstall(port, name);
@@ -267,16 +282,20 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
 
   delete this.reverseFlowMap[name];
   delete this.reverseFlowMap[rflow];
-  for (i = 0; i < this.dataFlows[reverse.id].length; i++) {
-    if (this.dataFlows[reverse.id][i] === rflow) {
-      this.dataFlows[reverse.id].splice(i, 1);
-      break;
+  if (this.dataFlows[reverse.id]) {
+    for (i = 0; i < this.dataFlows[reverse.id].length; i++) {
+      if (this.dataFlows[reverse.id][i] === rflow) {
+        this.dataFlows[reverse.id].splice(i, 1);
+        break;
+      }
     }
   }
-  for (i = 0; i < this.dataFlows[port.id].length; i++) {
-    if (this.dataFlows[port.id][i] === name) {
-      this.dataFlows[port.id].splice(i, 1);
-      break;
+  if (this.dataFlows[port.id]) {
+    for (i = 0; i < this.dataFlows[port.id].length; i++) {
+      if (this.dataFlows[port.id][i] === name) {
+        this.dataFlows[port.id].splice(i, 1);
+        break;
+      }
     }
   }
 };

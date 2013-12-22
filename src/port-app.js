@@ -34,7 +34,7 @@ fdom.port.App = function(manifestURL, creator) {
  */
 fdom.port.App.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
-    if (!this.controlChannel && message.channel) {
+    if (message.type === 'setup') {
       this.controlChannel = message.channel;
       mixin(this.config, message.config);
       this.emit(this.controlChannel, {
@@ -59,12 +59,10 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
       return;
     } else if (message.type === 'close') {
       // Closing channel.
-      if (message.channel === 'default') {
+      if (message.channel === 'default' || message.channel === 'control') {
         this.stop();
-      } else {
-        this.port.onMessage(flow, message);
       }
-      this.deregisterFlow(message.channel);
+      this.deregisterFlow(message.channel, false);
     } else {
       this.port.onMessage(flow, message);
     }
@@ -95,19 +93,35 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
  * Clean up after a flow which is no longer used / needed.
  * @method deregisterFLow
  * @param {String} flow The flow to remove mappings for.
+ * @param {Boolean} internal If the flow name is the internal identifier.
+ * @returns {Boolean} Whether the flow was successfully deregistered.
  * @private
  */
-fdom.port.App.prototype.deregisterFlow = function(flow) {
-  var key;
+fdom.port.App.prototype.deregisterFlow = function(flow, internal) {
+  var key,
+      map = internal ? this.internalPortMap : this.externalPortMap;
   // TODO: this is inefficient, but seems less confusing than a 3rd
   // reverse lookup map.
-  for (key in this.externalPortMap) {
-    if (this.externalPortMap[key] === flow) {
+  for (key in map) {
+    if (map[key] === flow) {
+      if (internal) {
+        this.emit(this.controlChannel, {
+          type: 'Channel Teardown',
+          request: 'unlink',
+          to: this.externalPortMap[key]
+        });
+      } else {
+        this.port.onMessage(flow, {
+          type: 'close',
+          channel: this.internalPortMap[key]
+        });
+      }
       delete this.externalPortMap[key];
       delete this.internalPortMap[key];
-      break;
+      return true;
     }
   }
+  return false;
 };
 
 /**
@@ -193,7 +207,8 @@ fdom.port.App.prototype.toString = function() {
  */
 fdom.port.App.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
-    fdom.debug.log('bound for ' + name);
+    fdom.debug.log('Application saw new channel binding: ' + name +
+        'registered as ' + message.channel);
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
     return;
@@ -224,7 +239,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         lineage: this.lineage,
         channel: message.reverse
       });
-    } else {
+    } else if (message.type === 'createLink') {
       // A design decision was that the default channel is
       // overridden when acting as a provider.
       if (this.manifest.provides &&
@@ -238,6 +253,8 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         channel: message.reverse
       });
       this.emit('internalChannelReady');
+    } else if (message.type === 'close') {
+      this.deregisterFlow(message.channel, true);
     }
   } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
     this.started = true;
