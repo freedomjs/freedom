@@ -102,15 +102,16 @@ fdom.port.Proxy.prototype.doEmit = function(msg) {
 };
 
 /**
- * Close / teardown the route that this proxy is one
- * endpoint of.
+ * Close / teardown the flow this proxy terminates.
  * @method doClose
  */
 fdom.port.Proxy.prototype.doClose = function() {
-  this.emit(this.controlChannel, {
-    type: 'Channel Closing',
-    request: 'close'
-  });
+  if (this.controlChannel) {
+    this.emit(this.controlChannel, {
+      type: 'Channel Closing',
+      request: 'close'
+    });
+  }
 
   this.emitChannel = null;
 };

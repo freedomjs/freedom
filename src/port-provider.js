@@ -38,6 +38,8 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       channel: message.reverse
     });
     this.emit('start');
+  } else if (source === 'control' && message.channel) {
+    this.controlChannel = message.channel;
   } else if (source === 'default') {
     if (!this.emitChannel && message.channel) {
       this.emitChannel = message.channel;
@@ -55,12 +57,27 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
 };
 
 /**
+ * Close / teardown the flow this provider terminates.
+ * @method doClose
+ */
+fdom.port.Provider.prototype.close = function() {
+  if (this.controlChannel) {
+    this.emit(this.controlChannel, {
+      type: 'Provider Closing',
+      request: 'close'
+    });
+  }
+
+  this.emitChannel = null;
+};
+
+/**
  * Get an interface to expose externally representing this port.
  * Providers are registered with the port using either
  * provideSynchronous or provideAsynchronous depending on the desired
  * return interface.
  * @method getInterface
- * @return {Object} The external interface of this Proxy.
+ * @return {Object} The external interface of this Provider.
  */
 fdom.port.Provider.prototype.getInterface = function() {
   if (this.iface) {
@@ -73,6 +90,9 @@ fdom.port.Provider.prototype.getInterface = function() {
       provideAsynchronous: function(prov) {
         this.providerCls = prov;
         this.synchronous = false;
+      }.bind(this),
+      close: function() {
+        this.close();
       }.bind(this)
     };
 
