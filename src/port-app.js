@@ -62,6 +62,14 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
       this.core = new message.core();
       this.emit('core', message.core);
       return;
+    } else if (message.type === 'close') {
+      // Closing channel.
+      if (message.channel === 'default') {
+        this.stop();
+      } else {
+        this.port.onMessage(flow, message);
+      }
+      this.deregisterFlow(message.channel);
     } else {
       this.port.onMessage(flow, message);
     }
@@ -89,7 +97,26 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
 };
 
 /**
- * Attempt to start the applicaiton once the remote freedom context
+ * Clean up after a flow which is no longer used / needed.
+ * @method deregisterFLow
+ * @param {String} flow The flow to remove mappings for.
+ * @private
+ */
+fdom.port.App.prototype.deregisterFlow = function(flow) {
+  var key;
+  // TODO: this is inefficient, but seems less confusing than a 3rd
+  // reverse lookup map.
+  for (key in this.externalPortMap) {
+    if (this.externalPortMap[key] === flow) {
+      delete this.externalPortMap[key];
+      delete this.internalPortMap[key];
+      break;
+    }
+  }
+};
+
+/**
+ * Attempt to start the application once the remote freedom context
  * exists.
  * @method start
  * @private
@@ -130,6 +157,26 @@ fdom.port.App.prototype.start = function() {
       exposeManager: true
     });
   }
+};
+
+/**
+ * Stop the application when it is no longer needed, and tear-down state.
+ * @method stop
+ * @private
+ */
+fdom.port.App.prototype.stop = function() {
+  if (!this.started) {
+    return;
+  }
+  if (this.port) {
+    this.port.off();
+    this.port.onMessage('control', {
+      type: 'close',
+      channel: 'control'
+    });
+    delete this.port;
+  }
+  this.started = false;
 };
 
 /**

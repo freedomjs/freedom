@@ -251,6 +251,17 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
     return;
   }
 
+  // Notify ports that a channel is closing.
+  this.hub.onMessage(this.controlFlows[port.id], {
+    type: 'close',
+    channel: name
+  });
+  this.hub.onMessage(this.controlFlows[reverse.id], {
+    type: 'close',
+    channel: rflow
+  });
+
+  // Uninstall the channel.
   this.hub.uninstall(port, name);
   this.hub.uninstall(reverse, rflow);
 
