@@ -92,6 +92,12 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     }
     this.createLink(origin, message.name, 
         new fdom.port[message.service](message.args));
+  } else if (message.request === 'bindport') {
+    this.createLink({id: message.id},
+                    'custom' + message.port,
+                    new fdom.port[message.service](message.args),
+                    'default',
+                    true);
   } else if (message.request === 'delegate') {
     // Initate Delegation.
     if (this.delegate === null) {
