@@ -286,9 +286,19 @@ function getURL(blob) {
  * @static
  */
 function forceAppContext(src) {
-  var forced = "function " + isAppContext.name + "() { return true; }";
-  var source = src.replace(isAppContext.toString(), forced);
-  var blob = getBlob(source, 'text/javascript');
+  var declaration = "function " + isAppContext.name + "()",
+      definition = " { return true; }",
+      idx = src.indexOf(declaration),
+      source,
+      blob;
+  if (idx === -1) {
+    fdom.debug.warn('Unable to force App Context, source has been mangled.');
+    return;
+  }
+  source = src.substr(0, idx + declaration.length) + definition +
+      " function " + isAppContext.name + '_()' +
+      src.substr(idx + declaration.length);
+  blob = getBlob(source, 'text/javascript');
   return getURL(blob);
 }
 

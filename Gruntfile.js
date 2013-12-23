@@ -1,13 +1,28 @@
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    meta: {
+      src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
+            'providers/core.unprivileged.js', 'providers/echo.unprivileged.js',
+            'spec/util.js'],
+      test: ['spec/*Spec.js', 'spec/providers/*Spec.js']
+    },
     jasmine: {
       freedom: {
-        src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
-              'providers/core.unprivileged.js', 'providers/echo.unprivileged.js',
-              'spec/util.js'],
+        src: '<%= meta.src %>',
         options: {
-          specs: ['spec/*Spec.js', 'spec/providers/*Spec.js']
+          specs: '<%= meta.test %>'
+        }
+      },
+      coverage: {
+        src: '<%= meta.src %>',
+        options: {
+          specs: '<%= meta.test %>',
+          template: require('grunt-template-jasmine-istanbul'),
+          templateOptions: {
+            coverage: 'tools/coverage/coverage.json',
+            report: [{type: 'text-summary'}]
+          }
         }
       }
     },
@@ -99,9 +114,13 @@ module.exports = function(grunt) {
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
-    'jasmine',
+    'jasmine:freedom',
     'jshint:afterconcat',
     'uglify'
+  ]);
+  grunt.registerTask('coverage', [
+    'concat',
+    'jasmine:coverage'
   ]);
   grunt.registerTask('default', ['freedom']);
 };

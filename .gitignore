@@ -5,6 +5,7 @@
 ### Auto-generated
 tools/doc
 node_modules
+tools/coverage
 
 ### Demo dependencies
 demo/chat/server/tornado/

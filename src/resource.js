@@ -84,6 +84,10 @@ Resource.prototype.getContents = function(url) {
 Resource.prototype.resolve = function(manifest, url) {
   var deferred = fdom.proxy.Deferred(),
       i = 0;
+  if (url === undefined) {
+    deferred.reject();
+    return deferred.promise();
+  }
   for (i = 0; i < this.resolvers.length; i += 1) {
     if(this.resolvers[i](manifest, url, deferred)) {
       return deferred.promise();
