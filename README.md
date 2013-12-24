@@ -23,20 +23,20 @@ See freedom.js
 
 Several demonstrations of the freedom.js library are available as included [```demos```](https://homes.cs.washington.edu/~wrs/demo/).
 
-To run the demonstrations locally, freedom.js must be [generated](#development) on your machine.  Note that the freedom.js library cannot work when included as a ```file://``` URL (where xhr requests are not allowed by browser security policies). For testing locally, we recommend running ```python -m SimpleHTTPServer``` to access your page via a local HTTP URL.
+To run the demonstrations locally, freedom.js must be [generated](#build-freedomjs) on your machine.  Note that the freedom.js library cannot work when included as a ```file://``` URL (where xhr requests are not allowed by browser security policies). For testing locally, we recommend running ```python -m SimpleHTTPServer``` to access your page via a local HTTP URL.
 
 Build freedom.js
 ---------
 
-You can get started with freedom.js by using the generated version linked above. If you want to bundle freedom.js with custom providers, or otherwise need to generate your own version, run [```grunt```](https://gruntjs.org) in the main repository.  This will compile, lint, unit test, and optionally compress the code base. freedom.js can also be included in your project as an NPM dependency:
+You can get started with freedom.js by using the generated version linked above. If you want to bundle freedom.js with custom providers, or otherwise need to generate your own version, run [```grunt```](http://gruntjs.com) in the main repository.  This will compile, lint, unit test, and optionally compress the code base. freedom.js can also be included in your project as an NPM dependency:
 
-    npm install --keep-dev freedomjs
+    npm install freedomjs --save-dev
 
 Help freedom.js
 ---------
 
 We welcome contributions and pull requests! A set of current issues are maintained in the issues section of this repository. In addition, we would be happy to help you work through bugs with your use of the library and suggest solutions on our mailing list ([freedom@cs.washington.edu](mailto:freedom@cs.washington.edu)).
 
-Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict failures of this system if running ```grunt``` locally fails.
+Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict that a pull request will fail if running ```grunt``` locally fails.
 
 Internal documentation for the library is also [automatically generated](https://homes.cs.washington.edu/~wrs/tools/doc) and provides a reasonable starting point for understanding how the internals of freedom.js work together.
