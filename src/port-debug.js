@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, isAppContext, Worker */
+/*globals fdom:true, handleEvents */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
