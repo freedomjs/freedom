@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, makeAbsolute, getId */
+/*globals fdom:true, handleEvents, mixin, eachProp, getId */
 /*jslint indent:2,white:true,sloppy:true,sub:true */
 
 

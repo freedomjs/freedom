@@ -120,15 +120,5 @@ describe("util", function() {
     })
   });
 
-  it("Can make urls absolute", function() {
-    expect(makeAbsolute("test")).toMatch("test");
-    expect(makeAbsolute("test")).toMatch("://");
-  });
-
-  it("Can resolve relative paths", function() {
-    expect(resolvePath("test.html", "http://test.com/base/name.json")).
-      toEqual("http://test.com/base/test.html");
-  });
-
   // TODO: Verify appcontext / makeFrame behavior.
 });

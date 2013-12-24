@@ -325,39 +325,3 @@ function advertise() {
 function scripts() {
     return document.getElementsByTagName('script');
 }
-
-/**
- * Make a relative URL absolute, based on the current location.
- * @method makeAbsolute
- * @static
- */
-function makeAbsolute(url) {
-  var base = location.protocol + "//" + location.host + location.pathname;
-  return resolvePath(url, base);
-}
-
-/**
- * Resolve a url against a defined base location.
- * @method resolvePath
- * @static
- */
-function resolvePath(url, from) {
-  var protocols = ["http", "https", "chrome-extension", "resource"];
-  for (var i = 0; i < protocols.length; i++) {
-    if (url.indexOf(protocols[i] + "://") === 0) {
-      return url;
-    }
-  }
-
-  var dirname = from.substr(0, from.lastIndexOf("/"));
-  var protocolIdx = dirname.indexOf("://");
-  var pathIdx = protocolIdx + 3 + dirname.substr(protocolIdx + 3).indexOf("/");
-  var path = dirname.substr(pathIdx);
-  var base = dirname.substr(0, pathIdx);
-  if (url.indexOf("/") === 0) {
-    return base + url;
-  } else {
-    return base + path + "/" + url;
-  }
-}
-
