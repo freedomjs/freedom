@@ -52,9 +52,13 @@ freedom.on('peer', function() {
     });
  
     cinfo.channel.done(function(chan) {
+      var peer = channels[thisid];
       channels[thisid] = chan;
       chan.on('message', function(m) {
         freedom.emit('message', "from custom: " + JSON.stringify(m));
+      });
+      chan.onClose(function() {
+        freedom['core.echo'].close(peer);
       });
     });
 

@@ -51,12 +51,14 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       this.emit('start');
       return;
     }
-    if (message.to && this.providerInstances[message.to]) {
-      this.providerInstances[message.to](message);
-    } else if (message.to && message.type === 'construct') {
+    if (message.type === 'close' && message.to) {
+      delete this.providerInstances[message.to];
+    } else if (message.to && this.providerInstances[message.to]) {
+      this.providerInstances[message.to](message.message);
+    } else if (message.to && message.message && message.message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
     } else {
-      fdom.debug.warn(this.toString() + ' dropping message ' + message);
+      fdom.debug.warn(this.toString() + ' dropping message ' + JSON.stringify(message));
     }
   }
 };
@@ -141,11 +143,11 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
   instance.dispatchEvent = function(events, id, name, value) {
     if (events[name]) {
       this.emit(this.emitChannel, {
-        type: 'event',
+        type: 'message',
         to: id,
         message: {
-          action: 'event',
-          type: name,
+          name: name,
+          type: 'event',
           value: fdom.proxy.conform(events[name].value, value)
         }
       });
@@ -164,9 +166,9 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
               type: 'method',
               to: to,
               message: {
-                action: 'method',
+                type: 'method',
                 reqId: req,
-                type: type,
+                name: type,
                 value: ret
               }
             });

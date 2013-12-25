@@ -50,13 +50,24 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
   };
 
   proxy.once('start', function(deferred, proxy) {
-    deferred.resolve(proxy.getInterface());
+    deferred.resolve(this.getChannel(proxy));
   }.bind(this, deferred, proxy));
 
   continuation({
     channel: deferred,
     identifier: id
   });
+};
+
+Core_unprivileged.prototype.getChannel = function(proxy) {
+  var iface = proxy.getProxyInterface();
+  var chan = iface();
+  chan.close = iface.close;
+  chan.onClose = iface.onClose;
+  iface.onClose(chan, function() {
+    proxy.doClose();
+  });
+  return chan;
 };
 
 /**
@@ -151,7 +162,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       }
     });
     source.once('start', function(p, cb) {
-      cb(p.getInterface());
+      cb(this.getChannel(p));
     }.bind(this, source, continuation));
     this.manager.createLink(source,
         'default',
@@ -167,7 +178,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   }
 
   if (source.getInterface) {
-    continuation(source.getInterface());
+    continuation(this.getChannel(source));
   } else {
     continuation();
   }

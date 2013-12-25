@@ -18,6 +18,8 @@ fdom.port.Proxy = function(interfaceCls) {
   this.interfaceCls = interfaceCls;
   handleEvents(this);
   
+  this.ifaces = {};
+  this.handlers = {};
   this.emits = {};
 };
 
@@ -38,7 +40,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
   } else if (source === 'control' && message.type === 'setup') {
     this.controlChannel = message.channel;
   } else if (source === 'control' && message.type === 'close') {
-    console.warn('asked to close ' + message.channel + ' control channel is ' + this.controlChannel);
+    delete this.controlChannel;
     this.doClose();
   } else if (source === 'default') {
     if (!this.emitChannel && message.channel) {
@@ -46,15 +48,19 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       this.emit('start');
       return;
     }
+    if (message.type === 'close' && message.to) {
+      teardown(message.to);
+      return;
+    }
     if (message.to) {
       if (this.emits[message.to]) {
-        this.emits[message.to](message.type, message.message);
+        this.emits[message.to]('message', message.message);
       } else {
-        fdom.debug.warn('Could not deliver message, no such interface.');
+        fdom.debug.warn('Could not deliver message, no such interface: ' + message.to);
       }
     } else {
       eachProp(this.emits, function(iface) {
-        iface(message.type, message.message);
+        iface('message', message.message);
       });
     }
   }
@@ -68,7 +74,6 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
  * onMsg: function(binder) sets the function to call when messages for this
  *    interface arrive on the channel,
  * emit: function(msg) allows this interface to emit messages,
- * close: function() allows this interface to close the channel,
  * id: string is the Identifier for this interface.
  * @method getInterface
  */
@@ -78,30 +83,102 @@ fdom.port.Proxy.prototype.getInterface = function() {
 };
 
 /**
+ * Create a function that can be used to get interfaces from this proxy from
+ * a user-visible point.
+ */
+fdom.port.Proxy.prototype.getProxyInterface = function() {
+  var func = function(p) {
+    return p.getInterface();
+  }.bind({}, this);
+
+  func.close = function(iface) {
+    if (iface) {
+      eachProp(this.ifaces, function(candidate, id) {
+        if (candidate === iface) {
+          this.teardown(id);
+          this.emit(this.emitChannel, {
+            type: 'close',
+            to: id
+          });
+          return true;
+        }
+      }.bind(this));      
+    } else {
+      // Close the channel.
+      this.doClose();
+    }
+  }.bind(this);
+
+  func.onClose = function(iface, handler) {
+    if (typeof iface === 'function' && handler === undefined) {
+      // Add an on-channel-closed handler.
+      this.once('close', iface);
+      return;
+    }
+
+    eachProp(this.ifaces, function(candidate, id) {
+      if (candidate === iface) {
+        if (this.handlers[id]) {
+          this.handlers[id].push(handler);
+        } else {
+          this.handlers[id] = [handler];
+        }
+        return true;
+      }
+    }.bind(this));
+  }.bind(this);
+
+  return func;
+};
+
+/**
  * Provides a bound class for creating a proxy.Interface associated
  * with this proxy. This partial level of construction can be used
  * to allow the proxy to be used as a provider for another API.
  * @method getInterfaceConstructor
+ * @private
  */
 fdom.port.Proxy.prototype.getInterfaceConstructor = function() {
   var id = fdom.port.Proxy.nextId();
-  return this.interfaceCls.bind({}, function(id, binder) {
+  return this.interfaceCls.bind({}, function(id, obj, binder) {
+    this.ifaces[id] = obj;
     this.emits[id] = binder;
-  }.bind(this, id), this.doEmit.bind(this), this.doClose.bind(this), id);  
+  }.bind(this, id), this.doEmit.bind(this, id));  
 };
 
 /**
  * Emit a message on the channel once setup is complete.
  * @method doEmit
  * @private
+ * @param {String} to The ID of the flow sending the message.
  * @param {Object} msg The message to emit
+ * @param {Boolean} all Send message to all recipients.
  */
-fdom.port.Proxy.prototype.doEmit = function(msg) {
-  if (this.emitChannel) {
-    this.emit(this.emitChannel, msg);
-  } else {
-    this.once('start', this.doEmit.bind(this, msg));
+fdom.port.Proxy.prototype.doEmit = function(to, msg, all) {
+  if (all) {
+    to = false;
   }
+  if (this.emitChannel) {
+    this.emit(this.emitChannel, {to: to, type:'message', message: msg});
+  } else {
+    this.once('start', this.doEmit.bind(this, to, msg));
+  }
+};
+
+/**
+ * Teardown a single interface of this proxy.
+ * @method teardown
+ * @param {String} id The id of the interface to tear down.
+ */
+fdom.port.Proxy.prototype.teardown = function(id) {
+  delete this.emits[id];
+  if (this.handlers[id]) {
+    eachProp(this.handlers[id], function(prop) {
+      prop();
+    });
+  }
+  delete this.ifaces[id];
+  delete this.handlers[id];
 };
 
 /**
@@ -115,7 +192,13 @@ fdom.port.Proxy.prototype.doClose = function() {
       request: 'close'
     });
   }
-  this.emits = {};
+
+  eachProp(this.emits, function(emit, id) {
+    this.teardown(id);
+  }.bind(this));
+
+  this.emit('close');
+  this.off();
 
   this.emitChannel = null;
 };

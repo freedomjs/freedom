@@ -35,7 +35,7 @@ describe("fdom.Port.Proxy", function() {
     var spy = jasmine.createSpy('cb');
     iface.on('message', spy);
     
-    port.onMessage('default', {type:'message', message:'thing'});
+    port.onMessage('default', {type:'message', message:{type:'message', message: 'thing'}});
     expect(spy).toHaveBeenCalledWith('thing');
   });
 
@@ -53,11 +53,12 @@ describe("fdom.Port.Proxy", function() {
     var closeSpy = jasmine.createSpy('close');
     port.on('control', closeSpy);
 
-    var iface = port.getInterface();
+    var publicProxy = port.getProxyInterface();
+    var iface = publicProxy();
     iface.emit('hi', 'msg');
 
     expect(spy).toHaveBeenCalled();
-    iface.close();
+    publicProxy.close();
     iface.emit('hi', 'msg');
     expect(spy.callCount).toEqual(1);
     expect(closeSpy).toHaveBeenCalled();

@@ -5,14 +5,14 @@ if (typeof fdom === 'undefined') {
 }
 fdom.proxy = fdom.proxy || {};
 
-fdom.proxy.EventInterface = function(onMsg, emit, close) {
+fdom.proxy.EventInterface = function(onMsg, emit) {
   handleEvents(this);
   
-  onMsg(this.emit.bind(this));
+  onMsg(this, function(emit, type, msg) {
+    emit(msg.type, msg.message);
+  }.bind(this, this.emit));
 
   this.emit = function(emitter, type, msg) {
-    emitter({type: type, message: msg});
+    emitter({type: type, message: msg}, true);
   }.bind({}, emit);
-
-  this.close = close;
 };
