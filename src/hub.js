@@ -30,14 +30,14 @@ fdom.Hub = function() {
  * @param {Object} message The sent message.
  */
 fdom.Hub.prototype.onMessage = function(source, message) {
-  if (!this.routes[source]) {
+  var destination = this.routes[source];
+  if (!destination || !destination.app) {
     fdom.debug.warn("Message dropped from unregistered source " + source);
     return;
   }
 
-  var destination = this.routes[source];
-  if (!destination.app) {
-    fdom.debug.warn("Message dropped from unconfigured source " + source);
+  if(!this.apps[destination.app]) {
+    fdom.debug.warn("Message dropped to deregistered destination " + destination.app);
     return;
   }
 

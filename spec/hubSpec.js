@@ -20,6 +20,23 @@ describe("fdom.Hub", function() {
     expect(app.onMessage).toHaveBeenCalledWith('test', msg);
   });
 
+  it("requires registration", function() {
+    var app = {
+      id: 'testApp'
+    };
+    spyOn(fdom.debug, 'warn');
+    hub.install(app, null, 'magic');
+    expect(fdom.debug.warn).toHaveBeenCalled();
+
+    hub.register(app);
+    hub.install(app, null, 'magic');
+    expect(fdom.debug.warn.callCount).toEqual(2);
+    expect(hub.register(app)).toEqual(false);
+
+    expect(hub.deregister(app)).toEqual(true);
+    expect(hub.deregister(app)).toEqual(false);
+  });
+
   it("goes between apps", function() {
     var app1 = {
       id: 'testApp'
@@ -77,6 +94,35 @@ describe("fdom.Hub", function() {
 
     hub.onMessage(route, msg);
     expect(fdom.debug.warn).toHaveBeenCalled();
+  });
+
+  it("Handles failures when removing routes", function() {
+    spyOn(fdom.debug, 'warn');
+    var app1 = {
+      id: 'testApp'
+    };
+    var app2 = {
+      id: 'otherApp'
+    };
+    hub.register(app1);
+    hub.register(app2);
+    app2.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app1, 'otherApp', 'testx');
+    
+    hub.uninstall(app2, route);
+    expect(fdom.debug.warn).toHaveBeenCalled();
+
+    hub.uninstall({id: null}, route);
+    expect(fdom.debug.warn.callCount).toEqual(2);
+
+    expect(hub.uninstall(app1, route+'fake')).toEqual(false);
+
+    hub.deregister(app2);
+    expect(hub.getDestination(route)).toEqual(undefined);
+    expect(hub.getDestination(route+'fake')).toEqual(null);
+
+    hub.onMessage(route, {test: true});
+    expect(fdom.debug.warn.callCount).toEqual(3);
   });
 });
 
