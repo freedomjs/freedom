@@ -82,6 +82,9 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
  * Force a collection of values to look like the types and length of an API template.
  */
 fdom.proxy.conform = function(template, value) {
+  if (typeof(value) === 'function') {
+    value = undefined;
+  }
   switch(template) {
   case 'string':
     return String('') + value;
