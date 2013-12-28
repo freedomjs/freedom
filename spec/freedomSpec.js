@@ -5,7 +5,7 @@ describe("freedom", function() {
   xhr.send(null);
   var freedom_src = xhr.responseText;
 
-  var freedom;
+  var freedom, dir;
   beforeEach(function() {
     var global = {
       console: {
@@ -37,8 +37,8 @@ describe("freedom", function() {
     fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
 
     var path = window.location.href,
-        dir_idx = path.lastIndexOf('/'),
-        dir = path.substr(0, dir_idx) + '/';
+        dir_idx = path.lastIndexOf('/');
+    dir = path.substr(0, dir_idx) + '/';
     freedom = setup(global, undefined, {
       manifest: "relative://spec/helper/manifest.json",
       portType: 'Frame',
@@ -72,5 +72,48 @@ describe("freedom", function() {
     runs(function() {
       expect(cb).toHaveBeenCalledWith('roundtrip');
     });
+  });
+
+  it("Can be configured in a self-contained way", function() {
+    var script = document.createElement("script");
+    script.setAttribute('data-manifest', "relative://spec/helper/manifest.json");
+    script.innerText = "{}";
+    document.body.appendChild(script);
+
+    var global = {};
+
+    freedom = setup(global, undefined, {
+      portType: 'Frame',
+      inject: dir + "node_modules/es5-shim/es5-shim.js",
+      src: freedom_src,
+      stayLocal: true
+    });
+
+    expect(freedom.on).toBeDefined();
+
+    document.body.removeChild(script);
+  });
+
+  it("Requires Valid JSON", function() {
+    var script = document.createElement("script");
+    script.setAttribute('data-manifest', "relative://spec/helper/manifest.json");
+    script.innerText = "var x = 2; //this is not json";
+    document.body.appendChild(script);
+
+    var global = {};
+    freedomcfg = function() {
+      spyOn(fdom.debug, 'warn');
+    }
+
+    freedom = setup(global, undefined, {
+      portType: 'Frame',
+      inject: dir + "node_modules/es5-shim/es5-shim.js",
+      src: freedom_src,
+      advertise: true
+    });
+
+    expect(fdom.debug.warn).toHaveBeenCalled();
+
+    document.body.removeChild(script);
   });
 });

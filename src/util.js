@@ -306,12 +306,13 @@ function forceAppContext(src) {
  * When running in a priviledged context, honor a global
  * 'freedomcfg' function to allow registration of additional API providers.
  * @method advertise
+ * @param {Boolean} force Advertise even if not in a priviledged context.
  * @static
  */
-function advertise() {
+function advertise(force) {
   // TODO: Determine a better mechanism than this whitelisting.
   if ((location.protocol === 'chrome-extension:' ||
-      location.protocol == 'resource:') &&
+      location.protocol == 'resource:' || force) &&
       typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }

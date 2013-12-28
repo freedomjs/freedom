@@ -41,7 +41,7 @@ setup = function (global, freedom_src, config) {
     manager.once('delegate', manager.setup.bind(manager, fdom.debug));
   } else {
     manager.setup(fdom.debug);
-    advertise();
+    advertise(config.advertise);
     
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
@@ -62,11 +62,6 @@ setup = function (global, freedom_src, config) {
         }
       });
     }
-    //Try to talk to local FreeDOM Manager
-    if (!site_cfg['stayLocal']) {
-      link = new fdom.port.Runtime();
-      manager.setup(link);
-    }
 
     site_cfg.global = global;
     site_cfg.src = freedom_src;
@@ -74,6 +69,13 @@ setup = function (global, freedom_src, config) {
     if(config) {
       mixin(site_cfg, config, true);
     }
+
+    //Try to talk to local FreeDOM Manager
+    if (!site_cfg['stayLocal']) {
+      link = new fdom.port.Runtime();
+      manager.setup(link);
+    }
+
     link = location.protocol + "//" + location.host + location.pathname;
     fdom.resources.get(link, site_cfg.manifest).done(function(url) {
       setupApp(new fdom.port.App(url, []));

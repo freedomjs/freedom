@@ -2,9 +2,6 @@ describe("freedom", function() {
   var freedom, global, iac;
   beforeEach(function() {
     global = {
-      console: {
-        log: function() {}
-      },
       addEventListener: function(msg, handler) {
         this['on'+msg] = handler;
       },
