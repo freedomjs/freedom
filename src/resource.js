@@ -121,7 +121,7 @@ Resource.prototype.addResolver = function(resolver) {
  */
 Resource.prototype.addRetriever = function(proto, retriever) {
   if (this.contentRetreivers[proto]) {
-    console.warn("Unwilling to override file retrieval for " + proto);
+    fdom.debug.warn("Unwilling to override file retrieval for " + proto);
     return;
   }
   this.contentRetreivers[proto] = retriever;
