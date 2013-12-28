@@ -106,6 +106,10 @@ fdom.Hub.prototype.deregister = function(app) {
  * @return {String} A routing source identifier for sending messages.
  */
 fdom.Hub.prototype.install = function(source, destination, flow) {
+  if (!source) {
+    fdom.debug.warn("Unable to install route for null source");
+    return;
+  }
   if (!this.apps[source.id]) {
     fdom.debug.warn("Unwilling to generate a source for " + source.id);
     return;
