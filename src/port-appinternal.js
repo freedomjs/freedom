@@ -285,8 +285,10 @@ fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
       importer(urls[i], def);
     }
   } catch(e) {
-    console.warn(e.stack);
-    console.error("Error loading " + urls[i], e);
+    fdom.debug.warn(e.stack);
+    fdom.debug.error("Error loading " + urls[i], e);
+    fdom.debug.error("If the stack trace is not useful, see https://" +
+        "github.com/UWNetworksLab/freedom/wiki/Debugging-Script-Parse-Errors");
   }
   return deferred.promise();
 };
