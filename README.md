@@ -30,7 +30,7 @@ Build freedom.js
 
 You can get started with freedom.js by using the generated version linked above. If you want to bundle freedom.js with custom providers, or otherwise need to generate your own version, run [```grunt```](http://gruntjs.com) in the main repository.  This will compile, lint, unit test, and optionally compress the code base. freedom.js can also be included in your project as an NPM dependency:
 
-    npm install freedomjs --save-dev
+    npm install freedom --save-dev
 
 Help freedom.js
 ---------
