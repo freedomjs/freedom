@@ -13,9 +13,6 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
 
   eachProp(def, function(prop, name) {
     switch(prop.type) {
-    case 'property':
-      //TODO(willscott): how should asynchronous properties work?
-      break;
     case 'method':
       this[name] = function() {
         // Note: inflight should be registered before message is passed
