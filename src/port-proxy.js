@@ -85,6 +85,7 @@ fdom.port.Proxy.prototype.getInterface = function() {
 /**
  * Create a function that can be used to get interfaces from this proxy from
  * a user-visible point.
+ * @method getProxyInterface
  */
 fdom.port.Proxy.prototype.getProxyInterface = function() {
   var func = function(p) {

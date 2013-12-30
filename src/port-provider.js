@@ -121,6 +121,56 @@ fdom.port.Provider.prototype.getInterface = function() {
 };
 
 /**
+ * Create a function that can be used to get interfaces from this provider from
+ * a user-visible point.
+ * @method getProxyInterface
+ */
+fdom.port.Provider.prototype.getProxyInterface = function() {
+  var func = function(p) {
+    return p.getInterface();
+  }.bind({}, this);
+/*
+  func.close = function(iface) {
+    if (iface) {
+      eachProp(this.ifaces, function(candidate, id) {
+        if (candidate === iface) {
+          this.teardown(id);
+          this.emit(this.emitChannel, {
+            type: 'close',
+            to: id
+          });
+          return true;
+        }
+      }.bind(this));      
+    } else {
+      // Close the channel.
+      this.doClose();
+    }
+  }.bind(this);
+
+  func.onClose = function(iface, handler) {
+    if (typeof iface === 'function' && handler === undefined) {
+      // Add an on-channel-closed handler.
+      this.once('close', iface);
+      return;
+    }
+
+    eachProp(this.ifaces, function(candidate, id) {
+      if (candidate === iface) {
+        if (this.handlers[id]) {
+          this.handlers[id].push(handler);
+        } else {
+          this.handlers[id] = [handler];
+        }
+        return true;
+      }
+    }.bind(this));
+  }.bind(this);
+*/
+  return func;
+};
+
+/**
  * Get a new instance of the registered provider.
  * @method getProvider
  * @param {String} identifier the messagable address for this provider.
