@@ -1,4 +1,4 @@
-describe("channels", function() {
+describe("Core Provider", function() {
   var xhr = new XMLHttpRequest();
   xhr.open("get", "freedom.js", false);
   xhr.overrideMimeType("text/javascript; charset=utf-8");
