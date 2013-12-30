@@ -1,7 +1,9 @@
 /**
  * A storage provider using the browser localStorage cache.
+ * @Class Storage_localstorage
  * @constructor
  * @private
+ * @param {App} app The application creating this provider.
  */
 var Storage_localstorage = function(app) {
   this.app = app;

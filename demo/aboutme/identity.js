@@ -1,6 +1,10 @@
-IdentityProvider.prototype.getProfile = function(continuation) {
+var IdentityProvider = function() {
+
+};
+
+IdentityProvider.prototype.login = function(args, continuation) {
   var view = freedom['core.view']();
-  var promise = view.open({
+  var promise = view.open("login", {
     file: "identityview.html"
   });
   promise.done(function() {
@@ -23,7 +27,7 @@ IdentityProvider.prototype.getProfile = function(continuation) {
     
     continuation(identity);
   });
-}
+};
 
 freedom.identity().provideAsynchronous(IdentityProvider);
 

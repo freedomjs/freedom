@@ -5,9 +5,9 @@
     "script": "aboutme.js"
   },
   "dependencies": {
-    "identity": "identity.json"
-  },
-  "permissions": [
-    "identity"
-  ]
+    "identity": {
+      "url": "identity.json",
+      "api": "identity"
+    }
+  }
 }

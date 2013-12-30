@@ -5,7 +5,7 @@ fdom.apis.set("core", {
 });
 
 fdom.apis.set("core.view", {
-  'open': {type: "method", value: [{
+  'open': {type: "method", value: ["string", {
     'file':"string",
     'code':"string"
   }]},
