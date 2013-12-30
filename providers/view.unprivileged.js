@@ -25,6 +25,9 @@ var View_unprivileged = function(app) {
  */
 View_unprivileged.prototype.open = function(name, what, continuation) {
   this.host = document.createElement("div");
+  this.host.style.width = "100%";
+  this.host.style.height = "100%";
+  this.host.style.display = "relative";
 
   var container = document.body;
   var config = this.app.config.views;
@@ -53,8 +56,10 @@ View_unprivileged.prototype.open = function(name, what, continuation) {
 
 View_unprivileged.prototype.finishOpen = function(root, frame, src, continuation) {
   frame.src = src;
-  frame.style.width = "0";
-  frame.style.height = "0";
+  frame.style.width = "100%";
+  frame.style.height = "100%";
+  frame.style.border = "0";
+  frame.style.background = "transparent";
   root.appendChild(frame);
 
   this.app.config.global.addEventListener('message', this.onMessage.bind(this), true);
@@ -64,19 +69,6 @@ View_unprivileged.prototype.finishOpen = function(root, frame, src, continuation
 };
 
 View_unprivileged.prototype.show = function(continuation) {
-  if (this.win) {
-    // Fullscreen mode.
-    this.win.style.position = 'fixed';
-    this.win.style.top = '0px';
-    this.win.style.left = '0px';
-    this.win.style.width = '100%';
-    this.win.style.height = '100%';
-    this.win.style.background = 'rgba(255,255,255,0.75)';
-    this.win.style.border = '0px';
-    
-    // Refresh Layout
-    this.host.style.position = 'absolute';
-  }
   continuation();
 };
 
