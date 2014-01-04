@@ -12,5 +12,7 @@ demo/chat/server/tornado/
 demo/texteditor/server/tornado/
 providers/social/websocket-server/server/tornado
 
-### Chrome Test Runner Runtime Includes
-tools/chromeTestRunner/runtimeIncludes
+### Chrome Test Runner temp files
+tools/chromeTestRunner/temp
+/manifest.json
+/window.html
