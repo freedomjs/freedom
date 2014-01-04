@@ -1,12 +1,25 @@
 describe("Core Provider", function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("get", "freedom.js", false);
-  xhr.overrideMimeType("text/javascript; charset=utf-8");
-  xhr.send(null);
-  var freedom_src = xhr.responseText;
+  var freedom_src;
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("get", "freedom.js", false);
+    xhr.overrideMimeType("text/javascript; charset=utf-8");
+    xhr.send(null);
+    freedom_src = xhr.responseText;
+  } catch (err) {
+    freedom_src = '';
+  }
 
   var freedom;
   beforeEach(function() {
+    if(freedom_src === ''){
+      if(typeof jasmine.getGlobal().freedom_src !== 'undefined'){
+        freedom_src = jasmine.getGlobal().freedom_src;
+      } else {
+        throw "Could not load freedom source.";
+      }
+    }
+    
     var global = {
       console: {
         log: function() {}
