@@ -36,9 +36,20 @@ done
 
 ## TURN FREEDOM ROOT INTO A CHROME APP DYNAMICALLY
 
-cp "$SCRIPT_DIR/chromeTestRunner/manifest.json" "$FREEDOM_ROOT_DIR/manifest.json"
-cp "$SCRIPT_DIR/chromeTestRunner/window.html" "$FREEDOM_ROOT_DIR/window.html"
+# Assemble all the spec files
+SPEC_SCRIPTS=""
+pushd "$FREEDOM_ROOT_DIR" > /dev/null
+for FILE in `find . -iname "*spec.js"`
+do
+	SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
+done
+popd > /dev/null
 
+# Make a manifest and html file for the app
+cp "$SCRIPT_DIR/chromeTestRunner/manifest.json" "$FREEDOM_ROOT_DIR/manifest.json"
+cp "$SCRIPT_DIR/chromeTestRunner/window-preamble.html" "$FREEDOM_ROOT_DIR/window.html"
+echo "$SPEC_SCRIPTS" >> "$FREEDOM_ROOT_DIR/window.html"
+cat "$SCRIPT_DIR/chromeTestRunner/window-postamble.html" >> "$FREEDOM_ROOT_DIR/window.html"
 
 # Clear previous temp files
 rm -r "$TEMP_DIR/"*
@@ -53,7 +64,6 @@ TEMP_INCLUDES="$TEMP_DIR/includes"
 mkdir "$TEMP_INCLUDES"
 
 # Create a few dynamic files to support the test app
-cat `find $FREEDOM_ROOT_DIR -iname "*spec.js"` > "$TEMP_INCLUDES/specs.js" # Cat all specs together into a giant spec
 cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
 
 
