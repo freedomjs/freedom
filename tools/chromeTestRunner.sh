@@ -1,14 +1,14 @@
 ## GLOBALS
 
 SCRIPT_DIR=`dirname $BASH_SOURCE[0]`
-TEST_APP="$SCRIPT_DIR/chromeTestRunner"
 FREEDOM_ROOT_DIR="$SCRIPT_DIR/.."
-TMPDIR="/tmp" # Sets the root dir used by mktmp
+TEMP_DIR="$SCRIPT_DIR/chromeTestRunner/temp" # Will contain the concatonated spec file and the Chrome User Profile
 
 CHROME_BINARY="google-chrome" # Linux / Cygwin
 if [[ "$OSTYPE" == "darwin"* ]]; then # Mac OS X
 	CHROME_BINARY="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 fi
+
 
 
 ## COMMAND LINE FLAGS
@@ -33,34 +33,39 @@ for FLAG in $@; do
 done
 
 
-## BUILD CHROME APP DYNAMICALLY
+
+## TURN FREEDOM ROOT INTO A CHROME APP DYNAMICALLY
+
+cp "$SCRIPT_DIR/chromeTestRunner/manifest.json" "$FREEDOM_ROOT_DIR/manifest.json"
+cp "$SCRIPT_DIR/chromeTestRunner/window.html" "$FREEDOM_ROOT_DIR/window.html"
+
+
+# Clear previous temp files
+rm -r "$TEMP_DIR/"*
 
 # Set up a new profile for testing and prevent the "First Run" splash screen
-TEMP_PROFILE=`mktemp -d -t "freedomChromeTestProfile"`
+TEMP_PROFILE="$TEMP_DIR/chromeUserProfile"
+mkdir $TEMP_PROFILE
 touch "$TEMP_PROFILE/First Run"
 
-# Pull in freedom.js and othe dependancies that MUST be inside the app's dir
-RUNTIME_INCLUDES="$TEST_APP/runtimeIncludes"
-if [ -d "$RUNTIME_INCLUDES" ]; then
-	rm -r "$RUNTIME_INCLUDES"
-fi
-mkdir "$RUNTIME_INCLUDES"
-cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers,interface}/*.js > "$TEST_APP/runtimeIncludes/freedomSetup.js" # Defines the setup(...) function.
-cat "$FREEDOM_ROOT_DIR/spec/util.js" >> "$TEST_APP/runtimeIncludes/freedomSetup.js"
-cp "$FREEDOM_ROOT_DIR/freedom.js" "$TEST_APP/runtimeIncludes/freedom.js"
-cp -r "$FREEDOM_ROOT_DIR/spec/helper" "$TEST_APP/runtimeIncludes/"
-cp -r "$FREEDOM_ROOT_DIR/node_modules/grunt-contrib-jasmine/vendor/jasmine-1.3.0" "$TEST_APP/runtimeIncludes/"
+# Set up a folder for temporary includes (eg. the concatonated spec file)
+TEMP_INCLUDES="$TEMP_DIR/includes"
+mkdir "$TEMP_INCLUDES"
 
-# Pull in all the tests to run
-cat `find $FREEDOM_ROOT_DIR -iname "*spec.js"` > "$TEST_APP/runtimeIncludes/specs.js" # Cat all specs together into a giant spec
+# Create a few dynamic files to support the test app
+cat `find $FREEDOM_ROOT_DIR -iname "*spec.js"` > "$TEMP_INCLUDES/specs.js" # Cat all specs together into a giant spec
+cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
+
+
 
 ## RUN TESTS
 
 # Run the tests (Opens a new chrome window and blocks until it closes)
 echo "Starting Chrome..."
-"$CHROME_BINARY" -user-data-dir="$TEMP_PROFILE" --load-and-launch-app="$TEST_APP" 2> /dev/null
+"$CHROME_BINARY" -user-data-dir="$TEMP_PROFILE" --load-and-launch-app="$FREEDOM_ROOT_DIR" 2> /dev/null
 echo "Chrome exited."
 echo ""
+
 
 
 ## CLEANUP
@@ -68,14 +73,15 @@ echo ""
 # Cleanup or list temp files
 if [ $CLEAN_UP_TEMP_FILES -eq 1 ]; then
 	echo "Cleaning up..."
-	rm -r "$RUNTIME_INCLUDES"
-	rm -r "$TEMP_PROFILE"
+	rm -r "$TEMP_DIR/"*
+	rm "$FREEDOM_ROOT_DIR/manifest.json"
+	rm "$FREEDOM_ROOT_DIR/window.html"
 else
 	echo "Not cleaning up."
 	echo "Temp files left at:"
-	echo "	$RUNTIME_INCLUDES"
-	echo "	$TEMP_PROFILE"
+	echo "	$TEMP_DIR/"
+	echo "	$FREEDOM_ROOT_DIR/manifest.json"
+	echo "	$FREEDOM_ROOT_DIR/window.html"
 fi
-
 
 echo "Done."

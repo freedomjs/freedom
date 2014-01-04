@@ -24,7 +24,7 @@
         execJasmine();        
       }
     }
-    xhr.open("get", "runtimeIncludes/freedom.js", true);
+    xhr.open("get", "/freedom.js", true);
     xhr.overrideMimeType("text/javascript; charset=utf-8");
     xhr.send(null);
   };

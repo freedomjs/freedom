@@ -1,14 +1,18 @@
 {
+
+	"COMMENT": "This file lives in tools/chromeTestRunner/ and is coppied into the freedom root when chromeTestRunner.sh is run.",
+
+
 	"name": "Chrome Test Runner",
 	"description": "Runs tests using Jasmine",
-	"version": "0.1",
+	"version": "0.2",
 	"app": {
 		"background": {
-			"scripts": ["background.js"]
+			"scripts": ["tools/chromeTestRunner/background.js"]
 		}
 	},
 	"icons": {
-		"16": "tester-256.png",
-		"128": "tester-256.png"
+		"16": "tools/chromeTestRunner/tester-256.png",
+		"128": "tools/chromeTestRunner/tester-256.png"
 	}
 }
