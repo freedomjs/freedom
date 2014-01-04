@@ -54,6 +54,13 @@ describe("fdom.proxy.APIInterface", function() {
   });
 });
 
+afterEach(function() {
+  var frames = document.getElementsByTagName('iframe');
+  for (var i = 0; i < frames.length; i++) {
+    frames[i].parentNode.removeChild(frames[i]);
+  }
+});
+
 describe("fdom.proxy.conform", function() {
   it("Conforms Simple values to templates", function() {
     var blob = null;
