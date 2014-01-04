@@ -58,7 +58,7 @@ describe("fdom.proxy.conform", function() {
   it("Conforms Simple values to templates", function() {
     var blob = null;
     if (typeof(Blob) === typeof(Function)) {
-      blob = new Blob(2);
+      blob = new Blob(['hi']);
     } else {
       var build = new WebKitBlobBuilder();
       build.append('hi');
