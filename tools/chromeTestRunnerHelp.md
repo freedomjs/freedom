@@ -3,14 +3,15 @@ HOW TO USE THE CHROME TEST RUNNER
 (Paths are from the repo root dir)
 
 - Run the shell script at /tools/chromeTestRunner.sh
+- Tests can be re-run from source by refreshing the chrome app, no need to restart chrome
 - Run it with the -h or --help flags for a list of optional arguments
 
 
 NOTES ON WRITING TESTS
 ======================
 
-- Helper FreeDOM backends can be placed in /spec/helper and then instantiated
-	in your test using the instructions below.
+- Write tests exactly the same as for jasmine/phantom
+- If you need the text of the freedom source, call 'getFreedomSource()' (See example below)
 
 
 USING HELPER BACKENDS FOR TESTING
