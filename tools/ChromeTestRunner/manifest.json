@@ -11,6 +11,9 @@
 			"scripts": ["tools/chromeTestRunner/background.js"]
 		}
 	},
+	"permissions": [
+		"storage"
+	],
 	"icons": {
 		"16": "tools/chromeTestRunner/tester-256.png",
 		"128": "tools/chromeTestRunner/tester-256.png"
