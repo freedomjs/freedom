@@ -5,7 +5,9 @@
  *    e.g. Both modules A and B use this storage provider.
  *    They cannot access each other's keys
  **/
+
 function StorageProvider() {
+  this.core = freedom['core']();
   this.store = freedom['core.storage']();
   // This magic needs to be replaced with something deterministic that
   // uniquely identifies its place in the dependency tree
