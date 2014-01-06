@@ -1,0 +1,13 @@
+{
+  "name": "Socket Transport",
+  "description": "Provides transport via a low-level Socket interface. At least one side must be publically available.",
+  "app": {
+    "script": ["transport.socket.js"]
+  },
+  "provides": [
+    "transport"
+  ],
+  "permissions": [
+    "core.socket"
+  ]
+}

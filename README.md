@@ -1,57 +1,45 @@
-FreeDOM
+freedom.js
 =======
 [![Build Status](https://travis-ci.org/UWNetworksLab/freedom.png?branch=master)](https://travis-ci.org/UWNetworksLab/freedom)
 
-FreeDOM is a runtime for distributed web applications.
+freedom.js is a runtime for distributed web applications
 
-We don't get in the way of your app, but let you build complex web services
-without worrying about where data or code will reside. Instead, FreeDOM takes
-care of the distributed systems work to reduce your costs, keep your users in
-control of their data, and make your app as available and convenient as a
-cloud-based approach.
+Building distributed systems is hard! Debugging machines out of your control
+or in states you don't fully understand is accompanied by a plethora of potential missteps.
 
-Using FreeDOM
+The freedom.js runtime gives you the benefits of distribution without the headaches. The runtime comes with a solid set of service implementations
+for storage, communication, and navigating a social graph, and an architecture to allow building, thinking about, and debugging your application from the perspective of a single user.
+
+Use freedom.js
 ---------
 
-If you just want the code, the curent version is automatically built [here](https://homes.cs.washington.edu/~wrs/freedom.js).
+A generated one-file version of freedom.js is maintained [here](https://homes.cs.washington.edu/~wrs/freedom.js).
 
-Documentation on using and working with FreeDOM, and how to structure your
-application to align with the philosophy of the FreeDOM library are available
-on the [wiki](https://github.com/UWNetworksLab/freedom/wiki).
+Documentation for generating freedom.js yourself, or including it in your project, is maintained
+on the github [wiki](https://github.com/UWNetworksLab/freedom/wiki).
 
-Demos
+See freedom.js
 -------
 
-Demos are available in the ```demo``` folder.  FreeDOM must be [compiled](#development)
-before running the demos.  There is a known bug that the demos will fail when
-accessed from a ```file://``` url, due to security restrictions on access to
-local files.  You can access demos locally by running
+Several demonstrations of the freedom.js library are available as included [```demos```](https://homes.cs.washington.edu/~wrs/demo/).
 
-    make demo
-
-and then visiting [```http://localhost:8000/demo```](http://localhost:8000/demo).
-
-Or, browse the demos online [here](https://homes.cs.washington.edu/~wrs/demo/).
+To run the demonstrations locally, freedom.js must be [generated](#build-freedomjs) on your machine.  Note that the freedom.js library cannot work when included as a ```file://``` URL (where xhr requests are not allowed by browser security policies). For testing locally, we recommend running ```python -m SimpleHTTPServer``` to access your page via a local HTTP URL.
 
 Note: FreeDOM has only been tested using Chrome and Firefox.
 Other browsers may experience issues.
 
-Development
+Build freedom.js
 ---------
 
-FreeDOM can be compiled locally by running
+You can get started with freedom.js by using the generated version linked above. If you want to bundle freedom.js with custom providers, or otherwise need to generate your own version, run [```grunt```](http://gruntjs.com) in the main repository.  This will compile, lint, unit test, and optionally compress the code base. freedom.js can also be included in your project as an NPM dependency:
 
-    make
+    npm install freedom --save-dev
 
-or by running
-
-    grunt
-
-Contributing
+Help freedom.js
 ---------
 
-FreeDOM is unit tested & linted to maintain code quality.
-We ask that you run ```grunt``` in the base FreeDOM library to verify changes
-before committing or submitting pull requests.
+We welcome contributions and pull requests! A set of current issues are maintained in the issues section of this repository. In addition, we would be happy to help you work through bugs with your use of the library and suggest solutions on our mailing list ([freedom@cs.washington.edu](mailto:freedom@cs.washington.edu)).
 
-Internal docs are auto-generated [here](https://homes.cs.washington.edu/~wrs/tools/doc).
+Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict that a pull request will fail if running ```grunt``` locally fails.
+
+Internal documentation for the library is also [automatically generated](https://homes.cs.washington.edu/~wrs/tools/doc) and provides a reasonable starting point for understanding how the internals of freedom.js work together.

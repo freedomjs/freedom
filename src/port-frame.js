@@ -36,6 +36,15 @@ fdom.port.Frame.prototype.start = function() {
 };
 
 /**
+ * Stop this port by deleting the frame.
+ * @method stop
+ * @private
+ */
+fdom.port.Frame.prototype.stop = function() {
+  // Function is determined by setupListener or setupFrame as appropriate.
+};
+
+/**
  * Get the textual description of this port.
  * @method toString
  * @return {String} the description of this port.
@@ -50,12 +59,17 @@ fdom.port.Frame.prototype.toString = function() {
  * @method setupListener
  */
 fdom.port.Frame.prototype.setupListener = function() {
-  this.obj = this.config.global;
-  this.config.global.addEventListener('message', function(msg) {
+  var onMsg = function(msg) {
     if (msg.data.src !== 'in') {
       this.emitMessage(msg.data.flow, msg.data.message);
     }
-  }.bind(this), true);
+  }.bind(this);
+  this.obj = this.config.global;
+  this.obj.addEventListener('message', onMsg, true);
+  this.stop = function() {
+    this.obj.removeEventListener('message', onMsg, true);
+    delete this.obj;
+  };
   this.emit('started');
 };
 
@@ -77,7 +91,7 @@ fdom.port.Frame.prototype.emitMessage = function(flow, message) {
  * @method setupFrame
  */
 fdom.port.Frame.prototype.setupFrame = function() {
-  var frame;
+  var frame, onMsg;
   frame = this.makeFrame(this.config.src, this.config.inject);  
   
   if (!document.body) {
@@ -85,7 +99,7 @@ fdom.port.Frame.prototype.setupFrame = function() {
   }
   document.body.appendChild(frame);
 
-  frame.contentWindow.addEventListener('message', function(frame, msg) {
+  onMsg = function(frame, msg) {
     if (!this.obj) {
       this.obj = frame;
       this.emit('started');
@@ -93,7 +107,17 @@ fdom.port.Frame.prototype.setupFrame = function() {
     if (msg.data.src !== 'out') {
       this.emitMessage(msg.data.flow, msg.data.message);
     }
-  }.bind(this, frame.contentWindow), true);
+  }.bind(this, frame.contentWindow);
+
+  frame.contentWindow.addEventListener('message', onMsg, true);
+  this.stop = function() {
+    frame.contentWindow.removeEventListener('message', onMsg, true);
+    if (this.obj) {
+      delete this.obj;
+    }
+    frame.src = "about:blank";
+    document.body.removeChild(frame);
+  };
 };
 
 /**

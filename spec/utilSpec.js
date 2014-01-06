@@ -10,6 +10,21 @@ describe("util", function() {
 
     expect(sum).toEqual(30);
     expect(ids).toEqual([3, 2, 1, 0]);
+
+    eachReverse(false, function() {
+      sum = 100;
+    });
+    expect(sum).toEqual(30);
+  });
+
+  it("stops iterating if needed", function() {
+    var array = [1, 4, 9, 16];
+    var sum = 0;
+    eachReverse(array, function(el) {
+      sum += el;
+      return el % 2 != 0;
+    });
+    expect(sum).toEqual(25);
   });
 
   it("locates properties", function() {
@@ -35,6 +50,13 @@ describe("util", function() {
     expect(sum).toEqual(7);
     expect(props).toContain('a');
     expect(props).toContain('c');
+
+    sum = 0;
+    eachProp(obj, function(val, name) {
+      sum += val;
+      return name === 'b'
+    });
+    expect(sum).toEqual(3);
   });
 
   describe("mixin", function() {
@@ -63,6 +85,19 @@ describe("util", function() {
       mixin(base, other, true);
       expect(base.obj.val).toEqual(2);
       expect(base.obj.mine).toBeUndefined();
+    });
+
+    it("handles degenerate mixins", function() {
+      var result = mixin(base, null, true);
+      expect(result).toEqual({value: 1});
+    });
+  });
+
+  describe("getId", function() {
+    it("creates unique IDs", function() {
+      var id1 = getId();
+      var id2 = getId();
+      expect(id1).not.toEqual(id2);
     });
   });
 
@@ -101,16 +136,31 @@ describe("util", function() {
       expect(cb).toHaveBeenCalledWith('yes');
       expect(cb.calls.length).toEqual(1);
     });
-  });
 
-  it("Can make urls absolute", function() {
-    expect(makeAbsolute("test")).toMatch("test");
-    expect(makeAbsolute("test")).toMatch("://");
-  });
+    it("can unregister events", function() {
+      object.on('msg', cb);
+      object.off('msg', cb);
+      object.emit('msg', 'value');
+      expect(cb).not.toHaveBeenCalled();
+    });
 
-  it("Can resolve relative paths", function() {
-    expect(resolvePath("test.html", "http://test.com/base/name.json")).
-      toEqual("http://test.com/base/test.html");
+    it("Can cleanup all events", function() {
+      object.on('msg', cb);
+      object.on('other', cb);
+      object.off();
+      object.emit('msg', 'value');
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it("can unregister conditional events", function() {
+      var func = function(type, val) {
+        return val == 'yes';
+      };
+      object.once(func, cb);
+      object.off(func);
+      object.emit('msg', 'yes');
+      expect(cb).not.toHaveBeenCalled();
+    })
   });
   
   it("Can freeze objects", function () {
@@ -128,5 +178,12 @@ describe("util", function() {
     expect(frozen.b.c).toEqual(2);
   });
 
-  // TODO: Verify appcontext / makeFrame behavior.
+  describe("AppContext", function() {
+    it("Warns when source has been mangled", function() {
+      spyOn(fdom.debug, "warn");
+      var resp = forceAppContext("");
+      expect(fdom.debug.warn).toHaveBeenCalled();
+      expect(resp).toBeUndefined();
+    });
+  });
 });

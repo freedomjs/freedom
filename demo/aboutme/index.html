@@ -6,6 +6,7 @@
   <script type="text/javascript"
       src="/freedom.js"
       data-manifest="manifest.json">
+    {"views":{"login":"loginContainer"}}
   </script>
   <script type="text/javascript">
   window.onload = function() {
@@ -22,14 +23,12 @@
   }
   </script>
   <style type="text/css">
-  .loading {
-    font:2em helvetica;
-    border-radius:15px;
-    border:2px solid #888;
-    padding:10px;
-    margin-left:40%;
+  #loginContainer {
+    position: absolute;
+    height: 100%;
+    width: 100%;
   }
-  body.loaded .loading {
+  body.loaded #loginContainer {
     display:none;
   }
   #profile {
@@ -46,9 +45,8 @@
   </style>
 </head>
 <body>
-  <span class="loading">
-    Loading...
-  </span>
+  <div id="loginContainer">
+  </div>
   <div id="profile">
     <img id="profilepic" />
     <div id="header">

@@ -1,7 +1,0 @@
-{
-  "name": "Tester",
-  "description": "FreeDOM Backend for ChromeTestRunner",
-  "app": {
-    "script": "tester.js"
-  }
-}

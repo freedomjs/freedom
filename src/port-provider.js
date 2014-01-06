@@ -38,20 +38,46 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       channel: message.reverse
     });
     this.emit('start');
+  } else if (source === 'control' && message.type === 'setup') {
+    this.controlChannel = message.channel;
+  } else if (source === 'control' && message.type === 'close') {
+    if (message.channel === this.controlChannel) {
+      delete this.controlChannel;
+    }
+    this.close();
   } else if (source === 'default') {
     if (!this.emitChannel && message.channel) {
       this.emitChannel = message.channel;
       this.emit('start');
       return;
     }
-    if (message.to && this.providerInstances[message.to]) {
-      this.providerInstances[message.to](message);
-    } else if (message.to && message.type === 'construct') {
+    if (message.type === 'close' && message.to) {
+      delete this.providerInstances[message.to];
+    } else if (message.to && this.providerInstances[message.to]) {
+      this.providerInstances[message.to](message.message);
+    } else if (message.to && message.message && message.message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
     } else {
-      fdom.debug.warn(this.toString() + ' dropping message ' + message);
+      fdom.debug.warn(this.toString() + ' dropping message ' + JSON.stringify(message));
     }
   }
+};
+
+/**
+ * Close / teardown the flow this provider terminates.
+ * @method doClose
+ */
+fdom.port.Provider.prototype.close = function() {
+  if (this.controlChannel) {
+    this.emit(this.controlChannel, {
+      type: 'Provider Closing',
+      request: 'close'
+    });
+    delete this.controlChannel;
+  }
+
+  this.providerInstances = {};
+  this.emitChannel = null;
 };
 
 /**
@@ -60,7 +86,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
  * provideSynchronous or provideAsynchronous depending on the desired
  * return interface.
  * @method getInterface
- * @return {Object} The external interface of this Proxy.
+ * @return {Object} The external interface of this Provider.
  */
 fdom.port.Provider.prototype.getInterface = function() {
   if (this.iface) {
@@ -73,6 +99,9 @@ fdom.port.Provider.prototype.getInterface = function() {
       provideAsynchronous: function(prov) {
         this.providerCls = prov;
         this.synchronous = false;
+      }.bind(this),
+      close: function() {
+        this.close();
       }.bind(this)
     };
 
@@ -89,6 +118,56 @@ fdom.port.Provider.prototype.getInterface = function() {
 
     return this.iface;
   }
+};
+
+/**
+ * Create a function that can be used to get interfaces from this provider from
+ * a user-visible point.
+ * @method getProxyInterface
+ */
+fdom.port.Provider.prototype.getProxyInterface = function() {
+  var func = function(p) {
+    return p.getInterface();
+  }.bind({}, this);
+/*
+  func.close = function(iface) {
+    if (iface) {
+      eachProp(this.ifaces, function(candidate, id) {
+        if (candidate === iface) {
+          this.teardown(id);
+          this.emit(this.emitChannel, {
+            type: 'close',
+            to: id
+          });
+          return true;
+        }
+      }.bind(this));      
+    } else {
+      // Close the channel.
+      this.doClose();
+    }
+  }.bind(this);
+
+  func.onClose = function(iface, handler) {
+    if (typeof iface === 'function' && handler === undefined) {
+      // Add an on-channel-closed handler.
+      this.once('close', iface);
+      return;
+    }
+
+    eachProp(this.ifaces, function(candidate, id) {
+      if (candidate === iface) {
+        if (this.handlers[id]) {
+          this.handlers[id].push(handler);
+        } else {
+          this.handlers[id] = [handler];
+        }
+        return true;
+      }
+    }.bind(this));
+  }.bind(this);
+*/
+  return func;
 };
 
 /**
@@ -114,11 +193,11 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
   instance.dispatchEvent = function(events, id, name, value) {
     if (events[name]) {
       this.emit(this.emitChannel, {
-        type: 'event',
+        type: 'message',
         to: id,
         message: {
-          action: 'event',
-          type: name,
+          name: name,
+          type: 'event',
           value: fdom.proxy.conform(events[name].value, value)
         }
       });
@@ -137,9 +216,9 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
               type: 'method',
               to: to,
               message: {
-                action: 'method',
+                type: 'method',
                 reqId: req,
-                type: type,
+                name: type,
                 value: ret
               }
             });

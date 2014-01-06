@@ -14,6 +14,8 @@
  * @static
  */
 setup = function (global, freedom_src, config) {
+  fdom.debug = new fdom.port.Debug();
+
   var hub = new fdom.Hub(),
       site_cfg = {
         'debug': true,
@@ -27,19 +29,19 @@ setup = function (global, freedom_src, config) {
         manager.createLink(external, 'default', app);
       },
       link;
-  
-  // Debugging is not recorded until this point.
-  fdom.debug = new fdom.port.Debug();
 
   manager.setup(external);
-  manager.setup(fdom.debug);
   
   if (isAppContext()) {
     site_cfg.global = global;
     site_cfg.src = freedom_src;
     setupApp(new fdom.port[site_cfg.portType]());
+
+    // Delay debug messages until delegation to the parent context is setup.
+    manager.once('delegate', manager.setup.bind(manager, fdom.debug));
   } else {
-    advertise();
+    manager.setup(fdom.debug);
+    advertise(config ? config.advertise : undefined);
     
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
@@ -60,11 +62,6 @@ setup = function (global, freedom_src, config) {
         }
       });
     }
-    //Try to talk to local FreeDOM Manager
-    if (!site_cfg['stayLocal']) {
-      link = new fdom.port.Runtime();
-      manager.setup(link);
-    }
 
     site_cfg.global = global;
     site_cfg.src = freedom_src;
@@ -72,6 +69,13 @@ setup = function (global, freedom_src, config) {
     if(config) {
       mixin(site_cfg, config, true);
     }
+
+    //Try to talk to local FreeDOM Manager
+    if (!site_cfg['stayLocal']) {
+      link = new fdom.port.Runtime();
+      manager.setup(link);
+    }
+
     link = location.protocol + "//" + location.host + location.pathname;
     fdom.resources.get(link, site_cfg.manifest).done(function(url) {
       setupApp(new fdom.port.App(url, []));

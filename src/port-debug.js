@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, isAppContext, Worker */
+/*globals fdom:true, handleEvents */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -102,7 +102,7 @@ fdom.port.Debug.prototype.print = function(message) {
   if (!debug) {
     return;
   }
-  if (typeof console !== 'undefined' && console !== this) {
+  if (typeof this.console !== 'undefined' && this.console !== this) {
     args = JSON.parse(message.msg);
     if (typeof args === "string") {
       arr.push(args);
@@ -116,7 +116,10 @@ fdom.port.Debug.prototype.print = function(message) {
       arr.unshift('color: red');
       arr.unshift('%c ' + message.source);
     }
-    console[message.severity].apply(console, arr);
+    if (!this.console[message.severity] && this.console['log']) {
+      message.severity = 'log';
+    }
+    this.console[message.severity].apply(this.console, arr);
   }
 };
 

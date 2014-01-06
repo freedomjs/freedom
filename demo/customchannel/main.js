@@ -24,6 +24,7 @@ freedom.on('create', function() {
 
 freedom.on('destroy', function(id) {
   freedom.emit('message', 'destroying channel ' + id);
+  channels[id].close();
   delete channels[id];
   friend.emit('message', {
     cmd: 'destroy',
@@ -51,9 +52,13 @@ freedom.on('peer', function() {
     });
  
     cinfo.channel.done(function(chan) {
+      var peer = channels[thisid];
       channels[thisid] = chan;
       chan.on('message', function(m) {
         freedom.emit('message', "from custom: " + JSON.stringify(m));
+      });
+      chan.onClose(function() {
+        freedom['core.echo'].close(peer);
       });
     });
 

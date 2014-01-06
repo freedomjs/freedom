@@ -27,11 +27,6 @@ fdom.port.App = function(manifestURL, creator) {
 };
 
 /**
- * Apps are relocatable.
- */
-fdom.port.App.prototype.relocatable = true;
-
-/**
  * Receive an external application for the Application.
  * @method onMessage
  * @param {String} flow The origin of the message.
@@ -39,7 +34,7 @@ fdom.port.App.prototype.relocatable = true;
  */
 fdom.port.App.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
-    if (!this.controlChannel && message.channel) {
+    if (message.type === 'setup') {
       this.controlChannel = message.channel;
       mixin(this.config, message.config);
       this.emit(this.controlChannel, {
@@ -62,6 +57,12 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
       this.core = new message.core();
       this.emit('core', message.core);
       return;
+    } else if (message.type === 'close') {
+      // Closing channel.
+      if (message.channel === 'default' || message.channel === 'control') {
+        this.stop();
+      }
+      this.deregisterFlow(message.channel, false);
     } else {
       this.port.onMessage(flow, message);
     }
@@ -89,7 +90,42 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
 };
 
 /**
- * Attempt to start the applicaiton once the remote freedom context
+ * Clean up after a flow which is no longer used / needed.
+ * @method deregisterFLow
+ * @param {String} flow The flow to remove mappings for.
+ * @param {Boolean} internal If the flow name is the internal identifier.
+ * @returns {Boolean} Whether the flow was successfully deregistered.
+ * @private
+ */
+fdom.port.App.prototype.deregisterFlow = function(flow, internal) {
+  var key,
+      map = internal ? this.internalPortMap : this.externalPortMap;
+  // TODO: this is inefficient, but seems less confusing than a 3rd
+  // reverse lookup map.
+  for (key in map) {
+    if (map[key] === flow) {
+      if (internal) {
+        this.emit(this.controlChannel, {
+          type: 'Channel Teardown',
+          request: 'unlink',
+          to: this.externalPortMap[key]
+        });
+      } else {
+        this.port.onMessage(flow, {
+          type: 'close',
+          channel: this.internalPortMap[key]
+        });
+      }
+      delete this.externalPortMap[key];
+      delete this.internalPortMap[key];
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * Attempt to start the application once the remote freedom context
  * exists.
  * @method start
  * @private
@@ -133,6 +169,26 @@ fdom.port.App.prototype.start = function() {
 };
 
 /**
+ * Stop the application when it is no longer needed, and tear-down state.
+ * @method stop
+ * @private
+ */
+fdom.port.App.prototype.stop = function() {
+  if (!this.started) {
+    return;
+  }
+  if (this.port) {
+    this.port.off();
+    this.port.onMessage('control', {
+      type: 'close',
+      channel: 'control'
+    });
+    delete this.port;
+  }
+  this.started = false;
+};
+
+/**
  * Textual Description of the Port
  * @method toString
  * @return {String} The description of this Port.
@@ -151,7 +207,8 @@ fdom.port.App.prototype.toString = function() {
  */
 fdom.port.App.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
-    fdom.debug.log('bound for ' + name);
+    fdom.debug.log('Application saw new channel binding: ' + name +
+        'registered as ' + message.channel);
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
     return;
@@ -182,7 +239,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         lineage: this.lineage,
         channel: message.reverse
       });
-    } else {
+    } else if (message.type === 'createLink') {
       // A design decision was that the default channel is
       // overridden when acting as a provider.
       if (this.manifest.provides &&
@@ -196,6 +253,8 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         channel: message.reverse
       });
       this.emit('internalChannelReady');
+    } else if (message.type === 'close') {
+      this.deregisterFlow(message.channel, true);
     }
   } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
     this.started = true;

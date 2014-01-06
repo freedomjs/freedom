@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, makeAbsolute */
+/*globals fdom:true, handleEvents, mixin, eachProp */
 /*jslint indent:2,white:true,sloppy:true */
 
 /**
@@ -10,6 +10,7 @@
  * @param {App} app The application creating this provider.
  */
 var Echo_unprivileged = function(app) {
+  console.log('Echo Created!');
   this.app = app;
   handleEvents(this);
 
@@ -40,11 +41,13 @@ Echo_unprivileged.prototype.setup = function(proxy, continuation) {
   }
 
   this.core.bindChannel(proxy, function(chan) {
-//    TODO(willscott): Support channel shutdown.
-//    if (this.chan) {
-//        this.chan.close();
-//    }
+    if (this.chan) {
+      this.chan.close();
+    }
     this.chan = chan;
+    this.chan.onClose(function() {
+      delete this.chan;
+    }.bind(this));
     this.dispatchEvent('message', 'channel bound to echo');
     this.chan.on('message', function(m) {
       this.dispatchEvent('message', 'from custom channel: ' + m);

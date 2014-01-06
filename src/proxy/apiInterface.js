@@ -5,7 +5,7 @@ if (typeof fdom === 'undefined') {
 }
 fdom.proxy = fdom.proxy || {};
 
-fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
+fdom.proxy.ApiInterface = function(def, onMsg, emit) {
   var inflight = {},
       events = null,
       emitter = null,
@@ -13,9 +13,6 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
 
   eachProp(def, function(prop, name) {
     switch(prop.type) {
-    case 'property':
-      //TODO(willscott): how should asynchronous properties work?
-      break;
     case 'method':
       this[name] = function() {
         // Note: inflight should be registered before message is passed
@@ -23,7 +20,6 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
         var deferred = fdom.proxy.Deferred();
         inflight[reqId] = deferred;
         emit({
-          to: id,
           action: 'method',
           type: name,
           reqId: reqId,
@@ -50,11 +46,16 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
     }
   }.bind(this));
 
-  onMsg(function(type, msg) {
+  onMsg(this, function(type, msg) {
+    if (type === 'close') {
+      this.off();
+      delete this.inflight;
+      return;
+    }
     if (!msg) {
       return;
     }
-    if (type === 'method') {
+    if (msg.type === 'method') {
       if (inflight[msg.reqId]) {
         var deferred = inflight[msg.reqId];
         delete inflight[msg.reqId];
@@ -62,16 +63,15 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
       } else {
         console.log('Dropped response message with id ' + msg.reqId);
       }
-    } else if (type === 'event') {
-      if (events[msg.type]) {
-        emitter(msg.type, fdom.proxy.conform(events[msg.type].value, msg.value));
+    } else if (msg.type === 'event') {
+      if (events[msg.name]) {
+        emitter(msg.name, fdom.proxy.conform(events[msg.name].value, msg.value));
       }
     }
   }.bind(this));
 
   emit({
     'type': 'construct',
-    'to': id
   });
 };
 
@@ -79,6 +79,9 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit, id) {
  * Force a collection of values to look like the types and length of an API template.
  */
 fdom.proxy.conform = function(template, value) {
+  if (typeof(value) === 'function') {
+    value = undefined;
+  }
   switch(template) {
   case 'string':
     return String('') + value;

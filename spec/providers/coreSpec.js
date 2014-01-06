@@ -1,12 +1,10 @@
-describe("channels", function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("get", "freedom.js", false);
-  xhr.overrideMimeType("text/javascript; charset=utf-8");
-  xhr.send(null);
-  var freedom_src = xhr.responseText;
+describe("Core Provider", function() {
+  var freedom_src;
 
   var freedom;
   beforeEach(function() {
+    freedom_src = getFreedomSource();
+    
     var global = {
       console: {
         log: function() {}

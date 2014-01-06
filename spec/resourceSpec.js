@@ -29,6 +29,17 @@ describe("fdom.resources", function() {
     expect(response.name).toEqual("test");
   });
   
+  it("should warn on degenerate URLs", function() {
+    var deferred = resources.getContents();
+    var spy = jasmine.createSpy('r');
+    deferred.fail(spy);
+    expect(spy).toHaveBeenCalled();
+
+    deferred = resources.resolve('test');
+    deferred.fail(spy);
+    expect(spy.callCount).toEqual(2);
+  });
+
   it("should handle custom resolvers", function() {
     var resolver = function(manifest, url, deferred) {
       if (manifest.indexOf('test') === 0) {
@@ -65,5 +76,41 @@ describe("fdom.resources", function() {
     deferred = resources.getContents('unknown://url');
     deferred.fail(function() {result = 'failed';});
     expect(result).toEqual('failed');
+  });
+
+  it("should not allow replacing retrievers", function() {
+    var retriever = function(url, deferred) {
+      expect(url).toContain("test://");
+      deferred.resolve('Custom content!');
+    };
+    spyOn(fdom.debug, 'warn');
+    resources.addRetriever('http', retriever);
+    expect(fdom.debug.warn).toHaveBeenCalled();
+  });
+});
+
+describe('fdom.resources.httpResolver', function() {
+  var deferred, spy, resources;
+
+  beforeEach(function() {
+    resources = new Resource();
+    deferred = fdom.proxy.Deferred();
+    spy = jasmine.createSpy('resolvedURL');
+    deferred.done(spy);
+  });
+
+  it("should resolve relative URLs", function() {
+    resources.httpResolver('http://www.example.com/path/manifest.json', 'test.html', deferred);
+    expect(spy).toHaveBeenCalledWith('http://www.example.com/path/test.html');
+  });
+
+  it("should resolve path absolute URLs", function() {
+    resources.httpResolver('http://www.example.com/path/manifest.json', '/test.html', deferred);
+    expect(spy).toHaveBeenCalledWith('http://www.example.com/test.html');
+  });
+
+  it("should resolve absolute URLs", function() {
+    resources.httpResolver('http://www.example.com/path/manifest.json', 'http://www.other.com/test.html', deferred);
+    expect(spy).toHaveBeenCalledWith('http://www.other.com/test.html');
   });
 });

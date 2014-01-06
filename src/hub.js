@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest, makeAbsolute */
+/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -30,14 +30,14 @@ fdom.Hub = function() {
  * @param {Object} message The sent message.
  */
 fdom.Hub.prototype.onMessage = function(source, message) {
-  if (!this.routes[source]) {
+  var destination = this.routes[source];
+  if (!destination || !destination.app) {
     fdom.debug.warn("Message dropped from unregistered source " + source);
     return;
   }
 
-  var destination = this.routes[source];
-  if (!destination.app) {
-    fdom.debug.warn("Message dropped from unconfigured source " + source);
+  if(!this.apps[destination.app]) {
+    fdom.debug.warn("Message dropped to deregistered destination " + destination.app);
     return;
   }
 
@@ -58,6 +58,9 @@ fdom.Hub.prototype.onMessage = function(source, message) {
  */
 fdom.Hub.prototype.getDestination = function(source) {
   var destination = this.routes[source];
+  if (!destination) {
+    return null;
+  }
   return this.apps[destination.app];
 };
 
@@ -78,22 +81,43 @@ fdom.Hub.prototype.register = function(app, force) {
 };
 
 /**
+ * Deregister a destination for messages with the hub.
+ * Note: does not remove associated routes. As such, deregistering will
+ * prevent the installation of new routes, but will not distrupt existing
+ * hub routes.
+ * @method deregister
+ * @param {Port} app The Port to deregister
+ * @return {Boolean} Whether the app was deregistered.
+ */
+fdom.Hub.prototype.deregister = function(app) {
+  if(!this.apps[app.id]) {
+    return false;
+  }
+  delete this.apps[app.id];
+  return true;
+};
+
+/**
  * Install a new route in the hub.
  * @method install
  * @param {Port} source The source of the route.
  * @param {Port} destination The destination of the route.
- * @param {String} The flow on which the destination will receive routed messages.
+ * @param {String} flow The flow on which the destination will receive routed messages.
  * @return {String} A routing source identifier for sending messages.
  */
 fdom.Hub.prototype.install = function(source, destination, flow) {
+  if (!source) {
+    fdom.debug.warn("Unable to install route for null source");
+    return;
+  }
   if (!this.apps[source.id]) {
-    console.warn("Unwilling to generate a source for " + source.id);
+    fdom.debug.warn("Unwilling to generate a source for " + source.id);
     return;
   } else {
     source = this.apps[source.id];
   }
   if (!destination) {
-    console.warn("Unwilling to generate a flow to nowhere from " + source.id);
+    fdom.debug.warn("Unwilling to generate a flow to nowhere from " + source.id);
     return;
   }
 
@@ -108,6 +132,35 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
   }
 
   return route;
+};
+
+/**
+ * Uninstall a hub route.
+ * @method uninstall
+ * @param {Port} source The source of the route.
+ * @param {String} flow The route to uninstall.
+ * @return {Boolean} Whether the route was able to be uninstalled.
+ */
+fdom.Hub.prototype.uninstall = function(source, flow) {
+  if (!this.apps[source.id]) {
+    fdom.debug.warn("Unable to find routes for unknown source " + source.id);
+    return false;
+  } else {
+    source = this.apps[source.id];
+  }
+  var route = this.routes[flow];
+  if (!route) {
+    return false;
+  } else if (route.source != source.id) {
+    fdom.debug.warn("Flow " + flow + " does not belong to port " + source.id);
+    return false;
+  }
+
+  delete this.routes[flow];
+  if (typeof source.off === 'function') {
+    source.off(route);
+  }
+  return true;
 };
 
 /**

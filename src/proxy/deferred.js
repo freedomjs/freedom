@@ -134,8 +134,8 @@ fdom.proxy.Deferred = function(func) {
         for (var i = 0; i < events.length; i++) {
           var action = events[i][0];
           var fn = typeof fns[i] === 'function' ? fns[i] : null;
-          deferred[events[i][1]](function() {
-            var returned = fn && fn.apply(this, arguments);
+          deferred[events[i][1]](function(fn, action) {
+            var returned = fn && fn.apply(this, Array.prototype.slice.call(arguments, 2));
             if (returned && typeof returned['promise'] == 'function') {
               returned['promise']()
                 .done(newDefer.resolve)
@@ -144,7 +144,7 @@ fdom.proxy.Deferred = function(func) {
             } else {
               newDefer[action + "With"](this === promise ? newDefer['promise'](): this, fn ? [returned] : arguments);
             }
-          });
+          }.bind(this, fn, action));
         }
         fns = null;
       })['promise']();
@@ -163,9 +163,9 @@ fdom.proxy.Deferred = function(func) {
     promise[events[i][1]] = list.add;
 
     if (stateStr) {
-      list.add(function() {
-        state = stateStr;
-      }, events[i ^ 1][2].disable, events[2][2].lock);
+      list.add(function(ss) {
+        state = ss;
+      }.bind(this, stateStr), events[i ^ 1][2].disable, events[2][2].lock);
     }
 
     var e = events[i][0];    

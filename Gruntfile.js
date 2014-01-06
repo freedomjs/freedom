@@ -1,12 +1,28 @@
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    meta: {
+      src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
+            'providers/core.unprivileged.js', 'providers/echo.unprivileged.js',
+            'spec/util.js'],
+      test: ['spec/*Spec.js', 'spec/providers/*Spec.js']
+    },
     jasmine: {
       freedom: {
-        src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
-              'providers/core.unprivileged.js', 'providers/echo.unprivileged.js'],
+        src: '<%= meta.src %>',
         options: {
-          specs: ['spec/*Spec.js', 'spec/providers/*Spec.js']
+          specs: '<%= meta.test %>'
+        }
+      },
+      coverage: {
+        src: '<%= meta.src %>',
+        options: {
+          specs: '<%= meta.test %>',
+          template: require('grunt-template-jasmine-istanbul'),
+          templateOptions: {
+            coverage: 'tools/coverage/coverage.json',
+            report: [{type: 'text-summary'}]
+          }
         }
       }
     },
@@ -81,15 +97,32 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
+  // Custom Task for Chrome Test Runner
+  grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
+    grunt.util.spawn({
+      cmd: 'bash',
+      args: ['tools/chromeTestRunner.sh'],
+    }, function done(error, result, code) {
+      grunt.log.ok('Failed to execute shell script:'+
+        "\n\t"+error+
+        "\n\tResult: "+result+
+        "\n\tCode: "+code);
+    });
+  });
+
   // Default tasks.
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
-    'jasmine',
+    'jasmine:freedom',
     'jshint:afterconcat',
     'jshint:providers',
     'jshint:demo',
     'uglify'
+  ]);
+  grunt.registerTask('coverage', [
+    'concat',
+    'jasmine:coverage'
   ]);
   grunt.registerTask('default', ['freedom']);
 };

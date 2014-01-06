@@ -5,9 +5,13 @@
 ### Auto-generated
 tools/doc
 node_modules
-
-### Demo dependencies
-providers/social/websocket-server/server/tornado/
+tools/coverage
 
 ### Scrap
 .*.swp
+providers/social/websocket-server/server/tornado
+
+### Chrome Test Runner temp files
+tools/chromeTestRunner/temp
+/manifest.json
+/window.html

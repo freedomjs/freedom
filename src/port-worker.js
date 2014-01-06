@@ -33,6 +33,15 @@ fdom.port.Worker.prototype.start = function() {
 };
 
 /**
+ * Stop this port by destroying the worker.
+ * @method stop
+ * @private
+ */
+fdom.port.Worker.prototype.stop = function() {
+  // Function is determined by setupListener or setupFrame as appropriate.
+};
+
+/**
  * Get the textual description of this port.
  * @method toString
  * @return {String} the description of this port.
@@ -47,10 +56,15 @@ fdom.port.Worker.prototype.toString = function() {
  * @method setupListener
  */
 fdom.port.Worker.prototype.setupListener = function() {
-  this.obj = this.config.global;
-  this.config.global.addEventListener('message', function(msg) {
+  var onMsg = function(msg) {
     this.emitMessage(msg.data.flow, msg.data.message);
-  }.bind(this), true);
+  }.bind(this);
+  this.obj = this.config.global;
+  this.obj.addEventListener('message', onMsg, true);
+  this.stop = function() {
+    this.obj.removeEventListener('message', onMsg, true);
+    delete this.obj;
+  };
   this.emit('started');
 };
 
@@ -89,6 +103,12 @@ fdom.port.Worker.prototype.setupWorker = function() {
     }
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this, worker), true);
+  this.stop = function() {
+    worker.stop();
+    if (this.obj) {
+      delete this.obj;
+    }
+  };
 };
 
 /**
@@ -105,6 +125,9 @@ fdom.port.Worker.prototype.onMessage = function(flow, message) {
       mixin(this.config, message.config);
       this.start();
     }
+  } else if (flow === 'control' && message.type === 'close' &&
+      message.channel === 'control') {
+    this.stop();
   } else {
     if (this.obj) {
       //fdom.debug.log('message sent to worker: ', flow, message);
