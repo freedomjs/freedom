@@ -49,7 +49,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       return;
     }
     if (message.type === 'close' && message.to) {
-      teardown(message.to);
+      this.teardown(message.to);
       return;
     }
     if (message.to) {

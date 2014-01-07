@@ -43,6 +43,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
         value: prop.value,
         writable: false
       });
+      break;
     }
   }.bind(this));
 
@@ -71,7 +72,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
   }.bind(this));
 
   emit({
-    'type': 'construct',
+    'type': 'construct'
   });
 };
 

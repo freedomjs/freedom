@@ -184,7 +184,7 @@ fdom.port.Manager.prototype.destroy = function(port) {
 
   // Remove associated links.
   var i;
-  for (i = this.dataFlows[port.id].length - 1; i >= 0; i--) {
+  for (i = this.dataFlows[port.id].length - 1; i >= 0; i -= 1) {
     this.removeLink(port, this.dataFlows[port.id][i]);
   }
 
@@ -289,7 +289,7 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
   delete this.reverseFlowMap[name];
   delete this.reverseFlowMap[rflow];
   if (this.dataFlows[reverse.id]) {
-    for (i = 0; i < this.dataFlows[reverse.id].length; i++) {
+    for (i = 0; i < this.dataFlows[reverse.id].length; i += 1) {
       if (this.dataFlows[reverse.id][i] === rflow) {
         this.dataFlows[reverse.id].splice(i, 1);
         break;
@@ -297,7 +297,7 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
     }
   }
   if (this.dataFlows[port.id]) {
-    for (i = 0; i < this.dataFlows[port.id].length; i++) {
+    for (i = 0; i < this.dataFlows[port.id].length; i += 1) {
       if (this.dataFlows[port.id][i] === name) {
         this.dataFlows[port.id].splice(i, 1);
         break;
