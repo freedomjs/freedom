@@ -10,12 +10,11 @@ function TransportProvider() {
   this.peer = freedom['core.sctp-peerconnection']();
   this.peer.on('onMessage', this.message.bind(this));
   this.peer.on('onClose', this.onClose.bind(this));
-};
+}
 
 // Called when the peer-connection receives data, it then passes it here.
 TransportProvider.prototype.message = function(msg) {
-  console.log("TransportProvider.prototype.message: Got Message:"
-      + JSON.stringify(msg));
+  console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
   if (msg.text) {
     this.dispatchEvent('message',
         {"channelid": msg.channelid, "data": msg.text});
@@ -52,8 +51,7 @@ TransportProvider.prototype.send = function(channelid, msg, continuation) {
     console.log("TransportProvider.sending text: " + msg);
     promise = this.peer.postMessage({"channelid": channelid, "text": msg});
   } else {
-    console.error('Trying to send an unsupported type of object: '
-        + typeof(msg));
+    console.error('Trying to send an unsupported type of object: ' + typeof(msg));
     return;
   }
   promise.done(continuation);
@@ -65,7 +63,7 @@ TransportProvider.prototype.close = function(continuation) {
 
 TransportProvider.prototype.onClose = function() {
   this.dispatchEvent('onClose', null);
-}
+};
 
 // Note: freedom.transport() does not create a new transport instance here: for
 // module definitions freedom.transport() gets the module-constructor-freedom-

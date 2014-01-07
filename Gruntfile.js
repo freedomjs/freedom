@@ -38,6 +38,7 @@ module.exports = function(grunt) {
       providers: [
         'providers/social/websocket-server/*.js',
         'providers/storage/**/*.js',
+        'providers/transport/**/*.js',
       ],
       demo: [
         'demo/**/*.js'

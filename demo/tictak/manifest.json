@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "localstorage": {
-      "url": "/providers/storage/isolated-storage.json",
+      "url": "/providers/storage/isolated/storage.isolated.json",
       "api": "storage"
     }
   }
