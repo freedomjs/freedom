@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>File Drop</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+  <link href="page.css" rel="stylesheet">
+  <!-- Load FreeDOM and point it to the root module -->
+  <script type="text/javascript"
+      src="/freedom.js"
+      data-manifest="freedom-modules/manifest.json">
+    {
+      "stayLocal": true,
+      "debug": false,
+      "strongIsolation": true
+    }
+  </script>
+</head>
+<body>
+  <div class="container-narrow">
+
+    <!-- Header -->
+    <div class="masthead">
+      <h3 class="muted">FreeDOM File Drop</h3>
+    </div>
+    <hr>
+
+    <!-- Main drop box for files-->
+    <div id='drop' class="jumbotron">
+      <h1>Send a File</h1>
+      <p class="lead">Drag a file into this square to send a file</p>
+      <p>Note: Only supports 1 file at a time, so zip it up yourself!</p>
+      <img width='20%' src='file.png'/>
+    </div>
+
+    <!-- Display file transfer status -->
+    <h4 id='statsHeader'> Actively serving: </h4>
+    <div id="stats"></div>
+
+    <!-- Modal for post-upload, or current download -->
+    <div id='dropModal' class="modal hide fade">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Let's do this!</h3>
+      </div>
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Progress Bar -->
+        <div class="progress progress-striped">
+          <div id='dropProgress' class="bar" style="width: 0%;"></div>
+        </div>
+        <!-- Modal Contents -->
+        <div id='dropMessageBox'>
+          <p id='dropMessage'></p>
+          <input id='dropUrl' class='input-xxlarge' type="text" readonly>
+          <button id='dropDownload' type='button' class="btn btn-success">Download File</a>
+        </div>
+      </div>
+      <!-- Modal Footer -->
+      <div id='modalFooter' class="modal-footer">
+        <button id='closeModal' type="button" class="btn btn-primary">Close</a>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="FileSaver.js"></script>
+<script type="text/javascript" src="page.js"></script>
+</html>
+

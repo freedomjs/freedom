@@ -1,0 +1,10 @@
+{
+  "name": "Loopback Social", 
+  "description": "Mock social provider.",
+  "app": {
+    "script": ["social.loopback.js"]
+  },
+  "provides": [
+    "social"
+  ]
+}

@@ -3,8 +3,5 @@
   "description": "Counter Sample FreeDOM application",
   "app": {
     "script": "counter.js"
-  },
-  "permissions": [
-    "background"
-  ]
+  }
 }

@@ -3,6 +3,7 @@
 <head>
   <title>WebRTC Chat Demo</title>
   <meta http-equiv='Content-Type' content='text/html;charset=utf-8' />
+  <!-- Include freedom.js, pass it the manifest, and a set of options -->
   <script type='text/javascript'
       src='/freedom.js'
       data-manifest='manifest.json'>
@@ -14,38 +15,79 @@
   </script>
   <script type='text/javascript'>
   window.onload = function() {
-    var activeId;
+    document.getElementById('msg-input').focus();
+    var activeId;   // Stores who we're sending messages to
+
+    function clearLog() {
+      var log = document.getElementById('messagelist');
+      while (log.hasChildNodes()) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    function appendLog(elt) {
+      var log = document.getElementById('messagelist');
+      //Trim old messages
+      while (log.childNodes.length > 36) {
+        log.removeChild(log.lastChild);
+      }
+      if (log.childNodes.length) {
+        log.insertBefore(document.createElement('br'), log.childNodes[0]);
+        log.insertBefore(elt, log.childNodes[0]);
+      } else {
+        log.appendChild(elt);
+      }
+    }
+
+    // on changes to the buddylist, just redraw entire buddylist
     window.freedom.on('recv-buddylist', function(val) {
       var buddylist = document.getElementById('buddylist');
+      // Remove all elements in there now
       while(buddylist.hasChildNodes()) {
         buddylist.removeChild(buddylist.lastChild);
       }
+      var header = document.createElement('b');
+      header.appendChild(document.createTextNode('Buddylist'));
+      buddylist.appendChild(header);
+      // Create a new element for each buddy
       for (var i in val) {
         var child = document.createElement('div');
         child.innerHTML = val[i];
+        // If the user clicks on a buddy, change our current destination for messages
         child.addEventListener('click', function(jid) {
           activeId = jid;
           console.log("Messages will be sent to: " + activeId);
           document.getElementById('status').innerText = activeId;
+          document.getElementById('msg-input').focus();
         }.bind(this, val[i]), true);
         buddylist.appendChild(child);
       }
     });
+    // On new messages, append it to our message log
     window.freedom.on('recv-message', function(data) {
-      var log = document.getElementById('messagelist');
-      if (log.childNodes.length) {
-        log.insertBefore(document.createElement('br'), log.childNodes[0]);
-        log.insertBefore(document.createTextNode(data), log.childNodes[0]);
-      } else {
-        log.appendChild(document.createTextNode(data));
-      }
+      var message = data.fromUserId + ": " + data.message;
+      appendLog(document.createTextNode(message));
     });
+
+    // Display our own userId when we get it
     window.freedom.on('recv-uid', function(data) {
       document.getElementById('uid').innerText = "UID:"+data;
     });
-    window.freedom.on('onStatus', function(msg) {
-      console.log(JSON.stringify(msg));
+
+    // Display the current status of our connection to the Social provider
+    window.freedom.on('recv-status', function(msg) {
+      if (msg && msg == 'online') {
+        document.getElementById('msg-input').disabled = false;
+      } else {
+        document.getElementById('msg-input').disabled = true;
+      }
+      clearLog();
+      var elt = document.createElement('b');
+      elt.appendChild(document.createTextNode('Status: ' + msg));
+      appendLog(elt);
     });
+
+    // Listen for the enter key and send messages on return
     var input = document.getElementById('msg-input');
     input.onkeydown = function(evt) {
       if (evt.keyCode == 13) {
@@ -57,23 +99,26 @@
   }
   </script>
   <style type='text/css'>
-  body {border: 1px solid black; float:left; position:relative; width:800px;}
+  body {border: 1px solid black; float:left; position:relative; width:800px;font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, serif;}
   #uid {font-family: helvetica; float:left;}
   #uid:after {content: " <-> ";}
   #status {float:right;}
   #status:after {content: "▼"; color:#888;}
   #clear {clear:both; border-bottom:1px solid #888;}
-  #buddylist {position:absolute; right:0; z-index:2; background:white; padding:5px; top:25px;}
+  #buddylist {position:absolute; right:0; z-index:2; background:white; padding:5px; top:50px;}
   #msg-input {width:700px; margin:0;}
   #messagelist {min-height: 400px;}
   </style>
 </head>
 <body>
+  <header>
+    <b>FreeDOM Chat</b>
+  </header>
   <div id='uid'>No UID</div>
   <div id='status'>Unknown</div>
   <div id='buddylist'></div>
   <div id='clear'></div>
   <div id='messagelist' class='text'></div>
-  <input id='msg-input' type='text'/>
+  <input id='msg-input' type='text' placeholder='Type message here'/>
 </body>
 </html>

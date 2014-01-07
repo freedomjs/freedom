@@ -1,0 +1,13 @@
+{
+  "name": "Isolated Storage",
+  "description": "All instances of this storage provider exists in its own namespace",
+  "app": {
+    "script": "isolated-storage.js"
+  },
+  "provides": [
+    "storage"
+  ],
+  "permissions": [
+    "core.storage"
+  ]
+}

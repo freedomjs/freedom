@@ -40,7 +40,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       break;
     case 'constant':
       Object.defineProperty(this, name, {
-        value: prop.value,
+        value: recursiveFreezeObject(prop.value),
         writable: false
       });
     }

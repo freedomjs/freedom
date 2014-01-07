@@ -5,9 +5,9 @@
     "script": "main.js"
   },
   "dependencies": {
-    "identity": {
-      "url": "identity/identity.json",
-      "api": "identity"
+    "socialprovider": {
+      "url": "/providers/social/websocket-server/social.ws.json",
+      "api": "social"
     }
   }
 }

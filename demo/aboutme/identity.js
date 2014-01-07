@@ -9,7 +9,7 @@ IdentityProvider.prototype.login = function(args, continuation) {
   });
   promise.done(function() {
     view.show();
-  })
+  });
 
   var retVal = false;
 
