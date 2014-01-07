@@ -108,29 +108,6 @@ function handleEvents(obj) {
   };
 
   /**
-   * Filter a list based on a predicate. The list is filtered in place, with
-   * selected items removed and returned by the function.
-   * @method
-   * @param {Array} list The list to filter
-   * @param {Function} predicate The method to run on each item.
-   * @returns {Array} Selected items
-   */
-  var filter = function(list, predicate) {
-    var ret = [], i;
-
-    if (!list || !list.length) {
-      return [];
-    }
-
-    for (i = list.length - 1; i >= 0; i--) {
-      if (predicate(list[i])) {
-        ret.push(list.splice(i, 1));
-      }
-    }
-    return ret;
-  };
-
-  /**
    * Register a method to be executed when an event of a specific type occurs.
    * @method on
    * @param {String|Function} type The type of event to register against.
@@ -196,44 +173,6 @@ function handleEvents(obj) {
       }
     }
   }.bind(eventState);
-
-  /**
-   * Remove an event handler
-   * @method off
-   * @param {String} type The type of event to remove.
-   * @param {Function?} handler The handler to remove.
-   */
-  obj['off'] = function(type, handler) {
-    var i;
-    if (!type) {
-      this.listeners = {};
-      this.conditional = [];
-      this.oneshots = {};
-      this.onceConditional = [];
-      return;
-    }
-
-    if (typeof type === 'function') {
-      filter(this.onceConditional, function(item) {
-        return item[0] === type && (!handler || item[1] === handler);
-      });
-      filter(this.conditional, function(item) {
-        return item[0] === type && (!handler || item[1] === handler);
-      });
-    }
-
-    if (!handler) {
-      delete this.listeners[type];
-      delete this.oneshots[type];
-    } else {
-      filter(this.listeners[type], function(item) {
-        return item === handler;
-      });
-      filter(this.oneshots[type], function(item) {
-        return item === handler;
-      });
-    }
-  }.bind(eventState);
 }
 
 /**
@@ -286,19 +225,9 @@ function getURL(blob) {
  * @static
  */
 function forceAppContext(src) {
-  var declaration = "function " + isAppContext.name + "()",
-      definition = " { return true; }",
-      idx = src.indexOf(declaration),
-      source,
-      blob;
-  if (idx === -1) {
-    fdom.debug.warn('Unable to force App Context, source has been mangled.');
-    return;
-  }
-  source = src.substr(0, idx + declaration.length) + definition +
-      " function " + isAppContext.name + '_()' +
-      src.substr(idx + declaration.length);
-  blob = getBlob(source, 'text/javascript');
+  var forced = "function " + isAppContext.name + "() { return true; }";
+  var source = src.replace(isAppContext.toString(), forced);
+  var blob = getBlob(source, 'text/javascript');
   return getURL(blob);
 }
 
@@ -306,13 +235,14 @@ function forceAppContext(src) {
  * When running in a priviledged context, honor a global
  * 'freedomcfg' function to allow registration of additional API providers.
  * @method advertise
- * @param {Boolean} force Advertise even if not in a priviledged context.
  * @static
  */
-function advertise(force) {
+function advertise() {
+  debugger;
   // TODO: Determine a better mechanism than this whitelisting.
   if ((location.protocol === 'chrome-extension:' ||
-      location.protocol == 'resource:' || force) &&
+       location.protocol === 'chrome:' ||
+      location.protocol == 'resource:') &&
       typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
@@ -326,3 +256,39 @@ function advertise(force) {
 function scripts() {
     return document.getElementsByTagName('script');
 }
+
+/**
+ * Make a relative URL absolute, based on the current location.
+ * @method makeAbsolute
+ * @static
+ */
+function makeAbsolute(url) {
+  var base = location.protocol + "//" + location.host + location.pathname;
+  return resolvePath(url, base);
+}
+
+/**
+ * Resolve a url against a defined base location.
+ * @method resolvePath
+ * @static
+ */
+function resolvePath(url, from) {
+  var protocols = ["http", "https", "chrome-extension", "resource", "chrome"];
+  for (var i = 0; i < protocols.length; i++) {
+    if (url.indexOf(protocols[i] + "://") === 0) {
+      return url;
+    }
+  }
+
+  var dirname = from.substr(0, from.lastIndexOf("/"));
+  var protocolIdx = dirname.indexOf("://");
+  var pathIdx = protocolIdx + 3 + dirname.substr(protocolIdx + 3).indexOf("/");
+  var path = dirname.substr(pathIdx);
+  var base = dirname.substr(0, pathIdx);
+  if (url.indexOf("/") === 0) {
+    return base + url;
+  } else {
+    return base + path + "/" + url;
+  }
+}
+
