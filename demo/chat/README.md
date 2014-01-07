@@ -1,11 +1,13 @@
 FreeDOM Chat Demo
 =================
 
-An example chat lobby, where all users join a global buddylist with a GUID.
-Messages are directed to a single other user.
-We implement a custom identity provider that exposes an identity,
-social network, and does the actual forwarding of messages. 
-Note that this identity provider can be easily replaced by any other that
-exposes the same interface.
+An example chat lobby, where your buddylist is displayed alongside a message log.
+You can click on another user and send directed private messages to them.
 
-The source code for the central identity service is stored in server/router.py
+The current example uses a specific social provider that implements a
+global buddylist, where each user is assigned a random GUID.
+(source in /providers/social/websocket-server/)
+
+Note that this social provider can be easily replaced by any other that exposes the same Social API.
+We have drop-in replacements that connect to an XMPP server (such as G+ or Facebook),
+which the application can then use without any changes to their application code.

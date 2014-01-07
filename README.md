@@ -25,6 +25,9 @@ Several demonstrations of the freedom.js library are available as included [```d
 
 To run the demonstrations locally, freedom.js must be [generated](#build-freedomjs) on your machine.  Note that the freedom.js library cannot work when included as a ```file://``` URL (where xhr requests are not allowed by browser security policies). For testing locally, we recommend running ```python -m SimpleHTTPServer``` to access your page via a local HTTP URL.
 
+Note: FreeDOM has only been tested using Chrome and Firefox.
+Other browsers may experience issues.
+
 Build freedom.js
 ---------
 

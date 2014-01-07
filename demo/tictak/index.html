@@ -3,18 +3,22 @@
 <head>
   <title>FreeDOM Sample</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <!-- Include freedom.js and point to the root module -->
+  <!-- Note that you can specify a JSON object of options to FreeDOM -->
   <script type="text/javascript"
-      src="../../freedom.js"
+      src="/freedom.js"
       data-manifest="manifest.json">
-{
-  "stayLocal": true,
-  "debug": true,
-  "strongIsolation": true
-}
+    {
+      "stayLocal": true,
+      "debug": true,
+      "strongIsolation": true
+    }
   </script>
   <script type="text/javascript">
   window.onload = function() {
-    // Stats Update.
+    // Once freedom.js has been included, the window object is populated
+    // with a 'freedom' object, which can be used to communicate with the backend
+    // Display stats updates in the window
     window.freedom.on('stats', function(stats) {
       var win = 0, lose = 0;
       if (stats) {
@@ -24,6 +28,7 @@
       document.getElementById('win').innerText = win;
       document.getElementById('lose').innerText = lose;
     });
+    // Display the current state of the board
     window.freedom.on('board', function(board) {
       for (var id in board) {
         var realid = 'b' + (parseInt(id) + 1);
@@ -31,6 +36,8 @@
         document.getElementById(realid).checked = board[id];
       }
     });
+    // Add onclick listeners to each tile, which will
+    // send the user click actions to our backend
     var inputs = document.getElementsByTagName('input');
     for (var i = 0; i < inputs.length; i ++) {
       inputs[i].addEventListener('click', function(j) {
@@ -60,10 +67,14 @@
     font-size: 2em;
     font-family: helvetica;
   }
+  h1 {
+    font-size: 1em;
+  }
   </style>
 </head>
 <body>
   <header>
+    <h1>FreeDOM TicTakToe</h1>
     Win: <span id='win'>..</span> Lose: <span id='lose'>..</span>
   </header>
   <section>

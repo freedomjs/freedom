@@ -3,24 +3,36 @@
 <head>
   <title>FreeDOM Sample</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <!-- Load FreeDOM and point it to the root module -->
   <script type="text/javascript"
-      src="../../freedom.js"
+      src="/freedom.js"
       data-manifest="manifest.json">
+    {
+      "stayLocal": true,
+      "debug": true,
+      "strongIsolation": true
+    }
   </script>
   <script type="text/javascript">
+  // After loading freedom.js, the window is populated with a 'freedom'
+  // object, which is used as a message passing channel to the root module
   window.onload = function() {
+    //Forward click events to the root FreeDOM module
     document.getElementById('click').onclick = function() {
       window.freedom.emit('click', 1);
     }
+    //Display numbers from the root FreeDOM module
     window.freedom.on('number', function(n) {
       document.getElementById('count').innerHTML = n;
     });
 
+    //Initialize the counter on start with 0
     window.freedom.emit('click', 0);
   }
   </script>
 </head>
 <body>
+  <h1> FreeDOM Counter </h1>
   The counter is at <span id='count'>0</span>. <button id='click'>+1</button>
 </body>
 </html>

@@ -18,11 +18,11 @@ fdom.apis.set("core.view", {
 });
 
 fdom.apis.set("core.storage", {
-  'set': {type: "method", value: ["string", "string"]},
+  'keys': {type: "method", value: []},
   'get': {type: "method", value: ["string"]},
+  'set': {type: "method", value: ["string", "string"]},
   'remove': {type: "method", value: ["string"]},
-  'clear': {type: "method", value: []},
-  'change': {type: "event", value: ["string"]}
+  'clear': {type: "method", value: []}
 });
 
 fdom.apis.set("core.socket", {

@@ -54,65 +54,26 @@ function SimpleDataPeer(peerName) {
   var constraints = {optional: [{DtlsSrtpKeyAgreement: true}]};
   // A way to speak to the peer to send SDP headers etc.
   this._sendSignalMessage = null;
-  this._turnRequest = new XMLHttpRequest();
 
   this._pc = null;  // The peer connection.
-  this._pc_runQueue = [];
   // Get TURN servers for the peer connection.
-  this._turnRequest.onreadystatechange = function() {
-    var i;
-    if (this._turnRequest.readyState == 4) {
-      var turn_response = null;
-      try {
-        var parsed = JSON.parse(this._turnRequest.response);
-        var iceServer;
-        turn_response = {iceServers: []};
-        for (i = 0; i < static_pc_config.length; i++) {
-          iceServer = { 'url' : static_pc_config[i] };
-          turn_response.iceServers.push(iceServer);
-        }
-        for (i = 0; i < parsed.uris.length; i++) {
-          var server_parts = parsed.uris[i].split("?");
-          iceServer = { 'url' : server_parts[0],
-                        'credential' : parsed.password,
-                        'username' : parsed.username };
-          turn_response.iceServers.push(iceServer);
-        }
-      } catch (e) {
-        console.log("Invalid TURN response: " + this._turnRequest.response);
-      }
-      console.log("Got back TURN data: " + JSON.stringify(turn_response));
-      this._pc = new RTCPeerConnection(turn_response, constraints);
-      // Add basic event handlers.
-      this._pc.addEventListener("icecandidate",
-                                this._onIceCallback.bind(this));
-      this._pc.addEventListener("negotiationneeded",
-                                this._onNegotiationNeeded.bind(this));
-      this._pc.addEventListener("signalingstatechange",
-                                function () {
-                                  if (this._pc.signalingState == "stable") {
-                                    this._pcState = SimpleDataPeerState.CONNECTED;
-                                  }
-                                }.bind(this));
-      // drain this._pc_runQueue.  As this._pc is no longer null, it
-      // won't get modified while we run the callbacks.
-      for (i = 0; i < this._pc_runQueue.length; i++) {
-        var listener = this._pc_runQueue[i];
-        listener();
-      }
-      this._pc_runQueue = [];
-    } else  {
-      console.log("Got back no TURN data: " + this._turnRequest.readyState);
-      // this._pc = new RTCPeerConnection(null, constraints);
+  var iceServer;
+  var pc_config = {iceServers: []};
+  for (var i = 0; i < static_pc_config.length; i++) {
+    iceServer = { 'url' : static_pc_config[i] };
+    pc_config.iceServers.push(iceServer);
+  }
+  this._pc = new RTCPeerConnection(pc_config, constraints);
+  // Add basic event handlers.
+  this._pc.addEventListener("icecandidate",
+                            this._onIceCallback.bind(this));
+  this._pc.addEventListener("negotiationneeded",
+                            this._onNegotiationNeeded.bind(this));
+  this._pc.addEventListener("signalingstatechange", function () {
+    if (this._pc.signalingState == "stable") {
+      this._pcState = SimpleDataPeerState.CONNECTED;
     }
-  }.bind(this);
-  var request_key = Math.floor(Math.random() * 1e8);
-  console.log('Requesting TURN from ' +
-      'https://computeengineondemand.appspot.com/turn?username=UProxy&key=' + request_key);
-  this._turnRequest.open(
-      'GET', 'https://computeengineondemand.appspot.com/turn?username=UProxy&key=' +
-      request_key);
-  this._turnRequest.send(null);
+  }.bind(this));
   // This state variable is used to fake offer/answer when they are wrongly
   // requested and we really just need to reuse what we already have.
   this._pcState = SimpleDataPeerState.DISCONNECTED;
@@ -126,8 +87,8 @@ function SimpleDataPeer(peerName) {
 // If we already have it, run func immediately.
 SimpleDataPeer.prototype.runWhenReady = function(func) {
   if (this._pc === null) {
+    console.error('SimpleDataPeer: Something is terribly wrong. PeerConnection is null');
     // we're still waiting.
-    this._pc_runQueue.push(func);
   } else {
     func();
   }

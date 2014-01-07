@@ -19,6 +19,7 @@
       }
 
       header {
+        padding-top: 0.5em;
         padding-left: 1.2em;
         font-size: 2em;
         font-weight: 200;
@@ -54,9 +55,10 @@
       <li>
         <a href='counter'>Counter</a>
         <span>
-          The "Hello World" of FreeDOM, counter shows how a backend module can be used
-          with the FreeDOM library to provide availability across devices and with
-          minimal development effort.
+          The "Hello World" of FreeDOM, counter shows how to create a basic backend module in FreeDOM
+          and communicate between the page and the module.
+          FreeDOM modules encapsulate the backend of the application and can be migrated
+          across devices with minimal effort.
         </span>
         <kbd>
           <a href='counter/manifest.json'>manifest.json</a>
@@ -67,35 +69,57 @@
       <li>
         <a href='tictak'>TicTak</a>
         <span>
-          A minimal, complete FreeDOM demo, TicTak demonstrates a single player
-          game making use of a freedom storage service.  TicTak shows how to use
-          pluggable services to gain access to privileges beyond those available to
-          standard web applications.
+          TicTak demonstrates a single player game making use of the FreeDOM Storage API.  
+          TicTak uses the default Storage provider, to store game stats.
         </span>
         <kbd>
           <a href='tictak/manifest.json'>manifest.json</a>
-          <a href='tictak/tictak.js'>tictak.js</a>
-          <a href='tictak/storage.json'>storage.json</a>
-          <a href='tictak/storage.js'>storage.js</a>
+          <a href='tictak/main.js'>main.js</a>
           <a href='tictak/README.md'>README.md</a>
         </kbd>
       </li>
       <li>
         <a href='chat'>Chat</a>
         <span>
-          A minimal chat demonstration. Anyone using the demo will join a global buddylist
-          with a GUID. The demo makes use of a custom freedom identity provider. Chat shows
-          how one can leverage existing third-party servers to expose an identity and social network.
+          Chat demonstrates how to use the FreeDOM Social API to enable multi-user interactions.
+          In this basic example, the Social API is used to send chat messages, where all users
+          who use the app will join a global buddylist with a GUID.
         </span>
         <kbd>
           <a href='chat/manifest.json'>manifest.json</a>
           <a href='chat/main.js'>main.js</a>
-          <a href='chat/identity/identity.json'>identity.json</a>
-          <a href='chat/identity.js'>identity.js</a>
-          <a href='chat/server/router.py'>router.py</a>
           <a href='chat/README.md'>README.md</a>
         </kbd>
       </li>
+      <li>
+        <a href='filedrop'>File Drop</a>
+        <span>
+          File Drop demonstrates how to use the Transport API alongside the Social API
+          to create a powerful P2P file transfer utility.
+        </span>
+        <kbd>
+          <a href='filedrop/freedom-modules/manifest.json'>manifest.json</a>
+          <a href='filedrop/freedom-modules/main.js'>main.js</a>
+          <a href='filedrop/page.js'>page.js</a>
+          <a href='filedrop/page.css'>page.css</a>
+          <a href='filedrop/README.md'>README.md</a>
+        </kbd>
+      </li>
+      <!--li>
+        <a href='aboutme'>About Me</a>
+        <span>
+          AboutMe demonstrates how you can write your own Social API provider.
+          This basic example creates a new provider that fetches information from Gravatar
+          and displays the profile.
+        </span>
+        <kbd>
+          <a href='aboutme/manifest.json'>manifest.json</a>
+          <a href='aboutme/main.js'>main.js</a>
+          <a href='aboutme/identity.json'>identity.json</a>
+          <a href='aboutme/identity.js'>identity.js</a>
+          <a href='aboutme/README.md'>README.md</a>
+        </kbd>
+      </li-->
 
     </ul>
   </body>

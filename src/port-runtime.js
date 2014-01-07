@@ -89,18 +89,18 @@ fdom.port.Runtime.prototype.connect = function() {
   var host = this.config.runtimeHost || '127.0.0.1',
       port = this.config.runtimePort || 9009;
   if (!this.socket && this.status === fdom.port.Runtime.status.disconnected) {
-    fdom.debug.log("Manager Link connecting");
+    fdom.debug.log("FreeDOM Runtime Link connecting");
     this.status = fdom.port.Runtime.status.connecting;
     this.socket = new WebSocket('ws://' + host + ':' + port);
     this.socket.addEventListener('open', function(msg) {
-      fdom.debug.log("Manager Link connected");
+      fdom.debug.log("FreeDOM Runtime Link connected");
       this.status = fdom.port.Runtime.status.connected;
       this.emit('connected');
       fdom.apis.register('core.runtime', this.runtime.bind(this, this));
     }.bind(this), true);
     this.socket.addEventListener('message', this.message.bind(this), true);
     this.socket.addEventListener('close', function() {
-      fdom.debug.log("Manager Link disconnected");
+      fdom.debug.log("FreeDOM Runtime Link disconnected");
       this.status = fdom.port.Runtime.status.disconnected;
     }.bind(this), true);
   }

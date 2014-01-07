@@ -28,19 +28,19 @@ module.exports = function(grunt) {
     },
     jshint: {
       beforeconcat: [
-          'src/libs/*.js',
-          'src/*.js',
-          'src/proxy/*.js',
-          'providers/*.js',
-          'interface/*.js',
+        'src/libs/*.js',
+        'src/*.js',
+        'src/proxy/*.js',
+        'providers/*.js',
+        'interface/*.js',
       ],
       afterconcat: ['freedom.js'],
-      files: [
-          'src/libs/*.js',
-          'src/*.js',
-          'src/proxy/*.js',
-          'providers/*.js',
-          'interface/*.js',
+      providers: [
+        'providers/storage/*.js',
+        'providers/social/websocket-server/*.js',
+      ],
+      demo: [
+        'demo/**/*.js'
       ],
       options: {
         '-W069': true
@@ -116,6 +116,8 @@ module.exports = function(grunt) {
     'concat',
     'jasmine:freedom',
     'jshint:afterconcat',
+    'jshint:providers',
+    'jshint:demo',
     'uglify'
   ]);
   grunt.registerTask('coverage', [

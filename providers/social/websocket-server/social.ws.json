@@ -1,0 +1,10 @@
+{
+  "name": "WebSockets Rendezvous",
+  "description": "Social provider using the router.py WebSockets rendezvous",
+  "app": {
+    "script": "social.ws.js"
+  },
+  "provides": [
+    "social"
+  ]
+}

@@ -7,9 +7,8 @@ tools/doc
 node_modules
 tools/coverage
 
-### Demo dependencies
-demo/chat/server/tornado/
-demo/texteditor/server/tornado/
+### Scrap
+.*.swp
 providers/social/websocket-server/server/tornado
 
 ### Chrome Test Runner temp files
