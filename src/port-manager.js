@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, XMLHttpRequest */
+/*globals fdom:true, handleEvents, mixin */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
