@@ -30,7 +30,8 @@ Core_unprivileged.contextId = undefined;
 Core_unprivileged.prototype.createChannel = function(continuation) {
   var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface),
       deferred = fdom.proxy.Deferred(),
-      id = getId();
+      id = getId(),
+      chan = this.getChannel(proxy);
   this.manager.setup(proxy);
 
   if (this.manager.delegate && this.manager.toDelegate['core']) {
@@ -54,7 +55,7 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
   }.bind(this, deferred, proxy));
 
   continuation({
-    channel: deferred,
+    channel: chan,
     identifier: id
   });
 };
