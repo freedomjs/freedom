@@ -18,6 +18,7 @@ var Resource = function() {
     'https': this.xhrRetriever,
     'chrome-extension': this.xhrRetriever,
     'resource': this.xhrRetriever,
+    'chrome': this.xhrRetriever,
     'manifest': this.manifestRetriever
   };
 };
