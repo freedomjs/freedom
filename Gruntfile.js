@@ -3,7 +3,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     meta: {
       src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
-            'providers/core.unprivileged.js', 'providers/echo.unprivileged.js',
+            'providers/core/core.unprivileged.js', 'providers/core/echo.unprivileged.js',
             'spec/util.js'],
       test: ['spec/*Spec.js', 'spec/providers/*Spec.js']
     },
@@ -31,13 +31,13 @@ module.exports = function(grunt) {
         'src/libs/*.js',
         'src/*.js',
         'src/proxy/*.js',
-        'providers/*.js',
+        'providers/core/*.js',
         'interface/*.js',
       ],
       afterconcat: ['freedom.js'],
       providers: [
-        'providers/storage/*.js',
         'providers/social/websocket-server/*.js',
+        'providers/storage/**/*.js',
       ],
       demo: [
         'demo/**/*.js'
@@ -58,7 +58,7 @@ module.exports = function(grunt) {
           'src/util/preamble.js',
           'src/*.js',
           'src/proxy/*.js',
-          'providers/*.js',
+          'providers/core/*.js',
           'interface/*.js',
           'src/util/postamble.js'
         ],
