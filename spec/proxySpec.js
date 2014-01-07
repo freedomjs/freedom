@@ -64,4 +64,32 @@ describe("fdom.Port.Proxy", function() {
     expect(closeSpy).toHaveBeenCalled();
     expect(closeSpy.mostRecentCall.args[0].request).toEqual('close');
   });
+
+  it("reports errors when they occur", function() {
+    // setup.
+    port.onMessage('control', {
+      type: 'setup',
+      channel: 'control'
+    });
+    port.onMessage('default', {
+      channel: 'message'
+    });
+    var spy = jasmine.createSpy('msg');
+    var espy = jasmine.createSpy('cb');
+    port.on('message', spy);
+
+    var publicProxy = port.getProxyInterface();
+    var iface = publicProxy();
+    publicProxy.onError(espy);
+    iface.emit('hi', 'msg');
+    expect(spy).toHaveBeenCalled();
+
+    expect(espy).not.toHaveBeenCalled();
+    port.onMessage('default', {
+      type: 'error',
+      to: false,
+      message: 'msg'
+    });
+    expect(espy).toHaveBeenCalled();
+  });
 });
