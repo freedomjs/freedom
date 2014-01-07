@@ -61,6 +61,23 @@ afterEach(function() {
   }
 });
 
+describe("fdom.proxy.recursiveFreezeObject", function() {
+  it("Freezes objects", function () {
+    var obj = {
+      a: 1,
+      b: {
+        c: 2
+      }
+    };
+    var frozen = fdom.proxy.recursiveFreezeObject(obj);
+    frozen.a = 5;
+    frozen.b = 5;
+    frozen.c = 5;
+    expect(frozen.a).toEqual(1);
+    expect(frozen.b.c).toEqual(2);
+  });
+});
+
 describe("fdom.proxy.conform", function() {
   it("Conforms Simple values to templates", function() {
     var blob = null;

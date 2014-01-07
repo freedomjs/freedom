@@ -40,7 +40,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       break;
     case 'constant':
       Object.defineProperty(this, name, {
-        value: recursiveFreezeObject(prop.value),
+        value: fdom.proxy.recursiveFreezeObject(prop.value),
         writable: false
       });
       break;
@@ -138,4 +138,30 @@ fdom.proxy.conform = function(template, value) {
   }
   fdom.debug.log('Conform ignoring value for template:' + template);
   fdom.debug.log(value);
+};
+
+/**
+ * Recursively traverse a [nested] object and freeze its keys from being writable.
+ * Note, the result can have new keys added to it, but existing ones cannot be overwritten.
+ * Doesn't do anything for arrays or other collections.
+ * 
+ * @method recursiveFreezeObject
+ * @static
+ * @param {Object} obj - object to be frozen
+ * @return {Object} obj
+ **/
+fdom.proxy.recursiveFreezeObject = function(obj) {
+  var k, ret = {};
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+  for (k in obj) {
+    if (obj.hasOwnProperty(k)) {
+      Object.defineProperty(ret, k, {
+        value: fdom.proxy.recursiveFreezeObject(obj[k]),
+        writable: false
+      });
+    }
+  }
+  return ret;
 };

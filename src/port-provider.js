@@ -109,7 +109,7 @@ fdom.port.Provider.prototype.getInterface = function() {
       switch(prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
-          value: recursiveFreezeObject(prop.value),
+          value: fdom.proxy.recursiveFreezeObject(prop.value),
           writable: false
         });
         break;

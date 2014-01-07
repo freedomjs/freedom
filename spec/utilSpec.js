@@ -162,21 +162,6 @@ describe("util", function() {
       expect(cb).not.toHaveBeenCalled();
     })
   });
-  
-  it("Can freeze objects", function () {
-    var obj = {
-      a: 1,
-      b: {
-        c: 2
-      }
-    };
-    var frozen = recursiveFreezeObject(obj);
-    frozen.a = 5;
-    frozen.b = 5;
-    frozen.c = 5;
-    expect(frozen.a).toEqual(1);
-    expect(frozen.b.c).toEqual(2);
-  });
 
   describe("AppContext", function() {
     it("Warns when source has been mangled", function() {
