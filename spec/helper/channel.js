@@ -9,11 +9,9 @@ freedom.on('create', function() {
   id += 1;
 
   core.createChannel().done(function(id, cinfo) {
-    cinfo.channel.done(function(id, chan) {
-      channels[id] = chan;
-      freedom.emit('message', 'creating custom channel ' + thisid);
-      chan.on('message', function(msg) {freedom.emit('message', msg);});
-    }.bind(this, id));
+    channels[id] = cinfo.channel;
+    freedom.emit('message', 'creating custom channel ' + thisid);
+    cinfo.channel.on('message', function(msg) {freedom.emit('message', msg);});
     friend.emit('message', {
       cmd: 'create',
       id: id,
@@ -51,12 +49,10 @@ freedom.on('peer', function() {
       freedom.emit('message', "from provider: " + JSON.stringify(str));
     });
  
-    cinfo.channel.done(function(chan) {
-      channels[thisid] = chan;
-      freedom.emit('message', 'creating custom channel ' + thisid);
-      chan.on('message', function(m) {
-        freedom.emit('message', "from custom: " + JSON.stringify(m));
-      });
+    channels[thisid] = cinfo.channel;
+    freedom.emit('message', 'creating custom channel ' + thisid);
+    channels[thisid].on('message', function(m) {
+      freedom.emit('message', "from custom: " + JSON.stringify(m));
     });
 
     peer.setup(cinfo.identifier);
