@@ -70,6 +70,7 @@ function setupConnection(name, targetId) {
     freedom.emit('download-data', message);
   });
   core.createChannel().done(function (chan) {
+<<<<<<< HEAD
     connections[targetId].setup(name, chan.identifier);
     chan.channel.done(function(signallingChannel) {
       signallingChannel.on('message', function(msg) {
@@ -84,8 +85,22 @@ function setupConnection(name, targetId) {
           while(messageQueues[targetId].length > 0) {
             signallingChannel.emit('message', messageQueues[targetId].shift());
           }
+=======
+    connections[targetId].setup(chan.identifier, "downloader-pc");
+    chan.channel.on('message', function(msg) {
+      social.sendMessage(targetId, JSON.stringify({
+        cmd: 'signal',
+        data: msg
+      }));
+    });
+    chan.channel.on('ready', function() {
+      signallingChannels[targetId] = chan.channel;
+      if (messageQueues[targetId]) {
+        while(messageQueues[targetId].length > 0) {
+          chan.channel.emit('message', messageQueues[targetId].shift());
+>>>>>>> master
         }
-      });
+      }
     });
   });
 }

@@ -97,7 +97,7 @@ describe("Core Provider", function() {
     }, "Freedom should return success", 4000);
 
     runs(function() {
-      expect(cb).toHaveBeenCalledWith('sending message to 0');
+      expect(cb).toHaveBeenCalledWith('sending message to peer 0');
     });
   });
 });

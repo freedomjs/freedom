@@ -18,6 +18,7 @@ var Resource = function() {
     'https': this.xhrRetriever,
     'chrome-extension': this.xhrRetriever,
     'resource': this.xhrRetriever,
+    'chrome': this.xhrRetriever,
     'manifest': this.manifestRetriever
   };
 };
@@ -137,7 +138,7 @@ Resource.prototype.addRetriever = function(proto, retriever) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.httpResolver = function(manifest, url, deferred) {
-  var protocols = ["http", "https", "chrome-extension", "resource"],
+  var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
       dirname,
       i, protocolIdx, pathIdx,
       path, base;

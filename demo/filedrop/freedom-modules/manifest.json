@@ -6,11 +6,11 @@
   },
   "dependencies": {
     "socialprovider": {
-      "url": "/providers/social/websocket-server/social.ws.json",
+      "url": "../../../providers/social/websocket-server/social.ws.json",
       "api": "social"
     },
     "storageprovider": {
-      "url": "/providers/storage/isolated/storage.isolated.json",
+      "url": "../../../providers/storage/isolated-storage.json",
       "api": "storage"
     }
   },
