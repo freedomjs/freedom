@@ -12,6 +12,7 @@
         font-weight: 300;
       }
       #logo {
+        padding-left: 1.2em;
         font-family: 'Rosario', sans-serif;
         font-weight: 700;
         font-style: italic;
@@ -20,9 +21,14 @@
 
       header {
         padding-top: 0.5em;
-        padding-left: 1.2em;
         font-size: 2em;
         font-weight: 200;
+        display: inline-block;
+      }
+      #triangle {
+        padding-left: 0.5em;
+        font-size: 85%;
+        color: #666;
       }
       ul {
         list-style: none;
@@ -50,7 +56,7 @@
   </head>
   <body>
     <header id='logo'>freedom.js</header>
-    <header>Available Demos</header>
+    <header><span id='triangle'>&#9654;</span> Demos</header>
     <ul>
       <li>
         <a href='counter'>Counter</a>
