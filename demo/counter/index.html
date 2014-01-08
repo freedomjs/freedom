@@ -3,6 +3,8 @@
 <head>
   <title>FreeDOM Sample</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link href='../style.css' rel='stylesheet' type='text/css' />
+
   <!-- Load FreeDOM and point it to the root module -->
   <script type="text/javascript"
       src="../../freedom.js"
@@ -13,6 +15,7 @@
       "strongIsolation": true
     }
   </script>
+
   <script type="text/javascript">
   // After loading freedom.js, the window is populated with a 'freedom'
   // object, which is used as a message passing channel to the root module
@@ -26,14 +29,19 @@
       document.getElementById('count').innerHTML = n;
     });
 
-    //Initialize the counter on start with 0
+    //Initialize the counter on start at 0
     window.freedom.emit('click', 0);
   }
   </script>
 </head>
 <body>
-  <h1> FreeDOM Counter </h1>
-  The counter is at <span id='count'>0</span>. <button id='click'>+1</button>
+  <header id='logo'>freedom.js</header>
+  <header><span id='triangle'>&#9654;</span> Demos</header>
+  <header><span id='triangle'>&#9654;</span> Counter</header>
+  <section>
+    <p>The counter is currently <span id='count' class='freedomjs big'>0</span>.</p>
+    <kbd><button id='click'>Increment</button></kbd>
+  </section>
 </body>
 </html>
 

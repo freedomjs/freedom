@@ -3,6 +3,7 @@
 <head>
   <title>FreeDOM Sample</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link href='../style.css' rel='stylesheet' type='text/css' />
   <!-- Include freedom.js and point to the root module -->
   <!-- Note that you can specify a JSON object of options to FreeDOM -->
   <script type="text/javascript"
@@ -47,8 +48,8 @@
   }
   </script>
   <style type='text/css'>
-  #win {color: green;}
-  #lose {color: red;}
+  #win {color: rgb(100, 200, 100);}
+  #lose {color: rgb(253, 60, 0);}
   input {
     width: 100px;
     height: 100px;
@@ -57,10 +58,10 @@
     border: 1px solid black;
   }
   input.c1:checked {
-    background:green;
+    background:rgb(100, 200, 100);
   }
   input.c2:checked {
-    background:red;
+    background: rgb(253, 60, 0);
   }
   input:nth-child(3n + 1) {clear:both;}
   header {
@@ -73,10 +74,14 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>FreeDOM TicTakToe</h1>
-    Win: <span id='win'>..</span> Lose: <span id='lose'>..</span>
-  </header>
+  <header id='logo'>freedom.js</header>
+  <header><span id='triangle'>&#9654;</span> Demos</header>
+  <header><span id='triangle'>&#9654;</span> TicTak</header>
+  <section>
+    <kbd>
+      Win: <span id='win'>..</span> Lose: <span id='lose'>..</span>
+    </kbd>
+  </section>
   <section>
     <input type='checkbox' id='b1' />
     <input type='checkbox' id='b2' />
