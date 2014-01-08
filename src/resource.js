@@ -138,7 +138,7 @@ Resource.prototype.addRetriever = function(proto, retriever) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.httpResolver = function(manifest, url, deferred) {
-  var protocols = ["http", "https", "chrome-extension", "resource", "chrome"],
+  var protocols = ["http", "https", "chrome-extension", "resource"],
       dirname,
       i, protocolIdx, pathIdx,
       path, base;
