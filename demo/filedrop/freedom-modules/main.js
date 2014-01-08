@@ -82,21 +82,19 @@ function setupConnection(targetId) {
   });
   core.createChannel().done(function (chan) {
     connections[targetId].setup(chan.identifier, "downloader-pc");
-    chan.channel.done(function(signallingChannel) {
-      signallingChannel.on('message', function(msg) {
-        social.sendMessage(targetId, JSON.stringify({
-          cmd: 'signal',
-          data: msg
-        }));
-      });
-      signallingChannel.on('ready', function() {
-        signallingChannels[targetId] = signallingChannel;
-        if (messageQueues[targetId]) {
-          while(messageQueues[targetId].length > 0) {
-            signallingChannel.emit('message', messageQueues[targetId].shift());
-          }
+    chan.channel.on('message', function(msg) {
+      social.sendMessage(targetId, JSON.stringify({
+        cmd: 'signal',
+        data: msg
+      }));
+    });
+    chan.channel.on('ready', function() {
+      signallingChannels[targetId] = chan.channel;
+      if (messageQueues[targetId]) {
+        while(messageQueues[targetId].length > 0) {
+          chan.channel.emit('message', messageQueues[targetId].shift());
         }
-      });
+      }
     });
   });
 }
