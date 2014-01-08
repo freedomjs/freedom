@@ -88,7 +88,7 @@ module.exports = function(grunt) {
       }
     },
     coveralls: {
-      options: {
+      report: {
         src: 'tools/lcov.info'
       }
     }
@@ -129,7 +129,7 @@ module.exports = function(grunt) {
   grunt.registerTask('coverage', [
     'concat',
     'jasmine:coverage',
-    'coveralls'
+    'coveralls:report'
   ]);
   grunt.registerTask('default', ['freedom']);
 };
