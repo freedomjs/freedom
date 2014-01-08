@@ -46,11 +46,13 @@ fdom.apis.set("core.runtime", {
 });
 
 fdom.apis.set("core.peerconnection", {
-  'open': {type: "method", value: ["proxy"]},
-  'postMessage': {type: "method", value: [{"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}]},
-  'message': {type: "event", value: {"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}},
-
+  'setup': {type: "method", value: ["name", "proxy"]},
+  'send': {type: "method", value: [{"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}]},
+  'openDataChannel': {type: "method", value: ["string"]},
+  'closeDataChannel': {type: "method", value: ["string"]},
   'close': {type: "method", value: []},
+
+  'onData': {type: "event", value: {"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}},
   'onClose': {type: "event", value: {}}
 });
 

@@ -1,15 +1,13 @@
 /*
  * Peer 2 Peer transport provider.
  *
- * TODO: consider if this is actually doing anything useful, or if we should
- * just use core.sctp-peerconnection directly.
  */
 console.log("TransportProvider: " + self.location.href);
 
 function TransportProvider() {
-  this.peer = freedom['core.sctp-peerconnection']();
-  this.peer.on('onMessage', this.message.bind(this));
-  this.peer.on('onClose', this.onClose.bind(this));
+  this.pc = freedom['core.sctp-peerconnection']();
+  this.pc.on('onMessage', this.onData.bind(this));
+  this.pc.on('onClose', this.onClose.bind(this));
 }
 
 // Called when the peer-connection receives data, it then passes it here.
@@ -35,7 +33,7 @@ TransportProvider.prototype.message = function(msg) {
 TransportProvider.prototype.open = function(freedomChannelId,
     initiateConnection, continuation) {
   console.log("TransportProvider.open.");
-  var promise = this.peer.startup(freedomChannelId, initiateConnection);
+  var promise = this.pc.startup(freedomChannelId, initiateConnection);
   promise.done(continuation);
 };
 
@@ -43,13 +41,13 @@ TransportProvider.prototype.send = function(channelid, msg, continuation) {
   var promise;
   if (msg instanceof Blob) {
     console.log("TransportProvider.sending blob");
-    promise = this.peer.postMessage({"channelid": channelid, "binary": msg});
+    promise = this.pc.postMessage({"channelid": channelid, "binary": msg});
   } else if (msg instanceof ArrayBuffer) {
     console.log("TransportProvider.sending ArrayBuffer");
-    promise = this.peer.postMessage({"channelid": channelid, "buffer": msg});
+    promise = this.pc.postMessage({"channelid": channelid, "buffer": msg});
   } else if (typeof(msg) === 'string') {
     console.log("TransportProvider.sending text: " + msg);
-    promise = this.peer.postMessage({"channelid": channelid, "text": msg});
+    promise = this.pc.postMessage({"channelid": channelid, "text": msg});
   } else {
     console.error('Trying to send an unsupported type of object: ' + typeof(msg));
     return;
@@ -58,7 +56,7 @@ TransportProvider.prototype.send = function(channelid, msg, continuation) {
 };
 
 TransportProvider.prototype.close = function(continuation) {
-  this.peer.shutdown().done(continuation);
+  this.pc.shutdown().done(continuation);
 };
 
 TransportProvider.prototype.onClose = function() {
