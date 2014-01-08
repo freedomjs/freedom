@@ -10,9 +10,12 @@
       "api": "social"
     },
     "storageprovider": {
-      "url": "../../../providers/storage/isolated-storage.json",
+      "url": "../../../providers/storage/isolated/storage.isolated.json",
       "api": "storage"
+    },
+    "transport": {
+      "url": "../../../providers/transport/webrtc/transport.webrtc.json",
+      "api": "transport"
     }
-  },
-  "permissions": ["core.sctp-peerconnection"]
+  }
 }
