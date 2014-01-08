@@ -312,6 +312,7 @@ function forceAppContext(src) {
 function advertise(force) {
   // TODO: Determine a better mechanism than this whitelisting.
   if ((location.protocol === 'chrome-extension:' ||
+       location.protocol === 'chrome:' ||
       location.protocol == 'resource:' || force) &&
       typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
