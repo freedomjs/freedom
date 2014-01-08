@@ -71,7 +71,7 @@
 
     // Display our own userId when we get it
     window.freedom.on('recv-uid', function(data) {
-      document.getElementById('uid').innerText = "UID:"+data;
+      document.getElementById('uid').innerText = "Logged in as: "+data;
     });
 
     // Display the current status of our connection to the Social provider
@@ -93,6 +93,7 @@
       if (evt.keyCode == 13) {
         var text = input.value;
         input.value = "";
+        appendLog(document.createTextNode("You: " + text));
         window.freedom.emit('send-message', {to: activeId, message: text});
       }
     };
@@ -101,7 +102,6 @@
   <style type='text/css'>
   body {border: 1px solid black; float:left; position:relative; width:800px;font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, serif;}
   #uid {font-family: helvetica; float:left;}
-  #uid:after {content: " <-> ";}
   #status {float:right;}
   #status:after {content: "▼"; color:#888;}
   #clear {clear:both; border-bottom:1px solid #888;}
@@ -114,7 +114,7 @@
   <header>
     <b>FreeDOM Chat</b>
   </header>
-  <div id='uid'>No UID</div>
+  <div id='uid'>Logging In</div>
   <div id='status'>Unknown</div>
   <div id='buddylist'></div>
   <div id='clear'></div>
