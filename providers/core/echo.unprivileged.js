@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp */
+/*globals fdom:true, handleEvents */
 /*jslint indent:2,white:true,sloppy:true */
 
 /**
@@ -10,7 +10,7 @@
  * @param {App} app The application creating this provider.
  */
 var Echo_unprivileged = function(app) {
-  console.log('Echo Created!');
+  fdom.debug.log('Echo Created!');
   this.app = app;
   handleEvents(this);
 

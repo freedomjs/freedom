@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, getId */
+/*globals fdom:true, getId */
 /*jslint indent:2,white:true,sloppy:true,sub:true */
 
 
@@ -60,8 +60,8 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
 };
 
 Core_unprivileged.prototype.getChannel = function(proxy) {
-  var iface = proxy.getProxyInterface();
-  var chan = iface();
+  var iface = proxy.getProxyInterface(),
+      chan = iface();
   chan.close = iface.close;
   chan.onClose = iface.onClose;
   iface.onClose(chan, function() {

@@ -19,7 +19,8 @@ fdom.port.Proxy = function(interfaceCls) {
   handleEvents(this);
   
   this.ifaces = {};
-  this.handlers = {};
+  this.closeHandlers = {};
+  this.errorHandlers = {};
   this.emits = {};
 };
 
@@ -49,7 +50,11 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
       return;
     }
     if (message.type === 'close' && message.to) {
-      teardown(message.to);
+      this.teardown(message.to);
+      return;
+    }
+    if (message.type === 'error') {
+      this.error(message.to, message.message);
       return;
     }
     if (message.to) {
@@ -119,16 +124,33 @@ fdom.port.Proxy.prototype.getProxyInterface = function() {
 
     eachProp(this.ifaces, function(candidate, id) {
       if (candidate === iface) {
-        if (this.handlers[id]) {
-          this.handlers[id].push(handler);
+        if (this.closeHandlers[id]) {
+          this.closeHandlers[id].push(handler);
         } else {
-          this.handlers[id] = [handler];
+          this.closeHandlers[id] = [handler];
         }
         return true;
       }
     }.bind(this));
   }.bind(this);
 
+  func.onError = function(iface, handler) {
+    if (typeof iface === 'function' && handler === undefined) {
+      this.on('error', iface);
+      return;
+    }
+    eachProp(this.ifaces, function(candidate, id) {
+      if (candidate === iface) {
+        if (this.errorHandlers[id]) {
+          this.errorHandlers[id].push(handler);
+        } else {
+          this.errorHandlers[id] = [handler];
+        }
+        return true;
+      }
+    }.bind(this));
+  }.bind(this);
+  
   return func;
 };
 
@@ -173,14 +195,32 @@ fdom.port.Proxy.prototype.doEmit = function(to, msg, all) {
  */
 fdom.port.Proxy.prototype.teardown = function(id) {
   delete this.emits[id];
-  if (this.handlers[id]) {
-    eachProp(this.handlers[id], function(prop) {
+  if (this.closeHandlers[id]) {
+    eachProp(this.closeHandlers[id], function(prop) {
       prop();
     });
   }
   delete this.ifaces[id];
-  delete this.handlers[id];
+  delete this.closeHandlers[id];
+  delete this.errorHandlers[id];
 };
+
+/**
+ * Handle a message error reported to this proxy.
+ * @method error
+ * @param {String?} id The id of the interface where the error occured.
+ * @param {Object} message The message which failed, if relevant.
+ */
+fdom.port.Proxy.prototype.error = function(id, message) {
+  if (id && this.errorHandlers[id]) {
+    eachProp(this.errorHandlers[id], function(prop) {
+      prop(message);
+    });
+  } else if (!id) {
+    this.emit('error', message);
+  }
+};
+
 
 /**
  * Close / teardown the flow this proxy terminates.

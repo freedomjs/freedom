@@ -151,7 +151,7 @@ fdom.Hub.prototype.uninstall = function(source, flow) {
   var route = this.routes[flow];
   if (!route) {
     return false;
-  } else if (route.source != source.id) {
+  } else if (route.source !== source.id) {
     fdom.debug.warn("Flow " + flow + " does not belong to port " + source.id);
     return false;
   }

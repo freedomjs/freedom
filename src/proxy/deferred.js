@@ -1,20 +1,27 @@
+/*globals fdom:true, handleEvents, eachProp, Blob, ArrayBuffer */
+/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
+fdom.proxy = fdom.proxy || {};
+
 /**
  * Note: this follows the structure of jQuery deferred
  * https://github.com/jquery/jquery/blob/master/src/deferred.js
  */
 
 fdom.proxy.Callbacks = function(multiple) {
-  var memory, fired, firing, firingStart, firingLength, firingIndex;
-  var stack = multiple && [];
-  var list = [];
-  var fire = function(data) {
+  var memory, fired, firing, firingStart, firingLength, firingIndex,
+      stack = multiple && [],
+      list = [],
+      fire = function(data) {
     memory = data;
     fired = true;
     firingIndex = firingStart || 0;
     firingStart = 0;
     firingLength = list.length;
     firing = true;
-    for (; list && firingIndex < firingLength; firingIndex++) {
+    for (list; list && firingIndex < firingLength; firingIndex += 1) {
       list[firingIndex].apply(data[0], data[1]);
     }
     firing = false;
@@ -25,15 +32,18 @@ fdom.proxy.Callbacks = function(multiple) {
         list = [];
       }
     }
-  };
-  var self = {
+  },
+  self = {
     add: function() {
       if (list) {
         var start = list.length;
         (function add(args) {
-          for (var i = 0; i < args.length; i++) {
+          var i;
+          for (i = 0; i < args.length; i += 1) {
             if (typeof args[i] === 'function') {
-              if (!self.has(args[i])) list.push(args[i]);
+              if (!self.has(args[i])) {
+                list.push(args[i]);
+              }
             } else if (args[i] && args[i].length && typeof args[i] !== 'string') {
               add(args[i]);
             }
@@ -49,17 +59,17 @@ fdom.proxy.Callbacks = function(multiple) {
       return this;
     },
     remove: function() {
+      var i, idx;
       if (list) {
-        for (var i = 0; i < arguments.length; i++) {
-          var idx;
+        for (i = 0; i < arguments.length; i += 1) {
           while ((idx = list.indexOf(arguments[i], idx)) > -1) {
             list.splice(idx, 1);
             if (firing) {
               if (idx <= firingLength) {
-                firingLength--;
+                firingLength -= 1;
               }
               if (idx <= firingIndex) {
-                firingIndex--;
+                firingIndex -= 1;
               }
             }
           }
@@ -117,10 +127,10 @@ fdom.proxy.Deferred = function(func) {
     ["resolve", "done", fdom.proxy.Callbacks(), "resolved"],
     ["reject", "fail", fdom.proxy.Callbacks(), "rejected"],
     ["notify", "progress", fdom.proxy.Callbacks(true)]
-  ];
-
-  var state = "pending";
-  var promise = {
+  ], 
+      deferred = {},
+      state = "pending",
+      promise = {
     'state': function() {
       return state;
     },
@@ -129,14 +139,14 @@ fdom.proxy.Deferred = function(func) {
       return this;
     },
     'then': function() {
-      var fns = arguments;
+      var fns = arguments, i;
       return fdom.proxy.Deferred(function(newDefer) {
-        for (var i = 0; i < events.length; i++) {
-          var action = events[i][0];
-          var fn = typeof fns[i] === 'function' ? fns[i] : null;
+        for (i = 0; i < events.length; i += 1) {
+          var action = events[i][0],
+              fn = typeof fns[i] === 'function' ? fns[i] : null;
           deferred[events[i][1]](function(fn, action) {
             var returned = fn && fn.apply(this, Array.prototype.slice.call(arguments, 2));
-            if (returned && typeof returned['promise'] == 'function') {
+            if (returned && typeof returned.promise === 'function') {
               returned['promise']()
                 .done(newDefer.resolve)
                 .fail(newDefer.reject)
@@ -153,7 +163,6 @@ fdom.proxy.Deferred = function(func) {
       return (obj !== null && obj !== undefined) ? mixin(obj, promise) : promise;
     }
   };
-  var deferred = {};
 
   // Add event handlers.
   for (var i = 0; i < events.length; i++) {

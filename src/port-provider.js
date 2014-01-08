@@ -109,7 +109,7 @@ fdom.port.Provider.prototype.getInterface = function() {
       switch(prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
-          value: recursiveFreezeObject(prop.value),
+          value: fdom.proxy.recursiveFreezeObject(prop.value),
           writable: false
         });
         break;
@@ -129,7 +129,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
   var func = function(p) {
     return p.getInterface();
   }.bind({}, this);
-/*
+
   func.close = function(iface) {
     if (iface) {
       eachProp(this.ifaces, function(candidate, id) {
@@ -166,7 +166,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
       }
     }.bind(this));
   }.bind(this);
-*/
+
   return func;
 };
 

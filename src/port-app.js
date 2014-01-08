@@ -1,4 +1,4 @@
-/*globals fdom:true, Util:true, handleEvents, mixin, eachProp */
+/*globals fdom:true, handleEvents, mixin, eachProp */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};

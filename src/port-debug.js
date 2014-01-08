@@ -116,7 +116,7 @@ fdom.port.Debug.prototype.print = function(message) {
       arr.unshift('color: red');
       arr.unshift('%c ' + message.source);
     }
-    if (!this.console[message.severity] && this.console['log']) {
+    if (!this.console[message.severity] && this.console.log) {
       message.severity = 'log';
     }
     this.console[message.severity].apply(this.console, arr);
