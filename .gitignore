@@ -11,6 +11,8 @@ node_modules
 ### Scrap
 .*.swp
 providers/social/websocket-server/server/tornado
+_SpecRunner.html
+.grunt/
 
 ### Chrome Test Runner temp files
 tools/chromeTestRunner/temp

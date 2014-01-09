@@ -1,22 +1,39 @@
+var FILES = {
+  preamble: ['src/libs/*.js', 'src/util/preamble.js'],
+  postamble: ['src/util/postamble.js'],
+  src: [
+    'src/*.js', 
+    'src/proxy/*.js', 
+    'interface/*.js', 
+    'providers/core/*.js', 
+    '!**/*.spec.js', 
+    '!**/*Spec.js',
+  ],
+  jasminehelper: ['spec/util.js'],
+  srcprovider: [
+    'providers/social/websocket-server/*.js',
+    'providers/storage/**/*.js',
+    'providers/transport/**/*.js'
+  ],
+  test: ['**/*.spec.js', '**/*Spec.js'],
+  testphantom: [],
+  testchrome: [],
+};
+
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    meta: {
-      src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
-            'providers/core/*.js', 'spec/util.js'],
-      test: ['spec/*Spec.js', 'spec/providers/*Spec.js']
-    },
     jasmine: {
       freedom: {
-        src: '<%= meta.src %>',
+        src: FILES.src.concat(FILES.jasminehelper), 
         options: {
-          specs: '<%= meta.test %>'
+          specs: FILES.test.concat(FILES.testphantom)
         }
       },
       coverage: {
-        src: '<%= meta.src %>',
+        src: FILES.src,
         options: {
-          specs: '<%= meta.test %>',
+          specs: FILES.test.concat(FILES.testphantom),
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'tools/lcov.info',
@@ -26,22 +43,10 @@ module.exports = function(grunt) {
       },
     },
     jshint: {
-      beforeconcat: [
-        'src/libs/*.js',
-        'src/*.js',
-        'src/proxy/*.js',
-        'providers/core/*.js',
-        'interface/*.js',
-      ],
+      beforeconcat: FILES.src,
       afterconcat: ['freedom.js'],
-      providers: [
-        'providers/social/websocket-server/*.js',
-        'providers/storage/**/*.js',
-        'providers/transport/**/*.js',
-      ],
-      demo: [
-        'demo/**/*.js'
-      ],
+      providers: FILES.srcprovider,
+      demo: ['demo/**/*.js'],
       options: {
         '-W069': true
       }
@@ -53,15 +58,7 @@ module.exports = function(grunt) {
             return src.replace(/\/\*jslint/g,'/*');
           }
         },
-        src: [
-          'src/libs/*.js',
-          'src/util/preamble.js',
-          'src/*.js',
-          'src/proxy/*.js',
-          'providers/core/*.js',
-          'interface/*.js',
-          'src/util/postamble.js'
-        ],
+        src: FILES.preamble.concat(FILES.src).concat(FILES.postamble),
         dest: 'freedom.js'
       }
     },
