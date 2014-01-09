@@ -83,7 +83,7 @@ describe("/providers/storage/shared-storage", function() {
     }
     //*/
 
-    freedom = setup(window, undefined, {
+    freedom = setup(global, undefined, {
       manifest: "relative://spec/helper/providers.json",
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",

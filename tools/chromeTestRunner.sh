@@ -15,41 +15,54 @@ fi
 
 # Default values
 CLEAN_UP_TEMP_FILES=1
+SPEC_SCRIPTS=""
+
+function printHelp(){
+	echo "Usage: bash runTests.sh [flags ...] SPEC_FILE <SPEC_FILE ...>"
+	echo "   or: bash runTests.sh [flags ...] --all"
+	echo ""
+	echo "FLAGS:"
+	echo "	--no-cleanup	Prevents the script from cleaning up any temp files and instead prints their locations."
+	echo "	--all			Runs all the spec files in /spec/ that match *Spec.js or anywhere that match *.spec.js"	
+}
+
+if [ $# -eq 0 ]; then
+	printHelp
+	exit 1
+fi
 
 # Handle each flag
 for FLAG in $@; do
 	if [ $FLAG == "-h" ] || [ $FLAG == "--help" ]; then
-		echo "Usage: bash runTests.sh [flags ...]"
-		echo ""
-		echo "FLAGS:"
-		echo "	--no-cleanup	Prevents the script from cleaning up any temp files and instead prints their locations."
+		printHelp
 		exit 1
-	fi
 
 	# Prevent cleaning up temp files (for debugging failures)
-	if [ $FLAG == "--no-cleanup" ]; then
+	elif [ $FLAG == "--no-cleanup" ]; then
 		CLEAN_UP_TEMP_FILES=0
+
+	elif [ $FLAG == "--all" ]; then
+		pushd "$FREEDOM_ROOT_DIR" > /dev/null
+		# Files in /spec/ ending with Spec.js (old format)
+		for FILE in `find spec -name "*Spec.js"`
+		do
+			SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
+		done
+		# Files anywhere ending with .spec.js (new format)
+		for FILE in `find . -name "*.spec.js"`
+		do
+			SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
+		done
+		popd > /dev/null
+
+	else
+		SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FLAG\"></script>"
 	fi
 done
 
 
 
 ## TURN FREEDOM ROOT INTO A CHROME APP DYNAMICALLY
-
-# Assemble all the spec files
-SPEC_SCRIPTS=""
-pushd "$FREEDOM_ROOT_DIR" > /dev/null
-# Files in /spec/ ending with Spec.js (old format)
-for FILE in `find spec -name "*Spec.js"`
-do
-	SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
-done
-# Files anywhere ending with .spec.js (new format)
-for FILE in `find . -name "*.spec.js"`
-do
-	SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
-done
-popd > /dev/null
 
 # Make a manifest and html file for the app
 cp "$SCRIPT_DIR/chromeTestRunner/manifest.json" "$FREEDOM_ROOT_DIR/manifest.json"
@@ -70,7 +83,7 @@ TEMP_INCLUDES="$TEMP_DIR/includes"
 mkdir "$TEMP_INCLUDES"
 
 # Create a few dynamic files to support the test app
-cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
+cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers/core,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
 
 
 
