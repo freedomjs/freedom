@@ -1,4 +1,4 @@
-SOURCES = src/*.js src/proxy/*.js interface/*.js providers/*.js
+SOURCES = src/*.js src/proxy/*.js interface/*.js providers/core/*.js
 
 all: freedom.js
 

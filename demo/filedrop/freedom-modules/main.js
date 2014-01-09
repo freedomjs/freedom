@@ -22,7 +22,6 @@ var fetchQueue = [];  // Files on queue to be downloaded
 // PC
 var connections = {};
 var signallingChannels = {};
-var messageQueues = {};
 
 console.log('File Drop root module');
 
@@ -64,38 +63,20 @@ freedom.on('serve-data', function(data) {
   }
 });
 
-function setupConnection(targetId) {
-  connections[targetId] = freedom['core.sctp-peerconnection']();
-  connections[targetId].on('onReceived', function(message) {
-    if (message.buffer) {
-      freedom.emit('download-data', message.buffer);
-    } else if (message.text) {
-      freedom.emit('download-error', message.text);
-    } else {
-      freedom.emit('download-error', "Received unrecognized data");
-    }
-  });
-  connections[targetId].on('onCloseDataChannel', function(channelLabel) {
-    if (connections[targetId]) {
-      connections[targetId].closeDataChannel(channelLabel);
-    }
+function setupConnection(name, targetId) {
+  connections[targetId] = freedom.transport();
+  connections[targetId].on('onData', function(message) {
+    freedom.emit('download-data', message);
   });
   core.createChannel().done(function (chan) {
-    connections[targetId].setup(chan.identifier, "downloader-pc");
+    connections[targetId].setup(name, chan.identifier);
     chan.channel.on('message', function(msg) {
       social.sendMessage(targetId, JSON.stringify({
         cmd: 'signal',
         data: msg
       }));
     });
-    chan.channel.on('ready', function() {
-      signallingChannels[targetId] = chan.channel;
-      if (messageQueues[targetId]) {
-        while(messageQueues[targetId].length > 0) {
-          chan.channel.emit('message', messageQueues[targetId].shift());
-        }
-      }
-    });
+    signallingChannels[targetId] = chan.channel;
   });
 }
 
@@ -120,7 +101,7 @@ function fetch(data) {
     cmd: 'fetch',
     data: key
   }));
-  setupConnection(serverId);
+  setupConnection("fetcher", serverId);
 }
 
 freedom.on('download', function(data) {
@@ -173,11 +154,11 @@ social.on('onMessage', function(data) {
     targetId = data.fromClientId;
 
     console.log("social.onMessage: Received request for " + key + " from " + targetId);
-    setupConnection(targetId);
+    setupConnection("server-"+targetId, targetId);
     //SEND IT
     if (files[key]) {
       console.log("social.onMessage: Sending " + key + " to " + targetId);
-      connections[targetId].send({'channelLabel': 'filedrop', 'buffer': files[key]});
+      connections[targetId].send('filedrop', files[key]);
     } else {
       console.log("social.onMessage: I don't have key: " + key);
       social.sendMessage(targetId, JSON.stringify({
@@ -194,7 +175,8 @@ social.on('onMessage', function(data) {
     if (signallingChannels[targetId]) {
       signallingChannels[targetId].emit('message', msg.data);
     } else {
-      messageQueues[targetId].push(msg.data);
+      //DEBUG
+      console.error("Signalling channel missing!!");
     }
   } else {
     console.log("social.onMessage: Unrecognized message: " + JSON.stringify(data));

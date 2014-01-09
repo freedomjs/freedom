@@ -21,7 +21,7 @@ function TransportProvider() {
   this.state = TransportProvider.state.DISCONNECTED;
   this.channel = null;
   this.socket = null;
-};
+}
 
 TransportProvider.state = {
   DISCONNECTED: 0,

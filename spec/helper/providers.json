@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "sharedStorage": {
-      "url": "../../providers/storage/shared-storage.json",
+      "url": "../../providers/storage/shared/storage.shared.json",
       "api": "storage"
     }
   }

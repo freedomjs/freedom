@@ -1,8 +1,8 @@
 {
-  "name": "Transport",
-  "description": "Included Transport Provider",
+  "name": "WebRTC Transport",
+  "description": "Included WebRTC Transport Provider",
   "app": {
-    "script": "transport.js"
+    "script": "transport.webrtc.js"
   },
   "provides": [
     "transport"
