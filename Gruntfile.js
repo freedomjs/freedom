@@ -89,7 +89,7 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'tools/lcov.info'
+        src: 'lcov.info'
       }
     }
   });
