@@ -1,0 +1,13 @@
+{
+  "name": "Provider Test Helper",
+  "description": "Helper backend for tests involving provider APIs",
+  "app": {
+    "script": "providers.js"
+  },
+  "dependencies": {
+    "sharedStorage": {
+      "url": "../../providers/storage/shared-storage.json",
+      "api": "storage"
+    }
+  }
+}
