@@ -39,7 +39,13 @@ done
 # Assemble all the spec files
 SPEC_SCRIPTS=""
 pushd "$FREEDOM_ROOT_DIR" > /dev/null
-for FILE in `find . -iname "*spec.js"`
+# Files in /spec/ ending with Spec.js (old format)
+for FILE in `find spec -name "*Spec.js"`
+do
+	SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
+done
+# Files anywhere ending with .spec.js (new format)
+for FILE in `find . -name "*.spec.js"`
 do
 	SPEC_SCRIPTS="$SPEC_SCRIPTS<script type=\"text/javascript\" src=\"$FILE\"></script>"
 done
