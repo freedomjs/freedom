@@ -20,11 +20,11 @@ module.exports = function(grunt) {
           specs: '<%= meta.test %>',
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
-            coverage: 'tools/coverage/coverage.json',
-            report: [{type: 'text-summary'}]
+            coverage: 'tools/lcov.info',
+            report: [{type: 'lcovonly'}]
           }
         }
-      }
+      },
     },
     jshint: {
       beforeconcat: [
@@ -86,6 +86,11 @@ module.exports = function(grunt) {
           outdir: 'tools/doc/'
         }
       }
+    },
+    coveralls: {
+      report: {
+        src: 'lcov.info'
+      }
     }
   });
 
@@ -96,6 +101,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-coveralls');
 
   // Custom Task for Chrome Test Runner
   grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
@@ -122,7 +128,8 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('coverage', [
     'concat',
-    'jasmine:coverage'
+    'jasmine:coverage',
+    'coveralls:report'
   ]);
   grunt.registerTask('default', ['freedom']);
 };
