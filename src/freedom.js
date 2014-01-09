@@ -41,7 +41,7 @@ setup = function (global, freedom_src, config) {
     manager.once('delegate', manager.setup.bind(manager, fdom.debug));
   } else {
     manager.setup(fdom.debug);
-    advertise(config.advertise);
+    advertise(config ? config.advertise : undefined);
     
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
