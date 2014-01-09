@@ -3,8 +3,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     meta: {
       src: ['src/libs/*.js', 'src/*.js', 'src/proxy/*.js', 'interface/*.js',
-            'providers/core.unprivileged.js', 'providers/echo.unprivileged.js',
-            'spec/util.js'],
+            'providers/*.js', 'spec/util.js'],
       test: ['spec/*Spec.js', 'spec/providers/*Spec.js']
     },
     jasmine: {

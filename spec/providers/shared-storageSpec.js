@@ -40,6 +40,7 @@ describe("/providers/storage/shared-storage", function() {
     dir = path.substr(0, dir_idx) + '/';
 
     // If running in a Chrome App with storage permission, lead the chrome local storage provider
+    //*
     if(typeof chrome !== 'undefined' && typeof chrome.storage.local !== 'undefined'){
       window.freedomcfg = function(register) {
         var Storage_chromeStorageLocal = function(app) {
@@ -48,52 +49,39 @@ describe("/providers/storage/shared-storage", function() {
         };
 
         Storage_chromeStorageLocal.prototype.keys = function(continuation) {
-          manifestId = this.app.manifestId;
           chrome.storage.local.get(null, function(items){
             keys = [];
             for(var itemKey in items){
-              if (itemKey.indexOf(manifestId) === 0){
-                keys.push(itemKey.substring(manifestId.length));
-              }
+              keys.push(itemKey);
             }
             continuation(keys);
           });
         };        
 
         Storage_chromeStorageLocal.prototype.get = function(key, continuation) {
-          key = this.app.manifestId + key;
           chrome.storage.local.get(key, function(ret){
             continuation(ret[key]);
           });
         };
 
         Storage_chromeStorageLocal.prototype.set = function(key, value, continuation) {
-          key = this.app.manifestId + key;
           items = {};
           items[key] = value;
           chrome.storage.local.set(items, continuation);
         };
 
         Storage_chromeStorageLocal.prototype.remove = function(key, continuation) {
-          key = this.app.manifestId + key;
           chrome.storage.local.remove(key, continuation);
         };
 
         Storage_chromeStorageLocal.prototype.clear = function(continuation) {
-          manifestId = this.app.manifestId;
-          chrome.storage.local.get(null, function(items){
-            for(var itemKey in items){
-              if (itemKey.indexOf(manifestId) === 0){
-                chrome.storage.local.remove(itemKey);
-              }
-            }
-            continuation();
-          });
+          chrome.storage.local.clear(continuation);
         };
 
         register("core.storage", Storage_chromeStorageLocal);
       };
     }
+    //*/
 
     freedom = setup(window, undefined, {
       manifest: "relative://spec/helper/providers.json",
@@ -129,7 +117,7 @@ describe("/providers/storage/shared-storage", function() {
     }, "RPC 'set' to storage.json module should return", ASYNC_TIMEOUT);
 
     runs(function() {
-      expect(cb).toHaveBeenCalledWith(JSON.stringify());
+      expect(cb).toHaveBeenCalledWith(undefined);
     });
   });
 
@@ -152,7 +140,7 @@ describe("/providers/storage/shared-storage", function() {
     }, "RPC 'set' to storage.json module should return", ASYNC_TIMEOUT);
 
     runs(function() {
-      expect(cb).toHaveBeenCalledWith(JSON.stringify());
+      expect(cb).toHaveBeenCalledWith(JSON.undefined);
     });
 
     runs(function() {
@@ -191,7 +179,7 @@ describe("/providers/storage/shared-storage", function() {
     }, "RPC 'set' to storage.json module should return", ASYNC_TIMEOUT);
 
     runs(function() {
-      expect(cb).toHaveBeenCalledWith(JSON.stringify());
+      expect(cb).toHaveBeenCalledWith(JSON.undefined);
     });
 
     runs(function() {
@@ -232,7 +220,7 @@ describe("/providers/storage/shared-storage", function() {
     }, "RPC 'clear' to storage.json module should return", ASYNC_TIMEOUT);
 
     runs(function() {
-      expect(cb).toHaveBeenCalledWith(JSON.stringify());
+      expect(cb).toHaveBeenCalledWith(JSON.undefined);
     });
 
     // Check it is cleared
