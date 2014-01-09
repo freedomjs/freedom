@@ -6,57 +6,49 @@ console.log("TransportProvider: " + self.location.href);
 
 function TransportProvider() {
   this.pc = freedom['core.sctp-peerconnection']();
-  this.pc.on('onMessage', this.onData.bind(this));
+  this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
 }
 
-// Called when the peer-connection receives data, it then passes it here.
-TransportProvider.prototype.message = function(msg) {
-  console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
-  if (msg.text) {
-    this.dispatchEvent('message',
-        {"channelid": msg.channelid, "data": msg.text});
-  } else if (msg.buffer) {
-    this.dispatchEvent('message',
-        {"channelid": msg.channelid, "data": msg.buffer});
-  } else if (msg.blob) {
-    console.error('Blob is not yet supported. ');
-  } else {
-    console.error('message called without a valid data field');
-  }
-};
-
-// The argument |freedomChannelId| is a freedom communication channel id to use
-// to open a peer connection. |initiateConnection| is a boolean that, when true,
-// indicates that this transport should initiate setup of a connection to the
-// peer.
-TransportProvider.prototype.open = function(freedomChannelId,
-    initiateConnection, continuation) {
-  console.log("TransportProvider.open.");
-  var promise = this.pc.startup(freedomChannelId, initiateConnection);
+// The argument |channelId| is a freedom communication channel id to use
+// to open a peer connection. 
+TransportProvider.prototype.setup = function(name, channelId, continuation) {
+  console.log("TransportProvider.setup." + name);
+  var promise = this.pc.setup(channelId, name);
   promise.done(continuation);
 };
 
-TransportProvider.prototype.send = function(channelid, msg, continuation) {
+TransportProvider.prototype.send = function(tag, data, continuation) {
   var promise;
-  if (msg instanceof Blob) {
-    console.log("TransportProvider.sending blob");
-    promise = this.pc.postMessage({"channelid": channelid, "binary": msg});
-  } else if (msg instanceof ArrayBuffer) {
+  if (data instanceof ArrayBuffer) {
     console.log("TransportProvider.sending ArrayBuffer");
-    promise = this.pc.postMessage({"channelid": channelid, "buffer": msg});
-  } else if (typeof(msg) === 'string') {
-    console.log("TransportProvider.sending text: " + msg);
-    promise = this.pc.postMessage({"channelid": channelid, "text": msg});
+    promise = this.pc.send({"channelLabel": tag, "buffer": data});
   } else {
-    console.error('Trying to send an unsupported type of object: ' + typeof(msg));
+    console.error('Trying to send an unsupported type of object: ' + typeof(data));
     return;
   }
   promise.done(continuation);
 };
 
 TransportProvider.prototype.close = function(continuation) {
-  this.pc.shutdown().done(continuation);
+  this.pc.close().done(continuation);
+};
+
+// Called when the peer-connection receives data, it then passes it here.
+TransportProvider.prototype.onData = function(msg) {
+  console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
+  if (msg.buffer) {
+    this.dispatchEvent('onData', {
+      "tag": msg.channelLabel, 
+      "data": msg.buffer
+    });
+  } else if (msg.text) {
+    console.error("Strings not supported.");
+  } else if (msg.blob) {
+    console.error('Blob is not supported. ');
+  } else {
+    console.error('message called without a valid data field');
+  }
 };
 
 TransportProvider.prototype.onClose = function() {

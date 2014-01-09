@@ -64,27 +64,41 @@ var FileRead = {
   }
 };
 
+function startServing(files) {
+  var err = document.getElementById("error");
+  err.textContent = "";
+  if (files.length < 1) {
+    console.error("No files found. Exiting");
+    err.textContent = "Can't find files, brah. Something wrong?";
+    return;
+  }
+  var file = files[0];
+  var reader = new FileReader();
+  console.log("Dropped a file. Let's start reading " + file);
+  reader.onload = FileRead.onLoad.bind({}, file);
+  reader.onerror = FileRead.onError;
+  reader.onprogress = FileRead.onProgress;
+  reader.onloadstart = function(evt) {
+    //Get rid of the overlay
+    console.log("Started reading file");
+    Modal.open();
+    Modal.displayMessage('Uploading');
+  };
+  reader.readAsArrayBuffer(file);
+  return;
+}
+
 // Controls behavior of drag and drop to the screen
 var DragNDrop = {
   within: false,
   onFile: function(e) {
+    console.log(e);
     e = e || window.event; // get window.event if e argument missing (in IE)   
     if (e.preventDefault) { e.preventDefault(); } // stops the browser from redirecting off to the image.
-    var dt = e.originalEvent.dataTransfer;
-    var files = dt.files;
-    var file = files[0];
-    var reader = new FileReader();
-    reader.onload = FileRead.onLoad.bind({}, file);
-    reader.onerror = FileRead.onError;
-    reader.onprogress = FileRead.onProgress;
-    reader.onloadstart = function(evt) {
-      //Get rid of the overlay
-      DragNDrop.within = false;
-      $("#drop").removeClass('overlaytext');
-      Modal.open();
-      Modal.displayMessage('Uploading');
-    };
-    reader.readAsArrayBuffer(file);
+    DragNDrop.within = false;
+    $("#drop").removeClass('overlaytext');
+    $("#fileChooser").hide();
+    startServing(e.originalEvent.dataTransfer.files);
     return false;
   },
   onEnter: function(e) {
@@ -106,9 +120,11 @@ var DragNDrop = {
 
 // Controls the stats on the main page
 var Stats = {
-  initialize: function(key, displayUrl) {
+  initialize: function(key, name, displayUrl) {
     $("#statsHeader").show();
     var div = document.createElement('div');
+    var label = document.createElement('h5');
+    label.appendChild(document.createTextNode(name));
     var input = document.createElement('input');
     input.className = 'input-xxlarge';
     input.type = 'text';
@@ -116,6 +132,7 @@ var Stats = {
     input.value = displayUrl;
     var stat = document.createElement('div');
     stat.id = key;
+    div.appendChild(label);
     div.appendChild(input);
     div.appendChild(stat);
     div.appendChild(document.createElement('br'));
@@ -159,13 +176,19 @@ window.onload = function() {
   $(document.body).bind('dragleave', DragNDrop.onLeave);
   $(document.body).bind('drop', DragNDrop.onFile);
 
+  document.getElementById("fileChooserBtn").onclick = function() {
+    $('#drop').hide();
+    var files = document.getElementById("fileChooserInput").files;
+    startServing(files);
+  };
+
   // Setup FreeDOM listeners
   window.freedom.on('serve-descriptor', function(val) {
     var displayUrl = window.location + "#" + JSON.stringify(val);
     Modal.open();
     Modal.displayMessage("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
     Modal.displayUrl(displayUrl);
-    Stats.initialize(val.key, displayUrl);
+    Stats.initialize(val.key, val.name, displayUrl);
   });
 
   window.freedom.on('serve-error', function(val) {

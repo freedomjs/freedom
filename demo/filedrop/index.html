@@ -25,12 +25,25 @@
     </div>
     <hr>
 
+    <div>
+      <font color="red"><em><h3 id="error"></h3></em></font>
+    </div>
+
     <!-- Main drop box for files-->
     <div id='drop' class="jumbotron">
       <h1>Send a File</h1>
       <p class="lead">Drag a file into this square to send a file</p>
       <p>Note: Only supports 1 file at a time, so zip it up yourself!</p>
       <img width='20%' src='file.png'/>
+    </div>
+    <div id='fileChooser' class="jumbotron">
+      <h2>Or choose a file below</h2>
+      <div class="input-group">
+        <input id="fileChooserInput" type="file">
+        <span class="input-group-btn">
+          <button id="fileChooserBtn" class="btn btn-default" type="button">Go</button>
+        </span>
+      </div>
     </div>
 
     <!-- Display file transfer status -->
@@ -65,9 +78,8 @@
   </div>
 </body>
 
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-<script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="FileSaver.js"></script>
 <script type="text/javascript" src="page.js"></script>
 </html>

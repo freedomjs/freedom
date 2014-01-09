@@ -43,7 +43,10 @@ fdom.apis.set("transport", {
   /**
    * Event on incoming data (ArrayBuffer)
    **/
-  'onData': {type: "event", value: "buffer"},
+  'onData': {type: "event", value: {
+    "tag": "string",
+    "data": "buffer"
+  }},
 
   /**
    * Event on successful closing of the connection

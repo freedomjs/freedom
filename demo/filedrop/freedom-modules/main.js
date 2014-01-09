@@ -158,7 +158,7 @@ social.on('onMessage', function(data) {
     //SEND IT
     if (files[key]) {
       console.log("social.onMessage: Sending " + key + " to " + targetId);
-      connections[targetId].send({'channelLabel': 'filedrop', 'buffer': files[key]});
+      connections[targetId].send('filedrop', files[key]);
     } else {
       console.log("social.onMessage: I don't have key: " + key);
       social.sendMessage(targetId, JSON.stringify({
