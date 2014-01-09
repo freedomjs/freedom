@@ -1,5 +1,5 @@
 describe("/providers/storage/shared-storage", function() {
-  var ASYNC_TIMEOUT = 200;
+  var ASYNC_TIMEOUT = 4000;
   var freedom_src;
 
   var freedom, dir;
