@@ -31,7 +31,7 @@ module.exports = function(grunt) {
         }
       },
       coverage: {
-        src: FILES.src,
+        src: FILES.src.concat(FILES.jasminehelper),
         options: {
           specs: FILES.test.concat(FILES.testphantom),
           template: require('grunt-template-jasmine-istanbul'),
