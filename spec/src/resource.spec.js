@@ -1,8 +1,9 @@
 describe("fdom.resources", function() {
   var resources;
 
-  beforeEach(function() {
+  beforeEach(function() {  
     resources = new Resource();
+    fdom.debug = new fdom.port.Debug();
   });
 
   it("should resolve URLs", function() {

@@ -13,9 +13,8 @@ var FILES = {
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  test: ['spec/**/*Spec.js'],
-  testphantom: [],
-  testchrome: [],
+  specsrc: ['spec/src/**/*.spec.js', 'spec/providers/core/**/*.spec.js', 'spec/providers/storage/**/*.spec.js'],
+  specproviders: ['spec/providers/transport/**/*.spec.js'],
 };
 
 module.exports = function(grunt) {
@@ -25,13 +24,13 @@ module.exports = function(grunt) {
       freedom: {
         src: FILES.src.concat(FILES.jasminehelper), 
         options: {
-          specs: FILES.test.concat(FILES.testphantom)
+          specs: FILES.specsrc,
         }
       },
       coverage: {
         src: FILES.src.concat(FILES.jasminehelper),
         options: {
-          specs: FILES.test.concat(FILES.testphantom),
+          specs: FILES.specsrc,
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'tools/lcov.info',

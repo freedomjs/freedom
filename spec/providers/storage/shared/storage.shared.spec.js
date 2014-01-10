@@ -1,87 +1,15 @@
-describe("/providers/storage/shared-storage", function() {
+describe("/providers/storage/shared/storage.shared.json", function() {
   var ASYNC_TIMEOUT = 4000;
   var freedom_src;
 
   var freedom, dir;
   beforeEach(function() {
     freedom_src = getFreedomSource();
-
-    var global = {
-      console: {
-        log: function() {}
-      }
-    };
-  
-    // Setup resource loading for the test environment, which uses file:// urls.
-    fdom.resources = new Resource();
-    fdom.resources.addResolver(function(manifest, url, deferred) {
-      if (url.indexOf('relative://') === 0) {
-        var dirname = manifest.substr(0, manifest.lastIndexOf('/'));
-        deferred.resolve(dirname + '/' + url.substr(11));
-        return true;
-      }
-      return false;
-    });
-    fdom.resources.addResolver(function(manifest, url, deferred) {
-      if (manifest.indexOf('file://') === 0) {
-        manifest = 'http' + manifest.substr(4);
-        fdom.resources.resolve(manifest, url).done(function(addr) {
-          addr = 'file' + addr.substr(4);
-          deferred.resolve(addr);
-        });
-        return true;
-      }
-      return false;
-    });
-    fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
-
+    var global = {console: {log: function() {}}};
+    setupResolvers();
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/');
     dir = path.substr(0, dir_idx) + '/';
-
-    // If running in a Chrome App with storage permission, lead the chrome local storage provider
-    //*
-    if(typeof chrome !== 'undefined' && typeof chrome.storage.local !== 'undefined'){
-      window.freedomcfg = function(register) {
-        var Storage_chromeStorageLocal = function(app) {
-          this.app = app;
-          handleEvents(this);
-        };
-
-        Storage_chromeStorageLocal.prototype.keys = function(continuation) {
-          chrome.storage.local.get(null, function(items){
-            keys = [];
-            for(var itemKey in items){
-              keys.push(itemKey);
-            }
-            continuation(keys);
-          });
-        };        
-
-        Storage_chromeStorageLocal.prototype.get = function(key, continuation) {
-          chrome.storage.local.get(key, function(ret){
-            continuation(ret[key]);
-          });
-        };
-
-        Storage_chromeStorageLocal.prototype.set = function(key, value, continuation) {
-          items = {};
-          items[key] = value;
-          chrome.storage.local.set(items, continuation);
-        };
-
-        Storage_chromeStorageLocal.prototype.remove = function(key, continuation) {
-          chrome.storage.local.remove(key, continuation);
-        };
-
-        Storage_chromeStorageLocal.prototype.clear = function(continuation) {
-          chrome.storage.local.clear(continuation);
-        };
-
-        register("core.storage", Storage_chromeStorageLocal);
-      };
-    }
-    //*/
 
     freedom = setup(global, undefined, {
       manifest: "relative://spec/helper/providers.json",
