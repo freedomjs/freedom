@@ -31,12 +31,29 @@ body {
   padding: 14px 24px;
 }
 
-/** Drop overlay **/
-div.overlaytext {
+/* Drop overlay */
+div.modal-backdrop {
   background-color:black;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  position: absolute;
   color:white;  
   opacity:0.6; /* transparency */  
   filter:alpha(opacity=60); /* IE transparency */  
 }
 
+.hide {
+  display: none;
+}
 
+.modal {
+  position: absolute;
+  top: 200px;
+  background: white;
+  z-index: 2;
+  border: 2px dashed #555;
+  border-radius: 20px;
+  padding: 20px;
+}
