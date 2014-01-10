@@ -1,4 +1,4 @@
-describe("Core Provider", function() {
+describe("Core Provider Integration", function() {
   var freedom_src;
 
   var freedom;
@@ -99,5 +99,52 @@ describe("Core Provider", function() {
     runs(function() {
       expect(cb).toHaveBeenCalledWith('sending message to peer 0');
     });
+  });
+});
+
+describe("Core Provider Channels", function() {
+  var manager, hub, global;
+  beforeEach(function() {
+    global = {freedom: {}};
+    hub = new fdom.Hub();
+    manager = new fdom.port.Manager(hub);
+    hub.emit('config', {
+      global: global
+    });
+  });
+
+  it('Links Custom Channels', function() {
+    var source = createTestPort('test');
+    manager.setup(source);
+
+    var chan = source.gotMessage('control').channel;
+    hub.onMessage(chan, {
+      type: 'Core Provider',
+      request: 'core'
+    });
+    
+    var core = source.gotMessage('control', {type: 'core'}).core;
+    expect(core).toBeDefined();
+
+    var c = new core(), id, input;
+    var call = c.createChannel(function(chan) {
+      id = chan.identifier;
+      input = chan.channel;
+    });
+    expect(input).toBeDefined();
+    
+    var inHandle = jasmine.createSpy('input');
+    input.on(inHandle);
+    expect(inHandle).not.toHaveBeenCalled();
+
+    var output;
+    c.bindChannel(id, function(chan) {
+      output = chan;
+    });
+    expect(output).toBeDefined();
+    
+    expect(inHandle).not.toHaveBeenCalled();
+    output.emit('message', 'whoo!');
+    expect(inHandle).toHaveBeenCalled();
   });
 });
