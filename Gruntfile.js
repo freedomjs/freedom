@@ -5,9 +5,7 @@ var FILES = {
     'src/*.js', 
     'src/proxy/*.js', 
     'interface/*.js', 
-    'providers/core/*.js', 
-    '!**/*.spec.js', 
-    '!**/*Spec.js',
+    'providers/core/*.js',
   ],
   jasminehelper: ['spec/util.js'],
   srcprovider: [
@@ -15,7 +13,7 @@ var FILES = {
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  test: ['**/*.spec.js', '**/*Spec.js'],
+  test: ['spec/**/*Spec.js'],
   testphantom: [],
   testchrome: [],
 };
