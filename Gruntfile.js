@@ -16,7 +16,7 @@ var FILES = {
     'providers/transport/**/*.js'
   ],
   test: ['**/*.spec.js', '**/*Spec.js'],
-  testphantom: [],
+  testphantom: ['!providers/transport/**/*.spec.js'],
   testchrome: [],
 };
 
