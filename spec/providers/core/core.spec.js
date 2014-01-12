@@ -82,7 +82,7 @@ describe("Core Provider Integration", function() {
 });
 
 describe("Core Provider Channels", function() {
-  var manager, hub, global;
+  var manager, hub, global, source, core;
   beforeEach(function() {
     global = {freedom: {}};
     hub = new fdom.Hub();
@@ -90,10 +90,7 @@ describe("Core Provider Channels", function() {
     hub.emit('config', {
       global: global
     });
-  });
-
-  it('Links Custom Channels', function() {
-    var source = createTestPort('test');
+    source = createTestPort('test');
     manager.setup(source);
 
     var chan = source.gotMessage('control').channel;
@@ -102,7 +99,10 @@ describe("Core Provider Channels", function() {
       request: 'core'
     });
     
-    var core = source.gotMessage('control', {type: 'core'}).core;
+    core = source.gotMessage('control', {type: 'core'}).core;
+  });
+
+  it('Links Custom Channels', function() {
     expect(core).toBeDefined();
 
     var c = new core(), id, input;
@@ -125,5 +125,33 @@ describe("Core Provider Channels", function() {
     expect(inHandle).not.toHaveBeenCalled();
     output.emit('message', 'whoo!');
     expect(inHandle).toHaveBeenCalled();
+  });
+
+
+  it('Supports Custom Channel Closing', function() {
+    var c = new core(), id, input;
+    var call = c.createChannel(function(chan) {
+      id = chan.identifier;
+      input = chan.channel;
+    });
+    expect(input).toBeDefined();
+    
+    var handle = jasmine.createSpy('message');
+
+    var output;
+    c.bindChannel(id, function(chan) {
+      output = chan;
+    });
+    expect(output).toBeDefined();
+    output.on(handle);
+
+    var closer = jasmine.createSpy('close');
+    input.onClose(closer);
+    expect(handle).not.toHaveBeenCalled();
+    input.emit('message', 'whoo!');
+    expect(handle).toHaveBeenCalledWith('message', 'whoo!');
+    expect(closer).not.toHaveBeenCalled();
+    output.close();
+    expect(closer).toHaveBeenCalled();
   });
 });

@@ -43,7 +43,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
   } else if (source === 'control' && message.type === 'close') {
     delete this.controlChannel;
     this.doClose();
-  } else if (source === 'default') {
+  } else {
     if (!this.emitChannel && message.channel) {
       this.emitChannel = message.channel;
       this.emit('start');
