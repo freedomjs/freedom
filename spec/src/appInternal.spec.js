@@ -1,5 +1,5 @@
 describe('fdom.port.AppInternal', function() {
-  var app, manager, hub, global;
+  var app, manager, hub, global, loc;
   beforeEach(function() {
     global = {freedom: {}};
     hub = new fdom.Hub();
@@ -9,7 +9,11 @@ describe('fdom.port.AppInternal', function() {
       global: global
     });
     manager.setup(app);
-  });
+
+    var path = window.location.href,
+        dir_idx = path.lastIndexOf('/');
+    loc = path.substr(0, dir_idx) + '/';
+});
 
   it('configures an app environment', function() {
     var source = createTestPort('test');
@@ -33,5 +37,22 @@ describe('fdom.port.AppInternal', function() {
 
     expect(source.gotMessage('control', {'name': 'identity'})).toBeDefined();
     expect(source.gotMessage('control', {'name': 'core.echo'})).toBeDefined();
+  });
+
+  it('handles script loading and attachment', function() {
+    setupResolvers();
+    global.document = document;
+  
+    runs(function() {
+      app.loadScripts(loc, 'relative://spec/helper/beacon.js');
+    });
+    
+    waitsFor(function() {
+      return typeof fileIncluded !== "undefined";
+    }, "Beacon should be included", 1000);
+    
+    runs(function() {
+      expect(fileIncluded).toEqual(true);
+    });
   });
 });
