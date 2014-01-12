@@ -154,4 +154,13 @@ describe("Core Provider Channels", function() {
     output.close();
     expect(closer).toHaveBeenCalled();
   });
+
+  it('Manages Module Identifiers', function() {
+    var c = new core();
+    c.setId(['a','b','c']);
+    
+    var spy = jasmine.createSpy('id');
+    c.getId(spy);
+    expect(spy).toHaveBeenCalledWith(['a','b','c']);
+  });
 });
