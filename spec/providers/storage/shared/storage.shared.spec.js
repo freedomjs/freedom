@@ -1,3 +1,35 @@
+describe("storage.shared.json", function() {
+  var proxy;
+  beforeEach(function() {
+    proxy = createProxyFor("providers/storage/shared/storage.shared.json", "storage");
+  });
+
+  it("Returns Keys", function() {
+    var val = undefined;
+    var p = proxy();
+
+    runs(function() {
+      p.set('key', 'myvalue').done(function() {
+        p.get('key').done(function(ret) {
+          val = ret;
+        });
+      })
+    });
+    waitsFor("Key to be round-tripped", function() {
+      return val != undefined;
+    }, 1000);
+    runs(function() {
+      expect(val).toEqual('myvalue');
+      p.clear().done(function() {
+        val = undefined;
+      });
+    });
+    waitsFor('Cleanup to finish', function() {
+      return val == undefined;
+    }, 1000);
+  });
+});
+
 describe("/providers/storage/shared/storage.shared.json", function() {
   var ASYNC_TIMEOUT = 4000;
   var freedom_src;

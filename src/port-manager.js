@@ -208,6 +208,11 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
     this.once('config', this.createLink.bind(this, port, name, destination, destName));
     return; 
   }
+  
+  if (!this.controlFlows[port.id]) {
+    fdom.debug.warn('Unwilling to link from non-registered source.');
+    return;
+  }
 
   if (!this.controlFlows[destination.id]) {
     if(this.setup(destination) === false) {

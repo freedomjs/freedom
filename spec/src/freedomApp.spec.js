@@ -1,5 +1,5 @@
 describe("freedom", function() {
-  var freedom, global, iac;
+  var freedom, global;
   beforeEach(function() {
     global = {
       addEventListener: function(msg, handler) {
@@ -12,18 +12,13 @@ describe("freedom", function() {
   
     setupResolvers();  
     iac = isAppContext;
-    isAppContext = function() {
-      return true;
-    };
 
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
-    freedom = setup(global, undefined, undefined);
-  });
-
-  afterEach(function() {
-    isAppContext = iac;
+    freedom = setup(global, undefined, {
+      'isApp': true
+    });
   });
   
   it("Loads an App", function() {

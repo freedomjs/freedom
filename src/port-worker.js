@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, isAppContext, Worker */
+/*globals fdom:true, handleEvents, mixin, Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -25,7 +25,7 @@ fdom.port.Worker = function() {
  * @private
  */
 fdom.port.Worker.prototype.start = function() {
-  if (isAppContext()) {
+  if (this.config.appContext) {
     this.setupListener();
   } else {
     this.setupWorker();
