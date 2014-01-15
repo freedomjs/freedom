@@ -20,7 +20,8 @@ setup = function (global, freedom_src, config) {
       site_cfg = {
         'debug': true,
         'stayLocal': false,
-        'portType': 'Worker'
+        'portType': 'Worker',
+        'appContext': (!config || typeof(config.isApp) === "undefined") ? isAppContext() : config.isApp
       },
       manager = new fdom.port.Manager(hub),
       external = new fdom.port.Proxy(fdom.proxy.EventInterface),
@@ -31,8 +32,11 @@ setup = function (global, freedom_src, config) {
       link;
 
   manager.setup(external);
-  
-  if (isAppContext()) {
+
+  if (site_cfg.appContext) {
+    if (config) {
+      mixin(site_cfg, config, true);
+    }
     site_cfg.global = global;
     site_cfg.src = freedom_src;
     setupApp(new fdom.port[site_cfg.portType]());

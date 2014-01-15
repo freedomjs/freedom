@@ -30,6 +30,54 @@ var createTestPort = function(id) {
   return port;
 };
 
+var createProxyFor = function(app, api) {
+  setupResolvers();
+  var global = {
+    document: document
+  };
+
+  // Wrap the resolving subsystem to grab the child's 'freedom' object and promote it
+  // to window before the internal script is loaded. 
+  for(var i = 0; i < fdom.resources.resolvers.length; i++) {
+    var resolver = fdom.resources.resolvers[i];
+    fdom.resources.resolvers[i] = function(wrap, m, u, d) {
+      if (u.lastIndexOf(".js") === u.length - 3) {
+        window.freedom = global.freedom;
+      }
+      return wrap(m, u, d);
+    }.bind({}, resolver);
+  }
+  
+  var hub = new fdom.Hub(),
+      site_cfg = {
+        'debug': true,
+        'portType': 'DirectLink',
+        'appContext': false,
+        'manifest': app,
+        'resources': fdom.resources,
+        'global': global
+      },
+      manager = new fdom.port.Manager(hub),
+      proxy;
+  
+  if (api) {
+    proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, fdom.apis.get(api).definition));
+  } else {
+    proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
+  }
+  manager.setup(proxy);
+  
+  var link = location.protocol + "//" + location.host + location.pathname;
+  fdom.resources.get(link, site_cfg.manifest).done(function(url) {
+    var app = new fdom.port.App(url, []);
+    manager.setup(app);
+    manager.createLink(proxy, 'default', app);
+  });
+  hub.emit('config', site_cfg);
+
+  return proxy.getProxyInterface();
+};
+
 var fdom_src;
 var getFreedomSource = function(id) {
   if(typeof fdom_src === 'undefined'){

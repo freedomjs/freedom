@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, isAppContext, getBlob, forceAppContext, getURL */
+/*globals fdom:true, handleEvents, mixin, getBlob, forceAppContext, getURL */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -26,7 +26,7 @@ fdom.port.Frame = function() {
  * @private
  */
 fdom.port.Frame.prototype.start = function() {
-  if (isAppContext()) {
+  if (this.config.appContext) {
     this.setupListener();
     this.src = 'in';
   } else {

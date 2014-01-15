@@ -65,7 +65,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
 
 /**
  * Close / teardown the flow this provider terminates.
- * @method doClose
+ * @method close
  */
 fdom.port.Provider.prototype.close = function() {
   if (this.controlChannel) {
@@ -75,6 +75,7 @@ fdom.port.Provider.prototype.close = function() {
     });
     delete this.controlChannel;
   }
+  this.emit('close');
 
   this.providerInstances = {};
   this.emitChannel = null;
@@ -144,7 +145,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
       }.bind(this));      
     } else {
       // Close the channel.
-      this.doClose();
+      this.close();
     }
   }.bind(this);
 
