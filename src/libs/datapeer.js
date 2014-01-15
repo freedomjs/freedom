@@ -482,4 +482,4 @@ DataPeer.prototype.handleSignalMessage = function (message) {
 
 // Export to the environment
 exports.DataPeer = DataPeer;
-}(window));
+}(this));
