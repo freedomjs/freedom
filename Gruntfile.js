@@ -13,7 +13,10 @@ var FILES = {
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specsrc: ['spec/src/**/*.spec.js', 'spec/providers/core/**/*.spec.js', 'spec/providers/storage/**/*.spec.js'],
+  specsrc: [
+    'spec/src/**/*.spec.js', 
+    'spec/providers/core/**/*.spec.js', 
+    'spec/providers/storage/storage.spec.js'],
   specproviders: ['spec/providers/transport/**/*.spec.js'],
 };
 
