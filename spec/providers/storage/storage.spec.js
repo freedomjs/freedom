@@ -31,6 +31,27 @@ var STORAGE_SPEC = function(manifest_url) {
     }, TIMEOUT);
   });
 
+  it("removes a key", function() {
+    var p = proxy();
+    var val = undefined;
+
+    runs(function() {
+      p.set('key', 'value').done(function() {
+        p.remove('key').done(function() {
+          p.keys().done(function(ret) {
+            val = ret;
+          });
+        });
+      });
+    });
+    waitsFor("keys to be returned", function() {
+      return val != undefined;
+    }, TIMEOUT);
+    runs(function() {
+      expect(val.length).toEqual(0);
+    });
+  });
+
   it("lists keys that have been set", function() {
     var p = proxy();
     var keys = undefined;
@@ -117,5 +138,75 @@ var STORAGE_SPEC = function(manifest_url) {
   });
 }};
 
+/**
+describe("storage.isolated.json - storage.shared.json", function() {
+  var proxyShared;
+  var proxyIsolated;
+  var TIMEOUT = 1000;
+  beforeEach(function() {
+    proxyIsolated = createProxyFor("providers/storage/isolated/storage.isolated.json", "storage");
+    proxyShared = createProxyFor("providers/storage/shared/storage.shared.json", "storage");
+  });
+
+  it("isolates partitions", function() {
+    var isolatedStorage = proxyIsolated();
+    var sharedStorage = proxyShared();
+    var val = undefined;
+    var done = false;
+
+    runs(function() {
+      sharedStorage.set("outerKey", "outerValue").done(function(){
+        done = true;
+      });
+    });
+    waitsFor("setup", function() {
+      return done == true;
+    }, TIMEOUT);
+
+    runs(function() {
+      done = false;
+      islatedStorage.set("key1", "value1").done(function() {
+        isolatedStorage.set("key2", "value2").done(function() {
+          p.keys().done(function(ret) {
+            val = ret;
+          });
+        });
+      });
+    });
+    
+    waitsFor("keys to be retrieved", function() {
+      return val != undefined;
+    }, TIMEOUT);
+
+    runs(function() {
+      expect(val.length).toEqual(2);
+      expect(val).toContain("key1");
+      expect(val).toContain("key2");
+      val = undefined;
+      sharedStorage.keys().done(function(ret) {
+        val = ret;
+      });
+    });
+
+    waitsFor("sharedStorage keys", function() {
+      return val != undefined;
+    }, TIMEOUT);
+
+    runs(function() {
+      expect(val.length).toEqual(3);
+    });
+
+    runs(function() {
+      sharedStorage.clear().done(function() {
+        done = true;
+      });
+    });
+    waitsFor("cleanup", function(){
+      return done == true;
+    }, TIMEOUT);
+
+  });
+});
+**/
 describe("storage.isolated.json", STORAGE_SPEC("providers/storage/isolated/storage.isolated.json"));
 describe("storage.shared.json", STORAGE_SPEC("providers/storage/shared/storage.shared.json"));
