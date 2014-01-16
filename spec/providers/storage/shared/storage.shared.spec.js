@@ -1,9 +1,9 @@
-describe("storage.shared/isolated.json", function() {
+var STORAGE_SPEC = function(manifest_url) {
+  return function() {
   var proxy;
   var TIMEOUT = 1000;
   beforeEach(function() {
-    //proxy = createProxyFor("providers/storage/shared/storage.shared.json", "storage");
-    proxy = createProxyFor("providers/storage/isolated/storage.isolated.json", "storage");
+    proxy = createProxyFor(manifest_url, "storage");
   });
 
   it("sets and gets keys", function() {
@@ -114,8 +114,8 @@ describe("storage.shared/isolated.json", function() {
     waitsFor("cleanup keys", function() {
       return val == undefined;
     }, TIMEOUT);
-
-  
   });
-});
+}};
 
+describe("storage.isolated.json", STORAGE_SPEC("providers/storage/isolated/storage.isolated.json"));
+describe("storage.shared.json", STORAGE_SPEC("providers/storage/shared/storage.shared.json"));
