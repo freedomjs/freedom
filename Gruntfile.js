@@ -13,7 +13,10 @@ var FILES = {
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specsrc: ['spec/src/**/*.spec.js', 'spec/providers/core/**/*.spec.js', 'spec/providers/storage/**/*.spec.js'],
+  specsrc: [
+    'spec/src/**/*.spec.js', 
+    'spec/providers/core/**/*.spec.js', 
+    'spec/providers/storage/storage.spec.js'],
   specproviders: ['spec/providers/transport/**/*.spec.js'],
 };
 
@@ -96,12 +99,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
+  grunt.loadNpmTasks('grunt-saucelabs');
 
   // Custom Task for Chrome Test Runner
   grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
     grunt.util.spawn({
       cmd: 'bash',
-      args: ['tools/chromeTestRunner.sh'],
+      args: ['tools/chromeTestRunner.sh'].concat(grunt.file.expand(FILES.specsrc)),
     }, function done(error, result, code) {
       grunt.log.ok('Failed to execute shell script:'+
         "\n\t"+error+
