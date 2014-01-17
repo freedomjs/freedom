@@ -7,10 +7,11 @@ describe("storage.shared.json", function() {
   it("Returns Keys", function() {
     var val = undefined;
     var p = proxy();
+    var p2 = proxy();
 
     runs(function() {
       p.set('key', 'myvalue').done(function() {
-        p.get('key').done(function(ret) {
+        p2.get('key').done(function(ret) {
           val = ret;
         });
       })
