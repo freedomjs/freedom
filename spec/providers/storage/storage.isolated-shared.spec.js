@@ -1,3 +1,4 @@
+/**
 describe("storage.isolated.json - storage.shared.json", function() {
   var proxyShared;
   var proxyIsolated;
@@ -61,4 +62,4 @@ describe("storage.isolated.json - storage.shared.json", function() {
 
   });
 });
-
+**/
