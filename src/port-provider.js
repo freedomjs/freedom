@@ -54,6 +54,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
     if (message.type === 'close' && message.to) {
       delete this.providerInstances[message.to];
     } else if (message.to && this.providerInstances[message.to]) {
+      message.message.to = message.to;
       this.providerInstances[message.to](message.message);
     } else if (message.to && message.message && message.message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
@@ -217,6 +218,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
               type: 'method',
               to: to,
               message: {
+                to: to,
                 type: 'method',
                 reqId: req,
                 name: type,

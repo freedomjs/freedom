@@ -17,15 +17,16 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       this[name] = function() {
         // Note: inflight should be registered before message is passed
         // in order to prepare for synchronous in-window pipes.
-        var deferred = fdom.proxy.Deferred();
-        inflight[reqId] = deferred;
+        var deferred = fdom.proxy.Deferred(),
+            thisReq = reqId;
+        reqId += 1;
+        inflight[thisReq] = deferred;
         emit({
           action: 'method',
           type: name,
-          reqId: reqId,
+          reqId: thisReq,
           value: fdom.proxy.conform(prop.value, arguments)
         });
-        reqId += 1;
         return deferred.promise();
       };
       break;
@@ -62,7 +63,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
         delete inflight[msg.reqId];
         deferred.resolve(msg.value);
       } else {
-        console.log('Dropped response message with id ' + msg.reqId);
+        fdom.debug.warn('Dropped response message with id ' + msg.reqId);
       }
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
