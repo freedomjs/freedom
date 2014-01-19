@@ -37,13 +37,19 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
 
     runs(function() {
       p1.on('onData', function(msg) {
-        console.log(msg.tag);
+        console.warn(msg);
+        val = msg;
       });
       p1.setup("p1", chan1.identifier);
       p2.setup("p2", chan2.identifier);
-//      p2.send('asdf', );
+      p2.send('asdf', 'test');
+    });
+    waitsFor("value to transmit", function() {
+      return val != undefined;
+    }, TIMEOUT);
     
-      expect(true).toEqual(false);
+    runs(function() {
+      expect(val.tag).toEqual('asdf');
     });
 
 
