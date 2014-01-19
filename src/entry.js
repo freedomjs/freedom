@@ -1,6 +1,10 @@
 /**
  * @module freedom
  */
+ 
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
 
 /**
  * External freedom Setup.  global.freedom is set to the value returned by
@@ -13,7 +17,7 @@
  * @param {Object} config Overriding config for freedom.js
  * @static
  */
-setup = function (global, freedom_src, config) {
+fdom.setup = function (global, freedom_src, config) {
   fdom.debug = new fdom.port.Debug();
 
   var hub = new fdom.Hub(),

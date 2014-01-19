@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, setup */
+/*globals fdom:true, handleEvents, mixin */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -38,7 +38,7 @@ fdom.port.DirectLink.prototype.start = function() {
 
     // Keep fdom.debug connected to parent hub.
     var debug = fdom.debug,
-        child = setup(this.config.global, undefined, {
+        child = fdom.setup(this.config.global, undefined, {
       isApp: true,
       portType: 'DirectLink'
     });

@@ -16,7 +16,7 @@ describe("Core Provider Integration", function() {
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
-    freedom = setup(global, undefined, {
+    freedom = fdom.setup(global, undefined, {
       manifest: "relative://spec/helper/channel.json",
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",

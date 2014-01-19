@@ -16,7 +16,7 @@ describe("freedom", function() {
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
-    freedom = setup(global, undefined, {
+    freedom = fdom.setup(global, undefined, {
       'isApp': true
     });
   });
