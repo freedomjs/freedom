@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, eachProp, Blob, ArrayBuffer */
+/*globals fdom:true, Blob, ArrayBuffer */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -160,7 +160,7 @@ fdom.proxy.Deferred = function(func) {
       })['promise']();
     },
     'promise': function(obj) {
-      return (obj !== null && obj !== undefined) ? mixin(obj, promise) : promise;
+      return (obj !== null && obj !== undefined) ? fdom.util.mixin(obj, promise) : promise;
     }
   };
 

@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -20,7 +20,7 @@ fdom.port.DirectLink = function() {
   this.config = {};
   this.src = null;
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -79,7 +79,7 @@ fdom.port.DirectLink.prototype.onMessage = function(flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
       this.start();
     }
   } else {

@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, Worker */
+/*globals fdom:true, Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -16,7 +16,7 @@ fdom.port.Worker = function() {
   this.id = 'Worker ' + Math.random();
   this.config = {};
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -122,7 +122,7 @@ fdom.port.Worker.prototype.onMessage = function(flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
       this.start();
     }
   } else if (flow === 'control' && message.type === 'close' &&

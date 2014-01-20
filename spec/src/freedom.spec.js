@@ -7,7 +7,8 @@ describe("freedom", function() {
     var global = {
       console: {
         log: function() {}
-      }
+      },
+      document: document
     };
     setupResolvers();
     
@@ -55,7 +56,9 @@ describe("freedom", function() {
     script.innerText = "{}";
     document.body.appendChild(script);
 
-    var global = {};
+    var global = {
+      document: document
+    };
 
     freedom = fdom.setup(global, undefined, {
       portType: 'Frame',
@@ -75,7 +78,9 @@ describe("freedom", function() {
     script.innerText = "var x = 2; //this is not json";
     document.body.appendChild(script);
 
-    var global = {};
+    var global = {
+      document: document
+    };
     freedomcfg = function() {
       spyOn(fdom.debug, 'warn');
     }

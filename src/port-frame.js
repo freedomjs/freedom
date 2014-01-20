@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, getBlob, forceAppContext, getURL */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -17,7 +17,7 @@ fdom.port.Frame = function() {
   this.config = {};
   this.src = null;
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -142,9 +142,9 @@ fdom.port.Frame.prototype.makeFrame = function(src, inject) {
       '"></script>';
   }
   loader = '<html>' + extra + '<script src="' +
-      forceAppContext(src) + '"></script></html>';
-  blob = getBlob(loader, 'text/html');
-  frame.src = getURL(blob);
+      fdom.util.forceAppContext(src) + '"></script></html>';
+  blob = fdom.util.getBlob(loader, 'text/html');
+  frame.src = fdom.util.getURL(blob);
 
   return frame;
 };
@@ -160,7 +160,7 @@ fdom.port.Frame.prototype.onMessage = function(flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
       this.start();
     }
   } else {

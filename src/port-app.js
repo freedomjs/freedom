@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp */
+/*globals fdom:true */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -23,7 +23,7 @@ fdom.port.App = function(manifestURL, creator) {
   this.internalPortMap = {};
   this.started = false;
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -36,7 +36,7 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (message.type === 'setup') {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
       this.emit(this.controlChannel, {
         type: 'Core Provider',
         request: 'core'
@@ -320,7 +320,7 @@ fdom.port.App.prototype.loadLinks = function() {
     }
   }
   if (this.manifest.dependencies) {
-    eachProp(this.manifest.dependencies, function(desc, name) {
+    fdom.util.eachProp(this.manifest.dependencies, function(desc, name) {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }

@@ -25,7 +25,7 @@ var createTestPort = function(id) {
     }
   };
 
-  handleEvents(port);
+  fdom.util.handleEvents(port);
 
   return port;
 };

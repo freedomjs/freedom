@@ -11,7 +11,6 @@ describe("freedom", function() {
     };
   
     setupResolvers();  
-    iac = isAppContext;
 
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),

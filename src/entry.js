@@ -25,7 +25,7 @@ fdom.setup = function (global, freedom_src, config) {
         'debug': true,
         'stayLocal': false,
         'portType': 'Worker',
-        'appContext': (!config || typeof(config.isApp) === "undefined") ? isAppContext() : config.isApp
+        'appContext': (!config || typeof(config.isApp) === "undefined") ? fdom.util.isAppContext() : config.isApp
       },
       manager = new fdom.port.Manager(hub),
       external = new fdom.port.Proxy(fdom.proxy.EventInterface),
@@ -39,7 +39,7 @@ fdom.setup = function (global, freedom_src, config) {
 
   if (site_cfg.appContext) {
     if (config) {
-      mixin(site_cfg, config, true);
+      fdom.util.mixin(site_cfg, config, true);
     }
     site_cfg.global = global;
     site_cfg.src = freedom_src;
@@ -49,11 +49,11 @@ fdom.setup = function (global, freedom_src, config) {
     manager.once('delegate', manager.setup.bind(manager, fdom.debug));
   } else {
     manager.setup(fdom.debug);
-    advertise(config ? config.advertise : undefined);
+    fdom.util.advertise(config ? config.advertise : undefined);
     
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
-      eachReverse(scripts(), function (script) {
+      fdom.util.eachReverse(fdom.util.scripts(global), function (script) {
         var manifest = script.getAttribute('data-manifest');
         var source = script.src;
         if (manifest) {
@@ -61,7 +61,7 @@ fdom.setup = function (global, freedom_src, config) {
           site_cfg.manifest = manifest;
           if (script.textContent.trim().length) {
             try {
-              mixin(site_cfg, JSON.parse(script.textContent), true);
+              fdom.util.mixin(site_cfg, JSON.parse(script.textContent), true);
             } catch (e) {
               fdom.debug.warn("Failed to parse configuration: " + e);
             }
@@ -75,7 +75,7 @@ fdom.setup = function (global, freedom_src, config) {
     site_cfg.src = freedom_src;
     site_cfg.resources = fdom.resources;
     if(config) {
-      mixin(site_cfg, config, true);
+      fdom.util.mixin(site_cfg, config, true);
     }
 
     //Try to talk to local FreeDOM Manager

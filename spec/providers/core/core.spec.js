@@ -8,7 +8,8 @@ describe("Core Provider Integration", function() {
     var global = {
       console: {
         log: function() {}
-      }
+      },
+      document: document
     };
   
     setupResolvers();
@@ -84,7 +85,7 @@ describe("Core Provider Integration", function() {
 describe("Core Provider Channels", function() {
   var manager, hub, global, source, core;
   beforeEach(function() {
-    global = {freedom: {}};
+    global = {freedom: {}, document: document};
     hub = new fdom.Hub();
     manager = new fdom.port.Manager(hub);
     hub.emit('config', {
