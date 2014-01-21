@@ -16,9 +16,8 @@ var FILES = {
   specsrc: [
     'spec/src/**/*.spec.js', 
     'spec/providers/core/**/*.spec.js', 
-    'spec/providers/storage/**/*js'
-  ],
-  specproviders: ['spec/providers/transport/**/*.spec.js'],
+    'spec/providers/storage/**/*.js'
+  ]
 };
 
 module.exports = function(grunt) {

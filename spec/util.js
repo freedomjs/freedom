@@ -35,6 +35,7 @@ var createProxyFor = function(app, api) {
   var global = {
     document: document
   };
+  fdom.debug = new fdom.port.Debug();
 
   // Wrap the resolving subsystem to grab the child's 'freedom' object and promote it
   // to window before the internal script is loaded. 

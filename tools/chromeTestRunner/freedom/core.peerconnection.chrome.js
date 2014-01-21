@@ -2,17 +2,17 @@
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
 function SctpPeerConnection(portApp) {
-
-    // a (hopefully unique) ID for debugging.
+  // This is the portApp (defined in freedom/src/port-app.js). A way to speak
+  // to freedom.
+  this._portApp = portApp;
+  fdom.util.handleEvents(this);
+  // a (hopefully unique) ID for debugging.
   this.peerName = "p" + Math.random();
 
   // For debugging.
   window.datapeers = window.datapeers || {};
   window.datapeers[this.peerName] = this;
 
-  // This is the portApp (defined in freedom/src/port-app.js). A way to speak
-  // to freedom.
-  this._portApp = portApp;
 
   // This is the a channel to send signalling messages.
   this._signallingChannel = null;
