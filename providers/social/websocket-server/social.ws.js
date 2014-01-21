@@ -37,12 +37,11 @@ function SocialProvider() {
  **/
 SocialProvider.prototype.login = function(loginOpts, continuation) {
   this.conn = new WebSocket(WS_URL+loginOpts.agent);
+  // Save the continuation until we get a status message for
+  // successful login.
+  this._cont = continuation;
   this._sendStatus('CONNECTING', 'connecting');
   this.conn.onmessage = this._onMessage.bind(this);
-  this.conn.onopen = (function(cont, msg) {
-    //this.conn.send(JSON.stringify({}));
-    cont(this._sendStatus('ONLINE', 'online'));
-  }).bind(this, continuation);
   this.conn.onerror = (function (cont, error) {
     this.conn = null;
     cont(this._sendStatus('ERR_CONNECTION', error));
@@ -188,8 +187,10 @@ SocialProvider.prototype._onMessage = function(msg) {
     for (var i=0; i<msg.msg.length; i++) {
       this._changeRoster(msg.msg[i], true);
     }
-    this._sendStatus('ONLINE', 'online');
-  // If directed message, emit event
+    this._cont(this._sendStatus('ONLINE', 'online'));
+    delete this._cont;
+
+    // If directed message, emit event
   } else if (msg.cmd == 'message') {
     this._changeRoster(msg.from, true);
     this.dispatchEvent('onMessage', {
