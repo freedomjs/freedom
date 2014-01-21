@@ -2,6 +2,8 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
   var proxy;
   var TIMEOUT = 1000;
   beforeEach(function() {
+    //To register any platform specific core providers
+    fdom.util.advertise();
     proxy = createProxyFor(manifest_url, "transport");
   });
 
@@ -21,6 +23,7 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
       core = freedom.core();
       core.createChannel().done(function (chan) {
         console.log("Chan1 done");
+        chan.channel.on('ready', function(){console.log("p1ready");});
         chan.channel.on('message', function(msg) {
           console.log("2->1")
           console.log(msg);
@@ -30,6 +33,7 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
       });
       core.createChannel().done(function (chan) {
         console.log("Chan2 done");
+        chan.channel.on('ready', function(){console.log("p2ready");});
         chan.channel.on('message', function(msg) {
           console.log("1->2")
           console.log(msg);
@@ -49,14 +53,14 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
       });
       p1.setup("p1", chan1.identifier);
       p2.setup("p2", chan2.identifier);
-      p2.send('asdf', 'test');
+      p1.send('tag', 'test');
     });
     waitsFor("value to transmit", function() {
       return val != undefined;
     }, TIMEOUT);
     
     runs(function() {
-      expect(val.tag).toEqual('asdf');
+      expect(val.tag).toEqual('test');
     });
 
 

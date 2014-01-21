@@ -101,8 +101,9 @@ SctpPeerConnection.prototype.setup =
   // Note: the signalling channel should only be sending receiveing strings.
   this._core.bindChannel(signallingChannelId, function(channel) {
     this._signallingChannel = channel;
-    this._peer.setSendSignalMessage(
-        this._signallingChannel.emit.bind(this._signallingChannel, "message"));
+    this._peer.setSendSignalMessage((function(msg) {
+      this._signallingChannel.emit('message', msg);
+    }).bind(this));
     this._signallingChannel.on('message',
         this._peer.handleSignalMessage.bind(this._peer));
     this._signallingChannel.emit('ready');
