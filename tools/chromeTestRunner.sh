@@ -70,7 +70,7 @@ rm -r "$TEMP_DIR/"*
 
 # Set up a new profile for testing and prevent the "First Run" splash screen
 TEMP_PROFILE="$TEMP_DIR/chromeUserProfile"
-mkdir $TEMP_PROFILE
+mkdir -p $TEMP_PROFILE
 touch "$TEMP_PROFILE/First Run"
 
 # Set up a folder for temporary includes (eg. the concatonated spec file)
