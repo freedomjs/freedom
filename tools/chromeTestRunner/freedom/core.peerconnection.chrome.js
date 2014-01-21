@@ -41,6 +41,7 @@ function SctpPeerConnection(portApp) {
 // }
 SctpPeerConnection.prototype.setup =
     function(signallingChannelId, peerName, continuation) {
+  console.log("!!!");
   this.peerName = peerName;
   var self = this;
 

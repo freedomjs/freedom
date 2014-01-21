@@ -8,13 +8,19 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
   it("can setup", function() {
     var p1 = proxy();
     var p2 = proxy();
-    var core = freedom.core();
+    var core = undefined; 
     var chan1 = undefined;
     var chan2 = undefined;
     var val = undefined;
 
+    waitsFor("freedom to be set", function() {
+      return typeof freedom !== "undefined";
+    }, TIMEOUT);
+
     runs(function (){
+      core = freedom.core();
       core.createChannel().done(function (chan) {
+        console.log("Chan1 done");
         chan.channel.on('message', function(msg) {
           console.log("2->1")
           console.log(msg);
@@ -23,6 +29,7 @@ var TRANSPORT_SPEC = function(manifest_url) { return function() {
         chan1 = chan;
       });
       core.createChannel().done(function (chan) {
+        console.log("Chan2 done");
         chan.channel.on('message', function(msg) {
           console.log("1->2")
           console.log(msg);

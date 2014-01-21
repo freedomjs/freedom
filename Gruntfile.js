@@ -16,7 +16,7 @@ var FILES = {
   specsrc: [
     'spec/src/**/*.spec.js', 
     'spec/providers/core/**/*.spec.js', 
-    'spec/providers/storage/**/*.js'
+    'spec/providers/storage/**/*.js',
   ]
 };
 
