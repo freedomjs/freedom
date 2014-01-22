@@ -52,7 +52,7 @@ var createProxyFor = function(app, api) {
   var hub = new fdom.Hub(),
       site_cfg = {
         'debug': true,
-        'portType': 'DirectLink',
+        'portType': 'Direct',
         'appContext': false,
         'manifest': app,
         'resources': fdom.resources,

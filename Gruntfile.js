@@ -3,6 +3,7 @@ var FILES = {
   postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 
+    'src/link/*.js',
     'src/proxy/*.js', 
     'interface/*.js', 
     'providers/core/*.js',

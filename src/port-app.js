@@ -136,7 +136,7 @@ fdom.port.App.prototype.start = function() {
   }
   if (this.manifest && this.controlChannel) {
     this.loadLinks();
-    this.port = new fdom.port[this.config.portType](this);
+    this.port = new fdom.link[this.config.portType](this);
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
     // Tell the local port to ask us for help.
