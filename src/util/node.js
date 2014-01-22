@@ -8,6 +8,7 @@
 
 var sources = [
   '/..',
+  '/../link',
   '/../proxy',
   '/../../interface'
 ];

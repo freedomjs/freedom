@@ -78,7 +78,7 @@ TEMP_INCLUDES="$TEMP_DIR/includes"
 mkdir "$TEMP_INCLUDES"
 
 # Create a few dynamic files to support the test app
-cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers/core,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
+cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/link,src/proxy,providers/core,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
 
 
 

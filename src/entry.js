@@ -43,7 +43,7 @@ fdom.setup = function (global, freedom_src, config) {
     }
     site_cfg.global = global;
     site_cfg.src = freedom_src;
-    setupApp(new fdom.port[site_cfg.portType]());
+    setupApp(new fdom.link[site_cfg.portType]());
 
     // Delay debug messages until delegation to the parent context is setup.
     manager.once('delegate', manager.setup.bind(manager, fdom.debug));
