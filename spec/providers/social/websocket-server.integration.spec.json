@@ -1,0 +1,13 @@
+{
+    "name": "WS tests",
+    "description": "Websocket server social provider integration tests",
+    "app": {
+        "script" : "websocket-server.integration.js"
+    },
+    "dependencies": {
+        "social": {
+            "url": "../../../providers/social/websocket-server/social.ws.json",
+            "api": "social"
+        }
+    }
+}
