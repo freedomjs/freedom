@@ -52,9 +52,11 @@ describe("websocket-server integration", function() {
     }, 1000);
     runs(function() {
       var i;
-      // This prints undefined twice, it doesn't look like freedom is defined.
+      // These log messages always print undefined, it doesn't look
+      // like freedom is defined.
       for (i = 0; i < frames.length; i++) {
-        console.log(typeof frames[i].freedom);
+        console.log(typeof frames[i].contentDocument.freedom);
+        console.log(typeof frames[i].contentWindow.document.freedom);
       }
     });
   });

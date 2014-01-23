@@ -9,7 +9,7 @@ var FILES = {
   ],
   jasminehelper: ['spec/util.js'],
   srcprovider: [
-    'providers/social/websocket-server/*.js',
+    'providers/social/websocket-server/*.spec.js',
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],

@@ -49,7 +49,6 @@ var SOCIAL_SPEC = function(manifest_url) {
     var loginCallback = function callback(status) {
       userId = status.userId;
       p.getRoster().done(function getRosterCallback(result) {
-        console.log(result);
         var ids = Object.keys(result);
         expect(ids.length).toBeGreaterThan(0);
         expect(ids).toContain(userId);
