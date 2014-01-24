@@ -2,12 +2,13 @@ describe("websocket-server integration", function() {
   var freedom_src;
 
   var freedom, dir;
+  var socialA, socialB;
   beforeEach(function() {
     freedom_src = getFreedomSource();
     var global = {
-      // console: {
-      //   log: function() {}
-      // }
+      console: {
+        log: function() {}
+      }
       // console: console
     };
     setupResolvers();
@@ -32,6 +33,19 @@ describe("websocket-server integration", function() {
     waitsFor(function iframesLoaded() {
       return ready;
     }, 5000);
+    var frames;
+    waitsFor(function() {
+      frames = Array.prototype.slice.call(document.getElementsByTagName('iframe'));
+      return (frames.length > 1 &&
+              (frames[0].contentDocument !== null ||
+               frames[0].contentWindow !== null));
+
+    }, 1000);
+    runs(function() {
+      socialA = frames[0].contentWindow.freedom.social();
+      socialB = frames[0].contentWindow.freedom.social();
+      expect(socialA).not.toBe(socialB);
+    });
   });
   
   afterEach(function() {
@@ -41,23 +55,35 @@ describe("websocket-server integration", function() {
     }
   });
 
-  it("test", function() {
-    var frames;
-    waitsFor(function() {
-      frames = Array.prototype.slice.call(document.getElementsByTagName('iframe'));
-      return (frames.length > 0 &&
-              (frames[0].contentDocument !== null ||
-               frames[0].contentWindow !== null));
+  it("Both log in", function() {
+    var loginInfo = {};
+    function loginCallbackFactory(social) {
+      return function (status) {
+        expect(status).not.toBe(undefined);
+        expect(status).not.toBe(null);
+        expect(status.status).toEqual(3);
+        expect(status.userId).toEqual(jasmine.any(String));
+        loginInfo[social] = status.userId;
+      };
+    }
+    socialA.login({network: "websockets",
+                   agent: "jasmine"}).done(loginCallbackFactory("A"));
+    socialB.login({network: "websockets",
+                   agent: "jasmine"}).done(loginCallbackFactory("B"));
 
+    waitsFor(function waitForLogin() {
+      return (typeof loginInfo.A !== "undefined" &&
+              typeof loginInfo.B !== "undefined");
     }, 1000);
-    runs(function() {
-      var i;
-      // These log messages always print undefined, it doesn't look
-      // like freedom is defined.
-      for (i = 0; i < frames.length; i++) {
-        console.log(typeof frames[i].contentDocument.freedom);
-        console.log(typeof frames[i].contentWindow.document.freedom);
-      }
+
+    socialB.on("onMessage", function(message) {
+      console.log("socialB got a message.");
+      console.log(message);
     });
+
+    runs(function() {
+      console.log(JSON.stringify(loginInfo));
+      socialA.sendMessage(loginInfo.B, "Hello B, this is A");
+    }, 1000);
   });
 });

@@ -19,7 +19,6 @@ var WS_URL = 'ws://p2pbr.com:8082/route/';
 var NETWORK_ID = 'websockets';
 
 function SocialProvider() {
-  console.log("WS Social Provider at " + self.location.href);
   this.conn = null;   // Web Socket
   this.id = null;     // userId of this user
   this.roster = {};   // List of seen users
@@ -36,20 +35,26 @@ function SocialProvider() {
  * @return {Object} status - Same schema as 'onStatus' events
  **/
 SocialProvider.prototype.login = function(loginOpts, continuation) {
+  if (this.conn !== null) {
+    console.warn("Already logged in");
+    continuation(this._sendStatus("ONLINE"));
+    return;
+  }
   this.conn = new WebSocket(WS_URL+loginOpts.agent);
   // Save the continuation until we get a status message for
   // successful login.
   this._cont = continuation;
-  this._sendStatus('CONNECTING', 'connecting');
   this.conn.onmessage = this._onMessage.bind(this);
   this.conn.onerror = (function (cont, error) {
     this.conn = null;
-    cont(this._sendStatus('ERR_CONNECTION', error));
+    this._cont(this._sendStatus('ERR_CONNECTION', error));
   }).bind(this, continuation);
   this.conn.onclose = (function (cont, msg) {
     this.conn = null;
-    cont(this._sendStatus('OFFLINE', 'offline'));
+    this._cont(this._sendStatus('OFFLINE', 'offline'));
   }).bind(this, continuation);
+
+  this._sendStatus('CONNECTING', 'connecting');
 };
 
 /**
@@ -98,9 +103,16 @@ SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
    * @return {Object} status - same schema as 'onStatus' events
    **/
 SocialProvider.prototype.logout = function(logoutOpts, continuation) {
+  if (this.conn === null) { // We may not have been logged in
+    console.warn("Already logged out");
+    continuation(this._sendStatus('OFFLINE', 'offline'));
+    return;
+  }
+  this.conn.onclose = function() {
+    this.conn = null;
+    continuation(this._sendStatus('OFFLINE', 'offline'));
+  }.bind(this);
   this.conn.close();
-  this.conn = null;
-  continuation(this._sendStatus('OFFLINE', 'offline'));
 };
 
 /**
@@ -187,8 +199,13 @@ SocialProvider.prototype._onMessage = function(msg) {
     for (var i=0; i<msg.msg.length; i++) {
       this._changeRoster(msg.msg[i], true);
     }
-    this._cont(this._sendStatus('ONLINE', 'online'));
-    delete this._cont;
+
+    if (typeof this._cont === 'function') {
+      this.conn.onclose = null;
+      this.conn.onerror = null;
+      this._cont(this._sendStatus('ONLINE', 'online'));
+      this._cont = null;
+    }
 
     // If directed message, emit event
   } else if (msg.cmd == 'message') {
