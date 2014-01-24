@@ -4,6 +4,10 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
 
   beforeEach(function() {
     freedom = setupModule("relative://spec/helper/providers.json");
+    freedom.emit("create", {
+      name: "core",
+      provider: "core"
+    });
   });
 
   afterEach(function() {
@@ -14,6 +18,12 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
 
   it("can setup", function() {
     runs(function() {
+      freedom.emit("create", {
+        name: "t",
+        provider: transportId
+      });
+
+
     
     });
     waitsFor("", function() {}, TIMEOUT);
