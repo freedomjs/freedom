@@ -1,28 +1,15 @@
 var TRANSPORT_SPEC = function(transportId) { return function() {
   var TIMEOUT = 1000;
+  var freedom;
   var freedom_src;
-  var freedom, dir;
 
   beforeEach(function() {
     freedom_src = getFreedomSource();
-    var global = {console: {log: function(){}}};
-    setupResolvers();
-    var path = window.location.href,
-      dir_idx = path.lastIndexOf('/');
-    dir = path.substr(0, dir_idx); + '/';
-    freedom = setup(global, undefined, {
-      manifest: "relative://spec/helper/providers.json",
-      portType: "Frame",
-      inject: dir + "node_modules/es5-shim/es5-shim.js",
-      src: freedom_src
-    });
+    freedom = setupModule("relative://spec/helper/providers.json", freedom_src);
   });
 
   afterEach(function() {
-    var frames = document.getElementsByTagName('iframe');
-    for (var i=0; i<frames.length; i++) {
-      frames[i].parentNode.removeChild(frames[i]);
-    }
+    cleanupIframes();
   });
   
   it("is all good in the hood", function() {expect(true).toEqual(true)});
@@ -93,4 +80,4 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
 
 }};
 
-describe("transport.webrtc.json", TRANSPORT_SPEC("webrtc"));
+describe("transport.webrtc.json", TRANSPORT_SPEC("transport.webrtc"));
