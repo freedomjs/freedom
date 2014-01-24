@@ -30,8 +30,15 @@ describe("storage.isolated.json - storage.shared.json", function() {
 
   beforeEach(function() {
     freedom = setupModule("relative://spec/helper/providers.json");
-    //spyOn(helper, 'ret').andCallThrough();
     freedom.on('return', helper.ret);
+    freedom.emit('create', {
+      name: 'storage.shared',
+      provider: 'storage.shared'
+    });
+    freedom.emit('create', {
+      name: 'storage.isolated',
+      provider: 'storage.isolated'
+    });
   });
   
   afterEach(function() {

@@ -5,15 +5,15 @@
     "script": "providers.js"
   },
   "dependencies": {
-    "storageShared": {
+    "storage.shared": {
       "url": "../../providers/storage/shared/storage.shared.json",
       "api": "storage"
     },
-    "storageIsolated": {
+    "storage.isolated": {
       "url": "../../providers/storage/isolated/storage.isolated.json",
       "api": "storage"
     },
-    "transportWebrtc": {
+    "transport.webrtc": {
       "url": "../../providers/transport/webrtc/transport.webrtc.json",
       "api": "transport"
     }

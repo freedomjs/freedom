@@ -1,11 +1,9 @@
 var TRANSPORT_SPEC = function(transportId) { return function() {
   var TIMEOUT = 1000;
   var freedom;
-  var freedom_src;
 
   beforeEach(function() {
-    freedom_src = getFreedomSource();
-    freedom = setupModule("relative://spec/helper/providers.json", freedom_src);
+    freedom = setupModule("relative://spec/helper/providers.json");
   });
 
   afterEach(function() {
@@ -13,6 +11,15 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
   });
   
   it("is all good in the hood", function() {expect(true).toEqual(true)});
+
+  it("can setup", function() {
+    runs(function() {
+    
+    });
+    waitsFor("", function() {}, TIMEOUT);
+  
+  });
+
 
 /**
   it("can setup", function() {
