@@ -146,3 +146,31 @@ function setupModule(manifest_url) {
     src: freedom_src
   });
 }
+
+function ProviderHelper(inFreedom) {
+  this.callId = 0;
+  this.returns = {};
+  this.freedom = inFreedom;
+}
+ProviderHelper.prototype.hasReturned = function(ids) {
+  for (var key in ids) {
+    if (ids.hasOwnProperty(key) && 
+        !this.returns.hasOwnProperty(ids[key])) {
+      return false;
+    }
+  }
+  return true;
+};
+ProviderHelper.prototype.call = function(provider, method, args) {
+  this.callId += 1;
+  this.freedom.emit('call', {
+    id: this.callId,
+    provider: provider,
+    method: method,
+    args: args
+  });
+  return this.callId;
+};
+ProviderHelper.prototype.ret = function(obj) {
+  this.returns[obj.id] = obj.data;
+};
