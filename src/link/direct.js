@@ -1,26 +1,26 @@
-/*globals fdom:true, handleEvents, mixin, setup */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
-fdom.port = fdom.port || {};
+fdom.link = fdom.link || {};
 
 /**
  * A port providing message transport between two freedom contexts in the same namespace.
  * Note that using a direct link does not provide the isolation that freedom.js
  * encourages. To that end it should be limited to a method for testing and not
  * used in production without some serious though about the implications of that decision.
- * @class DirectLink
+ * @class Link.Direct
  * @extends Port
  * @uses handleEvents
  * @constructor
  */
-fdom.port.DirectLink = function() {
-  this.id = 'DirectLink ' + Math.random();
+fdom.link.Direct = function() {
+  this.id = 'Link.Direct ' + Math.random();
   this.config = {};
   this.src = null;
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -28,7 +28,7 @@ fdom.port.DirectLink = function() {
  * @method start
  * @private
  */
-fdom.port.DirectLink.prototype.start = function() {
+fdom.link.Direct.prototype.start = function() {
   if (this.config.appContext) {
     this.config.global.directLink.other = this;
     this.other = this.config.global.directLink;
@@ -38,9 +38,9 @@ fdom.port.DirectLink.prototype.start = function() {
 
     // Keep fdom.debug connected to parent hub.
     var debug = fdom.debug,
-        child = setup(this.config.global, undefined, {
+        child = fdom.setup(this.config.global, undefined, {
       isApp: true,
-      portType: 'DirectLink'
+      portType: 'Direct'
     });
     fdom.debug = debug;
     this.config.global.freedom = child;
@@ -52,7 +52,7 @@ fdom.port.DirectLink.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.port.DirectLink.prototype.stop = function() {
+fdom.link.Direct.prototype.stop = function() {
   if (this === this.config.global.directLink) {
     delete this.config.global.directLink;
   }
@@ -64,7 +64,7 @@ fdom.port.DirectLink.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.port.DirectLink.prototype.toString = function() {
+fdom.link.Direct.prototype.toString = function() {
   return "[" + this.id + "]";
 };
 
@@ -75,11 +75,11 @@ fdom.port.DirectLink.prototype.toString = function() {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.port.DirectLink.prototype.onMessage = function(flow, message) {
+fdom.link.Direct.prototype.onMessage = function(flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
       this.start();
     }
   } else {

@@ -2,10 +2,11 @@
  * Peer 2 Peer transport provider.
  *
  */
-console.log("TransportProvider: " + self.location.href);
+console.log("TransportProvider: running in worker " + self.location.href);
 
 function TransportProvider() {
   this.pc = freedom['core.sctp-peerconnection']();
+  console.log(this.pc);
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
 }
@@ -61,5 +62,4 @@ TransportProvider.prototype.onClose = function() {
 //
 // TODO: change Freedom API so that it distinctly names the module-
 // constructor-freedom-thing separately from the thing to create new modules.
-var transport = freedom.transport();
-transport.provideAsynchronous(TransportProvider);
+freedom.transport().provideAsynchronous(TransportProvider);

@@ -1,9 +1,15 @@
+/*globals fdom:true, XMLHttpRequest, crypto */
+/*jslint indent:2,white:true,node:true,sloppy:true */
+if (typeof fdom === 'undefined') {
+  fdom = {};
+}
+
 /**
  * Utility method used within the freedom Library.
  * @class util
  * @static
  */
-var Util = {};
+fdom.util = {};
 
 
 /**
@@ -12,7 +18,7 @@ var Util = {};
  * @method eachReverse
  * @static
  */
-function eachReverse(ary, func) {
+fdom.util.eachReverse = function(ary, func) {
   if (ary) {
     var i;
     for (i = ary.length - 1; i > -1; i -= 1) {
@@ -21,15 +27,15 @@ function eachReverse(ary, func) {
       }
     }
   }
-}
+};
 
 /**
  * @method hasProp
  * @static
  */
-function hasProp(obj, prop) {
+fdom.util.hasProp = function(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
-}
+};
 
 /**
  * Cycles over properties in an object and calls a function for each
@@ -38,7 +44,7 @@ function hasProp(obj, prop) {
  * @method eachProp
  * @static
  */
-function eachProp(obj, func) {
+fdom.util.eachProp = function(obj, func) {
   var prop;
   for (prop in obj) {
     if (obj.hasOwnProperty(prop)) {
@@ -47,7 +53,7 @@ function eachProp(obj, func) {
       }
     }
   }
-}
+};
 
 /**
  * Simple function to mix in properties from source into target,
@@ -58,29 +64,30 @@ function eachProp(obj, func) {
  * @method mixin
  * @static
  */
-function mixin(target, source, force) {
+fdom.util.mixin = function(target, source, force) {
   if (source) {
-    eachProp(source, function (value, prop) {
-      if (force || !hasProp(target, prop)) {
+    fdom.util.eachProp(source, function (value, prop) {
+      if (force || !fdom.util.hasProp(target, prop)) {
         target[prop] = value;
       }
     });
   }
   return target;
-}
+};
 
 /**
  * Get a unique ID.
  * @method getId
  * @static
  */
-function getId() {
+fdom.util.getId = function() {
   var guid = 'guid',
-      domain = 12;
+      domain = 12,
+      buffer;
   if (typeof crypto === 'object') {
-    var buffer = new Uint8Array(domain);
+    buffer = new Uint8Array(domain);
     crypto.getRandomValues(buffer);
-    eachReverse(buffer, function(n) {
+    fdom.util.eachReverse(buffer, function(n) {
       guid += '-' + n;
     });
   } else {
@@ -91,7 +98,7 @@ function getId() {
   }
 
   return guid;
-}
+};
 
 /**
  * Add 'on' and 'emit' methods to an object, which act as a light weight
@@ -99,7 +106,7 @@ function getId() {
  * @class handleEvents
  * @static
  */
-function handleEvents(obj) {
+fdom.util.handleEvents = function(obj) {
   var eventState = {
     listeners: {},
     conditional: [],
@@ -122,7 +129,7 @@ function handleEvents(obj) {
       return [];
     }
 
-    for (i = list.length - 1; i >= 0; i--) {
+    for (i = list.length - 1; i >= 0; i -= 1) {
       if (predicate(list[i])) {
         ret.push(list.splice(i, 1));
       }
@@ -172,24 +179,24 @@ function handleEvents(obj) {
   obj['emit'] = function(type, data) {
     var i;
     if (this.listeners[type]) {
-      for (i = 0; i < this.listeners[type].length; i++) {
+      for (i = 0; i < this.listeners[type].length; i += 1) {
         if (this.listeners[type][i](data) === false) {
           return;
         }
       }
     }
     if (this.oneshots[type]) {
-      for (i = 0; i < this.oneshots[type].length; i++) {
+      for (i = 0; i < this.oneshots[type].length; i += 1) {
         this.oneshots[type][i](data);
       }
       this.oneshots[type] = [];
     }
-    for (i = 0; i < this.conditional.length; i++) {
+    for (i = 0; i < this.conditional.length; i += 1) {
       if (this.conditional[i][0](type, data)) {
         this.conditional[i][1](data);
       }
     }
-    for (i = this.onceConditional.length - 1; i >= 0; i--) {
+    for (i = this.onceConditional.length - 1; i >= 0; i -= 1) {
       if (this.onceConditional[i][0](type, data)) {
         var cond = this.onceConditional.splice(i, 1);
         cond[0][1](data);
@@ -234,49 +241,18 @@ function handleEvents(obj) {
       });
     }
   }.bind(eventState);
-}
+};
 
 /**
  * When run without a window, or specifically requested.
+ * Note: Declaration can be redefined in forceAppContext below.
  * @method isAppContext
  * @for util
  * @static
  */
-function isAppContext() {
+fdom.util.isAppContext=function() {
   return (typeof window === 'undefined');
-}
-
-/**
- * Get a Blob object of a string.
- * Polyfills implementations which don't have a current Blob constructor, like
- * phantomjs.
- * @method getBlob
- * @static
- */
-function getBlob(data, type) {
-  if (typeof Blob !== 'function' && typeof WebKitBlobBuilder !== 'undefined') {
-    var builder = new WebKitBlobBuilder();
-    builder.append(data);
-    return builder.getBlob(type);
-  } else {
-    return new Blob([data], {type: type});
-  }
-}
-
-/**
- * Get a URL of a blob object for inclusion in a frame.
- * Polyfills implementations which don't have a current URL object, like
- * phantomjs.
- * @method getURL
- * @static
- */
-function getURL(blob) {
-  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
-    return webkitURL.createObjectURL(blob);
-  } else {
-    return URL.createObjectURL(blob);
-  }
-}
+};
 
 /**
  * Provide a version of src where the 'isAppContext' function will return true.
@@ -285,22 +261,54 @@ function getURL(blob) {
  * @method forceAppContext
  * @static
  */
-function forceAppContext(src) {
-  var declaration = "function " + isAppContext.name + "()",
+fdom.util.forceAppContext = function(src) {
+  var declaration = fdom.util.isAppContext.name + "=function()",
       definition = " { return true; }",
       idx = src.indexOf(declaration),
       source,
       blob;
   if (idx === -1) {
-    fdom.debug.warn('Unable to force App Context, source has been mangled.');
+    fdom.debug.warn('Unable to force App Context, source is in unexpected condition.');
     return;
   }
   source = src.substr(0, idx + declaration.length) + definition +
-      " function " + isAppContext.name + '_()' +
+      '|| function()' +
       src.substr(idx + declaration.length);
-  blob = getBlob(source, 'text/javascript');
-  return getURL(blob);
-}
+  blob = fdom.util.getBlob(source, 'text/javascript');
+  return fdom.util.getURL(blob);
+};
+
+/**
+ * Get a Blob object of a string.
+ * Polyfills implementations which don't have a current Blob constructor, like
+ * phantomjs.
+ * @method getBlob
+ * @static
+ */
+fdom.util.getBlob = function(data, type) {
+  if (typeof Blob !== 'function' && typeof WebKitBlobBuilder !== 'undefined') {
+    var builder = new WebKitBlobBuilder();
+    builder.append(data);
+    return builder.getBlob(type);
+  } else {
+    return new Blob([data], {type: type});
+  }
+};
+
+/**
+ * Get a URL of a blob object for inclusion in a frame.
+ * Polyfills implementations which don't have a current URL object, like
+ * phantomjs.
+ * @method getURL
+ * @static
+ */
+fdom.util.getURL = function(blob) {
+  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
+    return webkitURL.createObjectURL(blob);
+  } else {
+    return URL.createObjectURL(blob);
+  }
+};
 
 /**
  * When running in a priviledged context, honor a global
@@ -309,7 +317,7 @@ function forceAppContext(src) {
  * @param {Boolean} force Advertise even if not in a priviledged context.
  * @static
  */
-function advertise(force) {
+fdom.util.advertise = function(force) {
   // TODO: Determine a better mechanism than this whitelisting.
   if ((location.protocol === 'chrome-extension:' ||
        location.protocol === 'chrome:' ||
@@ -317,13 +325,13 @@ function advertise(force) {
       typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
-}
+};
 
 /**
  * Find all scripts on the given page.
  * @method scripts
  * @static
  */
-function scripts() {
-    return document.getElementsByTagName('script');
-}
+fdom.util.scripts = function(global) {
+  return global.document.getElementsByTagName('script');
+};

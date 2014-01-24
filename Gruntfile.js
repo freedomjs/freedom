@@ -3,22 +3,23 @@ var FILES = {
   postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 
+    'src/link/*.js',
     'src/proxy/*.js', 
     'interface/*.js', 
     'providers/core/*.js',
   ],
   jasminehelper: ['spec/util.js'],
   srcprovider: [
-    'providers/social/websocket-server/*.spec.js',
+    'providers/social/websocket-server/*.js',
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
   specsrc: [
     'spec/src/**/*.spec.js', 
+    'spec/providers/social/*.spec.js', 
     'spec/providers/core/**/*.spec.js', 
-    'spec/providers/storage/storage.spec.js',
-    'spec/providers/social/*.spec.js'],
-  specproviders: ['spec/providers/transport/**/*.spec.js'],
+    'spec/providers/storage/**/*.js',
+  ]
 };
 
 module.exports = function(grunt) {

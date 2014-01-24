@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp, XMLHttpRequest */
+/*globals fdom:true */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -17,9 +17,9 @@ fdom.Hub = function() {
   this.routes = {};
   this.unbound = [];
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
   this.on('config', function(config) {
-    mixin(this.config, config);
+    fdom.util.mixin(this.config, config);
   }.bind(this));
 };
 

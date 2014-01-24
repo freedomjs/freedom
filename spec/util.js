@@ -25,7 +25,7 @@ var createTestPort = function(id) {
     }
   };
 
-  handleEvents(port);
+  fdom.util.handleEvents(port);
 
   return port;
 };
@@ -35,6 +35,7 @@ var createProxyFor = function(app, api) {
   var global = {
     document: document
   };
+  fdom.debug = new fdom.port.Debug();
 
   // Wrap the resolving subsystem to grab the child's 'freedom' object and promote it
   // to window before the internal script is loaded. 
@@ -51,7 +52,7 @@ var createProxyFor = function(app, api) {
   var hub = new fdom.Hub(),
       site_cfg = {
         'debug': true,
-        'portType': 'DirectLink',
+        'portType': 'Direct',
         'appContext': false,
         'manifest': app,
         'resources': fdom.resources,
@@ -121,4 +122,27 @@ function setupResolvers() {
     return false;
   });
   fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
+}
+
+function cleanupIframes() {
+  var frames = document.getElementsByTagName('iframe');
+  for (var i=0; i<frames.length; i++) {
+    frames[i].parentNode.removeChild(frames[i]);
+  }
+}
+
+function setupModule(manifest_url) {
+  var freedom_src = getFreedomSource();
+  var global = {console: {log: function(){}}, document: document};
+  setupResolvers();
+
+  var path = window.location.href;
+  var dir_idx = path.lastIndexOf('/');
+  var dir = path.substr(0, dir_idx) + '/';
+  return fdom.setup(global, undefined, {
+    manifest: manifest_url,
+    portType: "Frame",
+    inject: dir + "node_modules/es5-shim/es5-shim.js",
+    src: freedom_src
+  });
 }

@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, eachProp, Blob, ArrayBuffer */
+/*globals fdom:true, Blob, ArrayBuffer */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -11,7 +11,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       emitter = null,
       reqId = 0;
 
-  eachProp(def, function(prop, name) {
+  fdom.util.eachProp(def, function(prop, name) {
     switch(prop.type) {
     case 'method':
       this[name] = function() {
@@ -32,7 +32,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       break;
     case 'event':
       if(!events) {
-        handleEvents(this);
+        fdom.util.handleEvents(this);
         emitter = this.emit;
         delete this.emit;
         events = {};
@@ -130,7 +130,7 @@ fdom.proxy.conform = function(template, value) {
     return val;
   } else if (typeof template === 'object') {
     val = {};
-    eachProp(template, function(prop, name) {
+    fdom.util.eachProp(template, function(prop, name) {
       if (value[name]) {
         val[name] = fdom.proxy.conform(prop, value[name]);
       }

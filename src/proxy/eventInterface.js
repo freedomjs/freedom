@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -6,7 +6,7 @@ if (typeof fdom === 'undefined') {
 fdom.proxy = fdom.proxy || {};
 
 fdom.proxy.EventInterface = function(onMsg, emit) {
-  handleEvents(this);
+  fdom.util.handleEvents(this);
   
   onMsg(this, function(emit, type, msg) {
     emit(msg.type, msg.message);

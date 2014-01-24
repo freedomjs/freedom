@@ -1,8 +1,8 @@
-var STORAGE_SPEC = function(manifest_url) {
-  return function() {
+var STORAGE_SPEC = function(manifest_url) { return function() {
   var proxy;
   var TIMEOUT = 1000;
   beforeEach(function() {
+    fdom.util.advertise();
     proxy = createProxyFor(manifest_url, "storage");
   });
 
