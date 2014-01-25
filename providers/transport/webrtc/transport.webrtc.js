@@ -5,6 +5,7 @@
 console.log("TransportProvider: running in worker " + self.location.href);
 
 function TransportProvider() {
+  this.name = null;
   this.pc = freedom['core.sctp-peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
@@ -14,11 +15,13 @@ function TransportProvider() {
 // to open a peer connection. 
 TransportProvider.prototype.setup = function(name, channelId, continuation) {
   console.log("TransportProvider.setup." + name);
+  this.name = name;
   var promise = this.pc.setup(channelId, name);
   promise.done(continuation);
 };
 
 TransportProvider.prototype.send = function(tag, data, continuation) {
+  console.log("TransportProvider.send." + this.name);
   var promise = this.pc.send({"channelLabel": tag, "buffer": data});
   promise.done(continuation);
 };

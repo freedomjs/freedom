@@ -1,9 +1,4 @@
-var providers = {
-  "core": freedom.core(),
-//  "storage.shared": freedom.storageShared(),
-//  "storage.isolated": freedom.storageIsolated(),
-//  "transport.webrtc": freedom.transportWebrtc()
-};
+var providers = {"core": freedom.core()};
 var channels = {};
 
 // action = {
@@ -31,7 +26,8 @@ freedom.on("call", function(action){
 });
 
 freedom.on("createChannel", function() {
-  providers.core.createChannel().done(function(chan) {
+  //providers.core.createChannel().done(function(chan) {
+  freedom.core().createChannel().done(function(chan) {
     channels[chan.identifier] = chan.channel;
     chan.channel.on("message", function(msg){
       freedom.emit("inFromChannel", {

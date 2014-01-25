@@ -1,6 +1,7 @@
 var TRANSPORT_SPEC = function(transportId) { return function() {
   var TIMEOUT = 1000;
-  var freedom;
+  var freedom, helper;
+
   function ab2str(buf) {
     return String.fromCharCode.apply(null, new Uint16Array(buf));
   }
@@ -57,6 +58,7 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
 
   it("sends data", function() {
     var ids = {};
+    var signals = [];
     var chanId1 = undefined;
     var chanId2 = undefined;
     
@@ -76,16 +78,27 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
 
     runs(function() {
       helper.setChannelCallback(chanId1, function(msg) {
-        helper.sendToChannel(chanId2, msg);
+        signals.push(msg);
+        //helper.sendToChannel(chanId2, msg);
       });
       helper.setChannelCallback(chanId2, function(msg) {
-        helper.sendToChannel(chanId1, msg);
+        signals.push(msg);
+        //helper.sendToChannel(chanId1, msg);
       });
       var sendData = str2ab("HI");
       ids[0] = helper.call('t1', "setup", ["t1", chanId1]);
-      ids[1] = helper.call('t2', "setup", ["t2", chanId2]);
+      //ids[1] = helper.call('t2', "setup", ["t2", chanId2]);
       ids[2] = helper.call('t1', "send", ["tag", sendData]);
     });
+    waitsFor("signalling messages", function() {
+      return signals.length > 0;
+    }, TIMEOUT);
+
+    runs(function() {
+      console.log(signals);
+      expect(signals.length).toBeGreaterThan(0);
+    });
+
   });
 
 
