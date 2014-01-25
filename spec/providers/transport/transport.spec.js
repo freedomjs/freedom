@@ -1,13 +1,21 @@
 var TRANSPORT_SPEC = function(transportId) { return function() {
   var TIMEOUT = 1000;
   var freedom;
+  function ab2str(buf) {
+    return String.fromCharCode.apply(null, new Uint16Array(buf));
+  }
+  function str2ab(str) {
+    var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+    var bufView = new Uint16Array(buf);
+    for (var i=0, strLen=str.length; i<strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+  }
 
   beforeEach(function() {
     freedom = setupModule("relative://spec/helper/providers.json");
-    freedom.emit("create", {
-      name: "core",
-      provider: "core"
-    });
+    helper = new ProviderHelper(freedom);
   });
 
   afterEach(function() {
@@ -16,18 +24,41 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
   
   it("is all good in the hood", function() {expect(true).toEqual(true)});
 
-  it("can setup", function() {
+  it("generates signals", function() {
+    var ids = {};
+    var chanId = undefined;
+    var signals = [];
     runs(function() {
       freedom.emit("create", {
         name: "t",
         provider: transportId
       });
-
-
-    
+      helper.createChannel(function(newChanId) {
+        chanId = newChanId;
+      });
     });
-    waitsFor("", function() {}, TIMEOUT);
-  
+    waitsFor("create channel", function() {
+      return chanId != undefined; 
+    }, TIMEOUT);
+
+    runs(function() {
+      helper.setChannelCallback(chanId, function(msg) {
+        console.log(msg);
+        signals.push(msg);
+      });
+      var ab = str2ab("HI");
+      console.log(ab instanceof ArrayBuffer);
+      ids[0] = helper.call('t', "setup", ["t", chanId]);
+      ids[1] = helper.call('t', "send", ["tag", str2ab("Hi")]);
+    });
+    waitsFor("signalling messages", function() {
+      return signals.length > 0;
+    }, TIMEOUT);
+
+    runs(function() {
+      expect(signals.length).toBeGreaterThan(0);
+    });
+
   });
 
 

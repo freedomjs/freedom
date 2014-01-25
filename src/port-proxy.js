@@ -64,6 +64,7 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
         fdom.debug.warn('Could not deliver message, no such interface: ' + message.to);
       }
     } else {
+      var msg = message.message;
       fdom.util.eachProp(this.emits, function(iface) {
         iface('message', message.message);
       });

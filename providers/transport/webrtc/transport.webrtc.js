@@ -6,7 +6,6 @@ console.log("TransportProvider: running in worker " + self.location.href);
 
 function TransportProvider() {
   this.pc = freedom['core.sctp-peerconnection']();
-  console.log(this.pc);
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
 }
@@ -24,6 +23,9 @@ TransportProvider.prototype.send = function(tag, data, continuation) {
   if (data instanceof ArrayBuffer) {
     console.log("TransportProvider.sending ArrayBuffer");
     promise = this.pc.send({"channelLabel": tag, "buffer": data});
+  } else if (data instanceof String){
+    console.log("TransportProvider.sending String");
+    promise = this.pc.send({"channelLabel": tag, "text": data});
   } else {
     console.error('Trying to send an unsupported type of object: ' + typeof(data));
     return;
@@ -46,7 +48,7 @@ TransportProvider.prototype.onData = function(msg) {
   } else if (msg.text) {
     console.error("Strings not supported.");
   } else if (msg.blob) {
-    console.error('Blob is not supported. ');
+    console.error("Blob is not supported.");
   } else {
     console.error('message called without a valid data field');
   }
