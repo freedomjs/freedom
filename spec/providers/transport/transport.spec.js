@@ -87,7 +87,7 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
       });
       var sendData = str2ab("HI");
       ids[0] = helper.call('t1', "setup", ["t1", chanId1]);
-      //ids[1] = helper.call('t2', "setup", ["t2", chanId2]);
+      ids[1] = helper.call('t2', "setup", ["t2", chanId2]);
       ids[2] = helper.call('t1', "send", ["tag", sendData]);
     });
     waitsFor("signalling messages", function() {
