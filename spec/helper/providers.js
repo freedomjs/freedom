@@ -4,6 +4,9 @@ var providers = {
 //  "storage.isolated": freedom.storageIsolated(),
 //  "transport.webrtc": freedom.transportWebrtc()
 };
+// We need to keep track of want events we are already listening for
+// so that we don't send duplicate notifcations events the helper.
+var listeningFor = {};
 
 // action = {
 //  name: name to store provider under in 'providers' object, 
@@ -11,6 +14,7 @@ var providers = {
 // }
 freedom.on('create', function(action) {
   providers[action.name] = freedom[action.provider]();
+  listeningFor[action.name] = {};
 });
 
 // action = {
@@ -27,4 +31,19 @@ freedom.on('call', function(action){
       data: ret
     });
 	});
+});
+
+freedom.on('listenForEvent', function(listenEventInfo) {
+  var providerName = listenEventInfo.provider;
+  var eventName = listenEventInfo.event;
+  var provider = providers[providerName];
+
+  if (!listeningFor[providerName][eventName]) {
+    provider.on(listenEventInfo.event, function (eventPayload) { 
+      freedom.emit('eventFired', {provider: providerName,
+                                  event: eventName,
+                                  eventPayload: eventPayload});
+    });
+    listeningFor[providerName][eventName] = true;
+  }
 });

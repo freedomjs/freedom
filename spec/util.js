@@ -151,6 +151,8 @@ function ProviderHelper(inFreedom) {
   this.callId = 0;
   this.returns = {};
   this.freedom = inFreedom;
+  this._eventListeners = {};
+  this.freedom.on("eventFired", this._on.bind(this));
 }
 ProviderHelper.prototype.hasReturned = function(ids) {
   for (var key in ids) {
@@ -161,6 +163,12 @@ ProviderHelper.prototype.hasReturned = function(ids) {
   }
   return true;
 };
+
+ProviderHelper.prototype.create = function(name, provider) {
+  this.freedom.emit("create", {name: name,
+                         provider: provider});
+};
+
 ProviderHelper.prototype.call = function(provider, method, args) {
   this.callId += 1;
   this.freedom.emit('call', {
@@ -173,4 +181,40 @@ ProviderHelper.prototype.call = function(provider, method, args) {
 };
 ProviderHelper.prototype.ret = function(obj) {
   this.returns[obj.id] = obj.data;
+};
+
+ProviderHelper.prototype._on = function(eventInfo) {
+  var provider = eventInfo.provider;
+  var event = eventInfo.event;
+  var eventPayload = eventInfo.eventPayload;
+  var listeners = this._eventListeners[provider][event];
+  listeners.forEach(function (listener) {
+    listener(eventPayload);
+  });
+};
+
+ProviderHelper.prototype.on = function(provider, event, listener) {
+  if (typeof this._eventListeners[provider] === 'undefined') {
+    this._eventListeners[provider] = {};
+  }
+  if (typeof this._eventListeners[provider][event] === 'undefined') {
+    this._eventListeners[provider][event] = [];
+  }
+  this._eventListeners[provider][event].push(listener);
+  this.freedom.emit("listenForEvent", {provider: provider,
+                                 event: event});
+};
+
+/**
+ * Remove all listeners registered through "on" for an event. If an event is not
+ * specified, then all listeners for the provider are removed.
+ */
+ProviderHelper.prototype.removeListeners = function(provider, event) {
+  if (typeof this._eventListeners[provider] !== 'undefined') {
+    if (event) {
+      this._eventListeners[provider][event] = [];
+    } else {
+      this._eventListeners[provider] = {};
+    }
+  }
 };

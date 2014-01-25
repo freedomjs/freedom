@@ -1,4 +1,5 @@
 var SOCIAL_SPEC = function(manifest_url) {
+  const TIMEOUT = 2000;
   var proxy, p;
 
   beforeEach(function() {
@@ -34,7 +35,7 @@ var SOCIAL_SPEC = function(manifest_url) {
 
     waitsFor(function() {
       return loginCallback;
-    }, 1000);
+    }, TIMEOUT);
 
     runs(function logout() {
       p.logout({network: "websockets",
@@ -70,7 +71,7 @@ var SOCIAL_SPEC = function(manifest_url) {
              interactive: false}).done(loginCallback);
     waitsFor(function() {
       return logins === 5;
-    }, 2000);
+    }, TIMEOUT);
   });
 
   it("logs in twice", function() {
@@ -102,7 +103,7 @@ var SOCIAL_SPEC = function(manifest_url) {
              interactive: false}).done(loginCallback);
     waitsFor(function() {
       return loggedOut;
-    }, 1000);
+    }, TIMEOUT);
   });
 
   it("logs out when already logged out", function() {
@@ -115,7 +116,7 @@ var SOCIAL_SPEC = function(manifest_url) {
     });
     waitsFor(function() {
       return logoutCallback;
-    }, 1000);
+    }, TIMEOUT);
   });
 
   it("returns roster", function() {
@@ -138,7 +139,7 @@ var SOCIAL_SPEC = function(manifest_url) {
 
     waitsFor(function() {
       return rosterReturns;
-    }, 1000);
+    }, TIMEOUT);
 
     runs(function logout() {
       p.logout({network: "websockets",
@@ -171,7 +172,7 @@ var SOCIAL_SPEC = function(manifest_url) {
 
     waitsFor(function() {
       return messageReceived;
-    }, 1000);
+    }, TIMEOUT);
 
     runs(function logout() {
       p.logout({network: "websockets",
