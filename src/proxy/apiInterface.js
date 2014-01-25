@@ -98,7 +98,7 @@ fdom.proxy.conform = function(template, value) {
     if (value instanceof Blob) {
       return value;
     } else {
-      fdom.debug.log('conform expecting Blob, sees ' + (typeof value));
+      fdom.debug.warn('conform expecting Blob, sees ' + (typeof value));
       return new Blob([]);
     }
     break;
@@ -106,7 +106,7 @@ fdom.proxy.conform = function(template, value) {
     if (value instanceof ArrayBuffer) {  
       return value;
     } else {
-      fdom.debug.log('conform expecting ArrayBuffer, sees ' + (typeof value));
+      fdom.debug.warn('conform expecting ArrayBuffer, sees ' + (typeof value));
       //TODO(ryscheng): bug in Chrome where passing Array Buffers over iframes loses this
       return new ArrayBuffer(0);
     }

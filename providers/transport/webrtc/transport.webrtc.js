@@ -19,17 +19,7 @@ TransportProvider.prototype.setup = function(name, channelId, continuation) {
 };
 
 TransportProvider.prototype.send = function(tag, data, continuation) {
-  var promise;
-  if (data instanceof ArrayBuffer) {
-    console.log("TransportProvider.sending ArrayBuffer");
-    promise = this.pc.send({"channelLabel": tag, "buffer": data});
-  } else if (data instanceof String){
-    console.log("TransportProvider.sending String");
-    promise = this.pc.send({"channelLabel": tag, "text": data});
-  } else {
-    console.error('Trying to send an unsupported type of object: ' + typeof(data));
-    return;
-  }
+  var promise = this.pc.send({"channelLabel": tag, "buffer": data});
   promise.done(continuation);
 };
 
