@@ -177,7 +177,7 @@ fdom.util.handleEvents = function(obj) {
    * @param {Object} data The payload of the event.
    */
   obj['emit'] = function(type, data) {
-    var i;
+    var i, queue;
     if (this.listeners[type]) {
       for (i = 0; i < this.listeners[type].length; i += 1) {
         if (this.listeners[type][i](data) === false) {
@@ -186,10 +186,11 @@ fdom.util.handleEvents = function(obj) {
       }
     }
     if (this.oneshots[type]) {
-      for (i = 0; i < this.oneshots[type].length; i += 1) {
-        this.oneshots[type][i](data);
-      }
+      queue = this.oneshots[type];
       this.oneshots[type] = [];
+      for (i = 0; i < queue.length; i += 1) {
+        queue[i](data);
+      }
     }
     for (i = 0; i < this.conditional.length; i += 1) {
       if (this.conditional[i][0](type, data)) {
@@ -198,8 +199,8 @@ fdom.util.handleEvents = function(obj) {
     }
     for (i = this.onceConditional.length - 1; i >= 0; i -= 1) {
       if (this.onceConditional[i][0](type, data)) {
-        var cond = this.onceConditional.splice(i, 1);
-        cond[0][1](data);
+        queue = this.onceConditional.splice(i, 1);
+        queue[0][1](data);
       }
     }
   }.bind(eventState);

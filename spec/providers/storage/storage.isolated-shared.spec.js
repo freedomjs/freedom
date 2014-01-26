@@ -5,15 +5,8 @@ describe("storage.isolated.json - storage.shared.json", function() {
   beforeEach(function() {
     freedom = setupModule("relative://spec/helper/providers.json");
     helper = new ProviderHelper(freedom);
-    freedom.on('return', helper.ret.bind(helper));
-    freedom.emit('create', {
-      name: 'shared',
-      provider: 'storage.shared'
-    });
-    freedom.emit('create', {
-      name: 'isolated',
-      provider: 'storage.isolated'
-    });
+    helper.createProvider("shared", "storage.shared");
+    helper.createProvider("isolated", "storage.isolated");
   });
   
   afterEach(function() {

@@ -95,9 +95,22 @@ fdom.proxy.conform = function(template, value) {
     // TODO(willscott): Allow removal if sandboxing enforces this.
     return JSON.parse(JSON.stringify(value));
   case 'blob':
-    return value instanceof Blob ? value : new Blob([]);
+    if (value instanceof Blob) {
+      return value;
+    } else {
+      fdom.debug.warn('conform expecting Blob, sees ' + (typeof value));
+      return new Blob([]);
+    }
+    break;
   case 'buffer':
-    return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
+    if (value instanceof ArrayBuffer) {  
+      return value;
+    } else {
+      fdom.debug.warn('conform expecting ArrayBuffer, sees ' + (typeof value));
+      //TODO(ryscheng): bug in Chrome where passing Array Buffers over iframes loses this
+      return new ArrayBuffer(0);
+    }
+    break;
   case 'data':
     // TODO(willscott): should be opaque to non-creator.
     return value;

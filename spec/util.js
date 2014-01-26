@@ -150,9 +150,14 @@ function setupModule(manifest_url) {
 function ProviderHelper(inFreedom) {
   this.callId = 0;
   this.returns = {};
+  this.unboundCallbacks = [];
+  this.chanCallbacks = {};
   this.freedom = inFreedom;
   this._eventListeners = {};
   this.freedom.on("eventFired", this._on.bind(this));
+  this.freedom.on('return', this.ret.bind(this));
+  this.freedom.on('initChannel', this.onInitChannel.bind(this));
+  this.freedom.on('inFromChannel', this.onInFromChannel.bind(this));
 }
 ProviderHelper.prototype.hasReturned = function(ids) {
   for (var key in ids) {
@@ -217,4 +222,36 @@ ProviderHelper.prototype.removeListeners = function(provider, event) {
       this._eventListeners[provider] = {};
     }
   }
+};
+
+ProviderHelper.prototype.createProvider = function(name, provider) {
+  this.freedom.emit('create', {
+    name: name,
+    provider: provider
+  });
+};
+
+ProviderHelper.prototype.createChannel = function(cb) {
+  this.unboundCallbacks.push(cb);
+  this.freedom.emit('createChannel');
+};
+
+ProviderHelper.prototype.onInitChannel = function(chanId) {
+  var cb = this.unboundCallbacks.pop(); 
+  cb(chanId);
+};
+
+ProviderHelper.prototype.setChannelCallback = function(chanId, cb) {
+  this.chanCallbacks[chanId] = cb;
+};
+
+ProviderHelper.prototype.sendToChannel = function(chanId, msg) {
+  this.freedom.emit("outToChannel", {
+    chanId: chanId,
+    message: msg
+  });
+};
+
+ProviderHelper.prototype.onInFromChannel = function(data) {
+  this.chanCallbacks[data.chanId](data.message);
 };

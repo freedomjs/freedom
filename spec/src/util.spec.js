@@ -136,6 +136,17 @@ describe("util", function() {
       expect(cb).toHaveBeenCalledWith('yes');
       expect(cb.calls.length).toEqual(1);
     });
+    
+    it("can requeue conditioanl events", function() {
+      var f = function(m) {
+        m == 'ok' ? cb() : object.once('msg', f);
+      };
+      object.once('msg', f);
+      object.emit('msg', 'bad');
+      expect(cb).not.toHaveBeenCalled();
+      object.emit('msg', 'ok');
+      expect(cb).toHaveBeenCalled();
+    });
 
     it("can unregister events", function() {
       object.on('msg', cb);
