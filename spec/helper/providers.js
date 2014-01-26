@@ -1,3 +1,4 @@
+var listeningFor = {};
 var providers = {"core": freedom.core()};
 var channels = {};
 
@@ -7,6 +8,7 @@ var channels = {};
 // }
 freedom.on("create", function(action) {
   providers[action.name] = freedom[action.provider]();
+  listeningFor[action.name] = {};
 });
 
 // action = {
@@ -23,6 +25,21 @@ freedom.on("call", function(action){
       data: ret
     });
 	});
+});
+
+freedom.on('listenForEvent', function(listenEventInfo) {
+  var providerName = listenEventInfo.provider;
+  var eventName = listenEventInfo.event;
+  var provider = providers[providerName];
+
+  if (!listeningFor[providerName][eventName]) {
+    provider.on(listenEventInfo.event, function (eventPayload) { 
+      freedom.emit('eventFired', {provider: providerName,
+                                  event: eventName,
+                                  eventPayload: eventPayload});
+    });
+    listeningFor[providerName][eventName] = true;
+  }
 });
 
 freedom.on("createChannel", function() {

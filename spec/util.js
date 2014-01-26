@@ -153,6 +153,8 @@ function ProviderHelper(inFreedom) {
   this.unboundCallbacks = [];
   this.chanCallbacks = {};
   this.freedom = inFreedom;
+  this._eventListeners = {};
+  this.freedom.on("eventFired", this._on.bind(this));
   this.freedom.on('return', this.ret.bind(this));
   this.freedom.on('initChannel', this.onInitChannel.bind(this));
   this.freedom.on('inFromChannel', this.onInFromChannel.bind(this));
@@ -166,6 +168,12 @@ ProviderHelper.prototype.hasReturned = function(ids) {
   }
   return true;
 };
+
+ProviderHelper.prototype.create = function(name, provider) {
+  this.freedom.emit("create", {name: name,
+                         provider: provider});
+};
+
 ProviderHelper.prototype.call = function(provider, method, args) {
   this.callId += 1;
   this.freedom.emit('call', {
@@ -179,29 +187,73 @@ ProviderHelper.prototype.call = function(provider, method, args) {
 ProviderHelper.prototype.ret = function(obj) {
   this.returns[obj.id] = obj.data;
 };
+
+ProviderHelper.prototype._on = function(eventInfo) {
+  var provider = eventInfo.provider;
+  var event = eventInfo.event;
+  var eventPayload = eventInfo.eventPayload;
+  var listeners = this._eventListeners[provider][event];
+  if (listeners) {
+    listeners.forEach(function (listener) {
+      listener(eventPayload);
+    });
+  }
+};
+
+ProviderHelper.prototype.on = function(provider, event, listener) {
+  if (typeof this._eventListeners[provider] === 'undefined') {
+    this._eventListeners[provider] = {};
+  }
+  if (typeof this._eventListeners[provider][event] === 'undefined') {
+    this._eventListeners[provider][event] = [];
+  }
+  this._eventListeners[provider][event].push(listener);
+  this.freedom.emit("listenForEvent", {provider: provider,
+                                 event: event});
+};
+
+/**
+ * Remove all listeners registered through "on" for an event. If an event is not
+ * specified, then all listeners for the provider are removed.
+ */
+ProviderHelper.prototype.removeListeners = function(provider, event) {
+  if (typeof this._eventListeners[provider] !== 'undefined') {
+    if (event) {
+      this._eventListeners[provider][event] = [];
+    } else {
+      this._eventListeners[provider] = {};
+    }
+  }
+};
+
 ProviderHelper.prototype.createProvider = function(name, provider) {
   this.freedom.emit('create', {
     name: name,
     provider: provider
   });
 };
+
 ProviderHelper.prototype.createChannel = function(cb) {
   this.unboundCallbacks.push(cb);
   this.freedom.emit('createChannel');
 };
+
 ProviderHelper.prototype.onInitChannel = function(chanId) {
   var cb = this.unboundCallbacks.pop(); 
   cb(chanId);
 };
+
 ProviderHelper.prototype.setChannelCallback = function(chanId, cb) {
   this.chanCallbacks[chanId] = cb;
 };
+
 ProviderHelper.prototype.sendToChannel = function(chanId, msg) {
   this.freedom.emit("outToChannel", {
     chanId: chanId,
     message: msg
   });
-}
+};
+
 ProviderHelper.prototype.onInFromChannel = function(data) {
   this.chanCallbacks[data.chanId](data.message);
 };
