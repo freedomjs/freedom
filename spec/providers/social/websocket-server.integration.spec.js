@@ -73,11 +73,16 @@ describe("websocket-server integration", function() {
     var rosterUpdateLogin = false;
     runs(function() {
       socialAStatus = helper.returns[ids[0]];
-      helper.on("SocialA", "onChange", function(info) {
-        var socialBStatus = helper.returns[ids[1]];
-        expect(info.userId).toEqual(socialBStatus.userId);
-        expect(info.clients[info.userId].status).toEqual(2);
-        rosterUpdateLogin = true;
+      helper.on("SocialA", "onChange", function(info) {        
+        waitsFor("SocialB to log in", helper.hasReturned.bind(helper, ids),
+                 TIMEOUT);
+        runs(function() {
+          var socialBStatus = helper.returns[ids[1]];
+          if (info.userId === socialBStatus.userId) {
+            expect(info.clients[info.userId].status).toEqual(2);
+            rosterUpdateLogin = true;
+          }
+        });
       });
       ids[1] = helper.call("SocialB", "login", [{network: "websockets",
                                                  agent: "jasmine"}]);
