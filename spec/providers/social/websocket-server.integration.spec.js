@@ -1,4 +1,4 @@
-describe("websocket-server integration", function() {
+var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
   const TIMEOUT = 2000;
   var freedom, helper;
 
@@ -6,8 +6,8 @@ describe("websocket-server integration", function() {
     freedom = setupModule("relative://spec/helper/providers.json");
     helper = new ProviderHelper(freedom);
     freedom.on('return', helper.ret.bind(helper));
-    helper.create("SocialA", "socialWebsockets");
-    helper.create("SocialB", "socialWebsockets");
+    helper.create("SocialA", provider_name);
+    helper.create("SocialB", provider_name);
   });
   
   afterEach(function() {
@@ -136,18 +136,24 @@ describe("websocket-server integration", function() {
 
     ids[0] = helper.call("SocialA", "login", [{network: "websockets",
                                              agent: "jasmine"}]);
-    ids[1] = helper.call("SocialB", "login", [{network: "websockets",
-                                             agent: "jasmine"}]);
-    waitsFor("login", helper.hasReturned.bind(helper, ids), TIMEOUT);
+
+    waitsFor("SocialA login", helper.hasReturned.bind(helper, ids), TIMEOUT);
+
+    runs(function() {
+      ids[1] = helper.call("SocialB", "login", [{network: "websockets",
+                                                 agent: "jasmine"}]);
+    });
+
+    waitsFor("SocialB login", helper.hasReturned.bind(helper, ids), TIMEOUT);
 
     runs(function() {
       socialAStatus = helper.returns[ids[0]];
       socialBStatus = helper.returns[ids[1]];
     });
 
-    runs(checkRoster.bind(undefined, "SocialA", 2));
-    runs(checkRoster.bind(undefined, "SocialB", 3));
-
+    runs(checkRoster.bind(undefined, "SocialB", 2));
+    runs(checkRoster.bind(undefined, "SocialA", 3));
+    
     runs(function() {
       ids[4] = helper.call("SocialA", "logout", [{}]);
       ids[5] = helper.call("SocialB", "logout", [{}]);
@@ -158,4 +164,7 @@ describe("websocket-server integration", function() {
              TIMEOUT);
   });
  
-});
+};
+
+describe("websocket-server integration",
+         SOCIAL_INTEGRATION_SPEC.bind(this, "socialWebsockets"));
