@@ -193,9 +193,11 @@ ProviderHelper.prototype._on = function(eventInfo) {
   var event = eventInfo.event;
   var eventPayload = eventInfo.eventPayload;
   var listeners = this._eventListeners[provider][event];
-  listeners.forEach(function (listener) {
-    listener(eventPayload);
-  });
+  if (listeners) {
+    listeners.forEach(function (listener) {
+      listener(eventPayload);
+    });
+  }
 };
 
 ProviderHelper.prototype.on = function(provider, event, listener) {
