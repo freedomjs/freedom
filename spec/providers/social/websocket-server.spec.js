@@ -28,9 +28,7 @@ var SOCIAL_SPEC = function(manifest_url) {
       expect(status.userId).toEqual(jasmine.any(String));
       userId = status.userId;
     };
-    p.login({network: "websockets",
-             agent: "jasmine",
-             url: "http://pivotal.github.io/jasmine/",
+    p.login({ agent: "jasmine",
              interactive: false}).done(callback);
 
     waitsFor(function() {
@@ -38,8 +36,7 @@ var SOCIAL_SPEC = function(manifest_url) {
     }, TIMEOUT);
 
     runs(function logout() {
-      p.logout({network: "websockets",
-               userId: userId});
+      p.logout({userId: userId});
     });
   });
 
@@ -50,9 +47,7 @@ var SOCIAL_SPEC = function(manifest_url) {
       expect(status).not.toBe(null);
       expect(status.status).toEqual(0);
       if (logins < 5) {
-        p.login({network: "websockets",
-                 agent: "jasmine",
-                 url: "http://pivotal.github.io/jasmine/",
+        p.login({agent: "jasmine",
                  interactive: false}).done(loginCallback);
       }
     }
@@ -65,9 +60,7 @@ var SOCIAL_SPEC = function(manifest_url) {
       logins += 1;
       p.logout().done(logoutCallback);
     }
-    p.login({network: "websockets",
-             agent: "jasmine",
-             url: "http://pivotal.github.io/jasmine/",
+    p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
     waitsFor(function() {
       return logins === 5;
@@ -83,10 +76,8 @@ var SOCIAL_SPEC = function(manifest_url) {
       expect(status.status).toEqual(3);
       expect(status.userId).toEqual(jasmine.any(String));
       userId = status.userId;
-      p.login({network: "websockets",
-             agent: "jasmine",
-             url: "http://pivotal.github.io/jasmine/",
-             interactive: false}).done(secondLoginCallback);
+      p.login({agent: "jasmine",
+               interactive: false}).done(secondLoginCallback);
     }
     function secondLoginCallback(status) {
       expect(status).not.toBe(undefined);
@@ -97,9 +88,7 @@ var SOCIAL_SPEC = function(manifest_url) {
         loggedOut = true;
       });
     }
-    p.login({network: "websockets",
-             agent: "jasmine",
-             url: "http://pivotal.github.io/jasmine/",
+    p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
     waitsFor(function() {
       return loggedOut;
@@ -133,8 +122,7 @@ var SOCIAL_SPEC = function(manifest_url) {
       });
     };
 
-    p.login({network: "websockets",
-             agent: "jasmine",
+    p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
 
     waitsFor(function() {
@@ -142,32 +130,31 @@ var SOCIAL_SPEC = function(manifest_url) {
     }, TIMEOUT);
 
     runs(function logout() {
-      p.logout({network: "websockets",
-                userId: userId});
+      p.logout({userId: userId});
     });
   });
 
   it("sends message", function(){
     var rosterReturns = false;
     var messageReceived = false;
-    var userId;
+    var userId, clientId;
 
     var loginCallback = function callback(status) {
       userId = status.userId;
+      clientId = status.clientId;
       p.sendMessage(userId, "Hello World");
     };
 
     p.on("onMessage", function onMessage(message) {
       expect(message).not.toBe(undefined);
       expect(message).not.toBe(null);
-      if (message.toClientId === userId &&
+      if (message.toClientId === clientId &&
          message.message === "Hello World") {
         messageReceived = true;
       };
     });
 
-    p.login({network: "websockets",
-             agent: "jasmine",
+    p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
 
     waitsFor(function() {
@@ -175,12 +162,12 @@ var SOCIAL_SPEC = function(manifest_url) {
     }, TIMEOUT);
 
     runs(function logout() {
-      p.logout({network: "websockets",
-                userId: userId});
+      p.logout({userId: userId});
     });
   });
 
 };
 
 describe("social.ws.json", SOCIAL_SPEC.bind(this, "providers/social/websocket-server/social.ws.json"));
+describe("social.loopback.json", SOCIAL_SPEC.bind(this, "providers/social/loopback/social.loopback.json"));
 
