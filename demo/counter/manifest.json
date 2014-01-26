@@ -1,6 +1,6 @@
 {
   "name": "Counter",
-  "description": "Counter Sample FreeDOM application",
+  "description": "Counter Sample freedom.js application",
   "app": {
     "script": "counter.js"
   }
