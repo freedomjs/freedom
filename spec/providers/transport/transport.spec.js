@@ -1,5 +1,5 @@
 var TRANSPORT_SPEC = function(transportId) { return function() {
-  var TIMEOUT = 1000;
+  var TIMEOUT = 3000;
   var freedom, helper;
 
   beforeEach(function() {
