@@ -246,14 +246,23 @@ ProviderHelper.prototype.onInitChannel = function(chanId) {
 ProviderHelper.prototype.setChannelCallback = function(chanId, cb) {
   this.chanCallbacks[chanId] = cb;
 };
-
 ProviderHelper.prototype.sendToChannel = function(chanId, msg) {
   this.freedom.emit("outToChannel", {
     chanId: chanId,
     message: msg
   });
 };
-
 ProviderHelper.prototype.onInFromChannel = function(data) {
   this.chanCallbacks[data.chanId](data.message);
+};
+ProviderHelper.prototype.ab2str = function(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+};
+ProviderHelper.prototype.str2ab = function(str) {
+  var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+  var bufView = new Uint16Array(buf);
+  for (var i=0, strLen=str.length; i<strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
 };

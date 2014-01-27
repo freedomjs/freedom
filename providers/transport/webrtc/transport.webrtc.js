@@ -2,9 +2,9 @@
  * Peer 2 Peer transport provider.
  *
  */
-console.log("TransportProvider: running in worker " + self.location.href);
 
 function TransportProvider() {
+  console.log("TransportProvider: running in worker " + self.location.href);
   this.name = null;
   this.pc = freedom['core.sctp-peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));

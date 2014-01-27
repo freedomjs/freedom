@@ -137,7 +137,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
           }.bind(this));
     } else if (json.candidate) {
       // Add remote ice candidate.
-      console.log("Adding ice candidate: " + JSON.stringify(json.candidate));
+      console.log(this.peerName + ": Adding ice candidate: " + JSON.stringify(json.candidate));
       var ice_candidate = new RTCIceCandidate(json.candidate);
       this._pc.addIceCandidate(ice_candidate);
     } else {

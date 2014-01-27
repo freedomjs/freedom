@@ -132,6 +132,9 @@ SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
     console.error("No valid data to send has been provided.", sendInfo);
     return;
   }
+  //DEBUG
+  //objToSend = new ArrayBuffer(4);
+  //DEBUG
   this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
 
