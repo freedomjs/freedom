@@ -1,5 +1,5 @@
 var FILES = {
-  preamble: ['src/libs/*.js', 'src/util/preamble.js'],
+  preamble: ['src/util/preamble.js'],
   postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 

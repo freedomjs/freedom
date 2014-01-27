@@ -45,6 +45,7 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
   });
 
   it("sends data", function() {
+    var testString = "Hi";
     var ids = {};
     var signals = [];
     var chanId1 = undefined;
@@ -77,7 +78,7 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
         signals.push(msg);
         helper.sendToChannel(chanId1, msg);
       });
-      var sendData = helper.str2ab("HI");
+      var sendData = helper.str2ab(testString);
       ids[0] = helper.call("t1", "setup", ["t1", chanId1]);
       ids[1] = helper.call("t2", "setup", ["t2", chanId2]);
       ids[2] = helper.call("t1", "send", ["tag", sendData]);
@@ -87,10 +88,13 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
     }, TIMEOUT);
 
     runs(function() {
-      console.log(result);
       var resultStr = helper.ab2str(result.data);
-      console.log(resultStr);
       expect(signals.length).toBeGreaterThan(0);
+      expect(result.data instanceof ArrayBuffer).toBe(true);
+      expect(result.tag).toEqual("tag");
+      //expect(resultStr).toEqual(testString);
+      console.log(result);
+      console.log(resultStr);
     });
 
   });
