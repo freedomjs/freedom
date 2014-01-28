@@ -30,6 +30,21 @@ var createTestPort = function(id) {
   return port;
 };
 
+var mockIface = function(props) {
+  var iface = {};
+  props.forEach(function(p) {
+    iface[p[0]] = function(r) {
+      var d = fdom.proxy.Deferred();
+      d.resolve(r);
+      return d.promise();
+    }.bind({}, p[1]);
+    spyOn(iface, p[0]).andCallThrough();
+  });
+  return function() {
+    return iface;
+  };
+};
+
 var createProxyFor = function(app, api) {
   setupResolvers();
   var global = {

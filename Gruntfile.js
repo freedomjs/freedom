@@ -8,7 +8,10 @@ var FILES = {
     'interface/*.js', 
     'providers/core/*.js',
   ],
-  jasminehelper: ['spec/util.js'],
+  jasminehelper: [
+    'spec/util.js',
+    'providers/storage/isolated/storage.isolated.js',
+  ],
   srcprovider: [
     'providers/social/websocket-server/*.js',
     'providers/storage/**/*.js',
