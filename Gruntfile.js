@@ -21,13 +21,8 @@ var FILES = {
     'spec/providers/storage/**/*.js',
   ]
 };
-var WEBSERVER_PROCESS = null;
 
 module.exports = function(grunt) {
-  var saucekey = null;
-  if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
-    saucekey = process.env.SAUCE_ACCESS_KEY;
-  }
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     jasmine: {
@@ -35,14 +30,6 @@ module.exports = function(grunt) {
         src: FILES.src.concat(FILES.jasminehelper), 
         options: {
           specs: FILES.specsrc,
-          keepRunner: false,
-        }
-      },
-      freedomKeepRunner: {
-        src: FILES.src.concat(FILES.jasminehelper), 
-        options: {
-          specs: FILES.specsrc,
-          keepRunner: true,
         }
       },
       coverage: {
@@ -56,20 +43,6 @@ module.exports = function(grunt) {
           }
         }
       },
-    },
-    'saucelabs-jasmine': {
-      all: {
-        options: {
-          username: 'daemonf',
-          key: saucekey,
-          urls: ['http://localhost:8000/_SpecRunner.html'],
-          browsers: [
-            {
-              browserName: 'chrome',
-            }
-          ]
-        } 
-      }
     },
     jshint: {
       beforeconcat: FILES.src,
@@ -143,30 +116,11 @@ module.exports = function(grunt) {
     });
   });
 
-  grunt.registerTask('spawn-web-server', "Spawn a python webserver to serve the root dir", function(){
-    WEBSERVER_PROCESS = grunt.util.spawn({
-      cmd: 'python',
-      args: ['-m', 'SimpleHTTPServer'],
-    }, function done(error, result, code) {
-      grunt.log.ok('Failed to execute shell script:'+
-        "\n\t"+error+
-        "\n\tResult: "+result+
-        "\n\tCode: "+code);
-    });
-  });
-
-  grunt.registerTask('kill-web-server', "Kill the web server", function(){
-    if(WEBSERVER_PROCESS != null){
-      WEBSERVER_PROCESS.kill();
-    }
-  });
-
   // Default tasks.
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
     'jasmine:freedom',
-    'grunt-saucelabs',
     'jshint:afterconcat',
     'jshint:providers',
     'jshint:demo',
@@ -176,12 +130,6 @@ module.exports = function(grunt) {
     'concat',
     'jasmine:coverage',
     'coveralls:report'
-  ]);
-  grunt.registerTask('saucelabs', [
-    'jasmine:freedomKeepRunner',
-    'spawn-web-server',
-    'saucelabs-jasmine',
-    'kill-web-server',
   ]);
   grunt.registerTask('default', ['freedom']);
 };
