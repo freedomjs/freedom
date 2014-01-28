@@ -166,7 +166,6 @@ module.exports = function(grunt) {
     'jshint:beforeconcat',
     'concat',
     'jasmine:freedom',
-    'grunt-saucelabs',
     'jshint:afterconcat',
     'jshint:providers',
     'jshint:demo',
