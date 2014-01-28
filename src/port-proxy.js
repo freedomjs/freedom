@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, eachProp */
+/*globals fdom:true */
 /*jslint indent:2, white:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -16,7 +16,7 @@ fdom.port = fdom.port || {};
 fdom.port.Proxy = function(interfaceCls) {
   this.id = fdom.port.Proxy.nextId();
   this.interfaceCls = interfaceCls;
-  handleEvents(this);
+  fdom.util.handleEvents(this);
   
   this.ifaces = {};
   this.closeHandlers = {};
@@ -64,7 +64,8 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
         fdom.debug.warn('Could not deliver message, no such interface: ' + message.to);
       }
     } else {
-      eachProp(this.emits, function(iface) {
+      var msg = message.message;
+      fdom.util.eachProp(this.emits, function(iface) {
         iface('message', message.message);
       });
     }
@@ -99,7 +100,7 @@ fdom.port.Proxy.prototype.getProxyInterface = function() {
 
   func.close = function(iface) {
     if (iface) {
-      eachProp(this.ifaces, function(candidate, id) {
+      fdom.util.eachProp(this.ifaces, function(candidate, id) {
         if (candidate === iface) {
           this.teardown(id);
           this.emit(this.emitChannel, {
@@ -122,7 +123,7 @@ fdom.port.Proxy.prototype.getProxyInterface = function() {
       return;
     }
 
-    eachProp(this.ifaces, function(candidate, id) {
+    fdom.util.eachProp(this.ifaces, function(candidate, id) {
       if (candidate === iface) {
         if (this.closeHandlers[id]) {
           this.closeHandlers[id].push(handler);
@@ -139,7 +140,7 @@ fdom.port.Proxy.prototype.getProxyInterface = function() {
       this.on('error', iface);
       return;
     }
-    eachProp(this.ifaces, function(candidate, id) {
+    fdom.util.eachProp(this.ifaces, function(candidate, id) {
       if (candidate === iface) {
         if (this.errorHandlers[id]) {
           this.errorHandlers[id].push(handler);
@@ -196,7 +197,7 @@ fdom.port.Proxy.prototype.doEmit = function(to, msg, all) {
 fdom.port.Proxy.prototype.teardown = function(id) {
   delete this.emits[id];
   if (this.closeHandlers[id]) {
-    eachProp(this.closeHandlers[id], function(prop) {
+    fdom.util.eachProp(this.closeHandlers[id], function(prop) {
       prop();
     });
   }
@@ -213,7 +214,7 @@ fdom.port.Proxy.prototype.teardown = function(id) {
  */
 fdom.port.Proxy.prototype.error = function(id, message) {
   if (id && this.errorHandlers[id]) {
-    eachProp(this.errorHandlers[id], function(prop) {
+    fdom.util.eachProp(this.errorHandlers[id], function(prop) {
       prop(message);
     });
   } else if (!id) {
@@ -234,7 +235,7 @@ fdom.port.Proxy.prototype.doClose = function() {
     });
   }
 
-  eachProp(this.emits, function(emit, id) {
+  fdom.util.eachProp(this.emits, function(emit, id) {
     this.teardown(id);
   }.bind(this));
 

@@ -5,9 +5,21 @@
     "script": "providers.js"
   },
   "dependencies": {
-    "sharedStorage": {
+    "storage.shared": {
       "url": "../../providers/storage/shared/storage.shared.json",
       "api": "storage"
+    },
+    "storage.isolated": {
+      "url": "../../providers/storage/isolated/storage.isolated.json",
+      "api": "storage"
+    },
+    "transport.webrtc": {
+      "url": "../../providers/transport/webrtc/transport.webrtc.json",
+      "api": "transport"
+    },
+    "socialWebsockets": {
+      "url": "../../providers/social/websocket-server/social.ws.json",
+      "api": "social"
     }
   }
 }

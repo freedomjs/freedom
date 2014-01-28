@@ -44,16 +44,3 @@ We welcome contributions and pull requests! A set of current issues are maintain
 Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict that a pull request will fail if running ```grunt``` locally fails.
 
 Internal documentation for the library is also [automatically generated](https://homes.cs.washington.edu/~wrs/tools/doc) and provides a reasonable starting point for understanding how the internals of freedom.js work together.
-
-Testting via SauceLabs
-----------------------
-
-To test your code via SauceLabs' OpenSauce platform, you must define a couple environment variables:
-
-- SAUCE_USER_NAME must be set to your SauceLabs account name
-- SAUCE_ACCESS_KEY must be your API key which is at the bottom of every Sauce labs web page when logged in
-
-Then run 'grunt saucelabs'
-
-You must have python installed for the helper webserver to work.
-

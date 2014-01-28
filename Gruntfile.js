@@ -1,8 +1,9 @@
 var FILES = {
-  preamble: ['src/libs/*.js', 'src/util/preamble.js'],
+  preamble: ['src/util/preamble.js'],
   postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 
+    'src/link/*.js',
     'src/proxy/*.js', 
     'interface/*.js', 
     'providers/core/*.js',
@@ -13,19 +14,19 @@ var FILES = {
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specsrc: ['spec/src/**/*.spec.js', 'spec/providers/core/**/*.spec.js', 'spec/providers/storage/**/*.spec.js'],
-  specproviders: ['spec/providers/transport/**/*.spec.js'],
+  specsrc: [
+    'spec/src/**/*.spec.js', 
+    'spec/providers/social/**/*.spec.js', 
+    'spec/providers/core/**/*.spec.js', 
+    'spec/providers/storage/**/*.js',
+  ]
 };
+var WEBSERVER_PROCESS = null;
 
 module.exports = function(grunt) {
-  var webserverprocess = null;
-  var saucekey = null;  // Sauce User and API key must be provided by environment
-  var sauceuser = null; // variables so that they are not made publicly available.
+  var saucekey = null;
   if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
     saucekey = process.env.SAUCE_ACCESS_KEY;
-  }
-  if (typeof process.env.SAUCE_USER_NAME !== "undefined") {
-    sauceuser = process.env.SAUCE_USER_NAME;
   }
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -59,7 +60,7 @@ module.exports = function(grunt) {
     'saucelabs-jasmine': {
       all: {
         options: {
-          username: sauceuser,
+          username: 'daemonf',
           key: saucekey,
           urls: ['http://localhost:8000/_SpecRunner.html'],
           browsers: [
@@ -142,22 +143,21 @@ module.exports = function(grunt) {
     });
   });
 
-  // Spawn and kill a web server to help with remote saucelabs testing
   grunt.registerTask('spawn-web-server', "Spawn a python webserver to serve the root dir", function(){
-    webserverprocess = grunt.util.spawn({
+    WEBSERVER_PROCESS = grunt.util.spawn({
       cmd: 'python',
       args: ['-m', 'SimpleHTTPServer'],
     }, function done(error, result, code) {
-      grunt.log.error('Failed to execute shell script:'+
+      grunt.log.ok('Failed to execute shell script:'+
         "\n\t"+error+
         "\n\tResult: "+result+
         "\n\tCode: "+code);
-      grunt.log.ok("\nIGNORE THIS ERROR IF YOU CAN ACCESS http://localhost:8000/_SpecRunner.html");
     });
   });
+
   grunt.registerTask('kill-web-server', "Kill the web server", function(){
-    if(webserverprocess != null){
-      webserverprocess.kill();
+    if(WEBSERVER_PROCESS != null){
+      WEBSERVER_PROCESS.kill();
     }
   });
 

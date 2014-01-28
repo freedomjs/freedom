@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, eachProp, Blob, ArrayBuffer */
+/*globals fdom:true, Blob, ArrayBuffer */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -11,27 +11,28 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       emitter = null,
       reqId = 0;
 
-  eachProp(def, function(prop, name) {
+  fdom.util.eachProp(def, function(prop, name) {
     switch(prop.type) {
     case 'method':
       this[name] = function() {
         // Note: inflight should be registered before message is passed
         // in order to prepare for synchronous in-window pipes.
-        var deferred = fdom.proxy.Deferred();
-        inflight[reqId] = deferred;
+        var deferred = fdom.proxy.Deferred(),
+            thisReq = reqId;
+        reqId += 1;
+        inflight[thisReq] = deferred;
         emit({
           action: 'method',
           type: name,
-          reqId: reqId,
+          reqId: thisReq,
           value: fdom.proxy.conform(prop.value, arguments)
         });
-        reqId += 1;
         return deferred.promise();
       };
       break;
     case 'event':
       if(!events) {
-        handleEvents(this);
+        fdom.util.handleEvents(this);
         emitter = this.emit;
         delete this.emit;
         events = {};
@@ -62,7 +63,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
         delete inflight[msg.reqId];
         deferred.resolve(msg.value);
       } else {
-        console.log('Dropped response message with id ' + msg.reqId);
+        fdom.debug.warn('Dropped response message with id ' + msg.reqId);
       }
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
@@ -94,9 +95,22 @@ fdom.proxy.conform = function(template, value) {
     // TODO(willscott): Allow removal if sandboxing enforces this.
     return JSON.parse(JSON.stringify(value));
   case 'blob':
-    return value instanceof Blob ? value : new Blob([]);
+    if (value instanceof Blob) {
+      return value;
+    } else {
+      fdom.debug.warn('conform expecting Blob, sees ' + (typeof value));
+      return new Blob([]);
+    }
+    break;
   case 'buffer':
-    return value instanceof ArrayBuffer ? value : new ArrayBuffer(0);
+    if (value instanceof ArrayBuffer) {  
+      return value;
+    } else {
+      fdom.debug.warn('conform expecting ArrayBuffer, sees ' + (typeof value));
+      //TODO(ryscheng): bug in Chrome where passing Array Buffers over iframes loses this
+      return new ArrayBuffer(0);
+    }
+    break;
   case 'data':
     // TODO(willscott): should be opaque to non-creator.
     return value;
@@ -129,7 +143,7 @@ fdom.proxy.conform = function(template, value) {
     return val;
   } else if (typeof template === 'object') {
     val = {};
-    eachProp(template, function(prop, name) {
+    fdom.util.eachProp(template, function(prop, name) {
       if (value[name]) {
         val[name] = fdom.proxy.conform(prop, value[name]);
       }

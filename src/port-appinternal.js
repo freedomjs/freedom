@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, mixin, eachProp */
+/*globals fdom:true */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -21,7 +21,7 @@ fdom.port.AppInternal = function(manager) {
   this.pendingPorts = 0;
   this.requests = {};
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -37,7 +37,7 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
     }
   } else if (flow === 'default' && !this.appId) {
     // Recover the app:
@@ -172,7 +172,7 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
   }
   
   if (manifest.dependencies) {
-    eachProp(manifest.dependencies, function(desc, name) {
+    fdom.util.eachProp(manifest.dependencies, function(desc, name) {
       obj = {
         name: name
       };

@@ -22,7 +22,7 @@ function SocialProvider() {
   console.log("Loopback Social provider");
   //Populate a fake roster
   this.roster = {
-    USER_ID: {
+    "Test User": {
       userId: USER_ID,
       name: USER_ID,
       clients: {'Test User.0': {
@@ -114,16 +114,30 @@ SocialProvider.prototype.getRoster = function(continuation) {
 };
 
 // Send a message to someone.
-// All messages will be echoed back to self as if sent by 'Other User'
+// All messages not sent to USER_ID will be echoed back to self as if
+// sent by 'Other User'
 SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
-  this.dispatchEvent('onMessage', {
-    fromUserId: "Other User",
-    fromClientId: "Other User.0",
-    toUserId: USER_ID,
-    toClientId: CLIENT_ID,
-    network: NETWORK_ID,
-    message: msg
-  });
+  var message;
+  if (to === USER_ID) {
+    message = {
+      fromUserId: USER_ID,
+      fromClientId: CLIENT_ID,
+      toUserId: USER_ID,
+      toClientId: CLIENT_ID,
+      network: NETWORK_ID,
+      message: msg
+    };
+  } else {
+    message = {
+      fromUserId: "Other User",
+      fromClientId: "Other User.0",
+      toUserId: USER_ID,
+      toClientId: CLIENT_ID,
+      network: NETWORK_ID,
+      message: msg
+    };
+  }
+  this.dispatchEvent('onMessage', message);
   continuation();
 };
 

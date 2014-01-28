@@ -1,23 +1,23 @@
-/*globals fdom:true, handleEvents, mixin, getBlob, forceAppContext, getURL */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
-fdom.port = fdom.port || {};
+fdom.link = fdom.link || {};
 
 /**
  * A port providing message transport between two freedom contexts via iFrames.
- * @class Frame
+ * @class Link.Frame
  * @extends Port
  * @uses handleEvents
  * @constructor
  */
-fdom.port.Frame = function() {
+fdom.link.Frame = function() {
   this.id = 'Frame ' + Math.random();
   this.config = {};
   this.src = null;
 
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
@@ -25,7 +25,7 @@ fdom.port.Frame = function() {
  * @method start
  * @private
  */
-fdom.port.Frame.prototype.start = function() {
+fdom.link.Frame.prototype.start = function() {
   if (this.config.appContext) {
     this.setupListener();
     this.src = 'in';
@@ -40,7 +40,7 @@ fdom.port.Frame.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.port.Frame.prototype.stop = function() {
+fdom.link.Frame.prototype.stop = function() {
   // Function is determined by setupListener or setupFrame as appropriate.
 };
 
@@ -49,7 +49,7 @@ fdom.port.Frame.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.port.Frame.prototype.toString = function() {
+fdom.link.Frame.prototype.toString = function() {
   return "[" + this.id + "]";
 };
 
@@ -58,7 +58,7 @@ fdom.port.Frame.prototype.toString = function() {
  * freedom.js context.
  * @method setupListener
  */
-fdom.port.Frame.prototype.setupListener = function() {
+fdom.link.Frame.prototype.setupListener = function() {
   var onMsg = function(msg) {
     if (msg.data.src !== 'in') {
       this.emitMessage(msg.data.flow, msg.data.message);
@@ -79,7 +79,7 @@ fdom.port.Frame.prototype.setupListener = function() {
  * @param {String} flow the flow to emit the message on.
  * @param {Object} messgae The message to emit.
  */
-fdom.port.Frame.prototype.emitMessage = function(flow, message) {
+fdom.link.Frame.prototype.emitMessage = function(flow, message) {
   if (flow === 'control' && this.controlChannel) {
     flow = this.controlChannel;
   }
@@ -90,7 +90,7 @@ fdom.port.Frame.prototype.emitMessage = function(flow, message) {
  * Set up an iFrame with an isolated freedom.js context inside.
  * @method setupFrame
  */
-fdom.port.Frame.prototype.setupFrame = function() {
+fdom.link.Frame.prototype.setupFrame = function() {
   var frame, onMsg;
   frame = this.makeFrame(this.config.src, this.config.inject);  
   
@@ -127,7 +127,7 @@ fdom.port.Frame.prototype.setupFrame = function() {
  * painful enough that this mode of execution can be valuable for debugging.
  * @method makeFrame
  */
-fdom.port.Frame.prototype.makeFrame = function(src, inject) {
+fdom.link.Frame.prototype.makeFrame = function(src, inject) {
   var frame = document.createElement('iframe'),
       extra = '',
       loader,
@@ -142,9 +142,9 @@ fdom.port.Frame.prototype.makeFrame = function(src, inject) {
       '"></script>';
   }
   loader = '<html>' + extra + '<script src="' +
-      forceAppContext(src) + '"></script></html>';
-  blob = getBlob(loader, 'text/html');
-  frame.src = getURL(blob);
+      fdom.util.forceAppContext(src) + '"></script></html>';
+  blob = fdom.util.getBlob(loader, 'text/html');
+  frame.src = fdom.util.getURL(blob);
 
   return frame;
 };
@@ -156,11 +156,11 @@ fdom.port.Frame.prototype.makeFrame = function(src, inject) {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.port.Frame.prototype.onMessage = function(flow, message) {
+fdom.link.Frame.prototype.onMessage = function(flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      mixin(this.config, message.config);
+      fdom.util.mixin(this.config, message.config);
       this.start();
     }
   } else {

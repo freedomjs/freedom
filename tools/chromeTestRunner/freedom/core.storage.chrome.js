@@ -1,6 +1,6 @@
 var Storage_chromeStorageLocal = function(app) {
   this.app = app;
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 Storage_chromeStorageLocal.prototype.keys = function(continuation) {

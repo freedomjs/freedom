@@ -1,4 +1,4 @@
-/*globals fdom:true, getId */
+/*globals fdom:true */
 /*jslint indent:2,white:true,sloppy:true,sub:true */
 
 
@@ -30,7 +30,7 @@ Core_unprivileged.contextId = undefined;
 Core_unprivileged.prototype.createChannel = function(continuation) {
   var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface),
       deferred = fdom.proxy.Deferred(),
-      id = getId(),
+      id = fdom.util.getId(),
       chan = this.getChannel(proxy);
   this.manager.setup(proxy);
 
