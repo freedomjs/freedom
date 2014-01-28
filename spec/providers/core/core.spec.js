@@ -8,8 +8,7 @@ describe("Core Provider Integration", function() {
     var global = {
       console: {
         log: function() {}
-      },
-      document: document
+      }
     };
   
     setupResolvers();
@@ -17,7 +16,7 @@ describe("Core Provider Integration", function() {
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
-    freedom = fdom.setup(global, undefined, {
+    freedom = setup(global, undefined, {
       manifest: "relative://spec/helper/channel.json",
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
@@ -85,7 +84,7 @@ describe("Core Provider Integration", function() {
 describe("Core Provider Channels", function() {
   var manager, hub, global, source, core;
   beforeEach(function() {
-    global = {freedom: {}, document: document};
+    global = {freedom: {}};
     hub = new fdom.Hub();
     manager = new fdom.port.Manager(hub);
     hub.emit('config', {

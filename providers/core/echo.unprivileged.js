@@ -1,4 +1,4 @@
-/*globals fdom:true */
+/*globals fdom:true, handleEvents */
 /*jslint indent:2,white:true,sloppy:true */
 
 /**
@@ -12,7 +12,7 @@
 var Echo_unprivileged = function(app) {
   fdom.debug.log('Echo Created!');
   this.app = app;
-  fdom.util.handleEvents(this);
+  handleEvents(this);
 
   // The Core object for managing channels.
   this.app.once('core', function(Core) {

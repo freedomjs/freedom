@@ -7,15 +7,14 @@ describe("freedom", function() {
     var global = {
       console: {
         log: function() {}
-      },
-      document: document
+      }
     };
     setupResolvers();
     
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/');
     dir = path.substr(0, dir_idx) + '/';
-    freedom = fdom.setup(global, undefined, {
+    freedom = setup(global, undefined, {
       manifest: "relative://spec/helper/manifest.json",
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
@@ -56,11 +55,9 @@ describe("freedom", function() {
     script.innerText = "{}";
     document.body.appendChild(script);
 
-    var global = {
-      document: document
-    };
+    var global = {};
 
-    freedom = fdom.setup(global, undefined, {
+    freedom = setup(global, undefined, {
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src,
@@ -78,14 +75,12 @@ describe("freedom", function() {
     script.innerText = "var x = 2; //this is not json";
     document.body.appendChild(script);
 
-    var global = {
-      document: document
-    };
+    var global = {};
     freedomcfg = function() {
       spyOn(fdom.debug, 'warn');
     }
 
-    freedom = fdom.setup(global, undefined, {
+    freedom = setup(global, undefined, {
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src,

@@ -11,7 +11,7 @@
  */
 var Storage_unprivileged = function(app) {
   this.app = app;
-  fdom.util.handleEvents(this);
+  handleEvents(this);
 };
 
 /**

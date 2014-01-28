@@ -11,11 +11,12 @@ describe("freedom", function() {
     };
   
     setupResolvers();  
+    iac = isAppContext;
 
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
-    freedom = fdom.setup(global, undefined, {
+    freedom = setup(global, undefined, {
       'isApp': true
     });
   });

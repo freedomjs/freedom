@@ -1,15 +1,9 @@
-/*globals fdom:true, XMLHttpRequest, crypto */
-/*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-
 /**
  * Utility method used within the freedom Library.
  * @class util
  * @static
  */
-fdom.util = {};
+var Util = {};
 
 
 /**
@@ -18,7 +12,7 @@ fdom.util = {};
  * @method eachReverse
  * @static
  */
-fdom.util.eachReverse = function(ary, func) {
+function eachReverse(ary, func) {
   if (ary) {
     var i;
     for (i = ary.length - 1; i > -1; i -= 1) {
@@ -27,15 +21,15 @@ fdom.util.eachReverse = function(ary, func) {
       }
     }
   }
-};
+}
 
 /**
  * @method hasProp
  * @static
  */
-fdom.util.hasProp = function(obj, prop) {
+function hasProp(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
-};
+}
 
 /**
  * Cycles over properties in an object and calls a function for each
@@ -44,7 +38,7 @@ fdom.util.hasProp = function(obj, prop) {
  * @method eachProp
  * @static
  */
-fdom.util.eachProp = function(obj, func) {
+function eachProp(obj, func) {
   var prop;
   for (prop in obj) {
     if (obj.hasOwnProperty(prop)) {
@@ -53,7 +47,7 @@ fdom.util.eachProp = function(obj, func) {
       }
     }
   }
-};
+}
 
 /**
  * Simple function to mix in properties from source into target,
@@ -64,30 +58,29 @@ fdom.util.eachProp = function(obj, func) {
  * @method mixin
  * @static
  */
-fdom.util.mixin = function(target, source, force) {
+function mixin(target, source, force) {
   if (source) {
-    fdom.util.eachProp(source, function (value, prop) {
-      if (force || !fdom.util.hasProp(target, prop)) {
+    eachProp(source, function (value, prop) {
+      if (force || !hasProp(target, prop)) {
         target[prop] = value;
       }
     });
   }
   return target;
-};
+}
 
 /**
  * Get a unique ID.
  * @method getId
  * @static
  */
-fdom.util.getId = function() {
+function getId() {
   var guid = 'guid',
-      domain = 12,
-      buffer;
+      domain = 12;
   if (typeof crypto === 'object') {
-    buffer = new Uint8Array(domain);
+    var buffer = new Uint8Array(domain);
     crypto.getRandomValues(buffer);
-    fdom.util.eachReverse(buffer, function(n) {
+    eachReverse(buffer, function(n) {
       guid += '-' + n;
     });
   } else {
@@ -98,7 +91,7 @@ fdom.util.getId = function() {
   }
 
   return guid;
-};
+}
 
 /**
  * Add 'on' and 'emit' methods to an object, which act as a light weight
@@ -106,7 +99,7 @@ fdom.util.getId = function() {
  * @class handleEvents
  * @static
  */
-fdom.util.handleEvents = function(obj) {
+function handleEvents(obj) {
   var eventState = {
     listeners: {},
     conditional: [],
@@ -129,7 +122,7 @@ fdom.util.handleEvents = function(obj) {
       return [];
     }
 
-    for (i = list.length - 1; i >= 0; i -= 1) {
+    for (i = list.length - 1; i >= 0; i--) {
       if (predicate(list[i])) {
         ret.push(list.splice(i, 1));
       }
@@ -177,30 +170,29 @@ fdom.util.handleEvents = function(obj) {
    * @param {Object} data The payload of the event.
    */
   obj['emit'] = function(type, data) {
-    var i, queue;
+    var i;
     if (this.listeners[type]) {
-      for (i = 0; i < this.listeners[type].length; i += 1) {
+      for (i = 0; i < this.listeners[type].length; i++) {
         if (this.listeners[type][i](data) === false) {
           return;
         }
       }
     }
     if (this.oneshots[type]) {
-      queue = this.oneshots[type];
-      this.oneshots[type] = [];
-      for (i = 0; i < queue.length; i += 1) {
-        queue[i](data);
+      for (i = 0; i < this.oneshots[type].length; i++) {
+        this.oneshots[type][i](data);
       }
+      this.oneshots[type] = [];
     }
-    for (i = 0; i < this.conditional.length; i += 1) {
+    for (i = 0; i < this.conditional.length; i++) {
       if (this.conditional[i][0](type, data)) {
         this.conditional[i][1](data);
       }
     }
-    for (i = this.onceConditional.length - 1; i >= 0; i -= 1) {
+    for (i = this.onceConditional.length - 1; i >= 0; i--) {
       if (this.onceConditional[i][0](type, data)) {
-        queue = this.onceConditional.splice(i, 1);
-        queue[0][1](data);
+        var cond = this.onceConditional.splice(i, 1);
+        cond[0][1](data);
       }
     }
   }.bind(eventState);
@@ -242,42 +234,17 @@ fdom.util.handleEvents = function(obj) {
       });
     }
   }.bind(eventState);
-};
+}
 
 /**
  * When run without a window, or specifically requested.
- * Note: Declaration can be redefined in forceAppContext below.
  * @method isAppContext
  * @for util
  * @static
  */
-fdom.util.isAppContext=function() {
+function isAppContext() {
   return (typeof window === 'undefined');
-};
-
-/**
- * Provide a version of src where the 'isAppContext' function will return true.
- * Used for creating app contexts which may not be able to determine that they
- * need to start up as applications by themselves.
- * @method forceAppContext
- * @static
- */
-fdom.util.forceAppContext = function(src) {
-  var declaration = fdom.util.isAppContext.name + "=function()",
-      definition = " { return true; }",
-      idx = src.indexOf(declaration),
-      source,
-      blob;
-  if (idx === -1) {
-    fdom.debug.warn('Unable to force App Context, source is in unexpected condition.');
-    return;
-  }
-  source = src.substr(0, idx + declaration.length) + definition +
-      '|| function()' +
-      src.substr(idx + declaration.length);
-  blob = fdom.util.getBlob(source, 'text/javascript');
-  return fdom.util.getURL(blob);
-};
+}
 
 /**
  * Get a Blob object of a string.
@@ -286,7 +253,7 @@ fdom.util.forceAppContext = function(src) {
  * @method getBlob
  * @static
  */
-fdom.util.getBlob = function(data, type) {
+function getBlob(data, type) {
   if (typeof Blob !== 'function' && typeof WebKitBlobBuilder !== 'undefined') {
     var builder = new WebKitBlobBuilder();
     builder.append(data);
@@ -294,7 +261,7 @@ fdom.util.getBlob = function(data, type) {
   } else {
     return new Blob([data], {type: type});
   }
-};
+}
 
 /**
  * Get a URL of a blob object for inclusion in a frame.
@@ -303,13 +270,37 @@ fdom.util.getBlob = function(data, type) {
  * @method getURL
  * @static
  */
-fdom.util.getURL = function(blob) {
+function getURL(blob) {
   if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
     return webkitURL.createObjectURL(blob);
   } else {
     return URL.createObjectURL(blob);
   }
-};
+}
+
+/**
+ * Provide a version of src where the 'isAppContext' function will return true.
+ * Used for creating app contexts which may not be able to determine that they
+ * need to start up as applications by themselves.
+ * @method forceAppContext
+ * @static
+ */
+function forceAppContext(src) {
+  var declaration = "function " + isAppContext.name + "()",
+      definition = " { return true; }",
+      idx = src.indexOf(declaration),
+      source,
+      blob;
+  if (idx === -1) {
+    fdom.debug.warn('Unable to force App Context, source has been mangled.');
+    return;
+  }
+  source = src.substr(0, idx + declaration.length) + definition +
+      " function " + isAppContext.name + '_()' +
+      src.substr(idx + declaration.length);
+  blob = getBlob(source, 'text/javascript');
+  return getURL(blob);
+}
 
 /**
  * When running in a priviledged context, honor a global
@@ -318,7 +309,7 @@ fdom.util.getURL = function(blob) {
  * @param {Boolean} force Advertise even if not in a priviledged context.
  * @static
  */
-fdom.util.advertise = function(force) {
+function advertise(force) {
   // TODO: Determine a better mechanism than this whitelisting.
   if ((location.protocol === 'chrome-extension:' ||
        location.protocol === 'chrome:' ||
@@ -326,13 +317,13 @@ fdom.util.advertise = function(force) {
       typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
-};
+}
 
 /**
  * Find all scripts on the given page.
  * @method scripts
  * @static
  */
-fdom.util.scripts = function(global) {
-  return global.document.getElementsByTagName('script');
-};
+function scripts() {
+    return document.getElementsByTagName('script');
+}

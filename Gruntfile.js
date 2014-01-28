@@ -1,9 +1,8 @@
 var FILES = {
-  preamble: ['src/util/preamble.js'],
+  preamble: ['src/libs/*.js', 'src/util/preamble.js'],
   postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 
-    'src/link/*.js',
     'src/proxy/*.js', 
     'interface/*.js', 
     'providers/core/*.js',
@@ -14,12 +13,8 @@ var FILES = {
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specsrc: [
-    'spec/src/**/*.spec.js', 
-    'spec/providers/social/**/*.spec.js', 
-    'spec/providers/core/**/*.spec.js', 
-    'spec/providers/storage/**/*.js',
-  ]
+  specsrc: ['spec/src/**/*.spec.js', 'spec/providers/core/**/*.spec.js', 'spec/providers/storage/**/*.spec.js'],
+  specproviders: ['spec/providers/transport/**/*.spec.js'],
 };
 
 module.exports = function(grunt) {
