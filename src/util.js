@@ -320,10 +320,14 @@ fdom.util.getURL = function(blob) {
  */
 fdom.util.advertise = function(force) {
   // TODO: Determine a better mechanism than this whitelisting.
-  if ((location.protocol === 'chrome-extension:' ||
-       location.protocol === 'chrome:' ||
-      location.protocol == 'resource:' || force) &&
-      typeof freedomcfg !== "undefined") {
+  if (typeof location !== 'undefined') {
+    if ((location.protocol === 'chrome-extension:' ||
+        location.protocol === 'chrome:' ||
+        location.protocol == 'resource:' || force) &&
+        typeof freedomcfg !== "undefined") {
+      freedomcfg(fdom.apis.register.bind(fdom.apis));
+    }
+  } else if (force && typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
 };

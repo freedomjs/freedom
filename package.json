@@ -32,5 +32,8 @@
   "scripts": {
     "test": "grunt freedom coverage --verbose",
     "preinstall": "make"
+  },
+  "dependencies": {
+    "webworker-threads": "~0.4.9"
   }
 }

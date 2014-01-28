@@ -22,6 +22,8 @@ sources.forEach(function(dir) {
 });
 
 module.exports.freedom = fdom.setup(global, undefined, {
-  portType: 'nodeVM'
+  portType: 'Node',
+  isApp: false,
+  stayLocal: true
 });
 delete global.fdom;
