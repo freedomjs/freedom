@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents, eachProp */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -15,7 +15,7 @@ fdom.port = fdom.port || {};
  */
 fdom.port.Provider = function(def) {
   this.id = fdom.port.Proxy.nextId();
-  handleEvents(this);
+  fdom.util.handleEvents(this);
   
   this.definition = def;
   this.synchronous = false;
@@ -54,6 +54,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
     if (message.type === 'close' && message.to) {
       delete this.providerInstances[message.to];
     } else if (message.to && this.providerInstances[message.to]) {
+      message.message.to = message.to;
       this.providerInstances[message.to](message.message);
     } else if (message.to && message.message && message.message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
@@ -106,7 +107,7 @@ fdom.port.Provider.prototype.getInterface = function() {
       }.bind(this)
     };
 
-    eachProp(this.definition, function(prop, name) {
+    fdom.util.eachProp(this.definition, function(prop, name) {
       switch(prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
@@ -133,7 +134,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
 
   func.close = function(iface) {
     if (iface) {
-      eachProp(this.ifaces, function(candidate, id) {
+      fdom.util.eachProp(this.ifaces, function(candidate, id) {
         if (candidate === iface) {
           this.teardown(id);
           this.emit(this.emitChannel, {
@@ -156,7 +157,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
       return;
     }
 
-    eachProp(this.ifaces, function(candidate, id) {
+    fdom.util.eachProp(this.ifaces, function(candidate, id) {
       if (candidate === iface) {
         if (this.handlers[id]) {
           this.handlers[id].push(handler);
@@ -185,7 +186,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
   var instance = new this.providerCls(),
       events = {};
 
-  eachProp(this.definition, function(prop, name) {
+  fdom.util.eachProp(this.definition, function(prop, name) {
     if (prop.type === 'event') {
       events[name] = prop;
     }
@@ -217,6 +218,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
               type: 'method',
               to: to,
               message: {
+                to: to,
                 type: 'method',
                 reqId: req,
                 name: type,

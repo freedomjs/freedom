@@ -70,7 +70,7 @@ rm -r "$TEMP_DIR/"*
 
 # Set up a new profile for testing and prevent the "First Run" splash screen
 TEMP_PROFILE="$TEMP_DIR/chromeUserProfile"
-mkdir $TEMP_PROFILE
+mkdir -p $TEMP_PROFILE
 touch "$TEMP_PROFILE/First Run"
 
 # Set up a folder for temporary includes (eg. the concatonated spec file)
@@ -78,7 +78,7 @@ TEMP_INCLUDES="$TEMP_DIR/includes"
 mkdir "$TEMP_INCLUDES"
 
 # Create a few dynamic files to support the test app
-cat "$FREEDOM_ROOT_DIR"/{src/libs,src,src/proxy,providers/core,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
+cat "$FREEDOM_ROOT_DIR"/{src,src/link,src/proxy,providers/core,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
 
 
 

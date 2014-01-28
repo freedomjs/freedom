@@ -1,4 +1,4 @@
-/*globals fdom:true, handleEvents */
+/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -16,7 +16,7 @@ fdom.port.Debug = function() {
   this.emitChannel = false;
   this.console = null;
   this.config = false;
-  handleEvents(this);
+  fdom.util.handleEvents(this);
 };
 
 /**
