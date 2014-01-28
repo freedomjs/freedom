@@ -1,6 +1,6 @@
 {
   "name": "WebRTC Chat",
-  "description": "WebRTC Chat Sample freedom.js application",
+  "description": "WebRTC Chat Sample FreeDOM application",
   "app": {
     "script": "main.js"
   },

@@ -1,9 +1,9 @@
-/*globals fdom:true, Worker */
+/*globals fdom:true, handleEvents, mixin, Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
-fdom.link = fdom.link || {};
+fdom.port = fdom.port || {};
 
 /**
  * A port providing message transport between two freedom contexts via Worker.
@@ -12,11 +12,11 @@ fdom.link = fdom.link || {};
  * @uses handleEvents
  * @constructor
  */
-fdom.link.Worker = function() {
+fdom.port.Worker = function() {
   this.id = 'Worker ' + Math.random();
   this.config = {};
 
-  fdom.util.handleEvents(this);
+  handleEvents(this);
 };
 
 /**
@@ -24,7 +24,7 @@ fdom.link.Worker = function() {
  * @method start
  * @private
  */
-fdom.link.Worker.prototype.start = function() {
+fdom.port.Worker.prototype.start = function() {
   if (this.config.appContext) {
     this.setupListener();
   } else {
@@ -37,7 +37,7 @@ fdom.link.Worker.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.link.Worker.prototype.stop = function() {
+fdom.port.Worker.prototype.stop = function() {
   // Function is determined by setupListener or setupFrame as appropriate.
 };
 
@@ -46,7 +46,7 @@ fdom.link.Worker.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.link.Worker.prototype.toString = function() {
+fdom.port.Worker.prototype.toString = function() {
   return "[" + this.id + "]";
 };
 
@@ -55,7 +55,7 @@ fdom.link.Worker.prototype.toString = function() {
  * freedom.js context.
  * @method setupListener
  */
-fdom.link.Worker.prototype.setupListener = function() {
+fdom.port.Worker.prototype.setupListener = function() {
   var onMsg = function(msg) {
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this);
@@ -74,7 +74,7 @@ fdom.link.Worker.prototype.setupListener = function() {
  * @param {String} flow the flow to emit the message on.
  * @param {Object} messgae The message to emit.
  */
-fdom.link.Worker.prototype.emitMessage = function(flow, message) {
+fdom.port.Worker.prototype.emitMessage = function(flow, message) {
   if (flow === 'control' && this.controlChannel) {
     flow = this.controlChannel;
   }
@@ -85,7 +85,7 @@ fdom.link.Worker.prototype.emitMessage = function(flow, message) {
  * Set up a worker with an isolated freedom.js context inside.
  * @method setupWorker
  */
-fdom.link.Worker.prototype.setupWorker = function() {
+fdom.port.Worker.prototype.setupWorker = function() {
   var worker, blob;
   if (typeof (window.Blob) !== typeof (Function)) {
     worker = new Worker(this.config.source);
@@ -118,11 +118,11 @@ fdom.link.Worker.prototype.setupWorker = function() {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Worker.prototype.onMessage = function(flow, message) {
+fdom.port.Worker.prototype.onMessage = function(flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      fdom.util.mixin(this.config, message.config);
+      mixin(this.config, message.config);
       this.start();
     }
   } else if (flow === 'control' && message.type === 'close' &&

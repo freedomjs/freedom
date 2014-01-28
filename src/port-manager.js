@@ -1,4 +1,4 @@
-/*globals fdom:true */
+/*globals fdom:true, handleEvents, mixin */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -24,11 +24,11 @@ fdom.port.Manager = function(hub) {
   this.toDelegate = {};
   
   this.hub.on('config', function(config) {
-    fdom.util.mixin(this.config, config);
+    mixin(this.config, config);
     this.emit('config');
   }.bind(this));
   
-  fdom.util.handleEvents(this);
+  handleEvents(this);
   this.hub.register(this);
 };
 

@@ -30,7 +30,7 @@ StorageProvider.prototype.keys = function(continuation) {
   }
 
   var promise = this.store.keys();
-  promise.done((function(val) {
+  promise.done(function(val) {
     var result = [];
     //Check that our magic has been initialized
     //Only return keys in my partition
@@ -40,7 +40,7 @@ StorageProvider.prototype.keys = function(continuation) {
       }
     }
     continuation(result);
-  }).bind(this));
+  });
 };
 
 StorageProvider.prototype.get = function(key, continuation) {
@@ -75,7 +75,7 @@ StorageProvider.prototype.remove = function(key, continuation) {
 
 StorageProvider.prototype.clear = function(continuation) {
   var promise = this.store.keys();
-  promise.done((function(keys) {
+  promise.done(function(keys) {
     //Only remove keys in my partition
     for (var i = 0; i < keys.length; i++) {
       if (this.isMyKey(keys[i])) {
@@ -83,7 +83,7 @@ StorageProvider.prototype.clear = function(continuation) {
       }
     }
     continuation();
-  }).bind(this));
+  });
 };
 
 /** INTERNAL METHODS **/
@@ -131,7 +131,7 @@ StorageProvider.prototype.fromStoredKey = function(key) {
 
 // Check if this stored key is in my partition
 StorageProvider.prototype.isMyKey = function(storedKey) {
-  return (storedKey.substr(0, this.magic.length) == this.magic);
+  return (storeKey.substr(0, this.magic.length) == this.magic);
 };
 
 /** REGISTER PROVIDER **/

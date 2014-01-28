@@ -12,7 +12,7 @@ var View_unprivileged = function(app) {
   this.host = null;
   this.win = null;
   this.app = app;
-  fdom.util.handleEvents(this);
+  handleEvents(this);
 };
 
 /**

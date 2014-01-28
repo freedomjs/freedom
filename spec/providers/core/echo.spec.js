@@ -34,7 +34,7 @@ describe("providers/core/Echo_Unprivileged", function() {
     expect(args[0]).toEqual('test');
     
     var chan = {};
-    fdom.util.handleEvents(chan);
+    handleEvents(chan);
     chan.onClose = function(c) {};
     
     args[1](chan);
@@ -56,7 +56,7 @@ describe("providers/core/Echo_Unprivileged", function() {
     expect(args[0]).toEqual('test');
     
     var chan = {};
-    fdom.util.handleEvents(chan);
+    handleEvents(chan);
     chan.onClose = function(c) {};
     chan.close = jasmine.createSpy('close');
     

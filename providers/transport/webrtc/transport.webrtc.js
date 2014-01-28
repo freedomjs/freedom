@@ -2,10 +2,9 @@
  * Peer 2 Peer transport provider.
  *
  */
+console.log("TransportProvider: " + self.location.href);
 
 function TransportProvider() {
-  console.log("TransportProvider: running in worker " + self.location.href);
-  this.name = null;
   this.pc = freedom['core.sctp-peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
@@ -15,14 +14,19 @@ function TransportProvider() {
 // to open a peer connection. 
 TransportProvider.prototype.setup = function(name, channelId, continuation) {
   console.log("TransportProvider.setup." + name);
-  this.name = name;
   var promise = this.pc.setup(channelId, name);
   promise.done(continuation);
 };
 
 TransportProvider.prototype.send = function(tag, data, continuation) {
-  console.log("TransportProvider.send." + this.name);
-  var promise = this.pc.send({"channelLabel": tag, "buffer": data});
+  var promise;
+  if (data instanceof ArrayBuffer) {
+    console.log("TransportProvider.sending ArrayBuffer");
+    promise = this.pc.send({"channelLabel": tag, "buffer": data});
+  } else {
+    console.error('Trying to send an unsupported type of object: ' + typeof(data));
+    return;
+  }
   promise.done(continuation);
 };
 
@@ -41,7 +45,7 @@ TransportProvider.prototype.onData = function(msg) {
   } else if (msg.text) {
     console.error("Strings not supported.");
   } else if (msg.blob) {
-    console.error("Blob is not supported.");
+    console.error('Blob is not supported. ');
   } else {
     console.error('message called without a valid data field');
   }
@@ -57,4 +61,5 @@ TransportProvider.prototype.onClose = function() {
 //
 // TODO: change Freedom API so that it distinctly names the module-
 // constructor-freedom-thing separately from the thing to create new modules.
-freedom.transport().provideAsynchronous(TransportProvider);
+var transport = freedom.transport();
+transport.provideAsynchronous(TransportProvider);

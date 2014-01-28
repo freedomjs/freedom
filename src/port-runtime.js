@@ -1,4 +1,4 @@
-/*globals fdom:true, WebSocket */
+/*globals fdom:true, handleEvents, mixin, WebSocket */
 /*jslint indent:2, white:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -20,7 +20,7 @@ fdom.port.Runtime = function() {
   this.core = null;
   this.socket = null;
   this.status = fdom.port.Runtime.status.disconnected;
-  fdom.util.handleEvents(this);
+  handleEvents(this);
 };
 
 /**
@@ -57,7 +57,7 @@ fdom.port.Runtime.prototype.toString = function() {
 fdom.port.Runtime.prototype.onMessage = function(source, msg) {
   if (source === 'control' && msg.type === 'setup') {
     var config = {};
-    fdom.util.mixin(config, msg.config);
+    mixin(config, msg.config);
     delete config.global;
     //TODO: support long msgs.
     delete config.src;

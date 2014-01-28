@@ -1,6 +1,6 @@
 {
   "name": "Tic Tak",
-  "description": "Tic Tak Sample freedom.js application",
+  "description": "Tic Tak Sample FreeDOM application",
   "app": {
     "script": "main.js"
   },
