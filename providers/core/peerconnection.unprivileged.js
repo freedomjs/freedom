@@ -52,6 +52,8 @@ function SimpleDataPeer(peerName, dataChannelCallbacks) {
                             this._onIceCallback.bind(this));
   this._pc.addEventListener("negotiationneeded",
                             this._onNegotiationNeeded.bind(this));
+  this._pc.addEventListener("datachannel",
+                            this._onDataChannel.bind(this));
   this._pc.addEventListener("signalingstatechange", function () {
     if (this._pc.signalingState == "stable") {
       this._pcState = SimpleDataPeerState.CONNECTED;
@@ -69,7 +71,7 @@ function SimpleDataPeer(peerName, dataChannelCallbacks) {
 // gets back to us, and we have a valid RTCPeerConnection in this._pc.
 // If we already have it, run func immediately.
 SimpleDataPeer.prototype.runWhenReady = function(func) {
-  if (this._pc === null) {
+  if (typeof this._pc === "undefined" || this._pc === null) {
     console.error('SimpleDataPeer: Something is terribly wrong. PeerConnection is null');
     // we're still waiting.
   } else {
@@ -88,9 +90,13 @@ SimpleDataPeer.prototype.addPCEventListener = function(event, func) {
 
 SimpleDataPeer.prototype.openDataChannel = function(channelId, continuation) {
   this.runWhenReady(function doOpenDataChannel() {
-    this._addDataChannel(channelId, this._pc.createDataChannel(channelId, {}));
-    continuation();
-  });
+    var dataChannel = this._pc.createDataChannel(channelId, {});
+    dataChannel.onopen = function() {
+      this._addDataChannel(channelId, dataChannel);
+      continuation();
+      this._dataChannelCallbacks.onOpenFn(dataChannel, {label: channelId});
+    }.bind(this);
+  }.bind(this));
 };
 
 SimpleDataPeer.prototype.closeChannel= function(channelId) {
@@ -163,10 +169,17 @@ SimpleDataPeer.prototype.close = function() {
 };
 
 SimpleDataPeer.prototype._addDataChannel = function(channelId, channel) {
+  var callbacks = this._dataChannelCallbacks;
   this._channels[channelId] = channel;
-  for (var cb_key in this._dataChannelCallbacks) {
-    channel[cb_key] = this._dataChannelCallbacks[cb_key];
-  }
+
+  // channel.onopen = callbacks.onOpenFn.bind(this, channel, {label: channelId});
+
+  channel.onclose = callbacks.onCloseFn.bind(this, channel, {label: channelId});
+
+  channel.onmessage = callbacks.onMessageFn.bind(this, channel,
+                                                 {label: channelId});
+
+  channel.onerror = callbacks.onErrorFn.bind(this, channel, {label: channel});
 };
 
 // When we get our description, we set it to be our local description and
@@ -246,7 +259,7 @@ SimpleDataPeer.prototype._onSignalingStateChange = function () {
 };
 
 SimpleDataPeer.prototype._onDataChannel = function(event) {
-  this._addDataChannel(event.channel.label, event.chanel);
+  this._addDataChannel(event.channel.label, event.channel);
 };
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
@@ -291,50 +304,28 @@ SctpPeerConnection.prototype.setup =
 
   var dataChannelCallbacks = {
     // onOpenFn is called at the point messages will actually get through.
-    onOpenFn: function (smartDataChannel) {
-/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
-        smartDataChannel.dataChannel.label +
-        "): onOpenFn"); */
+    onOpenFn: function (dataChannel, info) {
       self.dispatchEvent("onOpenDataChannel",
-          smartDataChannel.dataChannel.label);
+                         info.label);
     },
-    onCloseFn: function (smartDataChannel) {
-/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
-        smartDataChannel.dataChannel.label +
-        "): onCloseFn"); */
+    onCloseFn: function (dataChannel, info) {
       self.dispatchEvent("onCloseDataChannel",
-                         { channelId: smartDataChannel.dataChannel.label});
+                         { channelId: info.label});
     },
     // Default on real message prints it to console.
-    onMessageFn: function (smartDataChannel, event) {
-      // These were filling the console, and causing the console to
-      // hog the CPU.
-/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
-          smartDataChannel.dataChannel.label +
-          "): onMessageFn", event); */
+    onMessageFn: function (dataChannel, info, event) {
       if (event.data instanceof ArrayBuffer) {
-/*        var data = new Uint8Array(event.data);
-          console.log(smartDataChannel.peerName + ": dataChannel(" +
-          smartDataChannel.dataChannel.label +
-          "): " + "Got ArrayBuffer (onReceived) data: ", data); */
         self.dispatchEvent('onReceived',
-            { 'channelLabel': smartDataChannel.dataChannel.label,
+            { 'channelLabel': info.label,
               'buffer': event.data });
       } else if (typeof(event.data) == 'string') {
-/*        console.log(smartDataChannel.peerName + ": dataChannel(" +
-          smartDataChannel.dataChannel.label +
-          "): " + "Got string (onReceived) data: ", event.data); */
         self.dispatchEvent('onReceived',
-            { 'channelLabel': smartDataChannel.dataChannel.label,
+            { 'channelLabel': info.label,
               'text': event.data });
-      } else {
-/*        console.error(smartDataChannel.peerName + ": dataChannel(" +
-          smartDataChannel.dataChannel.label +
-          "): " + "Got unkown data :( "); */
       }
     },
     // Default on error, prints it.
-    onErrorFn: function(smartDataChannel, err) {
+    onErrorFn: function(dataChannel, info, err) {
       console.error(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label + "): error: ", err);
     }

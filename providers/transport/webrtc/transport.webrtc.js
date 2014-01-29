@@ -9,6 +9,7 @@ function TransportProvider() {
   this.pc = freedom['core.sctp-peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
+  this._tags = [];
 }
 
 // The argument |channelId| is a freedom communication channel id to use
@@ -22,11 +23,19 @@ TransportProvider.prototype.setup = function(name, channelId, continuation) {
 
 TransportProvider.prototype.send = function(tag, data, continuation) {
   console.log("TransportProvider.send." + this.name);
-  var promise = this.pc.send({"channelLabel": tag, "buffer": data});
-  promise.done(continuation);
+  if (this._tags.indexOf(tag) >= 0) {
+    var promise = this.pc.send({"channelLabel": tag, "buffer": data});
+    promise.done(continuation);
+  } else {
+    this.pc.openDataChannel(tag).done(function(){
+      this._tags.push(tag);
+      this.send(tag, data, continuation);
+    }.bind(this));
+  }
 };
 
 TransportProvider.prototype.close = function(continuation) {
+  this._tags = [];
   this.pc.close().done(continuation);
 };
 
@@ -48,6 +57,7 @@ TransportProvider.prototype.onData = function(msg) {
 };
 
 TransportProvider.prototype.onClose = function() {
+  this._tags = [];
   this.dispatchEvent('onClose', null);
 };
 
