@@ -15,10 +15,14 @@ var SimpleDataPeerState = {
   CONNECTED: 'CONNECTED'
 };
 
-function SimpleDataPeer(peerName) {
+function SimpleDataPeer(peerName, dataChannelCallbacks) {
   this.peerName = peerName;
+  this._channels = {};
+  this._dataChannelCallbacks = dataChannelCallbacks;
 
   // depending on environment, select implementation.
+  // TODO: Rename this variable, hoisting causes existing definitions
+  // of RTCPeerConnection to get clobbered.
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
   //TODO wire up STUN/TURN server config from options page
   var static_pc_config = [
@@ -73,15 +77,26 @@ SimpleDataPeer.prototype.runWhenReady = function(func) {
   }
 };
 
+SimpleDataPeer.prototype.send = function(channelId, message, continuation) {
+  this._channels[channelId].send(message);
+  continuation();
+};
+
 SimpleDataPeer.prototype.addPCEventListener = function(event, func) {
   this._pc_listeners.push({event: event, func: func});
 };
 
-SimpleDataPeer.prototype._onSignalingStateChange = function () {
-//  console.log(this.peerName + ": " + "_onSignalingStateChange: ",
-//      this._pc.signalingState);
-  if (this._pc.signalingState == "stable") {
-    this._pcState = SimpleDataPeerState.CONNECTED;
+SimpleDataPeer.prototype.openDataChannel = function(channelId, continuation) {
+  this.runWhenReady(function doOpenDataChannel() {
+    this._addDataChannel(channelId, this._pc.createDataChannel(channelId, {}));
+    continuation();
+  });
+};
+
+SimpleDataPeer.prototype.closeChannel= function(channelId) {
+  if(channelId in this._channels) {
+    this._channels[channelId].close();
+    delete this._channels[channelId];
   }
 };
 
@@ -102,7 +117,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
     if (json.sdp) {
       // Set the remote description.
       this._pc.setRemoteDescription(
-          new RTCSessionDescription(json.sdp),
+         new RTCSessionDescription(json.sdp),
           // Success
           function () {
             if (this._pc.remoteDescription.type == "offer") {
@@ -140,6 +155,20 @@ SimpleDataPeer.prototype.negotiateConnection = function () {
   }.bind(this));
 };
 
+SimpleDataPeer.prototype.close = function() {
+  if(this._pc.signalingState !== "closed") {
+    this._pc.close();
+  }
+  // console.log(this.peerName + ": " + "Closed peer connection.");
+};
+
+SimpleDataPeer.prototype._addDataChannel = function(channelId, channel) {
+  this._channels[channelId] = channel;
+  for (var cb_key in this._dataChannelCallbacks) {
+    channel[cb_key] = this._dataChannelCallbacks[cb_key];
+  }
+};
+
 // When we get our description, we set it to be our local description and
 // send it to the peer.
 SimpleDataPeer.prototype._onDescription = function (description) {
@@ -157,11 +186,6 @@ SimpleDataPeer.prototype._onDescription = function (description) {
               "set the local description. ");
     }
   }.bind(this));
-};
-
-SimpleDataPeer.prototype.close = function() {
-  this._pc.close();
-  // console.log(this.peerName + ": " + "Closed peer connection.");
 };
 
 //
@@ -213,250 +237,16 @@ SimpleDataPeer.prototype._onIceCallback = function (event) {
   }
 };
 
-//-----------------------------------------------------------------------------
-// Smart wrapper for a data channels, including real notion of open an queuing
-//-----------------------------------------------------------------------------
-// Stores state of a datachannel. The issue is that even when a data channel is
-// in state open, unless the other end is also open, sent messages may not be
-// receieved. To ensure that sent messages are recieved, we send an initial ping
-// - pong message and consider the chanel truly open once we get or send a pong
-// message.
-//
-// TODO: remove PingPong; it's complex and shouldn't be needed. Also note that
-// combined with the bad channel name sending bug, this will have problems if
-// the channel name is PING or PONG. Note: using \b (backspace) to make it
-// unlikely that a channel name will clash.
-var PingPongMessage =  {
-  PING: '\bping',
-  PONG : '\bpong'
-};
-
-var SmartDataChannelState =  {
-  PENDING : 'pending', // waiting for channel to open.
-  PINGED : 'pinged',  // I got a ping (and sent a pong)
-  PONGED : 'ponged',  // I never got a ping message, but I got a pong.
-  CONNECTED: 'connected',  // Have got both a ping and a pong from the peer.
-  CLOSED : 'closed' // channel was closed.
-};
-
-function SmartDataChannel(channel, peerName, callbacks) {
-  this.peerName = peerName;
-  this.dataChannel = channel;
-  this.state = SmartDataChannelState.PENDING;
-  // queue of messages to send when the channel is ready.
-  this.queue = [];
-
-  // These are the DataPeer-level callbacks. They provide some abstraction over
-  // underlying datachannels and peer connection. e.g. onOpen is called at the
-  // point when sending messages will actualy work.
-  this._callbacks = {
-    // onOpenFn is called at the point messages will actually get through.
-    onOpenFn: function (smartDataChannel) {
-/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
-        smartDataChannel.dataChannel.label +
-        "): onOpenFn"); */
-    },
-    onCloseFn: function (smartDataChannel) {
-/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
-        smartDataChannel.dataChannel.label +
-        "): onCloseFn"); */
-    },
-    // Default on real message prints it to console.
-    onMessageFn: function (smartDataChannel, event) {
-/*      console.log(smartDataChannel.peerName + ": dataChannel(" +
-          smartDataChannel.dataChannel.label +
-          "): onMessageFn", event); */
-    },
-    // Default on error, prints it.
-    onErrorFn: function(smartDataChannel, err) {
-      console.error(smartDataChannel.peerName + ": dataChannel(" +
-          smartDataChannel.dataChannel.label + "): error: ", err);
-    }
-  };
-  for(var cb_key in callbacks) {
-    // Let the programmer know that a bad (unusable) callback key exists.
-    if(!(cb_key in this._callbacks)) {
-      console.log(this.peerName + ": Bad callback specified: " + cb_key +
-          ". Being ignored.");
-    } else { this._callbacks[cb_key] = callbacks[cb_key]; }
-  }
-
-  // This is a local binding for the ping-pong protocol handling of messages so
-  // that it can be removed from the event listeners later.
-  this._onPingPongMessageFn = this._onPingPongMessage.bind(this);
-
-  // The handlers for the underlying data channel events. _startPingPong will
-  // set the 'message' handler.
-  channel.addEventListener("open", this._startPingPong.bind(this));
-  channel.addEventListener("close", this._onClose.bind(this));
-  channel.addEventListener("error", this._onError.bind(this));
-}
-
-SmartDataChannel.prototype._startPingPong = function () {
-  this.dataChannel.addEventListener("message", this._onPingPongMessageFn);
-/*  console.log(this.peerName + ": dataChannel(" + this.dataChannel.label +
-      "): Sending PING"); */
-  this.dataChannel.send(PingPongMessage.PING);
-};
-
-// This logic is complex. :(  TODO: this should not be needed; when a data
-// channel is open, this should guarentee that the message will get to the other
-// side. See issue: https://code.google.com/p/webrtc/issues/detail?id=2406&thanks=2406&ts=1379699312
-SmartDataChannel.prototype._onPingPongMessage = function (event) {
-/*  console.log(this.peerName + ": dataChannel(" + this.dataChannel.label +
-      "): Message during PingPong startup: ", event); */
-  if (event.data == PingPongMessage.PING) {
-    if (this.state == SmartDataChannelState.PONGED) {
-      this._onConnected();
-    } else if (this.state == SmartDataChannelState.PENDING) {
-      this.dataChannel.send(PingPongMessage.PONG);
-      this.state = SmartDataChannelState.PINGED;
-    } else {
-      console.log(this.peerName + ": dataChannel(" +
-          this.dataChannel.label +
-          "): unkown state for message: " + this.state);
-    }
-  } else if (event.data == PingPongMessage.PONG) {
-    if (this.state == SmartDataChannelState.PINGED) {
-      this._onConnected();
-    } else if (this.state == SmartDataChannelState.PENDING) {
-      this.dataChannel.send(PingPongMessage.PONG);
-      this._onConnected();
-    } else {
-      console.error(this.peerName + ": dataChannel(" +
-          this.dataChannel.label +
-          "): unkown state for message: " + this.state);
-    }
-  } else {
-    // Sometimes we get messages with a channel id when a channel starts up. I
-    // think this is a bug:
-    //   https://code.google.com/p/webrtc/issues/detail?id=2439
-    // TODO: When that bug is fixed, add a warning here.
+SimpleDataPeer.prototype._onSignalingStateChange = function () {
+//  console.log(this.peerName + ": " + "_onSignalingStateChange: ",
+//      this._pc.signalingState);
+  if (this._pc.signalingState == "stable") {
+    this._pcState = SimpleDataPeerState.CONNECTED;
   }
 };
 
-SmartDataChannel.prototype._onError = function (e) {
-  this._callbacks(this,e);
-};
-
-SmartDataChannel.prototype._onConnected = function () {
-  /*console.log(this.peerName + ": dataChannel(" + this.dataChannel.label +
-      "): CONNECTED", event); */
-  this.state = SmartDataChannelState.CONNECTED;
-  this.dataChannel.removeEventListener("message", this._onPingPongMessageFn);
-  this.dataChannel.addEventListener("message", this._onMessage.bind(this));
-  this._callbacks.onOpenFn(this);
-  this._sendQueuedMessages();
-};
-
-SmartDataChannel.prototype._sendQueuedMessages = function () {
-  while(this.queue.length > 0) { this.dataChannel.send(this.queue.shift()); }
-};
-
-SmartDataChannel.prototype._onMessage = function (event) {
-  this._callbacks.onMessageFn(this, event);
-};
-
-SmartDataChannel.prototype._onClose = function () {
-  this.close();
-};
-
-// Given an ArrayBuffer, a string, or a Blob, send it on the underlying data
-// channel. If not connected, queues the message and sends it when connected.
-SmartDataChannel.prototype.send = function (message) {
-  if (this.state == SmartDataChannelState.CONNECTED) {
-    this.dataChannel.send(message);
-  } else {
-    this.queue.push(message);
-  }
-};
-
-SmartDataChannel.prototype.close = function () {
-  if(this.dataChannel.readyState != "closed") {
-    this.dataChannel.close();
-  }
-  this.state = SmartDataChannelState.CLOSED;
-  this._callbacks.onCloseFn(this);
-};
-
-//-----------------------------------------------------------------------------
-// A nicer wrapper for P2P data channels that uses SmartDataChannel and
-// datachannel labels to provide a simpler interface that abstracts over all
-// the channel negotiation stuff.
-//-----------------------------------------------------------------------------
-// A smart wrapper for data channels that queues messages.
-// this._dataChannelCallbacks : {
-//   onOpenFn: function (smartDataChannel) {...},
-//   onCloseFn: function (smartDataChannel) {...},
-//   onMessageFn: function (smartDataChannel, event) {...},
-//   onErrorFn: function (smartDataChannel, error) {...},
-// };
-function DataPeer(peerName, dataChannelCallbacks) {
-  this.peerName = peerName;
-  this._simplePeer = new SimpleDataPeer(this.peerName);
-  // All channels created and in this peer connection.
-  this._smartChannels = {};
-  // These are the DataPeer-level callbacks. They provide some abstraction over
-  // underlying datachannels and peer connection. e.g. onOpen is called at the
-  // point when sending messages will actualy work.
-  this._dataChannelCallbacks = dataChannelCallbacks;
-  this._simplePeer.runWhenReady(function() {
-    this._pc = this._simplePeer._pc;
-    this._pc.addEventListener("datachannel", this._onDataChannel.bind(this));
-  }.bind(this));
-}
-
-DataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
-  this._simplePeer.setSendSignalMessage(sendSignalMessageFn);
-};
-
-// Called when a peer has opened up a data channel to us.
-DataPeer.prototype._onDataChannel = function (event) {
-  this._smartChannels[event.channel.label] =
-      new SmartDataChannel(event.channel, this.peerName,
-          this._dataChannelCallbacks);
-};
-
-// Called to establish a new data channel with our peer.
-DataPeer.prototype.openDataChannel = function (channelId, continuation) {
-  this._simplePeer.runWhenReady(function() {
-    this._smartChannels[channelId] =
-        new SmartDataChannel(this._pc.createDataChannel(channelId, {}),
-                             this.peerName, this._dataChannelCallbacks);
-    continuation();
-  }.bind(this));
-};
-
-// If channel doesn't already exist, start a new channel.
-DataPeer.prototype.send = function (channelId, message, continuation) {
-  if(!(channelId in this._smartChannels)) {
-    this.openDataChannel(channelId, function() {
-      this.send(channelId, message, continuation); }.bind(this));
-  } else {
-    this._smartChannels[channelId].send(message);
-    continuation();
-  }
-};
-
-DataPeer.prototype.closeChannel = function (channelId) {
-  if(!(channelId in this._smartChannels)) {
-//    console.warn(this.peerName + ": " + "Trying to close a data channel id (" + channelId + ") that does not exist.");
-    return;
-  }
-  this._smartChannels[channelId].close();
-  delete this._smartChannels[channelId];
-};
-
-DataPeer.prototype.close = function () {
-  for(var channelId in this._smartChannels) {
-    this.closeChannel(channelId);
-  }
-//  console.log(this.peerName + ": " + "Closed DataPeer.");
-  this._pc.close();
-};
-
-DataPeer.prototype.handleSignalMessage = function (message) {
-  this._simplePeer.handleSignalMessage(message);
+SimpleDataPeer.prototype._onDataChannel = function(event) {
+  this._addDataChannel(event.channel.label, event.chanel);
 };
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
@@ -473,7 +263,7 @@ function SctpPeerConnection(portApp) {
   this._signallingChannel = null;
 
   // The DataPeer object for talking to the peer.
-  this._peer = null;
+  this._peer = null; 
 
   // The Core object for managing channels.
   this._portApp.once('core', function(Core) {
@@ -523,8 +313,8 @@ SctpPeerConnection.prototype.setup =
           smartDataChannel.dataChannel.label +
           "): onMessageFn", event); */
       if (event.data instanceof ArrayBuffer) {
-        var data = new Uint8Array(event.data);
-/*        console.log(smartDataChannel.peerName + ": dataChannel(" +
+/*        var data = new Uint8Array(event.data);
+          console.log(smartDataChannel.peerName + ": dataChannel(" +
           smartDataChannel.dataChannel.label +
           "): " + "Got ArrayBuffer (onReceived) data: ", data); */
         self.dispatchEvent('onReceived',
@@ -550,7 +340,7 @@ SctpPeerConnection.prototype.setup =
     }
   };
 
-  this._peer = new DataPeer(this.peerName, dataChannelCallbacks);
+  this._peer = new SimpleDataPeer(this.peerName, dataChannelCallbacks);
 
   // Setup link between Freedom messaging and _peer's signalling.
   // Note: the signalling channel should only be sending receiveing strings.
@@ -567,7 +357,7 @@ SctpPeerConnection.prototype.setup =
 
 };
 
-// TODO: delay continuation until the open callback rom _peer is called.
+// TODO: delay continuation until the open callback from _peer is called.
 SctpPeerConnection.prototype.openDataChannel =
     function(channelId, continuation) {
   this._peer.openDataChannel(channelId, continuation);
@@ -593,9 +383,10 @@ SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
   this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
 
-SctpPeerConnection.prototype.shutdown = function(continuation) {
+SctpPeerConnection.prototype.close = function(continuation) {
   this._peer.close();
   continuation();
+  this.dispatchEvent("onClose");
 };
 
 fdom.apis.register('core.sctp-peerconnection', SctpPeerConnection);
