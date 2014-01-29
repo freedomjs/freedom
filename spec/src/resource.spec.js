@@ -114,4 +114,9 @@ describe('fdom.resources.httpResolver', function() {
     resources.httpResolver('http://www.example.com/path/manifest.json', 'http://www.other.com/test.html', deferred);
     expect(spy).toHaveBeenCalledWith('http://www.other.com/test.html');
   });
+
+  it("should not resolve URLs without manifest", function() {
+    resources.httpResolver(undefined, 'test.html', deferred);
+    expect(spy).not.toHaveBeenCalled();
+  });
 });
