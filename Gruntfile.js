@@ -10,19 +10,26 @@ var FILES = {
   ],
   jasminehelper: [
     'spec/util.js',
-    'providers/storage/isolated/storage.isolated.js',
   ],
   srcprovider: [
     'providers/social/websocket-server/*.js',
+    'providers/social/loopback/*.js',
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specsrc: [
+  specunit: [
     'spec/src/**/*.spec.js', 
-    'spec/providers/social/**/*.spec.js', 
     'spec/providers/core/**/*.spec.js', 
-    'spec/providers/storage/**/*.js',
-  ]
+    'spec/providers/social/**/*.unit.spec.js', 
+    'spec/providers/storage/**/*.unit.spec.js',
+    'spec/providers/transport/**/*.unit.spec.js',
+  ],
+  specintegration: [
+    'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/storage/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js',
+  ],
+  specall: ['spec/**/*.spec.js']
 };
 var WEBSERVER_PROCESS = null;
 
@@ -35,23 +42,23 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     jasmine: {
       freedom: {
-        src: FILES.src.concat(FILES.jasminehelper), 
+        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
         options: {
-          specs: FILES.specsrc,
+          specs: FILES.specunit,
           keepRunner: false,
         }
       },
       freedomKeepRunner: {
         src: FILES.src.concat(FILES.jasminehelper), 
         options: {
-          specs: FILES.specsrc,
+          specs: FILES.specunit,
           keepRunner: true,
         }
       },
       coverage: {
         src: FILES.src.concat(FILES.jasminehelper),
         options: {
-          specs: FILES.specsrc,
+          specs: FILES.specunit,
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'tools/lcov.info',
@@ -137,7 +144,7 @@ module.exports = function(grunt) {
   grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
     grunt.util.spawn({
       cmd: 'bash',
-      args: ['tools/chromeTestRunner.sh'].concat(grunt.file.expand(FILES.specsrc)),
+      args: ['tools/chromeTestRunner.sh'].concat(grunt.file.expand(FILES.specall)),
     }, function done(error, result, code) {
       grunt.log.ok('Failed to execute shell script:'+
         "\n\t"+error+
@@ -173,6 +180,10 @@ module.exports = function(grunt) {
     'jshint:providers',
     'jshint:demo',
     'uglify'
+  ]);
+  grunt.registerTask('test', [
+    'freedom',
+    'chromeTestRunner'
   ]);
   grunt.registerTask('coverage', [
     'concat',

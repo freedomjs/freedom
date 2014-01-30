@@ -11,14 +11,14 @@
  * - ephemeral userIds and clientIds
  **/
 
-var social = freedom.social();
-var STATUS_NETWORK = social.STATUS_NETWORK;
-var STATUS_CLIENT = social.STATUS_CLIENT;
 //var WS_URL = 'ws://localhost:8082/route/';
 var WS_URL = 'ws://p2pbr.com:8082/route/';
 var NETWORK_ID = 'websockets';
 
-function SocialProvider() {
+function WSSocialProvider() {
+  var social = freedom.social();
+  this.STATUS_NETWORK = social.STATUS_NETWORK;
+  this.STATUS_CLIENT = social.STATUS_CLIENT;
   this.conn = null;   // Web Socket
   this.id = null;     // userId of this user
   this.roster = {};   // List of seen users
@@ -34,7 +34,7 @@ function SocialProvider() {
  * @param {Object} loginOptions
  * @return {Object} status - Same schema as 'onStatus' events
  **/
-SocialProvider.prototype.login = function(loginOpts, continuation) {
+WSSocialProvider.prototype.login = function(loginOpts, continuation) {
   if (this.conn !== null) {
     console.warn("Already logged in");
     continuation(this._sendStatus("ONLINE"));
@@ -70,7 +70,7 @@ SocialProvider.prototype.login = function(loginOpts, continuation) {
  *     ...
  * }
  **/
-SocialProvider.prototype.getRoster = function(continuation) {
+WSSocialProvider.prototype.getRoster = function(continuation) {
   continuation(this.roster);
 };
 
@@ -84,7 +84,7 @@ SocialProvider.prototype.getRoster = function(continuation) {
  * @param {String} destination_id - target
  * @return nothing
  **/
-SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
+WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   if (this.conn) {
     this.conn.send(JSON.stringify({to: to, msg: msg}));
   } else {
@@ -102,7 +102,7 @@ SocialProvider.prototype.sendMessage = function(to, msg, continuation) {
    * @param {Object} logoutOptions
    * @return {Object} status - same schema as 'onStatus' events
    **/
-SocialProvider.prototype.logout = function(logoutOpts, continuation) {
+WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
   if (this.conn === null) { // We may not have been logged in
     console.warn("Already logged out");
     continuation(this._sendStatus('OFFLINE', 'offline'));
@@ -127,12 +127,12 @@ SocialProvider.prototype.logout = function(logoutOpts, continuation) {
  * @param {String} message - Display message in the event
  * @return {Object} - same schema as 'onStatus' event
  **/
-SocialProvider.prototype._sendStatus = function(stat, message) {
+WSSocialProvider.prototype._sendStatus = function(stat, message) {
   var result = {
     network: NETWORK_ID,
     userId: this.id,
     clientId: this.id,
-    status: STATUS_NETWORK[stat],
+    status: this.STATUS_NETWORK[stat],
     message: message
   };
   this.dispatchEvent('onStatus', result);
@@ -147,7 +147,7 @@ SocialProvider.prototype._sendStatus = function(stat, message) {
  * @param {String} id - userId of user
  * @return nothing
  **/
-SocialProvider.prototype._changeRoster = function(id, online) {
+WSSocialProvider.prototype._changeRoster = function(id, online) {
   //Keep track if we've actually made changes
   var sendChange = false;
   //Create entry if not there
@@ -156,7 +156,7 @@ SocialProvider.prototype._changeRoster = function(id, online) {
     var c = {};
     c[id] = {
       clientId: id,
-      status: STATUS_CLIENT["MESSAGEABLE"]
+      status: this.STATUS_CLIENT["MESSAGEABLE"]
     };
     this.roster[id] = {
       userId: id,
@@ -165,11 +165,11 @@ SocialProvider.prototype._changeRoster = function(id, online) {
     };
   }
   //Update online/offline status
-  if (online && this.roster[id].clients[id].status !== STATUS_CLIENT["MESSAGEABLE"]) {
-    this.roster[id].clients[id].status = STATUS_CLIENT["MESSAGEABLE"];
+  if (online && this.roster[id].clients[id].status !== this.STATUS_CLIENT["MESSAGEABLE"]) {
+    this.roster[id].clients[id].status = this.STATUS_CLIENT["MESSAGEABLE"];
     sendChange = true;
-  } else if (!online && this.roster[id].clients[id].status !== STATUS_CLIENT["OFFLINE"]) {
-    this.roster[id].clients[id].status = STATUS_CLIENT["OFFLINE"];
+  } else if (!online && this.roster[id].clients[id].status !== this.STATUS_CLIENT["OFFLINE"]) {
+    this.roster[id].clients[id].status = this.STATUS_CLIENT["OFFLINE"];
     sendChange = true;
   }
   //Only dispatch change events if things have actually changed
@@ -189,7 +189,7 @@ SocialProvider.prototype._changeRoster = function(id, online) {
  * @param {String} msg - message from the server (see server/router.py for schema)
  * @return nothing
  **/
-SocialProvider.prototype._onMessage = function(msg) {
+WSSocialProvider.prototype._onMessage = function(msg) {
   msg = JSON.parse(msg.data);
   // If state information from the server
   // Store my own ID and all known users at the time
@@ -227,4 +227,7 @@ SocialProvider.prototype._onMessage = function(msg) {
   }
 };
 
-social.provideAsynchronous(SocialProvider);
+/** REGISTER PROVIDER **/
+if (typeof freedom !== 'undefined') {
+  freedom.social().provideAsynchronous(WSSocialProvider);
+}

@@ -5,35 +5,37 @@
  *   e.g. Both modules A and B use this storage provider. They'd be able to access the same keys
  **/
 
-function StorageProvider() {
+function SharedStorageProvider() {
   this.store = freedom['core.storage']();
   //console.log("Shared Storage Provider, running in worker " + self.location.href);
 }
 
-StorageProvider.prototype.keys = function(continuation) {
+SharedStorageProvider.prototype.keys = function(continuation) {
   var promise = this.store.keys();
   promise.done(continuation);
 };
 
-StorageProvider.prototype.get = function(key, continuation) {
+SharedStorageProvider.prototype.get = function(key, continuation) {
   var promise = this.store.get(key);
   promise.done(continuation);
 };
 
-StorageProvider.prototype.set = function(key, value, continuation) {
+SharedStorageProvider.prototype.set = function(key, value, continuation) {
   var promise = this.store.set(key, value);
   promise.done(continuation);
 };
 
-StorageProvider.prototype.remove = function(key, continuation) {
+SharedStorageProvider.prototype.remove = function(key, continuation) {
   var promise = this.store.remove(key);
   promise.done(continuation);
 };
 
-StorageProvider.prototype.clear = function(continuation) {
+SharedStorageProvider.prototype.clear = function(continuation) {
   var promise = this.store.clear();
   promise.done(continuation);
 };
 
 /** REGISTER PROVIDER **/
-freedom.storage().provideAsynchronous(StorageProvider);
+if (typeof freedom !== 'undefined') {
+  freedom.storage().provideAsynchronous(SharedStorageProvider);
+}

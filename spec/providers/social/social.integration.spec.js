@@ -166,5 +166,5 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
  
 };
 
-describe("websocket-server integration",
-         SOCIAL_INTEGRATION_SPEC.bind(this, "socialWebsockets"));
+describe("integration: social.ws.json",
+         SOCIAL_INTEGRATION_SPEC.bind(this, "social.ws"));

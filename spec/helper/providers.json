@@ -17,7 +17,7 @@
       "url": "../../providers/transport/webrtc/transport.webrtc.json",
       "api": "transport"
     },
-    "socialWebsockets": {
+    "social.ws": {
       "url": "../../providers/social/websocket-server/social.ws.json",
       "api": "social"
     }
