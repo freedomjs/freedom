@@ -8,6 +8,6 @@
     "transport"
   ],
   "permissions": [
-    "core.sctp-peerconnection"
+    "core.peerconnection"
   ]
 }

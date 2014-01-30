@@ -6,7 +6,7 @@
 function TransportProvider() {
   console.log("TransportProvider: running in worker " + self.location.href);
   this.name = null;
-  this.pc = freedom['core.sctp-peerconnection']();
+  this.pc = freedom['core.peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
   this._tags = [];

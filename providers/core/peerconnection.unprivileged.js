@@ -380,4 +380,4 @@ SctpPeerConnection.prototype.close = function(continuation) {
   this.dispatchEvent("onClose");
 };
 
-fdom.apis.register('core.sctp-peerconnection', SctpPeerConnection);
+fdom.apis.register('core.peerconnection', SctpPeerConnection);
