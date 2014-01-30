@@ -1,3 +1,11 @@
+var stun_servers = [
+  "stun:stun.l.google.com:19302",
+  "stun:stun1.l.google.com:19302",
+  "stun:stun2.l.google.com:19302",
+  "stun:stun3.l.google.com:19302",
+  "stun:stun4.l.google.com:19302"
+];
+
 /*
  * Peer 2 Peer transport provider.
  *
@@ -17,7 +25,7 @@ function TransportProvider() {
 TransportProvider.prototype.setup = function(name, channelId, continuation) {
   console.log("TransportProvider.setup." + name);
   this.name = name;
-  var promise = this.pc.setup(channelId, name);
+  var promise = this.pc.setup(channelId, name, stun_servers);
   promise.done(continuation);
 };
 

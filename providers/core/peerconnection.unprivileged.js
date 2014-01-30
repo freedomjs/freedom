@@ -5,6 +5,7 @@
  * Assumes that RTCPeerConnection is defined.
  */
 
+
 //-----------------------------------------------------------------------------
 // A class that wraps a peer connection and its data channels.
 //-----------------------------------------------------------------------------
@@ -15,7 +16,7 @@ var SimpleDataPeerState = {
   CONNECTED: 'CONNECTED'
 };
 
-function SimpleDataPeer(peerName, dataChannelCallbacks) {
+function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks) {
   this.peerName = peerName;
   this._channels = {};
   this._dataChannelCallbacks = dataChannelCallbacks;
@@ -24,15 +25,6 @@ function SimpleDataPeer(peerName, dataChannelCallbacks) {
   // TODO: Rename this variable, hoisting causes existing definitions
   // of RTCPeerConnection to get clobbered.
   var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
-  //TODO wire up STUN/TURN server config from options page
-  var static_pc_config = [
-    "stun:stun.l.google.com:19302",
-    "stun:stun1.l.google.com:19302",
-    "stun:stun2.l.google.com:19302",
-    "stun:stun3.l.google.com:19302",
-    "stun:stun4.l.google.com:19302" // ,
-    // "turn:stun.l.google.com:19302"
-  ];
 
   var constraints = {optional: [{DtlsSrtpKeyAgreement: true}]};
   // A way to speak to the peer to send SDP headers etc.
@@ -42,8 +34,8 @@ function SimpleDataPeer(peerName, dataChannelCallbacks) {
   // Get TURN servers for the peer connection.
   var iceServer;
   var pc_config = {iceServers: []};
-  for (var i = 0; i < static_pc_config.length; i++) {
-    iceServer = { 'url' : static_pc_config[i] };
+  for (var i = 0; i < stunServers.length; i++) {
+    iceServer = { 'url' : stunServers[i] };
     pc_config.iceServers.push(iceServer);
   }
   this._pc = new RTCPeerConnection(pc_config, constraints);
@@ -298,7 +290,7 @@ function PeerConnection(portApp) {
 //   debug: boolean           // should we add extra
 // }
 PeerConnection.prototype.setup =
-    function(signallingChannelId, peerName, continuation) {
+    function(signallingChannelId, peerName, stunServers, continuation) {
   this.peerName = peerName;
   var self = this;
 
@@ -331,7 +323,8 @@ PeerConnection.prototype.setup =
     }
   };
 
-  this._peer = new SimpleDataPeer(this.peerName, dataChannelCallbacks);
+  this._peer = new SimpleDataPeer(this.peerName, stunServers,
+                                  dataChannelCallbacks);
 
   // Setup link between Freedom messaging and _peer's signalling.
   // Note: the signalling channel should only be sending receiveing strings.
