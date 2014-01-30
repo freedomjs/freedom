@@ -149,6 +149,9 @@ Resource.prototype.httpResolver = function(manifest, url, deferred) {
     }
   }
   
+  if (!manifest) {
+    return false;
+  }
   for (i = 0; i < protocols.length; i += 1) {
     if (manifest.indexOf(protocols[i] + "://") === 0 &&
        url.indexOf("://") === -1) {
