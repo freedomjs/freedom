@@ -49,14 +49,14 @@ module.exports = function(grunt) {
         }
       },
       freedomKeepRunner: {
-        src: FILES.src.concat(FILES.jasminehelper), 
+        src: FILES.src.concat(FILES.jasminehelper),
         options: {
           specs: FILES.specunit,
           keepRunner: true,
         }
       },
       coverage: {
-        src: FILES.src.concat(FILES.jasminehelper),
+        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
         options: {
           specs: FILES.specunit,
           template: require('grunt-template-jasmine-istanbul'),
