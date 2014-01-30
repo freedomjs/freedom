@@ -263,7 +263,7 @@ SimpleDataPeer.prototype._onDataChannel = function(event) {
 };
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
-function SctpPeerConnection(portApp) {
+function PeerConnection(portApp) {
 
     // a (hopefully unique) ID for debugging.
   this.peerName = "p" + Math.random();
@@ -297,7 +297,7 @@ function SctpPeerConnection(portApp) {
 //   peerName: string,   // For pretty printing messages about this peer.
 //   debug: boolean           // should we add extra
 // }
-SctpPeerConnection.prototype.setup =
+PeerConnection.prototype.setup =
     function(signallingChannelId, peerName, continuation) {
   this.peerName = peerName;
   var self = this;
@@ -349,12 +349,12 @@ SctpPeerConnection.prototype.setup =
 };
 
 // TODO: delay continuation until the open callback from _peer is called.
-SctpPeerConnection.prototype.openDataChannel =
+PeerConnection.prototype.openDataChannel =
     function(channelId, continuation) {
   this._peer.openDataChannel(channelId, continuation);
 };
 
-SctpPeerConnection.prototype.closeDataChannel =
+PeerConnection.prototype.closeDataChannel =
     function(channelId, continuation) {
   this._peer.closeChannel(channelId);
   continuation();
@@ -362,7 +362,7 @@ SctpPeerConnection.prototype.closeDataChannel =
 
 // Called to send a message over the given datachannel to a peer. If the data
 // channel doesn't already exist, the DataPeer creates it.
-SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
+PeerConnection.prototype.send = function(sendInfo, continuation) {
   var objToSend = sendInfo.text || sendInfo.buffer || sendInfo.binary;
   if (typeof objToSend === 'undefined') {
     console.error("No valid data to send has been provided.", sendInfo);
@@ -374,10 +374,10 @@ SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
   this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
 
-SctpPeerConnection.prototype.close = function(continuation) {
+PeerConnection.prototype.close = function(continuation) {
   this._peer.close();
   continuation();
   this.dispatchEvent("onClose");
 };
 
-fdom.apis.register('core.peerconnection', SctpPeerConnection);
+fdom.apis.register('core.peerconnection', PeerConnection);
