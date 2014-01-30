@@ -1,7 +1,6 @@
 var SOCIAL_UNIT_SPEC = function(manifest_url) {
   const TIMEOUT = 2000;
   var proxy, p;
-
   beforeEach(function() {
     var firstStatus;
     proxy = createProxyFor(manifest_url, "social");
@@ -165,7 +164,6 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
       p.logout({userId: userId});
     });
   });
-
 };
 
 describe("unit: social.ws.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/websocket-server/social.ws.json"));
