@@ -51,10 +51,7 @@ TransportProvider.prototype.onClose = function() {
   this.dispatchEvent('onClose', null);
 };
 
-// Note: freedom.transport() does not create a new transport instance here: for
-// module definitions freedom.transport() gets the module-constructor-freedom-
-// thing.
-//
-// TODO: change Freedom API so that it distinctly names the module-
-// constructor-freedom-thing separately from the thing to create new modules.
-freedom.transport().provideAsynchronous(TransportProvider);
+/** REGISTER PROVIDER **/
+if (typeof freedom !== 'undefined') {
+  freedom.transport().provideAsynchronous(TransportProvider);
+}

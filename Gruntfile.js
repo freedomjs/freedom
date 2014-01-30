@@ -10,10 +10,10 @@ var FILES = {
   ],
   jasminehelper: [
     'spec/util.js',
-    'providers/storage/isolated/storage.isolated.js',
   ],
   srcprovider: [
     'providers/social/websocket-server/*.js',
+    'providers/social/loopback/*.js',
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
@@ -42,7 +42,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     jasmine: {
       freedom: {
-        src: FILES.src.concat(FILES.jasminehelper), 
+        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
         options: {
           specs: FILES.specunit,
           keepRunner: false,

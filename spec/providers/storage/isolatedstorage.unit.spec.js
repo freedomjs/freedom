@@ -1,4 +1,4 @@
-describe("providers.storage.isolated", function() {
+describe("unit: storage.isolated.json", function () {
   var provider;
   beforeEach(function() {
     freedom = {
@@ -47,4 +47,6 @@ describe("providers.storage.isolated", function() {
     expect(d).toHaveBeenCalled();
     expect(provider.store.remove).toHaveBeenCalled();
   });
+
 });
+

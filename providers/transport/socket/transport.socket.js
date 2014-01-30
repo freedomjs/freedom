@@ -1,6 +1,3 @@
-var socket = freedom['core.socket']();
-var core = freedome.core();
-
 
 fdom.apis.set("core.socket", {
   'create': {type: "method", value: ["string", "object"]},
@@ -21,6 +18,8 @@ function TransportProvider() {
   this.state = TransportProvider.state.DISCONNECTED;
   this.channel = null;
   this.socket = null;
+  this.freedomcore = freedom.core();
+  this.freedomsocket = freedom['core.socket']();
 }
 
 TransportProvider.state = {
@@ -39,7 +38,7 @@ TransportProvider.prototype.open = function(freedomChannelId,
   this.state = TransportProvider.state.CONNECTING;
   this.onOpen = continuation;
   this.initiating = initiateConnection;
-  core.bindChannel(freedomChannelId).done(function(channel) {
+  this.freedomcore.bindChannel(freedomChannelId).done(function(channel) {
     this.channel = channel;
     this.channel.on('message', function(msg) {
 
@@ -52,7 +51,7 @@ TransportProvider.prototype.open = function(freedomChannelId,
 };
 
 TransportProvider.prototype.connect = function() {
-  socket.create("tcp", {}).done(function(socket) {
+  this.freedomsocket.create("tcp", {}).done(function(socket) {
     this.socket = socket.socketId;
   }.bind(this));
 };
@@ -70,5 +69,7 @@ TransportProvider.prototype.close = function(continuation) {
   this.peer.shutdown().done(continuation);
 };
 
-var transport = freedom.transport();
-transport.provideAsynchronous(TransportProvider);
+/** REGISTER PROVIDER **/
+if (typeof freedom !== 'undefined') {
+  freedom.transport().provideAsynchronous(TransportProvider);
+}

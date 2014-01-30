@@ -1,4 +1,4 @@
-var STORAGE_SPEC = function(manifest_url) { return function() {
+var STORAGE_INTEGRATION_SPEC = function(manifest_url) { return function() {
   var proxy;
   var TIMEOUT = 1000;
   beforeEach(function() {
@@ -138,5 +138,5 @@ var STORAGE_SPEC = function(manifest_url) { return function() {
   });
 }};
 
-describe("storage.isolated.json", STORAGE_SPEC("providers/storage/isolated/storage.isolated.json"));
-describe("storage.shared.json", STORAGE_SPEC("providers/storage/shared/storage.shared.json"));
+describe("integration: storage.isolated.json", STORAGE_INTEGRATION_SPEC("providers/storage/isolated/storage.isolated.json"));
+describe("integration: storage.shared.json", STORAGE_INTEGRATION_SPEC("providers/storage/shared/storage.shared.json"));

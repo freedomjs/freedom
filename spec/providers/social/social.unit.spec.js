@@ -1,4 +1,4 @@
-var SOCIAL_SPEC = function(manifest_url) {
+var SOCIAL_UNIT_SPEC = function(manifest_url) {
   const TIMEOUT = 2000;
   var proxy, p;
 
@@ -168,6 +168,6 @@ var SOCIAL_SPEC = function(manifest_url) {
 
 };
 
-describe("social.ws.json", SOCIAL_SPEC.bind(this, "providers/social/websocket-server/social.ws.json"));
-describe("social.loopback.json", SOCIAL_SPEC.bind(this, "providers/social/loopback/social.loopback.json"));
+describe("unit: social.ws.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/websocket-server/social.ws.json"));
+describe("unit: social.loopback.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/loopback/social.loopback.json"));
 
