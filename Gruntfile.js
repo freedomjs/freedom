@@ -181,6 +181,10 @@ module.exports = function(grunt) {
     'jshint:demo',
     'uglify'
   ]);
+  grunt.registerTask('test', [
+    'freedom',
+    'chromeTestRunner'
+  ]);
   grunt.registerTask('coverage', [
     'concat',
     'jasmine:coverage',

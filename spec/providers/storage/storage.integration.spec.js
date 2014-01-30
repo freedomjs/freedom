@@ -1,142 +1,103 @@
-var STORAGE_INTEGRATION_SPEC = function(manifest_url) { return function() {
-  var proxy;
+var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
   var TIMEOUT = 1000;
+  var freedom, helper;
+
   beforeEach(function() {
-    fdom.util.advertise();
-    proxy = createProxyFor(manifest_url, "storage");
+    freedom = setupModule("relative://spec/helper/providers.json");
+    helper = new ProviderHelper(freedom);
+    helper.createProvider("s", storageId);
+  });
+
+  afterEach(function() {
+    cleanupIframes();
   });
 
   it("sets and gets keys", function() {
-    var p = proxy();
-    var val = undefined;
+    var ids = {};
 
     runs(function() {
-      p.set('key', 'myvalue').done(function() {
-        p.get('key').done(function(ret) {
-          val = ret;
-        });
-      })
+      ids[0] = helper.call("s", "set", ["key", "myvalue"]);
+      ids[1] = helper.call("s", "get", ["key"]);
     });
-    waitsFor("Key to be round-tripped", function() {
-      return val != undefined;
-    }, TIMEOUT);
+    waitsFor("Key to be round-tripped", helper.hasReturned.bind(helper,ids), TIMEOUT); 
+
     runs(function() {
-      expect(val).toEqual('myvalue');
-      p.clear().done(function() {
-        val = undefined;
-      });
+      expect(helper.returns[ids[1]]).toEqual("myvalue");
+      ids[2] = helper.call("s", "clear", []);
     });
-    waitsFor('Cleanup to finish', function() {
-      return val == undefined;
-    }, TIMEOUT);
+    waitsFor("cleanup", helper.hasReturned.bind(helper,ids), TIMEOUT); 
   });
 
   it("removes a key", function() {
-    var p = proxy();
-    var val = undefined;
+    var ids = {};
 
     runs(function() {
-      p.set('key', 'value').done(function() {
-        p.remove('key').done(function() {
-          p.keys().done(function(ret) {
-            val = ret;
-          });
-        });
-      });
+      ids[0] = helper.call("s", "set", ["key", "myvalue"]);
+      ids[1] = helper.call("s", "remove", ["key"]);
+      ids[2] = helper.call("s", "keys", []);
     });
-    waitsFor("keys to be returned", function() {
-      return val != undefined;
-    }, TIMEOUT);
+    waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
+
     runs(function() {
-      expect(val.length).toEqual(0);
+      expect(helper.returns[ids[2]]).toEqual(0);
+      ids[3] = helper.call("s", "clear", []);
     });
+    waitsFor("cleanup", helper.hasReturned.bind(helper,ids), TIMEOUT); 
   });
 
   it("lists keys that have been set", function() {
-    var p = proxy();
-    var keys = undefined;
+    var ids = {};
 
     runs(function() {
-      p.set('k1', 'v1').done(function() {
-        p.set('k2', 'v2').done(function() {
-          p.keys().done(function(ret) {
-            keys = ret;
-          });
-        });
-      });
+      ids[0] = helper.call("s", "set", ["k1", "v1"]);
+      ids[1] = helper.call("s", "set", ["k2", "v2"]);
+      ids[2] = helper.call("s", "keys", []);
     });
-    waitsFor("keys to be set", function() {
-      return keys != undefined;
-    }, TIMEOUT);
+    waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
+
     runs(function() {
-      expect(keys.length).toEqual(2);
-      expect(keys).toContain('k1');
-      expect(keys).toContain('k2');
-      p.clear().done(function() {
-        keys = undefined;
-      });
+      expect(helper.returns[ids[2]]).toEqual(2);
+      expect(helper.returns[ids[2]]).toContain("k1");
+      expect(helper.returns[ids[2]]).toContain("k2");
+      ids[3] = helper.call("s", "clear", []);
     });
-    waitsFor("cleanup keys", function() {
-      return keys == undefined;
-    }, TIMEOUT);
+    waitsFor("cleanup", helper.hasReturned.bind(helper,ids), TIMEOUT); 
   });
 
   it("clears the store", function() {
-    var p = proxy();
-    var val = undefined;
+    var ids = {};
 
     runs(function() {
-      p.set('key', 'value').done(function() {
-        p.clear().done(function() {
-          p.keys().done(function(ret) {
-            val = ret;
-          });
-        });
-      });
+      ids[0] = helper.call("s", "set", ["key", "value"]);
+      ids[1] = helper.call("s", "clear", []);
+      ids[2] = helper.call("s", "keys", []);
     });
-    waitsFor("keys to be set", function() {
-      return val != undefined;
-    }, TIMEOUT);
+    waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
+
     runs(function() {
-      expect(val.length).toEqual(0);
+      expect(helper.returns[ids[2]]).toEqual(0);
     });
   });
 
   it("shares data between different instances", function() {
-    var p1 = proxy();
-    var p2 = proxy();
-    var isKeySet = false;
-    var val = undefined;
+    var ids = {};
 
     runs(function() {
-      p1.set("key", "value").done(function() {
-        isKeySet = true;
-      });
+      helper.createProvider("s2", storageId);
+      ids[0] = helper.call("s", "set", ["key", "value"]);
+      ids[1] = helper.call("s2", "get", ["key"]);
     });
-    waitsFor("keys should be set", function() {
-      return isKeySet == true;
-    }, TIMEOUT);
+    waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
+
     runs(function() {
-      p2.get("key").done(function(ret) {
-        val = ret;
-      });
-    });
-    waitsFor("keys retrieved", function() {
-      return val != undefined;
-    });
-    runs(function() {
+      expect(helper.returns[ids[1]]).toEqual("value");
       expect(val).toEqual("value");
-      p1.clear().done(function () {
-        p2.clear().done(function () {
-          val = undefined;
-        });
-      });
+      ids[2] = helper.call("s", "clear", []);
+      ids[3] = helper.call("s2", "clear", []);
     });
-    waitsFor("cleanup keys", function() {
-      return val == undefined;
-    }, TIMEOUT);
+    waitsFor("cleanup", helper.hasReturned.bind(helper,ids), TIMEOUT); 
   });
 }};
 
-describe("integration: storage.isolated.json", STORAGE_INTEGRATION_SPEC("providers/storage/isolated/storage.isolated.json"));
-describe("integration: storage.shared.json", STORAGE_INTEGRATION_SPEC("providers/storage/shared/storage.shared.json"));
+describe("integration: storage.isolated.json", STORAGE_INTEGRATION_SPEC("storage.isolated"));
+describe("integration: storage.shared.json", STORAGE_INTEGRATION_SPEC("storage.shared"));
