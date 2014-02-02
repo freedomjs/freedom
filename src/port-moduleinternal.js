@@ -6,18 +6,18 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * The internal configuration of an application, makes sure that the freedom
- * export has the appropriate properties, and loads user scripts.
- * @class AppInternal
+ * The internal logic for module setup, which makes sure the public
+ * facing exports have appropriate properties, and load user scripts.
+ * @class ModuleInternal
  * @extends Port
- * @param {Port} manager The hub manager within this application to signal.
+ * @param {Port} manager The manager in this module to use for routing setup.
  * @constructor
  */
-fdom.port.AppInternal = function(manager) {
+fdom.port.ModuleInternal = function(manager) {
   this.config = {};
   this.manager = manager;
   
-  this.id = 'environment' + Math.random();
+  this.id = 'ModuleInternal-' + Math.random();
   this.pendingPorts = 0;
   this.requests = {};
 
@@ -26,25 +26,26 @@ fdom.port.AppInternal = function(manager) {
 
 /**
  * Message handler for this port.
- * The Internal app only handles two messages:
+ * This port only handles two messages:
  * The first is its setup from the manager, which it uses for configuration.
- * The second is from the app external, which provides it with manifest info.
+ * The second is from the module controller (fdom.port.Module), which provides
+ * the manifest info for the module.
  * @method onMessage
  * @param {String} flow The detination of the message.
  * @param {Object} message The message.
  */
-fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
+fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
       fdom.util.mixin(this.config, message.config);
     }
   } else if (flow === 'default' && !this.appId) {
-    // Recover the app:
+    // Recover the ID of this module:
     this.port = this.manager.hub.getDestination(message.channel);
-    this.appChannel = message.channel;
+    this.externalChannel = message.channel;
     this.appId = message.appId;
-    this.appLineage = message.lineage;
+    this.lineage = message.lineage;
 
     var objects = this.mapProxies(message.manifest);
 
@@ -61,8 +62,8 @@ fdom.port.AppInternal.prototype.onMessage = function(flow, message) {
  * @method toString
  * @return {String} a description of this Port.
  */
-fdom.port.AppInternal.prototype.toString = function() {
-  return "[App Environment Helper]";
+fdom.port.ModuleInternal.prototype.toString = function() {
+  return "[Module Environment Helper]";
 };
 
 /**
@@ -72,7 +73,7 @@ fdom.port.AppInternal.prototype.toString = function() {
  * @param {Proxy} proxy The proxy to attach.
  * @private.
  */
-fdom.port.AppInternal.prototype.attach = function(name, proxy) {
+fdom.port.ModuleInternal.prototype.attach = function(name, proxy) {
   var exp = this.config.global.freedom;
 
   if (!exp[name]) {
@@ -92,7 +93,7 @@ fdom.port.AppInternal.prototype.attach = function(name, proxy) {
  * @param {Object[]} items Descriptors of the proxy ports to load.
  * @private
  */
-fdom.port.AppInternal.prototype.loadLinks = function(items) {
+fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
   var i, proxy, provider, core;
   for (i = 0; i < items.length; i += 1) {
     if (items[i].def) {
@@ -113,7 +114,7 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
   // Allow resolution of files by parent.
   fdom.resources.addResolver(function(manifest, url, deferred) {
     var id = Math.random();
-    this.emit(this.appChannel, {
+    this.emit(this.externalChannel, {
       type: 'resolve',
       id: id,
       data: url
@@ -128,7 +129,7 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
   core = fdom.apis.get('core').definition;
   provider = new fdom.port.Provider(core);
   this.manager.getCore(function(CoreProv) {
-    new CoreProv(this.manager).setId(this.appLineage);
+    new CoreProv(this.manager).setId(this.lineage);
     provider.getInterface().provideAsynchronous(CoreProv);
   }.bind(this));
 
@@ -149,12 +150,12 @@ fdom.port.AppInternal.prototype.loadLinks = function(items) {
 };
 
 /**
- * Determine which proxy ports should be exposed by this application.
+ * Determine which proxy ports should be exposed by this module.
  * @method mapProxies
- * @param {Object} manifest the application JSON manifest.
+ * @param {Object} manifest the module JSON manifest.
  * @return {Object[]} proxy descriptors defined in the manifest.
  */
-fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
+fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
   var proxies = [], seen = ['core'], i, obj;
   
   if (manifest.permissions) {
@@ -207,10 +208,10 @@ fdom.port.AppInternal.prototype.mapProxies = function(manifest) {
 /**
  * Load external scripts into this namespace.
  * @method loadScripts
- * @param {String} from The URL of this application's manifest.
+ * @param {String} from The URL of this modules's manifest.
  * @param {String[]} scripts The URLs of the scripts to load.
  */
-fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
+fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
   var i = 0,
       safe = true,
       importer = function importScripts(script, deferred) {
@@ -224,13 +225,13 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
         outstanding -= 1;
         if (outstanding === 0) {
           if (safe) {
-            this.emit(this.appChannel, {
+            this.emit(this.externalChannel, {
               type: 'ready'
             });
             this.tryLoad(importer, urls);
           } else {
             this.tryLoad(importer, urls).done(function() {
-              this.emit(this.appChannel, {
+              this.emit(this.externalChannel, {
                 type: 'ready'
               });
             }.bind(this));
@@ -267,7 +268,7 @@ fdom.port.AppInternal.prototype.loadScripts = function(from, scripts) {
  * @param {String[]} urls The resoved URLs to load.
  * @returns {fdom.proxy.Deferred} completion of load
  */
-fdom.port.AppInternal.prototype.tryLoad = function(importer, urls) {
+fdom.port.ModuleInternal.prototype.tryLoad = function(importer, urls) {
   var i,
       deferred = fdom.proxy.Deferred(),
       def,

@@ -90,7 +90,7 @@ fdom.setup = function (global, freedom_src, config) {
       link = site_cfg.location;
     }
     fdom.resources.get(link, site_cfg.manifest).done(function(url) {
-      setupApp(new fdom.port.App(url, []));
+      setupApp(new fdom.port.Module(url, []));
     });
   }
   hub.emit('config', site_cfg);

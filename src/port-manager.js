@@ -6,7 +6,7 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * A freedom application which processes control messages manage hub routing.
+ * A freedom port which manages the control plane of of changing hub routes.
  * @class Manager
  * @extends Port
  * @param {Hub} hub The routing hub to control.

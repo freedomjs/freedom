@@ -1,10 +1,10 @@
-describe('fdom.port.AppInternal', function() {
+describe('fdom.port.ModuleInternal', function() {
   var app, manager, hub, global, loc;
   beforeEach(function() {
     global = {freedom: {}};
     hub = new fdom.Hub();
     manager = new fdom.port.Manager(hub);
-    app = new fdom.port.AppInternal(manager);
+    app = new fdom.port.ModuleInternal(manager);
     hub.emit('config', {
       global: global
     });
