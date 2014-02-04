@@ -43,6 +43,7 @@ TransportProvider.prototype.send = function(tag, data, continuation) {
 };
 
 TransportProvider.prototype.close = function(continuation) {
+  // TODO: Close data channels.
   this._tags = [];
   this.pc.close().done(continuation);
 };
