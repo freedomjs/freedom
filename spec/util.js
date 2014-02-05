@@ -85,7 +85,7 @@ var createProxyFor = function(app, api) {
   
   var link = location.protocol + "//" + location.host + location.pathname;
   fdom.resources.get(link, site_cfg.manifest).done(function(url) {
-    var app = new fdom.port.App(url, []);
+    var app = new fdom.port.Module(url, []);
     manager.setup(app);
     manager.createLink(proxy, 'default', app);
   });

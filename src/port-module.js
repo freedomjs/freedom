@@ -6,14 +6,14 @@ if (typeof fdom === 'undefined') {
 fdom.port = fdom.port || {};
 
 /**
- * The external Port face of an application on a hub.
- * @class App
+ * The external Port face of a module on a hub.
+ * @class Module
  * @extends Port
  * @param {String} manifestURL The manifest this module loads.
  * @param {String[]} creator The lineage of creation for this module.
  * @constructor
  */
-fdom.port.App = function(manifestURL, creator) {
+fdom.port.Module = function(manifestURL, creator) {
   this.config = {};
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
@@ -27,12 +27,12 @@ fdom.port.App = function(manifestURL, creator) {
 };
 
 /**
- * Receive an external application for the Application.
+ * Receive a message for the Module.
  * @method onMessage
  * @param {String} flow The origin of the message.
  * @param {Object} message The message received.
  */
-fdom.port.App.prototype.onMessage = function(flow, message) {
+fdom.port.Module.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (message.type === 'setup') {
       this.controlChannel = message.channel;
@@ -97,7 +97,7 @@ fdom.port.App.prototype.onMessage = function(flow, message) {
  * @returns {Boolean} Whether the flow was successfully deregistered.
  * @private
  */
-fdom.port.App.prototype.deregisterFlow = function(flow, internal) {
+fdom.port.Module.prototype.deregisterFlow = function(flow, internal) {
   var key,
       map = internal ? this.internalPortMap : this.externalPortMap;
   // TODO: this is inefficient, but seems less confusing than a 3rd
@@ -125,12 +125,12 @@ fdom.port.App.prototype.deregisterFlow = function(flow, internal) {
 };
 
 /**
- * Attempt to start the application once the remote freedom context
+ * Attempt to start the module once the remote freedom context
  * exists.
  * @method start
  * @private
  */
-fdom.port.App.prototype.start = function() {
+fdom.port.Module.prototype.start = function() {
   if (this.started || this.port) {
     return false;
   }
@@ -157,23 +157,23 @@ fdom.port.App.prototype.start = function() {
       flow: 'core'
     });
     
-    // Tell the remote location to instantate the app.
+    // Tell the container to instantiate the counterpart to this external view.
     this.port.onMessage('control', {
       type: 'Environment Configuration',
       request: 'port',
-      name: 'AppInternal',
-      service: 'AppInternal',
+      name: 'ModInternal',
+      service: 'ModuleInternal',
       exposeManager: true
     });
   }
 };
 
 /**
- * Stop the application when it is no longer needed, and tear-down state.
+ * Stop the module when it is no longer needed, and tear-down state.
  * @method stop
  * @private
  */
-fdom.port.App.prototype.stop = function() {
+fdom.port.Module.prototype.stop = function() {
   if (!this.started) {
     return;
   }
@@ -193,21 +193,21 @@ fdom.port.App.prototype.stop = function() {
  * @method toString
  * @return {String} The description of this Port.
  */
-fdom.port.App.prototype.toString = function() {
-  return "[App " + this.manifestId + "]";
+fdom.port.Module.prototype.toString = function() {
+  return "[Module " + this.manifestId + "]";
 };
 
 /**
- * Intercept messages as they arrive from the application,
+ * Intercept messages as they arrive from the module,
  * mapping them between internal and external flow names.
  * @method emitMessage
- * @param {String} name The destination the app wants to send to.
+ * @param {String} name The destination the module wants to send to.
  * @param {Object} message The message to send.
  * @private
  */
-fdom.port.App.prototype.emitMessage = function(name, message) {
+fdom.port.Module.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
-    fdom.debug.log('Application saw new channel binding: ' + name +
+    fdom.debug.log('Module saw new channel binding: ' + name +
         'registered as ' + message.channel);
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
@@ -229,9 +229,9 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
         this.externalPortMap[message.message.id] = false;
       }
       this.core.onMessage(this, message.message);
-    } else if (message.name === 'AppInternal' && !this.appInternal) {
-      this.appInternal = message.channel;
-      this.port.onMessage(this.appInternal, {
+    } else if (message.name === 'ModInternal' && !this.modInternal) {
+      this.modInternal = message.channel;
+      this.port.onMessage(this.modInternal, {
         type: 'Initialization',
         id: this.manifestId,
         appId: this.id,
@@ -256,12 +256,12 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
     } else if (message.type === 'close') {
       this.deregisterFlow(message.channel, true);
     }
-  } else if (name === 'AppInternal' && message.type === 'ready' && !this.started) {
+  } else if (name === 'ModInternal' && message.type === 'ready' && !this.started) {
     this.started = true;
     this.emit('start');
-  } else if (name === 'AppInternal' && message.type === 'resolve') {
+  } else if (name === 'ModInternal' && message.type === 'resolve') {
     fdom.resources.get(this.manifestId, message.data).done(function(id, data) {
-      this.port.onMessage(this.appInternal, {
+      this.port.onMessage(this.modInternal, {
         type: 'resolve response',
         id: id,
         data: data
@@ -278,7 +278,7 @@ fdom.port.App.prototype.emitMessage = function(name, message) {
  * @method loadManifest
  * @private
  */
-fdom.port.App.prototype.loadManifest = function() {
+fdom.port.Module.prototype.loadManifest = function() {
   fdom.resources.getContents(this.manifestId).done(function(data) {
     var resp = {};
     try {
@@ -293,11 +293,11 @@ fdom.port.App.prototype.loadManifest = function() {
 };
 
 /**
- * Request the external routes used by this application.
+ * Request the external routes used by this module.
  * @method loadLinks
  * @private
  */
-fdom.port.App.prototype.loadLinks = function() {
+fdom.port.Module.prototype.loadLinks = function() {
   var i, channels = ['default'], name, dep,
       finishLink = function(dep, provider) {
         dep.getInterface().provideAsynchronous(provider);
@@ -325,7 +325,7 @@ fdom.port.App.prototype.loadLinks = function() {
         channels.push(name);
       }
       fdom.resources.get(this.manifestId, desc.url).done(function (url) {
-        var dep = new fdom.port.App(url, this.lineage);
+        var dep = new fdom.port.Module(url, this.lineage);
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,
           request: 'link',
@@ -342,7 +342,7 @@ fdom.port.App.prototype.loadLinks = function() {
   }
 };
 
-fdom.port.App.prototype.serialize = function() {
+fdom.port.Module.prototype.serialize = function() {
   return JSON.serialize({
     manifestId: this.manifestId,
     externalPortMap: this.externalPortMap,
