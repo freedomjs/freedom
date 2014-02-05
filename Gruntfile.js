@@ -27,7 +27,7 @@ var FILES = {
     //'spec/providers/transport/**/*.unit.spec.js',
   ],
   specintegration: [
-    //'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
     //'spec/providers/transport/**/*.integration.spec.js',
   ],
