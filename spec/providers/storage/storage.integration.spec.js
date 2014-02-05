@@ -39,7 +39,7 @@ var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
     waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
 
     runs(function() {
-      expect(helper.returns[ids[2]]).toEqual(0);
+      expect(helper.returns[ids[2]]).toEqual([]);
       ids[3] = helper.call("s", "clear", []);
     });
     waitsFor("cleanup", helper.hasReturned.bind(helper,ids), TIMEOUT); 
@@ -56,7 +56,7 @@ var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
     waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
 
     runs(function() {
-      expect(helper.returns[ids[2]]).toEqual(2);
+      expect(helper.returns[ids[2]].length).toEqual(2);
       expect(helper.returns[ids[2]]).toContain("k1");
       expect(helper.returns[ids[2]]).toContain("k2");
       ids[3] = helper.call("s", "clear", []);
@@ -70,12 +70,16 @@ var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
     runs(function() {
       ids[0] = helper.call("s", "set", ["key", "value"]);
       ids[1] = helper.call("s", "clear", []);
+    });
+    waitsFor("keys to be cleared", helper.hasReturned.bind(helper,ids), TIMEOUT); 
+
+    runs(function() {
       ids[2] = helper.call("s", "keys", []);
     });
     waitsFor("keys to be returned", helper.hasReturned.bind(helper,ids), TIMEOUT); 
 
     runs(function() {
-      expect(helper.returns[ids[2]]).toEqual(0);
+      expect(helper.returns[ids[2]].length).toEqual(0);
     });
   });
 
@@ -91,7 +95,6 @@ var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
 
     runs(function() {
       expect(helper.returns[ids[1]]).toEqual("value");
-      expect(val).toEqual("value");
       ids[2] = helper.call("s", "clear", []);
       ids[3] = helper.call("s2", "clear", []);
     });
