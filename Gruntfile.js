@@ -22,7 +22,7 @@ var FILES = {
     'spec/providers/core/**/*.spec.js', 
     'spec/providers/social/**/*.unit.spec.js', 
     'spec/providers/storage/**/*.unit.spec.js',
-    'spec/providers/transport/**/*.unit.spec.js',
+//    'spec/providers/transport/**/*.unit.spec.js',
   ],
   specintegration: [
     'spec/providers/social/**/*.integration.spec.js',
@@ -38,35 +38,42 @@ module.exports = function(grunt) {
   if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
     saucekey = process.env.SAUCE_ACCESS_KEY;
   }
-  grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-    jasmine: {
-      freedom: {
-        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
-        options: {
-          specs: FILES.specunit,
-          keepRunner: false,
-        }
-      },
-      freedomKeepRunner: {
-        src: FILES.src.concat(FILES.jasminehelper),
-        options: {
-          specs: FILES.specunit,
-          keepRunner: true,
-        }
-      },
-      coverage: {
-        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
-        options: {
-          specs: FILES.specunit,
+  var jasmineSpecs = {};
+  var jasmineTasks = [];
+  var jasmineCoverageTasks = [];
+  
+  FILES.specunit.forEach(function(spec) {
+    jasmineTasks.push('jasmine:' + spec);
+    jasmineCoverageTasks.push('jasmine:' + spec + 'Coverage');
+    jasmineSpecs[spec] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
+        keepRunner: false
+      }
+    };
+    jasmineSpecs[spec + 'KeepRunner'] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
+        keepRunner: true
+      }
+    }
+    jasmineSpecs[spec + 'Coverage'] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'tools/lcov.info',
             report: [{type: 'lcovonly'}]
           }
-        }
-      },
-    },
+      }
+    }
+  });
+  grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
+    jasmine: jasmineSpecs,
     'saucelabs-jasmine': {
       all: {
         options: {
@@ -172,10 +179,12 @@ module.exports = function(grunt) {
   });
 
   // Default tasks.
+  grunt.registerTask('jasmineTasks', jasmineTasks);
+  grunt.registerTask('jasmineCoverageTasks', jasmineCoverageTasks);
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
-    'jasmine:freedom',
+    'jasmineTasks',
     'jshint:afterconcat',
     'jshint:providers',
     'jshint:demo',
@@ -187,11 +196,11 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('coverage', [
     'concat',
-    'jasmine:coverage',
+    'jasmineCoverageTasks',
     'coveralls:report'
   ]);
   grunt.registerTask('saucelabs', [
-    'jasmine:freedomKeepRunner',
+    'jasmineTasks',
     'spawn-web-server',
     'saucelabs-jasmine',
     'kill-web-server',
