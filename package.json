@@ -27,7 +27,8 @@
     "es5-shim": "~2.3.0",
     "grunt-template-jasmine-istanbul": "~0.3.0",
     "grunt-coveralls": "~0.3.0",
-    "grunt-saucelabs": "~5.0.0"
+    "grunt-saucelabs": "~5.0.0",
+    "istanbul": "~0.2.4"
   },
   "scripts": {
     "test": "grunt freedom coverage --verbose",

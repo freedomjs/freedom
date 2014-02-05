@@ -4,8 +4,8 @@
 
 ### Auto-generated
 tools/doc
-tools/lcov*.info
-lcov.info
+tools/coverage*.json
+tools/lcov.info
 node_modules
 
 ### Scrap

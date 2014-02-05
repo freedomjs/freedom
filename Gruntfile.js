@@ -61,17 +61,16 @@ module.exports = function(grunt) {
         keepRunner: true
       }
     }
+    grunt.file.mkdir('tools/lcov' + jasmineTasks.length);
     jasmineSpecs[sname + 'Coverage'] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
-          template: require('grunt-template-jasmine-istanbul'),
-          templateOptions: {
-            coverage: 'tools/lcov' +jasmineTasks.length + '.info',
-            report: {
-              type: 'lcovonly'
-            }
-          }
+        template: require('grunt-template-jasmine-istanbul'),
+        templateOptions: {
+          coverage: 'tools/coverage' + jasmineTasks.length + '.json',
+          report: []
+        }
       }
     }
   });
@@ -136,7 +135,7 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'tools/lcov*.info'
+        src: 'tools/lcov.info'
       }
     }
   });
@@ -150,6 +149,19 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-saucelabs');
+  
+  // Write lcov coverage
+  grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
+    var istanbul = require('istanbul');
+    var collector = new istanbul.Collector();
+    var reporter = istanbul.Report.create('lcovonly', {
+      dir: 'tools'
+    });
+    grunt.file.expand('tools/coverage*.json').forEach(function (file) {
+      collector.add(grunt.file.readJSON(file));
+    });
+    reporter.writeReport(collector, true);
+  });
 
   // Custom Task for Chrome Test Runner
   grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
@@ -201,6 +213,7 @@ module.exports = function(grunt) {
   grunt.registerTask('coverage', [
     'concat',
     'jasmineCoverageTasks',
+    'istanbulCollect',
     'coveralls:report'
   ]);
   grunt.registerTask('saucelabs', [
