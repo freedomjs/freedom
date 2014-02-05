@@ -4,7 +4,7 @@
 
 ### Auto-generated
 tools/doc
-tools/lcov.info
+tools/lcov*.info
 lcov.info
 node_modules
 

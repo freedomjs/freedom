@@ -67,8 +67,10 @@ module.exports = function(grunt) {
         specs: spec,
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
-            coverage: 'tools/lcov.info',
-            report: [{type: 'lcovonly'}]
+            coverage: 'tools/lcov' +jasmineTasks.length + '.info',
+            report: {
+              type: 'lcovonly'
+            }
           }
       }
     }
@@ -134,7 +136,7 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'lcov.info'
+        src: 'tools/lcov*.info'
       }
     }
   });
