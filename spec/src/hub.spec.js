@@ -30,7 +30,7 @@ describe("fdom.Hub", function() {
 
     hub.register(app);
     hub.install(app, null, 'magic');
-    expect(fdom.debug.warn.callCount).toEqual(2);
+    expect(fdom.debug.warn.calls.count()).toEqual(2);
     expect(hub.register(app)).toEqual(false);
 
     expect(hub.deregister(app)).toEqual(true);
@@ -113,7 +113,7 @@ describe("fdom.Hub", function() {
     expect(fdom.debug.warn).toHaveBeenCalled();
 
     hub.uninstall({id: null}, route);
-    expect(fdom.debug.warn.callCount).toEqual(2);
+    expect(fdom.debug.warn.calls.count()).toEqual(2);
 
     expect(hub.uninstall(app1, route+'fake')).toEqual(false);
 
@@ -122,7 +122,7 @@ describe("fdom.Hub", function() {
     expect(hub.getDestination(route+'fake')).toEqual(null);
 
     hub.onMessage(route, {test: true});
-    expect(fdom.debug.warn.callCount).toEqual(3);
+    expect(fdom.debug.warn.calls.count()).toEqual(3);
   });
 });
 

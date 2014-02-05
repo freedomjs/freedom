@@ -23,7 +23,7 @@ describe("fdom.proxy.Callbacks", function() {
 
     callback.fire();
     expect(f).toHaveBeenCalled();
-    expect(f.callCount).toEqual(1);    
+    expect(f.calls.count()).toEqual(1);    
   });
  
   it("Removes Callbacks reasonably", function() {
@@ -60,7 +60,7 @@ describe("fdom.proxy.Callbacks", function() {
     var h = jasmine.createSpy('c');
 
     callback.add(f);
-    f.andCallFake(function() {
+    f.and.callFake(function() {
       callback.add(h);
       callback.remove(f);
       callback.fire('b');

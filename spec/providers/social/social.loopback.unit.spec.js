@@ -4,16 +4,23 @@ describe("unit: social.loopback.json", function () {
 
   beforeEach(function() {
     freedom = {
-      social: function() { return {
-        STATUS_NETWORK: fdom.apis.get("social").definition.STATUS_NETWORK.value,
-        STATUS_CLIENT: fdom.apis.get("social").definition.STATUS_CLIENT.value
-      };}
+      social: mockIface([], [
+        ['STATUS_NETWORK', fdom.apis.get("social").definition.STATUS_NETWORK.value],
+        ['STATUS_CLIENT', fdom.apis.get("social").definition.STATUS_CLIENT.value]
+      ])
     };
+
+    jasmine.clock().install();
     provider = new LoopbackSocialProvider();
     provider.dispatchEvent = jasmine.createSpy('dispatchEvent');
   });
-
+  
+  afterEach(function() {
+    jasmine.clock().uninstall();
+  });
+  
   it("emits offline at start", function() {
+    jasmine.clock().tick(100);
     waitsFor("offline onStatus event", function() {
       return provider.dispatchEvent.callCount > 0;
     }, TIMEOUT);
@@ -114,4 +121,5 @@ describe("unit: social.loopback.json", function () {
 
 
 });
+
 

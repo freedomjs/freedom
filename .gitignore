@@ -4,6 +4,7 @@
 
 ### Auto-generated
 tools/doc
+tools/coverage*.json
 tools/lcov.info
 lcov.info
 node_modules

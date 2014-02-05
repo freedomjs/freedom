@@ -18,11 +18,12 @@ var FILES = {
     'providers/transport/**/*.js'
   ],
   specunit: [
-    'spec/src/**/*.spec.js', 
+    'spec/src/{a,d,h,m,p,r,u}*.spec.js',
+    'spec/src/freedom*.spec.js', 
     'spec/providers/core/**/*.spec.js', 
     'spec/providers/social/**/*.unit.spec.js', 
     'spec/providers/storage/**/*.unit.spec.js',
-    'spec/providers/transport/**/*.unit.spec.js',
+//    'spec/providers/transport/**/*.unit.spec.js',
   ],
   specintegration: [
     'spec/providers/social/**/*.integration.spec.js',
@@ -38,35 +39,44 @@ module.exports = function(grunt) {
   if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
     saucekey = process.env.SAUCE_ACCESS_KEY;
   }
+  var jasmineSpecs = {};
+  var jasmineTasks = [];
+  var jasmineCoverageTasks = [];
+  
+  FILES.specunit.forEach(function(spec) {
+    var sname = spec + 'Spec';
+    jasmineTasks.push('jasmine:' + sname);
+    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
+    jasmineSpecs[sname] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
+        keepRunner: false
+      }
+    };
+    jasmineSpecs[sname + 'KeepRunner'] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
+        keepRunner: true
+      }
+    }
+    grunt.file.mkdir('tools/lcov' + jasmineTasks.length);
+    jasmineSpecs[sname + 'Coverage'] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
+        template: require('grunt-template-jasmine-istanbul'),
+        templateOptions: {
+          coverage: 'tools/coverage' + jasmineTasks.length + '.json',
+          report: []
+        }
+      }
+    }
+  });
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    jasmine: {
-      freedom: {
-        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
-        options: {
-          specs: FILES.specunit,
-          keepRunner: false,
-        }
-      },
-      freedomKeepRunner: {
-        src: FILES.src.concat(FILES.jasminehelper),
-        options: {
-          specs: FILES.specunit,
-          keepRunner: true,
-        }
-      },
-      coverage: {
-        src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper), 
-        options: {
-          specs: FILES.specunit,
-          template: require('grunt-template-jasmine-istanbul'),
-          templateOptions: {
-            coverage: 'tools/lcov.info',
-            report: [{type: 'lcovonly'}]
-          }
-        }
-      },
-    },
+    jasmine: jasmineSpecs,
     'saucelabs-jasmine': {
       all: {
         options: {
@@ -125,7 +135,7 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'lcov.info'
+        src: 'tools/lcov.info'
       }
     }
   });
@@ -139,6 +149,19 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-saucelabs');
+  
+  // Write lcov coverage
+  grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
+    var istanbul = require('istanbul');
+    var collector = new istanbul.Collector();
+    var reporter = istanbul.Report.create('lcovonly', {
+      dir: 'tools'
+    });
+    grunt.file.expand('tools/coverage*.json').forEach(function (file) {
+      collector.add(grunt.file.readJSON(file));
+    });
+    reporter.writeReport(collector, true);
+  });
 
   // Custom Task for Chrome Test Runner
   grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
@@ -172,10 +195,12 @@ module.exports = function(grunt) {
   });
 
   // Default tasks.
+  grunt.registerTask('jasmineTasks', jasmineTasks);
+  grunt.registerTask('jasmineCoverageTasks', jasmineCoverageTasks);
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
-    'jasmine:freedom',
+    'jasmineTasks',
     'jshint:afterconcat',
     'jshint:providers',
     'jshint:demo',
@@ -187,11 +212,12 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('coverage', [
     'concat',
-    'jasmine:coverage',
+    'jasmineCoverageTasks',
+    'istanbulCollect',
     'coveralls:report'
   ]);
   grunt.registerTask('saucelabs', [
-    'jasmine:freedomKeepRunner',
+    'jasmineTasks',
     'spawn-web-server',
     'saucelabs-jasmine',
     'kill-web-server',

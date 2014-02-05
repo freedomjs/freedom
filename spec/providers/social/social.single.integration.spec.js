@@ -23,7 +23,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name, network_id) {
     };
   }
   
-  it("logs in", function() {
+  xit("logs in", function() {
     var ids = {};
     
     runs(function() {
@@ -38,23 +38,23 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name, network_id) {
     });
   });
 
-  it("logs in, then out (x5)", function() {
+  xit("logs in, then out (x5)", function() {
   
   });
 
-  it("logs in twice", function() {
+  xit("logs in twice", function() {
   
   });
 
-  it("logs out when already logged out", function() {
+  xit("logs out when already logged out", function() {
   
   });
 
-  it("returns roster", function() {
+  xit("returns roster", function() {
   
   });
 
-  it("sends message", function() {
+  xit("sends message", function() {
   
   });
  

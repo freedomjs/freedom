@@ -2,7 +2,7 @@ describe("core.storage unprivileged", function() {
   var provider;
   var TIMEOUT = 1000;
   
-  beforeEach(function() {
+  beforeEach(function(done) {
     if (typeof chrome !== "undefined") {
       chrome.storage.local.clear();
       provider = new Storage_chromeStorageLocal({});
@@ -10,91 +10,58 @@ describe("core.storage unprivileged", function() {
       localStorage.clear();
       provider = new Storage_unprivileged({});
     }
+    done();
   });
   
-  it("Deals with Keys appropriately", function() {
-    var d;
-    runs(function() {
-      d = jasmine.createSpy('keys');
-      provider.keys(d);
-    });
-    waitsFor("keys return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalledWith([]);
-      d = jasmine.createSpy('get');
-      provider.get('myKey', d);
-    });
-    waitsFor("get return", function() {return (d.callCount > 0);}, TIMEOUT);
-    
-    runs(function() {
-      expect(d).toHaveBeenCalledWith(null);
-      d = jasmine.createSpy('set');
-      provider.set('myKey', 'myVal', d);
-    });
-    waitsFor("set return", function() {return (d.callCount > 0);}, TIMEOUT);
-    
-    runs(function() {
-      expect(d).toHaveBeenCalled();
-      d = jasmine.createSpy('get2');
-      provider.get('myKey', d);
-    });
-    waitsFor("get return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalledWith('myVal');
-      d = jasmine.createSpy('keys2');
-      provider.keys(d);
-    });
-    waitsFor("keys return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalledWith(['myKey']);
-      d = jasmine.createSpy('rem');
-      provider.remove('myKey', d);
-    });
-    waitsFor("remove return", function() {return (d.callCount > 0);}, TIMEOUT);
-    
-    runs(function() {
-      expect(d).toHaveBeenCalled();
-      d = jasmine.createSpy('get3');
-      provider.get('myKey', d);
-    });
-    waitsFor("get return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalledWith(null);
-    });
+  it("Deals with Keys appropriately", function(done) {
+    var callbackOne = function(ret) {
+      expect(ret).toEqual([]);
+      provider.get('myKey', callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      expect(ret).toEqual(null);
+      provider.set('myKey', 'myVal', callbackThree);
+    };
+    var callbackThree = function(ret) {
+      provider.get('myKey', callbackFour);
+    }
+    var callbackFour = function(ret) {
+      expect(ret).toEqual('myVal');
+      provider.keys(callbackFive);
+    };
+    var callbackFive = function(ret) {
+      expect(ret).toEqual(['myKey']);
+      provider.remove('myKey', callbackSix);
+    }
+    var callbackSix = function(ret) {
+      provider.get('myKey', callbackSeven);
+    };
+    var callbackSeven = function(ret) {
+      expect(ret).toEqual(null);
+      done();
+    };
+    provider.keys(callbackOne);
   });
 
-  it("Clears Items", function() {
-    var d;
+  it("Clears Items", function(done) {
+    var callbackOne = function(ret) {
+      provider.set('otherKey', 'otherValue', callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      provider.clear(callbackThree);
+    };
+    var callbackThree = function(ret) {
+      provider.get('myKey', callbackFour);
+    };
+    var callbackFour = function(ret) {
+      expect(ret).toEqual(null);
+      provider.get('otherKey', callbackFive);
+    };
+    var callbackFive = function(ret) {
+      expect(ret).toEqual(null);
+      done();
+    }
+    provider.set('myKey', 'myVal', callbackOne);
     
-    runs(function() {
-      d = jasmine.createSpy('set');
-      provider.set('myKey', 'myVal', d);
-      provider.set('otherKey', 'otherVal', d);
-      d = jasmine.createSpy('clear');
-      provider.clear(d);
-    });
-    waitsFor("clear return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalled();
-      d = jasmine.createSpy('get');
-      provider.get('myKey', d);
-    });
-    waitsFor("get return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalledWith(null);
-      d = jasmine.createSpy('get2');
-      provider.get('otherKey', d);
-    });
-    waitsFor("get return", function() {return (d.callCount > 0);}, TIMEOUT);
-
-    runs(function() {
-      expect(d).toHaveBeenCalledWith(null);
-    });
   });
 });

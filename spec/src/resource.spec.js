@@ -15,12 +15,12 @@ describe("fdom.resources", function() {
   });
 
   it("should cache resolved URLs", function() {
-    spyOn(resources, 'resolve').andCallThrough();
+    spyOn(resources, 'resolve').and.callThrough();
     var deferred = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
     deferred = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
-    expect(resources.resolve.calls.length).toEqual(1);
+    expect(resources.resolve.calls.count()).toEqual(1);
   });
 
   it("should fetch URLs", function() {
@@ -38,7 +38,7 @@ describe("fdom.resources", function() {
 
     deferred = resources.resolve('test');
     deferred.fail(spy);
-    expect(spy.callCount).toEqual(2);
+    expect(spy.calls.count()).toEqual(2);
   });
 
   it("should handle custom resolvers", function() {

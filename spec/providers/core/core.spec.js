@@ -32,53 +32,33 @@ describe("Core Provider Integration", function() {
     }
   });
 
-  it("Manages Channels Between Modules", function() {
+  it("Manages Channels Between Modules", function(done) {
     var cb = jasmine.createSpy('cb');
-    var called = false;
-    runs(function() {
-      freedom.once('message', function(msg) {
-        // created.
-        expect(msg).toEqual('creating custom channel 0');
-        freedom.on('message', cb);
-        freedom.on('message', function() {
-          called = true;
-        });
-        freedom.emit('message', 0);
+    freedom.once('message', function(msg) {
+      // created.
+      expect(msg).toEqual('creating custom channel 0');
+      freedom.on('message', cb);
+      freedom.on('message', function() {
+        expect(cb).toHaveBeenCalledWith('sending message to 0');
+        done();
       });
-      freedom.emit('create');
+      freedom.emit('message', 0);
     });
-
-    waitsFor(function() {
-      return called;
-    }, "Freedom should return success", 4000);
-
-    runs(function() {
-      expect(cb).toHaveBeenCalledWith('sending message to 0');
-    });
+    freedom.emit('create');
   });
 
-  it("Manages Channels With providers", function() {
+  it("Manages Channels With providers", function(done) {
     var cb = jasmine.createSpy('cb');
-    var called = false;
-    runs(function() {
-      freedom.once('message', function(msg) {
-        // created.
-        freedom.on('message', cb);
-        freedom.on('message', function() {
-          called = true;
-        });
-        freedom.emit('message', 0);
+    freedom.once('message', function(msg) {
+      // created.
+      freedom.on('message', cb);
+      freedom.on('message', function() {
+        expect(cb).toHaveBeenCalledWith('sending message to peer 0');
+        done();
       });
-      freedom.emit('peer');
+      freedom.emit('message', 0);
     });
-
-    waitsFor(function() {
-      return called;
-    }, "Freedom should return success", 4000);
-
-    runs(function() {
-      expect(cb).toHaveBeenCalledWith('sending message to peer 0');
-    });
+    freedom.emit('peer');
   });
 });
 

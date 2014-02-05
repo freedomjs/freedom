@@ -16,9 +16,10 @@ function LoopbackSocialProvider() {
   this.NETWORK_ID = 'loopback';
   this.USER_ID = 'Test User';      //My userId
   this.CLIENT_ID = 'Test User.0';  //My clientId
+  this.client_codes = freedom.social().STATUS_CLIENT;
+  this.net_codes = freedom.social().STATUS_NETWORK;
   console.log("Loopback Social Provider");
 
-  var STATUS_CLIENT = freedom.social().STATUS_CLIENT;
   //Populate a fake roster
   this.roster = {
     "Test User": {
@@ -27,7 +28,7 @@ function LoopbackSocialProvider() {
       clients: {'Test User.0': {
         'clientId': this.CLIENT_ID,
         'network': this.NETWORK_ID,
-        'status': STATUS_CLIENT["MESSAGEABLE"]
+        'status': this.client_codes["MESSAGEABLE"]
       }}
     },
     "Other User": {
@@ -36,7 +37,7 @@ function LoopbackSocialProvider() {
       clients: {'Other User.0':{
         'clientId': "Other User.0", 
         'network': this.NETWORK_ID,
-        'status': STATUS_CLIENT["MESSAGEABLE"]
+        'status': this.client_codes["MESSAGEABLE"]
       }}
     },
     'Johnny Appleseed': this.makeRosterEntry('Johnny Appleseed'),
@@ -58,12 +59,11 @@ function LoopbackSocialProvider() {
 
 // Generate an 'onStatus' message
 LoopbackSocialProvider.prototype.makeOnStatus = function(stat) {
-  var STATUS_NETWORK = freedom.social().STATUS_NETWORK;
   return {
     network: this.NETWORK_ID,
     userId: this.USER_ID,
     clientId: this.CLIENT_ID,
-    status: STATUS_NETWORK[stat],
+    status: this.net_codes[stat],
     message: "Woo!"
   };
 };
@@ -72,7 +72,6 @@ LoopbackSocialProvider.prototype.makeOnStatus = function(stat) {
 // and random statuses
 LoopbackSocialProvider.prototype.makeRosterEntry = function(userId, opts) {
   var STATUSES = ['MESSAGEABLE', 'ONLINE', 'OFFLINE'];
-  var STATUS_CLIENT = freedom.social().STATUS_CLIENT;
   opts = opts || {};
   var entry = {
     userId: userId,
@@ -83,12 +82,12 @@ LoopbackSocialProvider.prototype.makeRosterEntry = function(userId, opts) {
   } else {
     var clients = {};
     var nclients = userId.charCodeAt(0) % 3;
-    for (var i=0; i<nclients; ++i) {
+    for (var i = 0; i < nclients; ++i) {
       var clientId = userId+'/-client'+i;
       clients[clientId] = {
         clientId: clientId,
         network: this.NETWORK_ID,
-        status: STATUS_CLIENT[STATUSES[i]]
+        status: this.client_codes[STATUSES[i]]
       };
     }
     entry.clients = clients;

@@ -24,7 +24,7 @@ describe("fdom.Port.Debug", function() {
     });
 
     expect(spy).toHaveBeenCalled();
-    expect(spy.callCount).toEqual(4);
+    expect(spy.calls.count()).toEqual(4);
   });
 
   it("Allows filtering of Messages", function() {
@@ -44,11 +44,11 @@ describe("fdom.Port.Debug", function() {
 
     fdom.debug.config = 'keyword';
     fdom.debug.print(msg);
-    expect(console.callCount).toEqual(1);
+    expect(console.calls.count()).toEqual(1);
 
     fdom.debug.config = 'My';
     fdom.debug.print(msg);
-    expect(console.callCount).toEqual(2);
+    expect(console.calls.count()).toEqual(2);
   });
 
   it("Filters on source", function() {
