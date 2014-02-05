@@ -9,7 +9,7 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
     });
   });
 
-  it("logs in", function(d) {
+  xit("logs in", function(d) {
     var userId;
     var callback = function callback(status) {
       expect(status).not.toBe(undefined);
@@ -23,7 +23,7 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
              interactive: false}).done(callback);
   });
 
-  it("logs in twice", function(d) {
+  xit("logs in twice", function(d) {
     var userId;
     function loginCallback(status) {
       expect(status).not.toBe(undefined);
@@ -45,7 +45,7 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
              interactive: false}).done(loginCallback);
   });
 
-  it("logs out when already logged out", function(done) {
+  xit("logs out when already logged out", function(done) {
     var logoutCallback = false;
     p.logout().done(function(status) {
       expect(status).not.toBe(undefined);
@@ -55,7 +55,7 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
     });
   });
 
-  it("returns roster", function(done) {
+  xit("returns roster", function(done) {
     var userId;
 
     var loginCallback = function callback(status) {
@@ -72,7 +72,7 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
              interactive: false}).done(loginCallback);
   });
 
-  it("sends message", function(d){
+  xit("sends message", function(d){
     var rosterReturns = false;
     var messageReceived = false;
     var userId, clientId;

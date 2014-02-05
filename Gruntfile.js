@@ -18,12 +18,13 @@ var FILES = {
     'providers/transport/**/*.js'
   ],
   specunit: [
-    'spec/src/{a,d,h,m,p,r,u}*.spec.js',
-    'spec/src/freedom*.spec.js', 
+    'spec/src/{a,b,c,d,e}*.spec.js',
+    'spec/src/{f,g}*.spec.js',
+    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
     'spec/providers/core/**/*.spec.js', 
     'spec/providers/social/**/*.unit.spec.js', 
     'spec/providers/storage/**/*.unit.spec.js',
-//    'spec/providers/transport/**/*.unit.spec.js',
+    //'spec/providers/transport/**/*.unit.spec.js',
   ],
   specintegration: [
     'spec/providers/social/**/*.integration.spec.js',
@@ -51,7 +52,7 @@ module.exports = function(grunt) {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
-        keepRunner: false
+        keepRunner: false 
       }
     };
     jasmineSpecs[sname + 'KeepRunner'] = {

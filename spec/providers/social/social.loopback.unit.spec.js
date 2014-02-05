@@ -21,19 +21,13 @@ describe("unit: social.loopback.json", function () {
   
   it("emits offline at start", function() {
     jasmine.clock().tick(100);
-    waitsFor("offline onStatus event", function() {
-      return provider.dispatchEvent.callCount > 0;
-    }, TIMEOUT);
-
-    runs(function() {
-      expect(provider.dispatchEvent).toHaveBeenCalled();
-      expect(provider.dispatchEvent).toHaveBeenCalledWith("onStatus", {
-        network: "loopback",
-        userId: "Test User",
-        clientId: "Test User.0",
-        status: freedom.social().STATUS_NETWORK["OFFLINE"],
-        message: "Woo!"
-      });
+    expect(provider.dispatchEvent).toHaveBeenCalled();
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onStatus", {
+      network: "loopback",
+      userId: "Test User",
+      clientId: "Test User.0",
+      status: freedom.social().STATUS_NETWORK["OFFLINE"],
+      message: "Woo!"
     });
   });
 
@@ -66,10 +60,10 @@ describe("unit: social.loopback.json", function () {
     var d = jasmine.createSpy("getRoster");
     provider.login({}, function() {});
     provider.getRoster(d);
-    expect(d.calls.length).toEqual(1);
-    expect(d.mostRecentCall.args.length).toBeGreaterThan(0);
-    expect(d.mostRecentCall.args[0]["Other User"]).toBeDefined();
-    expect(d.mostRecentCall.args[0]["Other User"]).toEqual({
+    expect(d.calls.count()).toEqual(1);
+    expect(d.calls.mostRecent().args.length).toBeGreaterThan(0);
+    expect(d.calls.mostRecent().args[0]["Other User"]).toBeDefined();
+    expect(d.calls.mostRecent().args[0]["Other User"]).toEqual({
       userId: "Other User",
       name: "Other User",
       clients: {"Other User.0": {
