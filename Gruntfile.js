@@ -41,12 +41,13 @@ module.exports = function(grunt) {
     saucekey = process.env.SAUCE_ACCESS_KEY;
   }
   var jasmineSpecs = {};
-  var jasmineTasks = [];
+  var jasmineUnitTasks = [];
+  var jasmineIntegrationTasks = [];
   var jasmineCoverageTasks = [];
   
   FILES.specunit.forEach(function(spec) {
     var sname = spec + 'Spec';
-    jasmineTasks.push('jasmine:' + sname);
+    jasmineUnitTasks.push('jasmine:' + sname);
     jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
     jasmineSpecs[sname] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
@@ -62,18 +63,29 @@ module.exports = function(grunt) {
         keepRunner: true
       }
     }
-    grunt.file.mkdir('tools/lcov' + jasmineTasks.length);
+    //grunt.file.mkdir('tools/lcov' + jasmineUnitTasks.length); //What is this for?
     jasmineSpecs[sname + 'Coverage'] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         template: require('grunt-template-jasmine-istanbul'),
         templateOptions: {
-          coverage: 'tools/coverage' + jasmineTasks.length + '.json',
+          coverage: 'tools/coverage' + jasmineUnitTasks.length + '.json',
           report: []
         }
       }
     }
+  });
+  FILES.specintegration.forEach(function(spec) {
+    var sname = spec + "Spec";
+    jasmineIntegrationTasks.push("jasmine:"+sname);
+    jasmineSpecs[sname] = {
+      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
+      options: {
+        specs: spec,
+        keepRunner: false
+      }
+    };
   });
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -196,12 +208,13 @@ module.exports = function(grunt) {
   });
 
   // Default tasks.
-  grunt.registerTask('jasmineTasks', jasmineTasks);
+  grunt.registerTask('jasmineUnitTasks', jasmineUnitTasks);
+  grunt.registerTask('jasmineIntegrationTasks', jasmineIntegrationTasks);
   grunt.registerTask('jasmineCoverageTasks', jasmineCoverageTasks);
   grunt.registerTask('freedom', [
     'jshint:beforeconcat',
     'concat',
-    'jasmineTasks',
+    'jasmineUnitTasks',
     'jshint:afterconcat',
     'jshint:providers',
     'jshint:demo',
@@ -209,7 +222,7 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('test', [
     'freedom',
-    'chromeTestRunner'
+    'jasmineIntegrationTasks'
   ]);
   grunt.registerTask('coverage', [
     'concat',
@@ -218,7 +231,7 @@ module.exports = function(grunt) {
     'coveralls:report'
   ]);
   grunt.registerTask('saucelabs', [
-    'jasmineTasks',
+    'jasmineUnitTasks',
     'spawn-web-server',
     'saucelabs-jasmine',
     'kill-web-server',
