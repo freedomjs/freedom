@@ -27,9 +27,9 @@ var FILES = {
     //'spec/providers/transport/**/*.unit.spec.js',
   ],
   specintegration: [
-    'spec/providers/social/**/*.integration.spec.js',
+    //'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
-    'spec/providers/transport/**/*.integration.spec.js',
+    //'spec/providers/transport/**/*.integration.spec.js',
   ],
   specall: ['spec/**/*.spec.js']
 };
@@ -56,14 +56,6 @@ module.exports = function(grunt) {
         keepRunner: false 
       }
     };
-    jasmineSpecs[sname + 'KeepRunner'] = {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        keepRunner: true
-      }
-    }
-    //grunt.file.mkdir('tools/lcov' + jasmineUnitTasks.length); //What is this for?
     jasmineSpecs[sname + 'Coverage'] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
