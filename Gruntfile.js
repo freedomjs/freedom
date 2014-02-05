@@ -18,7 +18,8 @@ var FILES = {
     'providers/transport/**/*.js'
   ],
   specunit: [
-    'spec/src/**/*.spec.js', 
+    'spec/src/{a,d,h,m,p,r,u}*.spec.js',
+    'spec/src/freedom*.spec.js', 
     'spec/providers/core/**/*.spec.js', 
     'spec/providers/social/**/*.unit.spec.js', 
     'spec/providers/storage/**/*.unit.spec.js',
@@ -43,23 +44,24 @@ module.exports = function(grunt) {
   var jasmineCoverageTasks = [];
   
   FILES.specunit.forEach(function(spec) {
-    jasmineTasks.push('jasmine:' + spec);
-    jasmineCoverageTasks.push('jasmine:' + spec + 'Coverage');
-    jasmineSpecs[spec] = {
+    var sname = spec + 'Spec';
+    jasmineTasks.push('jasmine:' + sname);
+    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
+    jasmineSpecs[sname] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         keepRunner: false
       }
     };
-    jasmineSpecs[spec + 'KeepRunner'] = {
+    jasmineSpecs[sname + 'KeepRunner'] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         keepRunner: true
       }
     }
-    jasmineSpecs[spec + 'Coverage'] = {
+    jasmineSpecs[sname + 'Coverage'] = {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
