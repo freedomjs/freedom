@@ -15,7 +15,11 @@ Storage_chromeStorageLocal.prototype.keys = function(continuation) {
 
 Storage_chromeStorageLocal.prototype.get = function(key, continuation) {
   chrome.storage.local.get(key, function(ret){
-    continuation(ret[key]);
+    if (ret.hasOwnProperty(key)) {
+      continuation(ret[key]);
+    } else {
+      continuation(null);
+    }
   });
 };
 
