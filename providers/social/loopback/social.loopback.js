@@ -17,7 +17,8 @@ var CLIENT_ID = 'Test User.0';  //My clientId
 
 function LoopbackSocialProvider() {
   console.log("Loopback Social provider");
-  var STATUS_CLIENT = freedom.social().STATUS_CLIENT;
+  this.client_codes = freedom.social().STATUS_CLIENT;
+  this.net_codes = freedom.social().STATUS_NETWORK;
   //Populate a fake roster
   this.roster = {
     "Test User": {
@@ -26,7 +27,7 @@ function LoopbackSocialProvider() {
       clients: {'Test User.0': {
         'clientId': CLIENT_ID,
         'network': NETWORK_ID,
-        'status': STATUS_CLIENT["MESSAGEABLE"]
+        'status': this.client_codes["MESSAGEABLE"]
       }}
     },
     "Other User": {
@@ -35,43 +36,41 @@ function LoopbackSocialProvider() {
       clients: {'Other User.0':{
         'clientId': "Other User.0", 
         'network': NETWORK_ID,
-        'status': STATUS_CLIENT["MESSAGEABLE"]
+        'status': this.client_codes["MESSAGEABLE"]
       }}
     },
-    'Johnny Appleseed': makeRosterEntry('Johnny Appleseed'),
-    'Betty Boop': makeRosterEntry('Betty Boop'),
-    'Big Bird': makeRosterEntry('Big Bird'),
-    'Bugs Bunny': makeRosterEntry('Bugs Bunny'),
-    'Daffy Duck': makeRosterEntry('Daffy Duck'),
-    'Kermit the Frog': makeRosterEntry('Kermit the Frog'),
-    'Minnie Mouse': makeRosterEntry('Minnie Mouse'),
-    'Porky Pig': makeRosterEntry('Porky Pig'),
-    'Swedish Chef': makeRosterEntry('Swedish Chef'),
-    'Yosemite Sam': makeRosterEntry('Yosemite Sam')
+    'Johnny Appleseed': this.makeRosterEntry('Johnny Appleseed'),
+    'Betty Boop': this.makeRosterEntry('Betty Boop'),
+    'Big Bird': this.makeRosterEntry('Big Bird'),
+    'Bugs Bunny': this.makeRosterEntry('Bugs Bunny'),
+    'Daffy Duck': this.makeRosterEntry('Daffy Duck'),
+    'Kermit the Frog': this.makeRosterEntry('Kermit the Frog'),
+    'Minnie Mouse': this.makeRosterEntry('Minnie Mouse'),
+    'Porky Pig': this.makeRosterEntry('Porky Pig'),
+    'Swedish Chef': this.makeRosterEntry('Swedish Chef'),
+    'Yosemite Sam': this.makeRosterEntry('Yosemite Sam')
   };
   // Send an offline status on start
   setTimeout((function() {
-    this.dispatchEvent('onStatus', makeOnStatus('OFFLINE'));
+    this.dispatchEvent('onStatus', this.makeOnStatus('OFFLINE'));
   }).bind(this), 0);
 }
 
 // Generate an 'onStatus' message
-function makeOnStatus(stat) {
-  var STATUS_NETWORK = freedom.social().STATUS_NETWORK;
+LoopbackSocialProvider.prototype.makeOnStatus = function(stat) {
   return {
     network: NETWORK_ID,
     userId: USER_ID,
     clientId: CLIENT_ID,
-    status: STATUS_NETWORK[stat],
+    status: this.net_codes[stat],
     message: "Woo!"
   };
-}
+};
 
 // Autocreates fake rosters with variable numbers of clients
 // and random statuses
-function makeRosterEntry(userId, opts) {
+LoopbackSocialProvider.prototype.makeRosterEntry = function(userId, opts) {
   var STATUSES = ['MESSAGEABLE', 'ONLINE', 'OFFLINE'];
-  var STATUS_CLIENT = freedom.social().STATUS_CLIENT;
   opts = opts || {};
   var entry = {
     userId: userId,
@@ -82,23 +81,23 @@ function makeRosterEntry(userId, opts) {
   } else {
     var clients = {};
     var nclients = userId.charCodeAt(0) % 3;
-    for (var i=0; i<nclients; ++i) {
+    for (var i = 0; i < nclients; ++i) {
       var clientId = userId+'/-client'+i;
       clients[clientId] = {
         clientId: clientId,
         network: NETWORK_ID,
-        status: STATUS_CLIENT[STATUSES[i]]
+        status: this.client_codes[STATUSES[i]]
       };
     }
     entry.clients = clients;
   }
   return entry;
-}
+};
 
 // Log in. Options are ignored
 // Roster is only emitted to caller after log in
 LoopbackSocialProvider.prototype.login = function(opts, continuation) {
-  var ret = makeOnStatus('ONLINE');
+  var ret = this.makeOnStatus('ONLINE');
   for (var id in this.roster) {
     if (this.roster.hasOwnProperty(id)) {
       this.dispatchEvent('onChange', this.roster[id]);
@@ -144,7 +143,7 @@ LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 // Log out. All users in the roster will go offline
 // Options are ignored
 LoopbackSocialProvider.prototype.logout = function(opts, continuation) {
-  var ret = makeOnStatus('OFFLINE');
+  var ret = this.makeOnStatus('OFFLINE');
   // Remove all clients in the roster and emit these changes
   for (var id in this.roster) {
     if (this.roster.hasOwnProperty(id)) {

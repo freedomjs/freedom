@@ -115,7 +115,7 @@ describe("util", function() {
       object.emit('msg', 'value');
       object.emit('msg', 'value2');
       expect(cb).toHaveBeenCalledWith('value2');
-      expect(cb.calls.length).toEqual(2);
+      expect(cb.calls.count()).toEqual(2);
     });
 
     it("can execute events 'Once'", function() {
@@ -123,7 +123,7 @@ describe("util", function() {
       object.emit('msg', 'value');
       object.emit('msg', 'value2');
       expect(cb).toHaveBeenCalledWith('value');
-      expect(cb.calls.length).toEqual(1);
+      expect(cb.calls.count()).toEqual(1);
     });
 
     it("can execute events conditionally", function() {
@@ -134,7 +134,7 @@ describe("util", function() {
       object.emit('msg', 'yes');
       object.emit('othermsg', 'yes');
       expect(cb).toHaveBeenCalledWith('yes');
-      expect(cb.calls.length).toEqual(1);
+      expect(cb.calls.count()).toEqual(1);
     });
     
     it("can requeue conditioanl events", function() {

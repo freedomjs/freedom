@@ -30,7 +30,7 @@ var createTestPort = function(id) {
   return port;
 };
 
-var mockIface = function(props) {
+var mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
     iface[p[0]] = function(r) {
@@ -38,8 +38,13 @@ var mockIface = function(props) {
       d.resolve(r);
       return d.promise();
     }.bind({}, p[1]);
-    spyOn(iface, p[0]).andCallThrough();
+    spyOn(iface, p[0]).and.callThrough();
   });
+  if (consts) {
+    consts.forEach(function(c) {
+      iface[c[0]] = c[1];
+    });
+  }
   return function() {
     return iface;
   };

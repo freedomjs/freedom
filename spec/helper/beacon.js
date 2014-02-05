@@ -1,1 +1,2 @@
 fileIncluded = true;
+callback && callback();

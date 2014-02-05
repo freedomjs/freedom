@@ -1,74 +1,30 @@
 var SOCIAL_UNIT_SPEC = function(manifest_url) {
   const TIMEOUT = 2000;
   var proxy, p;
-  beforeEach(function() {
-    var firstStatus;
+  beforeEach(function(done) {
     proxy = createProxyFor(manifest_url, "social");
-    runs(function() {
-      p = proxy();
-      p.on("onStatus", function(status) {
-        firstStatus = true;
-      });
+    p = proxy();
+    p.once("onStatus", function(status) {
+      done();
     });
-
-    waitsFor(function() {
-      return firstStatus;
-    }, 500);
   });
 
-  it("logs in", function() {
-    var loginCallback = false;
+  it("logs in", function(d) {
     var userId;
     var callback = function callback(status) {
-      loginCallback = true;
       expect(status).not.toBe(undefined);
       expect(status).not.toBe(null);
       expect(status.status).toEqual(3);
       expect(status.userId).toEqual(jasmine.any(String));
       userId = status.userId;
+      p.logout({userId: userId}).done(d);
     };
     p.login({ agent: "jasmine",
              interactive: false}).done(callback);
-
-    waitsFor(function() {
-      return loginCallback;
-    }, TIMEOUT);
-
-    runs(function logout() {
-      p.logout({userId: userId});
-    });
   });
 
-  it("logs in, then out (x5)", function() {
-    var logins = 0;
-    function logoutCallback(status) {
-      expect(status).not.toBe(undefined);
-      expect(status).not.toBe(null);
-      expect(status.status).toEqual(0);
-      if (logins < 5) {
-        p.login({agent: "jasmine",
-                 interactive: false}).done(loginCallback);
-      }
-    }
-    function loginCallback(status) {
-      expect(status).not.toBe(undefined);
-      expect(status).not.toBe(null);
-      expect(status.status).toEqual(3);
-      expect(status.userId).toEqual(jasmine.any(String));
-      userId = status.userId;
-      logins += 1;
-      p.logout().done(logoutCallback);
-    }
-    p.login({agent: "jasmine",
-             interactive: false}).done(loginCallback);
-    waitsFor(function() {
-      return logins === 5;
-    }, TIMEOUT);
-  });
-
-  it("logs in twice", function() {
+  it("logs in twice", function(d) {
     var userId;
-    var loggedOut = false;
     function loginCallback(status) {
       expect(status).not.toBe(undefined);
       expect(status).not.toBe(null);
@@ -83,32 +39,23 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
       expect(status).not.toBe(null);
       expect(status.status).toEqual(3);
       expect(status.userId).toEqual(userId);
-      p.logout().done(function() {
-        loggedOut = true;
-      });
+      p.logout().done(d);
     }
     p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
-    waitsFor(function() {
-      return loggedOut;
-    }, TIMEOUT);
   });
 
-  it("logs out when already logged out", function() {
+  it("logs out when already logged out", function(done) {
     var logoutCallback = false;
     p.logout().done(function(status) {
       expect(status).not.toBe(undefined);
       expect(status).not.toBe(null);
       expect(status.status).toEqual(0);
-      logoutCallback = true;
+      done();
     });
-    waitsFor(function() {
-      return logoutCallback;
-    }, TIMEOUT);
   });
 
-  it("returns roster", function() {
-    var rosterReturns = false;
+  it("returns roster", function(done) {
     var userId;
 
     var loginCallback = function callback(status) {
@@ -117,23 +64,15 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
         var ids = Object.keys(result);
         expect(ids.length).toBeGreaterThan(0);
         expect(ids).toContain(userId);
-        rosterReturns = true;
+        p.logout({userId: userId}).done(done);
       });
     };
 
     p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
-
-    waitsFor(function() {
-      return rosterReturns;
-    }, TIMEOUT);
-
-    runs(function logout() {
-      p.logout({userId: userId});
-    });
   });
 
-  it("sends message", function(){
+  it("sends message", function(d){
     var rosterReturns = false;
     var messageReceived = false;
     var userId, clientId;
@@ -149,20 +88,12 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
       expect(message).not.toBe(null);
       if (message.toClientId === clientId &&
          message.message === "Hello World") {
-        messageReceived = true;
+        p.logout({userId: userId}).done(d);
       };
     });
 
     p.login({agent: "jasmine",
              interactive: false}).done(loginCallback);
-
-    waitsFor(function() {
-      return messageReceived;
-    }, TIMEOUT);
-
-    runs(function logout() {
-      p.logout({userId: userId});
-    });
   });
 };
 
