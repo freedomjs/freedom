@@ -11,11 +11,11 @@
  * - ephemeral userIds and clientIds
  **/
 
-//var WS_URL = 'ws://localhost:8082/route/';
-var WS_URL = 'ws://p2pbr.com:8082/route/';
-var NETWORK_ID = 'websockets';
+//var this.WS_URL = 'ws://localhost:8082/route/';
 
 function WSSocialProvider() {
+  this.WS_URL = 'ws://p2pbr.com:8082/route/';
+  this.NETWORK_ID = 'websockets';
   var social = freedom.social();
   this.STATUS_NETWORK = social.STATUS_NETWORK;
   this.STATUS_CLIENT = social.STATUS_CLIENT;
@@ -40,7 +40,7 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
     continuation(this._sendStatus("ONLINE"));
     return;
   }
-  this.conn = new WebSocket(WS_URL+loginOpts.agent);
+  this.conn = new WebSocket(this.WS_URL+loginOpts.agent);
   // Save the continuation until we get a status message for
   // successful login.
   this._cont = continuation;
@@ -129,7 +129,7 @@ WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
  **/
 WSSocialProvider.prototype._sendStatus = function(stat, message) {
   var result = {
-    network: NETWORK_ID,
+    network: this.NETWORK_ID,
     userId: this.id,
     clientId: this.id,
     status: this.STATUS_NETWORK[stat],
@@ -215,7 +215,7 @@ WSSocialProvider.prototype._onMessage = function(msg) {
       fromClientId: msg.from,
       toUserId: this.id,
       toClientId: this.id,
-      network: NETWORK_ID,
+      network: this.NETWORK_ID,
       message: msg.msg
     });
   // Roster change event
