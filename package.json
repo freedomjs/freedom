@@ -26,7 +26,7 @@
     "grunt-contrib-uglify": "~0.3.2",
     "es5-shim": "~2.3.0",
     "grunt-template-jasmine-istanbul": "~0.3.0",
-    "grunt-coveralls": "~0.2.10",
+    "grunt-coveralls": "~0.3.0",
     "grunt-saucelabs": "~5.0.0"
   },
   "scripts": {
