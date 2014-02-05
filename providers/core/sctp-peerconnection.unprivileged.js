@@ -588,7 +588,7 @@ SctpPeerConnection.prototype.send = function(sendInfo, continuation) {
     return;
   }
   //DEBUG
-  objToSend = new ArrayBuffer(4);
+  //objToSend = new ArrayBuffer(4);
   //DEBUG
   this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };

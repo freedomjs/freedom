@@ -170,9 +170,9 @@ function ProviderHelper(inFreedom) {
   this.freedom = inFreedom;
   this._eventListeners = {};
   this.freedom.on("eventFired", this._on.bind(this));
-  this.freedom.on('return', this.ret.bind(this));
-  this.freedom.on('initChannel', this.onInitChannel.bind(this));
-  this.freedom.on('inFromChannel', this.onInFromChannel.bind(this));
+  this.freedom.on("return", this.ret.bind(this));
+  this.freedom.on("initChannel", this.onInitChannel.bind(this));
+  this.freedom.on("inFromChannel", this.onInFromChannel.bind(this));
 }
 ProviderHelper.prototype.hasReturned = function(ids) {
   for (var key in ids) {
