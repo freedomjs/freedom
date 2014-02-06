@@ -17,12 +17,20 @@ var SimpleDataPeerState = {
 };
 
 function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks) {
+  var RTCPC;
   this.peerName = peerName;
   this._channels = {};
   this._dataChannelCallbacks = dataChannelCallbacks;
 
-  // depending on environment, select implementation.
-  var RTCPC = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
+  if (typeof RTCPeerConnection !== "undefined") {
+    RTCPC = RTCPeerConnection;
+  } else if (typeof webkitRTCPeerConnection !== "undefined") {
+    RTCPC = webkitRTCPeerConnection;
+  } else if (typeof mozRTCPeerConnection !== "undefined") {
+    RTCPC = mozRTCPeerConnection;
+  } else {
+    throw new Error("This environment does not seem to support RTCPeerConnection");
+  }
 
   var constraints = {optional: [{DtlsSrtpKeyAgreement: true}]};
   // A way to speak to the peer to send SDP headers etc.
@@ -360,7 +368,7 @@ PeerConnection.prototype.send = function(sendInfo, continuation) {
     return;
   }
   //DEBUG
-  objToSend = new ArrayBuffer(4);
+  // objToSend = new ArrayBuffer(4);
   //DEBUG
   this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
