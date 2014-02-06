@@ -45,17 +45,6 @@ fdom.apis.set("core.runtime", {
   'needFile': {type: 'event', value: ["string", "string"]}
 });
 
-fdom.apis.set("core.peerconnection", {
-  'setup': {type: "method", value: ["name", "proxy"]},
-  'send': {type: "method", value: [{"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}]},
-  'openDataChannel': {type: "method", value: ["string"]},
-  'closeDataChannel': {type: "method", value: ["string"]},
-  'close': {type: "method", value: []},
-
-  'onData': {type: "event", value: {"tag": "string", "text": "string", "binary": "blob", "buffer": "buffer"}},
-  'onClose': {type: "event", value: {}}
-});
-
 fdom.apis.set('core.echo', {
   'setup': {type: "method", value: ["proxy"]},
   'send': {type: "method", value: ["string"]},
@@ -63,7 +52,7 @@ fdom.apis.set('core.echo', {
 });
 
 
-fdom.apis.set('core.sctp-peerconnection', {
+fdom.apis.set('core.peerconnection', {
   // Setup the link to the peer and options for this peer connection.
   'setup': {type: "method",
     value: [
@@ -72,14 +61,17 @@ fdom.apis.set('core.sctp-peerconnection', {
       "proxy",
       // The peerName, used debugging and console messages.
       "string",
+      // The list of STUN servers to use.
+      // format is of a single entry is stun:HOST:PORT, where HOST and
+      // PORT are the hostname and port, respectively.
+      ["array", "string"]
       ]
   },
 
   // Send a message to the peer.
   'send': {type: "method", value: [{
     // Data channel id. If provided, will be used as the channel label.
-    // If the channel label doesn't already exist, a new channel will be
-    // created.
+    // The behavior is undefined if the channel label doesn't exist.
     "channelLabel": "string",
     // One of the bellow should be defined; this is the data to send.
     "text": "string",

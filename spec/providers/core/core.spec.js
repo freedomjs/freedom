@@ -52,7 +52,7 @@ describe("Core Provider Integration", function() {
     freedom.once('message', function(msg) {
       // created.
       freedom.on('message', cb);
-      freedom.on('message', function() {
+      freedom.once('message', function() {
         expect(cb).toHaveBeenCalledWith('sending message to peer 0');
         done();
       });
