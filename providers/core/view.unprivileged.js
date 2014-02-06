@@ -31,8 +31,8 @@ View_unprivileged.prototype.open = function(name, what, continuation) {
 
   var container = document.body;
   var config = this.app.config.views;
-  if (config && config[name] && document.getElementById(config[name])) {
-    container = document.getElementById(config[name]);
+  if (config && config[name] && document.getElementById(name)) {
+    container = document.getElementById(name);
   }
 
   container.appendChild(this.host);
@@ -77,7 +77,7 @@ View_unprivileged.prototype.postMessage = function(args, continuation) {
   continuation();
 };
 
-View_unprivileged.prototype.close = function() {
+View_unprivileged.prototype.close = function(continuation) {
   if (this.host) {
     this.host.parentNode.removeChild(this.host);
     this.host = null;
@@ -86,6 +86,7 @@ View_unprivileged.prototype.close = function() {
     removeEventListener('message', this.onMessage.bind(this), true);
     this.win = null;
   }
+  continuation();
 };
 
 View_unprivileged.prototype.onMessage = function(m) {
