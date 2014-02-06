@@ -1,12 +1,12 @@
 var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
-  const TIMEOUT = 2000;
   var freedom, helper;
 
-  beforeEach(function() {
+  beforeEach(function(done) {
     freedom = setupModule("relative://spec/helper/providers.json");
     helper = new ProviderHelper(freedom);
     helper.create("SocialA", provider_name);
     helper.create("SocialB", provider_name);
+    done();
   });
   
   afterEach(function() {
@@ -15,7 +15,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
     cleanupIframes();
   });
 
-  it("A-B: sends message between A->B", function() {
+  xit("A-B: sends message between A->B", function() {
     var ids = {};
     var msg = "Hello World";
     ids[0] = helper.call("SocialA", "login", [{network: network_id,
@@ -58,7 +58,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
 
   });
 
-  it("A-B: sends roster updates through the onChange event.", function() {
+  xit("A-B: sends roster updates through the onChange event.", function() {
     var ids = {};
     var socialAStatus;
     function waitForIds() {
@@ -118,7 +118,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
              TIMEOUT);
   });
 
-  it("A-B: can return the roster", function() {
+  xit("A-B: can return the roster", function() {
     var ids = {};
     var socialAStatus, socialBStatus;
 
