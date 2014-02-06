@@ -57,3 +57,7 @@ div.modal-backdrop {
   border-radius: 20px;
   padding: 20px;
 }
+
+.input-xxlarge {
+  width: 90%;
+}
