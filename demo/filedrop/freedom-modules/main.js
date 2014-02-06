@@ -66,7 +66,8 @@ freedom.on('serve-data', function(data) {
 function setupConnection(name, targetId) {
   connections[targetId] = freedom.transport();
   connections[targetId].on('onData', function(message) {
-    freedom.emit('download-data', message);
+    console.log("Receiving data with tag: " + message.tag);
+    freedom.emit('download-data', message.data);
   });
   core.createChannel().done(function (chan) {
     connections[targetId].setup(name, chan.identifier);
