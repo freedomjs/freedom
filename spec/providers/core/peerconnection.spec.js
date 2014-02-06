@@ -1,10 +1,26 @@
-function webkitRTCPeerConnection(configuration, constraints) {
+function RTCPeerConnection(configuration, constraints) {
   this.configuration = configuration;
   this.constraints = constraints;
 }
 
-webkitRTCPeerConnection.prototype.addEventListener = function(event, func) {
+RTCPeerConnection.prototype.addEventListener = function(event, func) {
 };
+
+RTCPeerConnection.setRemoteDescriptionSuccess = true;
+RTCPeerConnection.prototype.setRemoteDescription = function(description,
+                                                            successCallback,
+                                                            failureCallback) {
+  if (RTCPeerConnection.setRemoteDescriptionSuccess) {
+    this.remoteDescription = description;
+    successCallback();
+  } else {
+    failureCallback();
+  }
+};
+
+function RTCSessionDescription(descriptionInitDict) {
+  this.descriptionInitDict = descriptionInitDict;
+}
 
 describe("providers/core/peerconnection", function() {
   var portApp, events, emitted, listeningOn;
@@ -40,6 +56,8 @@ describe("providers/core/peerconnection", function() {
     emitted = [];
     listeningOn = {};
 
+    RTCPeerConnection.setRemoteDescriptionSuccess = true;
+
     events = {
       emit: function(eventName, eventData) {
         emitted.push({eventName: eventName,
@@ -63,9 +81,10 @@ describe("providers/core/peerconnection", function() {
 
   it("sets up.", setup);
 
-  it("handles signaling messages.", function() {
+  it("handles remote offer messages.", function() {
+    var message = JSON.stringify({sdp: "v=0"});
     setup();
-    listeningOn.message();
+    listeningOn.message(message);
   });
   
 });

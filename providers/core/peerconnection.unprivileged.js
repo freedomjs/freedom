@@ -22,9 +22,7 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks) {
   this._dataChannelCallbacks = dataChannelCallbacks;
 
   // depending on environment, select implementation.
-  // TODO: Rename this variable, hoisting causes existing definitions
-  // of RTCPeerConnection to get clobbered.
-  var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
+  var RTCPC = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
 
   var constraints = {optional: [{DtlsSrtpKeyAgreement: true}]};
   // A way to speak to the peer to send SDP headers etc.
@@ -38,7 +36,7 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks) {
     iceServer = { 'url' : stunServers[i] };
     pc_config.iceServers.push(iceServer);
   }
-  this._pc = new RTCPeerConnection(pc_config, constraints);
+  this._pc = new RTCPC(pc_config, constraints);
   // Add basic event handlers.
   this._pc.addEventListener("icecandidate",
                             this._onIceCallback.bind(this));
