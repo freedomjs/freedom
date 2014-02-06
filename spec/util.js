@@ -30,6 +30,26 @@ var createTestPort = function(id) {
   return port;
 };
 
+var mockIface = function(props, consts) {
+  var iface = {};
+  props.forEach(function(p) {
+    iface[p[0]] = function(r) {
+      var d = fdom.proxy.Deferred();
+      d.resolve(r);
+      return d.promise();
+    }.bind({}, p[1]);
+    spyOn(iface, p[0]).and.callThrough();
+  });
+  if (consts) {
+    consts.forEach(function(c) {
+      iface[c[0]] = c[1];
+    });
+  }
+  return function() {
+    return iface;
+  };
+};
+
 var createProxyFor = function(app, api) {
   setupResolvers();
   var global = {
@@ -70,7 +90,7 @@ var createProxyFor = function(app, api) {
   
   var link = location.protocol + "//" + location.host + location.pathname;
   fdom.resources.get(link, site_cfg.manifest).done(function(url) {
-    var app = new fdom.port.App(url, []);
+    var app = new fdom.port.Module(url, []);
     manager.setup(app);
     manager.createLink(proxy, 'default', app);
   });
@@ -149,33 +169,24 @@ function setupModule(manifest_url) {
 
 function ProviderHelper(inFreedom) {
   this.callId = 0;
-  this.returns = {};
-  this.unboundCallbacks = [];
+  this.callbacks = {};
+  this.unboundChanCallbacks = [];
   this.chanCallbacks = {};
   this.freedom = inFreedom;
   this._eventListeners = {};
   this.freedom.on("eventFired", this._on.bind(this));
-  this.freedom.on('return', this.ret.bind(this));
-  this.freedom.on('initChannel', this.onInitChannel.bind(this));
-  this.freedom.on('inFromChannel', this.onInFromChannel.bind(this));
+  this.freedom.on("return", this.ret.bind(this));
+  this.freedom.on("initChannel", this.onInitChannel.bind(this));
+  this.freedom.on("inFromChannel", this.onInFromChannel.bind(this));
 }
-ProviderHelper.prototype.hasReturned = function(ids) {
-  for (var key in ids) {
-    if (ids.hasOwnProperty(key) && 
-        !this.returns.hasOwnProperty(ids[key])) {
-      return false;
-    }
-  }
-  return true;
-};
-
 ProviderHelper.prototype.create = function(name, provider) {
   this.freedom.emit("create", {name: name,
                          provider: provider});
 };
 
-ProviderHelper.prototype.call = function(provider, method, args) {
+ProviderHelper.prototype.call = function(provider, method, args, cb) {
   this.callId += 1;
+  this.callbacks[this.callId] = cb;
   this.freedom.emit('call', {
     id: this.callId,
     provider: provider,
@@ -185,7 +196,7 @@ ProviderHelper.prototype.call = function(provider, method, args) {
   return this.callId;
 };
 ProviderHelper.prototype.ret = function(obj) {
-  this.returns[obj.id] = obj.data;
+  this.callbacks[obj.id](obj.data);
 };
 
 ProviderHelper.prototype._on = function(eventInfo) {
@@ -234,12 +245,12 @@ ProviderHelper.prototype.createProvider = function(name, provider) {
 };
 
 ProviderHelper.prototype.createChannel = function(cb) {
-  this.unboundCallbacks.push(cb);
+  this.unboundChanCallbacks.push(cb);
   this.freedom.emit('createChannel');
 };
 
 ProviderHelper.prototype.onInitChannel = function(chanId) {
-  var cb = this.unboundCallbacks.pop(); 
+  var cb = this.unboundChanCallbacks.pop(); 
   cb(chanId);
 };
 

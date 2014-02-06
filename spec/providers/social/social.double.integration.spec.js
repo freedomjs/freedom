@@ -1,13 +1,12 @@
-var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
-  const TIMEOUT = 2000;
+var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
   var freedom, helper;
 
-  beforeEach(function() {
+  beforeEach(function(done) {
     freedom = setupModule("relative://spec/helper/providers.json");
     helper = new ProviderHelper(freedom);
-    freedom.on('return', helper.ret.bind(helper));
     helper.create("SocialA", provider_name);
     helper.create("SocialB", provider_name);
+    done();
   });
   
   afterEach(function() {
@@ -16,12 +15,12 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
     cleanupIframes();
   });
 
-  it("sends message", function() {
+  xit("A-B: sends message between A->B", function() {
     var ids = {};
     var msg = "Hello World";
-    ids[0] = helper.call("SocialA", "login", [{network: "websockets",
+    ids[0] = helper.call("SocialA", "login", [{network: network_id,
                                              agent: "jasmine"}]);
-    ids[1] = helper.call("SocialB", "login", [{network: "websockets",
+    ids[1] = helper.call("SocialB", "login", [{network: network_id,
                                              agent: "jasmine"}]);
     waitsFor("login", helper.hasReturned.bind(helper, ids), TIMEOUT);
 
@@ -59,13 +58,13 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
 
   });
 
-  it("sends roster updates through the onChange event.", function() {
+  xit("A-B: sends roster updates through the onChange event.", function() {
     var ids = {};
     var socialAStatus;
     function waitForIds() {
       return helper.hasReturned(ids);
     }
-    ids[0] = helper.call("SocialA", "login", [{network: "websockets",
+    ids[0] = helper.call("SocialA", "login", [{network: network_id,
                                                agent: "jasmine"}]);
 
     waitsFor("SocialA to log in", helper.hasReturned.bind(helper, ids));
@@ -84,7 +83,7 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
           }
         });
       });
-      ids[1] = helper.call("SocialB", "login", [{network: "websockets",
+      ids[1] = helper.call("SocialB", "login", [{network: network_id,
                                                  agent: "jasmine"}]);
     });
 
@@ -119,7 +118,7 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
              TIMEOUT);
   });
 
-  it("can return the roster", function() {
+  xit("A-B: can return the roster", function() {
     var ids = {};
     var socialAStatus, socialBStatus;
 
@@ -134,13 +133,13 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
       });
     }
 
-    ids[0] = helper.call("SocialA", "login", [{network: "websockets",
+    ids[0] = helper.call("SocialA", "login", [{network: network_id,
                                              agent: "jasmine"}]);
 
     waitsFor("SocialA login", helper.hasReturned.bind(helper, ids), TIMEOUT);
 
     runs(function() {
-      ids[1] = helper.call("SocialB", "login", [{network: "websockets",
+      ids[1] = helper.call("SocialB", "login", [{network: network_id,
                                                  agent: "jasmine"}]);
     });
 
@@ -166,5 +165,4 @@ var SOCIAL_INTEGRATION_SPEC = function(provider_name) {
  
 };
 
-describe("websocket-server integration",
-         SOCIAL_INTEGRATION_SPEC.bind(this, "socialWebsockets"));
+describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "social.ws", "websockets"));

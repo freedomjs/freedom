@@ -9,8 +9,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then # Mac OS X
 	CHROME_BINARY="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 fi
 
-
-
 ## COMMAND LINE FLAGS
 
 # Default values
@@ -78,7 +76,7 @@ TEMP_INCLUDES="$TEMP_DIR/includes"
 mkdir "$TEMP_INCLUDES"
 
 # Create a few dynamic files to support the test app
-cat "$FREEDOM_ROOT_DIR"/{src,src/link,src/proxy,providers/core,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
+cat "$FREEDOM_ROOT_DIR"/{src,src/link,src/proxy,providers/core,providers/social/loopback,providers/social/websocket-server,providers/storage/shared,providers/storage/isolated,providers/transport/webrtc,interface}/*.js > "$TEMP_INCLUDES/freedomSetup.js" # Defines the setup(...) function.
 
 
 

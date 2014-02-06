@@ -4,6 +4,7 @@
 
 ### Auto-generated
 tools/doc
+tools/coverage*.json
 tools/lcov.info
 lcov.info
 node_modules
@@ -12,6 +13,7 @@ node_modules
 .*.swp
 providers/social/websocket-server/server/tornado
 _SpecRunner.html
+sauce_connect.log*
 .grunt/
 
 ### Chrome Test Runner temp files

@@ -23,7 +23,7 @@ describe("fdom.Port.Proxy", function() {
     // New interfaces also will.
     iface = port.getInterface();
     iface.emit('hi', 'msg');
-    expect(spy.callCount).toEqual(2);
+    expect(spy.calls.count()).toEqual(2);
   });
 
   it("reports messages to the interface", function() {
@@ -60,9 +60,9 @@ describe("fdom.Port.Proxy", function() {
     expect(spy).toHaveBeenCalled();
     publicProxy.close();
     iface.emit('hi', 'msg');
-    expect(spy.callCount).toEqual(1);
+    expect(spy.calls.count()).toEqual(1);
     expect(closeSpy).toHaveBeenCalled();
-    expect(closeSpy.mostRecentCall.args[0].request).toEqual('close');
+    expect(closeSpy.calls.argsFor(0)[0].request).toEqual('close');
   });
 
   it("reports errors when they occur", function() {

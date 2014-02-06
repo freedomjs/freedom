@@ -1,10 +1,10 @@
-describe('fdom.port.AppInternal', function() {
+describe('fdom.port.ModuleInternal', function() {
   var app, manager, hub, global, loc;
   beforeEach(function() {
     global = {freedom: {}};
     hub = new fdom.Hub();
     manager = new fdom.port.Manager(hub);
-    app = new fdom.port.AppInternal(manager);
+    app = new fdom.port.ModuleInternal(manager);
     hub.emit('config', {
       global: global
     });
@@ -39,20 +39,14 @@ describe('fdom.port.AppInternal', function() {
     expect(source.gotMessage('control', {'name': 'core.echo'})).toBeDefined();
   });
 
-  it('handles script loading and attachment', function() {
+  it('handles script loading and attachment', function(done) {
     setupResolvers();
     global.document = document;
   
-    runs(function() {
-      app.loadScripts(loc, 'relative://spec/helper/beacon.js');
-    });
-    
-    waitsFor(function() {
-      return typeof fileIncluded !== "undefined";
-    }, "Beacon should be included", 1000);
-    
-    runs(function() {
+    callback = function() {
       expect(fileIncluded).toEqual(true);
-    });
+      done();
+    }
+    app.loadScripts(loc, 'relative://spec/helper/beacon.js');
   });
 });

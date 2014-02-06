@@ -27,7 +27,7 @@ describe("fdom.Port.Manager", function() {
     manager.onMessage('unregistered', {
       request: 'debug'
     });
-    expect(fdom.debug.print.callCount).toEqual(1);
+    expect(fdom.debug.print.calls.count()).toEqual(1);
   });
 
   it("Creates Links", function() {

@@ -1,4 +1,4 @@
-var TRANSPORT_SPEC = function(transportId) { return function() {
+var TRANSPORT_INTEGRATION_SPEC = function(transportId) { return function() {
   var TIMEOUT = 3000;
   var freedom, helper;
 
@@ -102,4 +102,4 @@ var TRANSPORT_SPEC = function(transportId) { return function() {
 
 }};
 
-describe("transport.webrtc.json", TRANSPORT_SPEC("transport.webrtc"));
+describe("transport.webrtc.json", TRANSPORT_INTEGRATION_SPEC("transport.webrtc"));

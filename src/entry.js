@@ -84,9 +84,13 @@ fdom.setup = function (global, freedom_src, config) {
       manager.setup(link);
     }
 
-    link = location.protocol + "//" + location.host + location.pathname;
+    if (typeof location !== 'undefined') {
+      link = location.protocol + "//" + location.host + location.pathname;
+    } else if (site_cfg.location) {
+      link = site_cfg.location;
+    }
     fdom.resources.get(link, site_cfg.manifest).done(function(url) {
-      setupApp(new fdom.port.App(url, []));
+      setupApp(new fdom.port.Module(url, []));
     });
   }
   hub.emit('config', site_cfg);

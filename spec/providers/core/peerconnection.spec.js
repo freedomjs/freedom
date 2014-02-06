@@ -38,18 +38,12 @@ describe("providers/core/peerconnection", function() {
       continuation(events);
     };
 
-  function setup() {
-    var setupCompletes = false;
+  function setup(done) {
     function setupCalled() {
-      setupCompletes = true;
+      expect(emitted).toContain({eventName: "ready", eventData: undefined});
+      done();
     }
     peerconnection.setup(PROXY, "setup peer", turnServers, setupCalled);
-    waitsFor(function() {
-      return setupCompletes;
-    }, TIMEOUT);
-    runs(function() {
-      expect(emitted).toContain({eventName: "ready"});
-    });
   }
 
   beforeEach(function beforeEach() {
@@ -81,10 +75,13 @@ describe("providers/core/peerconnection", function() {
 
   it("sets up.", setup);
 
-  it("handles remote offer messages.", function() {
+  it("handles remote offer messages.", function(done) {
     var message = JSON.stringify({sdp: "v=0"});
-    setup();
-    listeningOn.message(message);
+    setup(sendMessage);
+    function sendMessage() {
+      listeningOn.message(message);
+      done();
+    }
   });
   
 });

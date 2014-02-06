@@ -21,7 +21,20 @@ sources.forEach(function(dir) {
   });
 });
 
-module.exports.freedom = fdom.setup(global, undefined, {
-  portType: 'nodeVM'
+fdom.resources.addResolver(function(manifest, url, deferred) {
+  if (manifest === 'node://') {
+    deferred.resolve(url);
+    return true;
+  }
+  return false;
 });
-delete global.fdom;
+
+module.exports.freedom = function(fdom, manifest) {
+  return fdom.setup(global, undefined, {
+    portType: 'Node',
+    isApp: false,
+    stayLocal: true,
+    location: "node://",
+    manifest: manifest
+  });
+}.bind(global, fdom);
