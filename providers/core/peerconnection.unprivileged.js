@@ -1,216 +1,382 @@
+// A FreeDOM interface to a WebRTC Peer Connection via the peerdata wrapper.
+
 /**
- * A freedom.js interface to WebRTC Peer Connections
- * @param Channel channel a channel for emitting events.
- * @constructor
- * @private
+ * DataPeer
+ * Assumes that RTCPeerConnection is defined.
  */
-var PeerConnection_unprivileged = function(channel) {
-  this.appChannel = channel;
-  this.dataChannel = null;
-  this.identity = null;
-  this.connection = null;
-  this.myPid = Math.random();
-  this.remotePid = 1;
-  this.sendQueue = [];
-  handleEvents(this);
+
+
+//-----------------------------------------------------------------------------
+// A class that wraps a peer connection and its data channels.
+//-----------------------------------------------------------------------------
+// TODO: check that Handling of pranswer is treated appropriately.
+var SimpleDataPeerState = {
+  DISCONNECTED: 'DISCONNECTED',
+  CONNECTING: 'CONNECTING',
+  CONNECTED: 'CONNECTED'
 };
 
-PeerConnection_unprivileged.prototype.open = function(proxy, continuation) {
-  if (this.connection) {
-    continuation(false);
-  }
+function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks) {
+  var RTCPC;
+  this.peerName = peerName;
+  this._channels = {};
+  this._dataChannelCallbacks = dataChannelCallbacks;
 
-  // Listen for messages to/from the provided message channel.
-  this.appChannel = Core_unprivileged.bindChannel(this.appChannel, proxy);
-  this.appChannel['on']('message', this.onIdentity.bind(this));
-  this.appChannel.emit('ready');
-
-  this.setup(true);
-  continuation();
-};
-
-PeerConnection_unprivileged.prototype.setup = function(initiate) {
-  var RTCPeerConnection = RTCPeerConnection || webkitRTCPeerConnection || mozRTCPeerConnection;
-  this.connection = new RTCPeerConnection(null, {'optional': [{'RtpDataChannels': true}]});
-
-  var dcSetup = function() {
-    this.dataChannel.addEventListener('open', function() {
-      console.log("Data channel opened.");
-      this.emit('open');
-    }.bind(this), true);
-    this.dataChannel.addEventListener('message', function(m) {
-      // TODO(willscott): Support native binary transport, rather than this mess
-      if (this.parts > 0) {
-        this.buf += m.data;
-        this.parts--;
-        console.log('waiting for ' + this.parts + ' more parts.');
-        if (this.parts === 0) {
-          console.log("binary data recieved (" + this.buf.length + " bytes)");
-          var databuf = JSON.parse(this.buf);
-          var arr = new Uint8Array(databuf['binary']);
-          var blob = new Blob([arr.buffer], {"type": databuf['mime']});
-          this['dispatchEvent']('message', {"tag": databuf['tag'], "binary": blob, "buffer" : arr.buffer});
-          this.buf = "";
-        }
-        return;
-      }
-      var data = JSON.parse(m.data);
-      if (data['text']) {
-        this['dispatchEvent']('message', {"tag": data['tag'], "text": data['text']});
-      } else {
-        this.parts = data['binary'];
-        console.log("Beginning receipt of binary data (" + this.parts + " parts)");
-        this.buf = "";
-      }
-    }.bind(this), true);
-    this.dataChannel.addEventListener('close', function(conn) {
-      if (this.connection == conn) {
-        this['dispatchEvent']('onClose');
-        this.close(function() {});
-      }
-    }.bind(this, this.connection), true);
-  }.bind(this);
-
-  if (initiate) {
-    this.dataChannel = this.connection.createDataChannel("sendChannel", {'reliable': false});
-    dcSetup();
+  if (typeof RTCPeerConnection !== "undefined") {
+    RTCPC = RTCPeerConnection;
+  } else if (typeof webkitRTCPeerConnection !== "undefined") {
+    RTCPC = webkitRTCPeerConnection;
+  } else if (typeof mozRTCPeerConnection !== "undefined") {
+    RTCPC = mozRTCPeerConnection;
   } else {
-    this.connection.addEventListener('datachannel', function(evt) {
-      this.dataChannel = evt['channel'];
-      dcSetup();
-    }.bind(this));
+    throw new Error("This environment does not seem to support RTCPeerConnection");
   }
 
-  this.connection.addEventListener('icecandidate', function(evt) {
-    if(evt && evt['candidate']) {
-      this.appChannel.emit('message', JSON.stringify(evt['candidate']));
-    }
-  }.bind(this), true);
+  var constraints = {optional: [{DtlsSrtpKeyAgreement: true}]};
+  // A way to speak to the peer to send SDP headers etc.
+  this._sendSignalMessage = null;
 
-  this.makeOffer();
+  this._pc = null;  // The peer connection.
+  // Get TURN servers for the peer connection.
+  var iceServer;
+  var pc_config = {iceServers: []};
+  for (var i = 0; i < stunServers.length; i++) {
+    iceServer = { 'url' : stunServers[i] };
+    pc_config.iceServers.push(iceServer);
+  }
+  this._pc = new RTCPC(pc_config, constraints);
+  // Add basic event handlers.
+  this._pc.addEventListener("icecandidate",
+                            this._onIceCallback.bind(this));
+  this._pc.addEventListener("negotiationneeded",
+                            this._onNegotiationNeeded.bind(this));
+  this._pc.addEventListener("datachannel",
+                            this._onDataChannel.bind(this));
+  this._pc.addEventListener("signalingstatechange", function () {
+    if (this._pc.signalingState == "stable") {
+      this._pcState = SimpleDataPeerState.CONNECTED;
+    }
+  }.bind(this));
+  // This state variable is used to fake offer/answer when they are wrongly
+  // requested and we really just need to reuse what we already have.
+  this._pcState = SimpleDataPeerState.DISCONNECTED;
+
+  // Note: to actually do something with data channels opened by a peer, we
+  // need someone to manage "datachannel" event.
+}
+
+// Queue 'func', a 0-arg closure, for invocation when the TURN server
+// gets back to us, and we have a valid RTCPeerConnection in this._pc.
+// If we already have it, run func immediately.
+SimpleDataPeer.prototype.runWhenReady = function(func) {
+  if (typeof this._pc === "undefined" || this._pc === null) {
+    console.error('SimpleDataPeer: Something is terribly wrong. PeerConnection is null');
+    // we're still waiting.
+  } else {
+    func();
+  }
 };
 
-PeerConnection_unprivileged.prototype.makeOffer = function() {
-  if (this.remotePid < this.myPid) {
-    return;
-  }
-  this.connection.createOffer(function(desc) {
-    this.connection.setLocalDescription(desc);
-    desc['pid'] = this.myPid;
-    this.appChannel.emit('message', JSON.stringify(desc));
+SimpleDataPeer.prototype.send = function(channelId, message, continuation) {
+  this._channels[channelId].send(message);
+  continuation();
+};
+
+SimpleDataPeer.prototype.addPCEventListener = function(event, func) {
+  this._pc_listeners.push({event: event, func: func});
+};
+
+SimpleDataPeer.prototype.openDataChannel = function(channelId, continuation) {
+  this.runWhenReady(function doOpenDataChannel() {
+    var dataChannel = this._pc.createDataChannel(channelId, {});
+    dataChannel.onopen = function() {
+      this._addDataChannel(channelId, dataChannel);
+      continuation();
+      this._dataChannelCallbacks.onOpenFn(dataChannel, {label: channelId});
+    }.bind(this);
   }.bind(this));
 };
 
-PeerConnection_unprivileged.prototype.makeAnswer = function() {
-  this.connection.createAnswer(function(desc) {
-    this.connection.setLocalDescription(desc);
-    desc['pid'] = this.myPid;
-    this.appChannel.emit('message', JSON.stringify(desc));
+SimpleDataPeer.prototype.closeChannel= function(channelId) {
+  if(channelId in this._channels) {
+    this._channels[channelId].close();
+    delete this._channels[channelId];
+  }
+};
+
+SimpleDataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
+  this._sendSignalMessage = sendSignalMessageFn;
+};
+
+// Handle a message send on the signalling channel to this peer.
+SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
+//  console.log(this.peerName + ": " + "handleSignalMessage: \n" +
+//      messageText);
+  var json = JSON.parse(messageText);
+  this.runWhenReady(function() {
+    // TODO: If we are offering and they are also offerring at the same time,
+    // pick the one who has the lower randomId?
+    // (this._pc.signalingState == "have-local-offer" && json.sdp &&
+    //    json.sdp.type == "offer" && json.sdp.randomId < this.localRandomId)
+    if (json.sdp) {
+      // Set the remote description.
+      this._pc.setRemoteDescription(
+         new RTCSessionDescription(json.sdp),
+          // Success
+          function () {
+            if (this._pc.remoteDescription.type == "offer") {
+              this._pc.createAnswer(this._onDescription.bind(this));
+            }
+          }.bind(this),
+          // Failure
+          function (e) {
+            console.error(this.peerName + ": " +
+                "setRemoteDescription failed:", e);
+          }.bind(this));
+    } else if (json.candidate) {
+      // Add remote ice candidate.
+      console.log(this.peerName + ": Adding ice candidate: " + JSON.stringify(json.candidate));
+      var ice_candidate = new RTCIceCandidate(json.candidate);
+      this._pc.addIceCandidate(ice_candidate);
+    } else {
+      console.warn(this.peerName + ": " +
+          "handleSignalMessage got unexpected message: ", messageText);
+    }
   }.bind(this));
 };
 
-PeerConnection_unprivileged.prototype.onIdentity = function(msg) {
-  try {
-    var m = msg;
-    if (typeof msg === "string") {
-      m = JSON.parse(msg);
-    }
-    if (m['candidate']) {
-      var candidate = new RTCIceCandidate(m);
-      this.connection.addIceCandidate(candidate);
-    } else if (m['type'] == 'offer' && m['pid'] != this.myId) {
-      this.remotePid = m['pid'];
-      if (this.remotePid < this.myPid) {
-        this.close(function() {
-          this.setup(false);
-          this.connection.setRemoteDescription(new RTCSessionDescription(m), function() {}, function() {
-            console.log("Failed to set remote description");
-          });
-          this.makeAnswer();
+// Connect to the peer by the signalling channel.
+SimpleDataPeer.prototype.negotiateConnection = function () {
+  this._pcState = SimpleDataPeerState.CONNECTING;
+  this.runWhenReady(function() {
+    this._pc.createOffer(
+        this._onDescription.bind(this),
+        function(e) {
+          console.error(this.peerName + ": " +
+              "createOffer failed: ", e.toString());
+          this._pcState = SimpleDataPeerState.DISCONNECTED;
         }.bind(this));
-      } else {
-        // They'll get my offer and send an answer.
-      }
-    } else if (m['type'] == 'answer' && m['pid'] != this.myId) {
-      this.remotePid = m['pid'];
-      this.connection.setRemoteDescription(new RTCSessionDescription(m));
+  }.bind(this));
+};
+
+SimpleDataPeer.prototype.close = function() {
+  if(this._pc.signalingState !== "closed") {
+    this._pc.close();
+  }
+  // console.log(this.peerName + ": " + "Closed peer connection.");
+};
+
+SimpleDataPeer.prototype._addDataChannel = function(channelId, channel) {
+  var callbacks = this._dataChannelCallbacks;
+  this._channels[channelId] = channel;
+
+  // channel.onopen = callbacks.onOpenFn.bind(this, channel, {label: channelId});
+
+  channel.onclose = callbacks.onCloseFn.bind(this, channel, {label: channelId});
+
+  channel.onmessage = callbacks.onMessageFn.bind(this, channel,
+                                                 {label: channelId});
+
+  channel.onerror = callbacks.onErrorFn.bind(this, channel, {label: channel});
+};
+
+// When we get our description, we set it to be our local description and
+// send it to the peer.
+SimpleDataPeer.prototype._onDescription = function (description) {
+  this.runWhenReady(function() {
+    if (this._sendSignalMessage) {
+      this._pc.setLocalDescription(
+          description, function() {
+            this._sendSignalMessage(JSON.stringify({'sdp':description}));
+          }.bind(this), function (e) { console.error(this.peerName + ": " +
+              "setLocalDescription failed:", e);
+          }.bind(this));
+    } else {
+      console.error(this.peerName + ": " +
+          "_onDescription: _sendSignalMessage is not set, so we did not " +
+              "set the local description. ");
     }
-  } catch(e) {
-    console.log("Couldn't understand identity message: " + JSON.stringify(msg) + ": -> " + e.message);
-  }
+  }.bind(this));
 };
 
-PeerConnection_unprivileged.prototype.postMessage = function(ref, continuation) {
-  if (!this.connection) {
-    return continuation(false);
-  }
-  // Queue until open.
-  if (!this.dataChannel || this.dataChannel.readyState != "open") {
-    return this.once('open', this.postMessage.bind(this, ref, continuation));
-  }
-  window.dc = this.dataChannel;
-
-  if(ref['text']) {
-    this.sendQueue.push(JSON.stringify({"tag": ref['tag'], "text":ref['text']}));
-    console.log("Sending text: " + ref['text']);
-    this._process();
-  } else if(ref['binary']) {
-    // TODO(willscott): implement direct blob support when available.
-    console.log("Transmitting " + ref['binary'].size + " binary bytes");
-    var reader = new FileReader();
-    reader.addEventListener('load', function(type, tag, ev) {
-      var arr = [];
-      arr.push.apply(arr, new Uint8Array(ev.target.result));
-      // Chunk messages so that packets are below MTU.
-      var MAX_LEN = 512;
-      var str = JSON.stringify({"mime": type, "tag": tag, "binary": arr});
-      var parts = Math.ceil(str.length / MAX_LEN);
-      console.log("Sending chunked " + type + " ("+ str.length + " bytes)");
-      this.sendQueue.push(JSON.stringify({"binary": parts}));
-
-      while (str.length > 0) {
-        this.sendQueue.push(str.substr(0, MAX_LEN));
-        str = str.substr(MAX_LEN);
-      }
-      this._process();
-    }.bind(this, ref['binary'].type, ref['tag']), true);
-
-    reader.readAsArrayBuffer(ref['binary']);
-  }
-  continuation();
-};
-
-PeerConnection_unprivileged.prototype._process = function(scheduled) {
-  if (this.scheduled && !scheduled) {
+//
+SimpleDataPeer.prototype._onNegotiationNeeded = function (e) {
+  // console.log(this.peerName + ": " + "_onNegotiationNeeded", this._pc, e);
+  if(this._pcState != SimpleDataPeerState.DISCONNECTED) {
+    // Negotiation messages are falsely requested for new data channels.
+    //   https://code.google.com/p/webrtc/issues/detail?id=2431
+    // This code is a hack to simply reset the same local and remote
+    // description which will trigger the appropriate data channel open event.
+    // TODO: fix/remove this when Chrome issue is fixed.
+    var logSuccess = function (op) { return function() {
+      //console.log(this.peerName + ": " + op + " succeeded ");
+    }.bind(this); }.bind(this);
+    var logFail = function (op) { return function(e) {
+      //console.log(this.peerName + ": " + op + " failed: " + e);
+    }.bind(this); }.bind(this);
+    if (this._pc.localDescription && this._pc.remoteDescription &&
+        this._pc.localDescription.type == "offer") {
+      this._pc.setLocalDescription(this._pc.localDescription,
+                                   logSuccess("setLocalDescription"),
+                                   logFail("setLocalDescription"));
+      this._pc.setRemoteDescription(this._pc.remoteDescription,
+                                    logSuccess("setRemoteDescription"),
+                                    logFail("setRemoteDescription"));
+    } else if (this._pc.localDescription && this._pc.remoteDescription &&
+        this._pc.localDescription.type == "answer") {
+      this._pc.setRemoteDescription(this._pc.remoteDescription,
+                                    logSuccess("setRemoteDescription"),
+                                    logFail("setRemoteDescription"));
+      this._pc.setLocalDescription(this._pc.localDescription,
+                                   logSuccess("setLocalDescription"),
+                                   logFail("setLocalDescription"));
+    }
     return;
   }
+  this.negotiateConnection();
+};
 
-  var next = this.sendQueue.shift();
-  this.dataChannel.send(next);
-
-  if (this.scheduled) {
-    clearTimeout(this.scheduled);
-    delete this.scheduled;
-  }
-
-  if (this.sendQueue.length) {
-    var STEP = 300;
-    this.scheduled = setTimeout(this._process.bind(this, true), STEP);
+SimpleDataPeer.prototype._onIceCallback = function (event) {
+  if (event.candidate) {
+    // Send IceCandidate to peer.
+    // console.log(this.peerName + ": " + "ice callback with candidate", event);
+    if (this._sendSignalMessage) {
+      this._sendSignalMessage(JSON.stringify({'candidate': event.candidate}));
+    } else {
+      console.warn(this.peerName + ": " + "_onDescription: _sendSignalMessage is not set.");
+    }
   }
 };
 
-PeerConnection_unprivileged.prototype.close = function(continuation) {
-  delete this.dataChannel;
-
-  if (this.connection) {
-    try {
-      this.connection.close();
-    } catch(e) {
-      // Ignore already-closed errors.
-    }
-    delete this.connection;
+SimpleDataPeer.prototype._onSignalingStateChange = function () {
+//  console.log(this.peerName + ": " + "_onSignalingStateChange: ",
+//      this._pc.signalingState);
+  if (this._pc.signalingState == "stable") {
+    this._pcState = SimpleDataPeerState.CONNECTED;
   }
+};
+
+SimpleDataPeer.prototype._onDataChannel = function(event) {
+  this._addDataChannel(event.channel.label, event.channel);
+};
+
+// _signallingChannel is a channel for emitting events back to the freedom Hub.
+function PeerConnection(portApp) {
+
+    // a (hopefully unique) ID for debugging.
+  this.peerName = "p" + Math.random();
+
+  // This is the portApp (defined in freedom/src/port-app.js). A way to speak
+  // to freedom.
+  this._portApp = portApp;
+
+  // This is the a channel to send signalling messages.
+  this._signallingChannel = null;
+
+  // The DataPeer object for talking to the peer.
+  this._peer = null; 
+
+  // The Core object for managing channels.
+  this._portApp.once('core', function(Core) {
+    this._core = new Core();
+  }.bind(this));
+  this._portApp.emit(this._portApp.controlChannel, {
+    type: 'core request delegated to peerconnection',
+    request: 'core'
+  });
+}
+
+// Start a peer connection using the given freedomChannelId as the way to
+// communicate with the peer. The argument |freedomChannelId| is a way to speak
+// to an identity provide to send them SDP headers negotiate the address/port to
+// setup the peer to peerConnection.
+//
+// options: {
+//   peerName: string,   // For pretty printing messages about this peer.
+//   debug: boolean           // should we add extra
+// }
+PeerConnection.prototype.setup =
+    function(signallingChannelId, peerName, stunServers, continuation) {
+  this.peerName = peerName;
+  var self = this;
+
+  var dataChannelCallbacks = {
+    // onOpenFn is called at the point messages will actually get through.
+    onOpenFn: function (dataChannel, info) {
+      self.dispatchEvent("onOpenDataChannel",
+                         info.label);
+    },
+    onCloseFn: function (dataChannel, info) {
+      self.dispatchEvent("onCloseDataChannel",
+                         { channelId: info.label});
+    },
+    // Default on real message prints it to console.
+    onMessageFn: function (dataChannel, info, event) {
+      if (event.data instanceof ArrayBuffer) {
+        self.dispatchEvent('onReceived',
+            { 'channelLabel': info.label,
+              'buffer': event.data });
+      } else if (typeof(event.data) == 'string') {
+        self.dispatchEvent('onReceived',
+            { 'channelLabel': info.label,
+              'text': event.data });
+      }
+    },
+    // Default on error, prints it.
+    onErrorFn: function(dataChannel, info, err) {
+      console.error(smartDataChannel.peerName + ": dataChannel(" +
+          smartDataChannel.dataChannel.label + "): error: ", err);
+    }
+  };
+
+  this._peer = new SimpleDataPeer(this.peerName, stunServers,
+                                  dataChannelCallbacks);
+
+  // Setup link between Freedom messaging and _peer's signalling.
+  // Note: the signalling channel should only be sending receiveing strings.
+  this._core.bindChannel(signallingChannelId, function(channel) {
+    this._signallingChannel = channel;
+    this._peer.setSendSignalMessage((function(msg) {
+      this._signallingChannel.emit('message', msg);
+    }).bind(this));
+    this._signallingChannel.on('message',
+        this._peer.handleSignalMessage.bind(this._peer));
+    this._signallingChannel.emit('ready');
+    continuation();
+  }.bind(this));
+
+};
+
+// TODO: delay continuation until the open callback from _peer is called.
+PeerConnection.prototype.openDataChannel =
+    function(channelId, continuation) {
+  this._peer.openDataChannel(channelId, continuation);
+};
+
+PeerConnection.prototype.closeDataChannel =
+    function(channelId, continuation) {
+  this._peer.closeChannel(channelId);
   continuation();
 };
 
-fdom.apis.register("core.peerconnection", PeerConnection_unprivileged);
+// Called to send a message over the given datachannel to a peer. If the data
+// channel doesn't already exist, the DataPeer creates it.
+PeerConnection.prototype.send = function(sendInfo, continuation) {
+  var objToSend = sendInfo.text || sendInfo.buffer || sendInfo.binary;
+  if (typeof objToSend === 'undefined') {
+    console.error("No valid data to send has been provided.", sendInfo);
+    return;
+  }
+  //DEBUG
+  // objToSend = new ArrayBuffer(4);
+  //DEBUG
+  this._peer.send(sendInfo.channelLabel, objToSend, continuation);
+};
+
+PeerConnection.prototype.close = function(continuation) {
+  this._peer.close();
+  continuation();
+  this.dispatchEvent("onClose");
+};
+
+fdom.apis.register('core.peerconnection', PeerConnection);

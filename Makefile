@@ -8,3 +8,5 @@ freedom.js: $(SOURCES) src/util/preamble.js src/util/postamble.js
 clean:
 	rm freedom.js
 	rm freedom.min.js
+	rm tools/coverage*
+	rm -r tools/lcov*
