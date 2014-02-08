@@ -1,58 +1,69 @@
 function RTCPeerConnection(configuration, constraints) {
+  RTCPeerConnection.mostRecent = this;
   this.configuration = configuration;
   this.constraints = constraints;
+  this.listeners = {};
 }
 
 RTCPeerConnection.prototype.addEventListener = function(event, func) {
+  // We only allow registering one listener for simplicity
+  this.listeners[event] = func;
 };
 
-RTCPeerConnection.setRemoteDescriptionSuccess = true;
-RTCPeerConnection.prototype.setRemoteDescription = function(description,
-                                                            successCallback,
-                                                            failureCallback) {
-  if (RTCPeerConnection.setRemoteDescriptionSuccess) {
-    this.remoteDescription = description;
-    successCallback();
-  } else {
-    failureCallback();
-  }
+RTCPeerConnection.prototype.createDataChannel = function(label, dict) {
+  var dataChannel = new RTCDataChannel(label, dict);
+  return dataChannel;
 };
+
+function RTCDataChannel(label, dict) {
+  RTCDataChannel.mostRecent = this;
+
+  this.label = label;
+  this._closed = false;
+  setTimeout(function() {
+    if (typeof this.onopen === 'function') {
+      this.onopen();
+    }
+  }.bind(this), 0);
+}
+
+RTCDataChannel.prototype.send = function() {
+};
+
+RTCDataChannel.prototype.close = function() {
+  this._closed = true;
+};
+
 
 function RTCSessionDescription(descriptionInitDict) {
   this.descriptionInitDict = descriptionInitDict;
+  this.sdp = descriptionInitDict.sdp;
+  this.type = descriptionInitDict.type;
 }
 
 describe("providers/core/peerconnection", function() {
-  var portApp, events, emitted, listeningOn;
+  var portApp, signalChannel, emitted, listeningOn;
+  var dispatchedEvents;
   var peerconnection;
   var turnServers = [];
   var PROXY = "PROXY";
   var TIMEOUT = 1000;
   
 
-    function Core () {
-    };
+  function Core () {
+  };
 
-    Core.prototype.bindChannel = function(id, continuation) {
-      console.info("bind channel");
-      continuation(events);
-    };
+  Core.prototype.bindChannel = function(id, continuation) {
+    continuation(signalChannel);
+  };
 
-  function setup(done) {
-    function setupCalled() {
-      expect(emitted).toContain({eventName: "ready", eventData: undefined});
-      done();
-    }
-    peerconnection.setup(PROXY, "setup peer", turnServers, setupCalled);
-  }
-
-  beforeEach(function beforeEach() {
+  beforeEach(function beforeEach(done) {
     emitted = [];
     listeningOn = {};
+    dispatchedEvents = {};
 
-    RTCPeerConnection.setRemoteDescriptionSuccess = true;
-
-    events = {
+    // signalling channel events
+    signalChannel = {
       emit: function(eventName, eventData) {
         emitted.push({eventName: eventName,
                       eventData: eventData});
@@ -61,7 +72,7 @@ describe("providers/core/peerconnection", function() {
         listeningOn[event] = func;
       }
     };
-
+    
     portApp = {
       once: function(name, func) {
         expect(name).toEqual("core");
@@ -71,17 +82,109 @@ describe("providers/core/peerconnection", function() {
       }
     };
     peerconnection = new PeerConnection(portApp);
+    peerconnection.dispatchEvent = function(event, data) {
+      dispatchedEvents[event] = data;
+    };
+
+    function setupCalled() {
+      expect(emitted).toContain({eventName: "ready", eventData: undefined});
+      done();
+    }
+    peerconnection.setup(PROXY, "setup peer", turnServers, setupCalled);
   });
 
-  it("sets up.", setup);
+  it("Opens data channel", function(done) {
+    var rtcpc = RTCPeerConnection.mostRecent;
+    spyOn(rtcpc, "createDataChannel").and.callThrough();
+    peerconnection.openDataChannel("openDC", openDataChannelContinuation);
 
-  it("handles remote offer messages.", function(done) {
-    var message = JSON.stringify({sdp: "v=0"});
-    setup(sendMessage);
-    function sendMessage() {
-      listeningOn.message(message);
+    function openDataChannelContinuation() {
+      var dataChannel;
+      expect(rtcpc.createDataChannel).toHaveBeenCalledWith("openDC", {});
+      dataChannel = RTCDataChannel.mostRecent;
+      expect(dataChannel).toBeDefined();
+      expect(dataChannel.label).toEqual("openDC");
       done();
     }
   });
-  
+
+  it("Fires onOpenDataChannel for peer created data channels.", function(done) {
+    var rtcpc = RTCPeerConnection.mostRecent;
+    var dataChannel = new RTCDataChannel("onOpenDC", {});
+    var event = {channel: dataChannel};
+    
+    rtcpc.listeners.datachannel(event);
+    expect(dispatchedEvents.onOpenDataChannel).toEqual("onOpenDC");
+    done();
+  });
+
+  it("Closes data channel", function(done) {
+    var rtcpc = RTCPeerConnection.mostRecent;
+    var dataChannel;
+    peerconnection.openDataChannel("closeDC", openDataChannelContinuation);
+
+    function openDataChannelContinuation() {
+      dataChannel = RTCDataChannel.mostRecent;
+      expect(dataChannel).toBeDefined();
+      spyOn(dataChannel, "close").and.callThrough();
+      peerconnection.closeDataChannel("closeDC", closeDataChannelContinuation);
+    }
+    function closeDataChannelContinuation() {
+      expect(dataChannel.close).toHaveBeenCalled();
+      done();
+    }
+  });
+
+  it("Fires onClose when closed", function(done) {
+    var rtcpc = RTCPeerConnection.mostRecent;
+    var dataChannel;
+    peerconnection.openDataChannel("oncloseDC", openDataChannelContinuation);
+    function openDataChannelContinuation() {
+      dataChannel = RTCDataChannel.mostRecent;
+      expect(dataChannel.onclose).toEqual(jasmine.any(Function));
+      dataChannel.onclose();
+      
+      expect(dispatchedEvents.onCloseDataChannel).toBeDefined();
+      done();
+    }
+  });
+
+  it("Sends message", function(done) {
+    var rtcpc = RTCPeerConnection.mostRecent;
+    var dataChannel;
+    var sendInfo = {channelLabel: "sendDC",
+                   text: "Hello World"};
+    peerconnection.openDataChannel("sendDC", openDataChannelContinuation);
+
+    function openDataChannelContinuation() {
+      dataChannel = RTCDataChannel.mostRecent;
+      expect(dataChannel).toBeDefined();
+      spyOn(dataChannel, "send");
+      peerconnection.send(sendInfo, sendContinuation);
+    }
+    function sendContinuation() {
+      expect(dataChannel.send).toHaveBeenCalledWith("Hello World");
+      done();
+    }
+  });
+
+  it("Receives messages", function(done) {
+    var rtcpc = RTCPeerConnection.mostRecent;
+    var dataChannel;
+
+    peerconnection.openDataChannel("receiveDC", openDataChannelContinuation);
+    function openDataChannelContinuation() {
+      dataChannel = RTCDataChannel.mostRecent;
+      expect(dataChannel.onmessage).toEqual(jasmine.any(Function));
+      dataChannel.onmessage({data: "Hello World"});
+
+      var message = dispatchedEvents.onReceived;
+      expect(message).toBeDefined();
+      expect(message.channelLabel).toEqual("receiveDC");
+      expect(message.text).toEqual("Hello World");
+
+      done();
+    }
+  });
+
 });
