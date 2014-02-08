@@ -41,6 +41,6 @@ Help freedom.js
 
 We welcome contributions and pull requests! A set of current issues are maintained in the issues section of this repository. In addition, we would be happy to help you work through bugs with your use of the library and suggest solutions on our mailing list ([freedom@cs.washington.edu](mailto:freedom@cs.washington.edu)).
 
-Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict that a pull request will fail if running ```grunt``` locally fails.
+Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict that a pull request will fail if running ```grunt test``` locally fails.
 
 Internal documentation for the library is also [automatically generated](https://homes.cs.washington.edu/~wrs/tools/doc) and provides a reasonable starting point for understanding how the internals of freedom.js work together.
