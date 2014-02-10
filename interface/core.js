@@ -62,8 +62,8 @@ fdom.apis.set('core.peerconnection', {
       // The peerName, used debugging and console messages.
       "string",
       // The list of STUN servers to use.
-      // format is of a single entry is stun:HOST:PORT, where HOST and
-      // PORT are the hostname and port, respectively.
+      // The format of a single entry is stun:HOST:PORT, where HOST
+      // and PORT are a stun server hostname and port, respectively.
       ["array", "string"]
       ]
   },
