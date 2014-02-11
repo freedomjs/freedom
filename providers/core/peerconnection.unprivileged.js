@@ -92,7 +92,6 @@ SimpleDataPeer.prototype.openDataChannel = function(channelId, continuation) {
     dataChannel.onopen = function() {
       this._addDataChannel(channelId, dataChannel);
       continuation();
-      this._dataChannelCallbacks.onOpenFn(dataChannel, {label: channelId});
     }.bind(this);
   }.bind(this));
 };
@@ -170,7 +169,9 @@ SimpleDataPeer.prototype._addDataChannel = function(channelId, channel) {
   var callbacks = this._dataChannelCallbacks;
   this._channels[channelId] = channel;
 
-  // channel.onopen = callbacks.onOpenFn.bind(this, channel, {label: channelId});
+  if (channel.readyState === "connecting") {
+    channel.onopen = callbacks.onOpenFn.bind(this, channel, {label: channelId});
+  }
 
   channel.onclose = callbacks.onCloseFn.bind(this, channel, {label: channelId});
 
@@ -258,6 +259,12 @@ SimpleDataPeer.prototype._onSignalingStateChange = function () {
 
 SimpleDataPeer.prototype._onDataChannel = function(event) {
   this._addDataChannel(event.channel.label, event.channel);
+  // RTCDataChannels created by a RTCDataChannelEvent have an initial
+  // state of open, so the onopen event for the channel will not
+  // fire. We need to fire the onOpenDataChannel event here
+  // http://www.w3.org/TR/webrtc/#idl-def-RTCDataChannelState
+  this._dataChannelCallbacks.onOpenFn(event.channel,
+                                      {label: event.channel.label});
 };
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
