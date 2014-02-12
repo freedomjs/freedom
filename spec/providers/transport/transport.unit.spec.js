@@ -53,7 +53,7 @@ describe("transport.webrtc.json unit tests.", function () {
         return peerconnection;
       }
     };
-    transport = new TransportProvider();
+    transport = new WebRTCTransportProvider();
     transport.dispatchEvent = function(event, data) {
       dispatchedEvents[event] = data;
     };
@@ -62,7 +62,7 @@ describe("transport.webrtc.json unit tests.", function () {
     function postSetup() {
       expect(peerconnection.setup).toHaveBeenCalledWith(undefined,
                                                        "unit-tests",
-                                                        stun_servers);
+                                                        WebRTCTransportProvider.stun_servers);
       done();
     }
   });
