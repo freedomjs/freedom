@@ -13,7 +13,8 @@
 
 //var this.WS_URL = 'ws://localhost:8082/route/';
 
-function WSSocialProvider() {
+function WSSocialProvider(dispatchEvent) {
+  this.dispatchEvent = dispatchEvent;
   this.WS_URL = 'ws://p2pbr.com:8082/route/';
   this.NETWORK_ID = 'websockets';
   var social = freedom.social();

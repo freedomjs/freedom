@@ -1,5 +1,5 @@
 describe("core.view", function() {
-  var provider, app;
+  var provider, app, el;
 
   beforeEach(function() {
     app = {
@@ -10,13 +10,19 @@ describe("core.view", function() {
       manifestId: 'myApp',
     };
     provider = new View_unprivileged(app);
+ 
+    el = document.createElement('div');
+    el.id = 'myview';
+    document.body.appendChild(el);
+  });
+
+  afterEach(function() {
+    document.body.removeChild(el);
+    delete el;
   });
 
   it("Places objects and cleans up.", function() {
     app.config.views['myview'] = true;
-    var el = document.createElement('div');
-    el.id = 'myview';
-    document.body.appendChild(el);
 
     var cb = jasmine.createSpy('cb');
     provider.open('myview', {'code': ''}, cb);
@@ -29,13 +35,14 @@ describe("core.view", function() {
   });
 
   // TODO: Understand phantom security model better.
-  xit("Roundtrips messages", function(done) {
-    var onReturn = function() {
-      expect(provider.dispatchEvent).toHaveBeenCalledWith('msg');
+  it("Roundtrips messages", function(done) {
+    app.config.views['myview'] = true;
+
+    provider.dispatchEvent = jasmine.createSpy('de');
+    provider.dispatchEvent.and.callFake(function() {
+      expect(provider.dispatchEvent).toHaveBeenCalledWith('message', 'msg');
       provider.close(done);
-    };
-    provider.dispatchEvent = jasmine.createSpy('cb');
-    provider.dispatchEvent.and.callFake(onReturn);
+    });
     var sendMsg = function() {
       provider.postMessage('msg', function() {});
     }
@@ -45,6 +52,6 @@ describe("core.view", function() {
     var onOpen = function() {
       provider.show(onShow);
     };
-    provider.open('myview', {'code': '<script>window.addEventListener("message", function(m) {parent.postMessage(m, "*");}, true);</script>'}, onOpen);    
+    provider.open('myview', {'code': '<script>window.addEventListener("message", function(m) {m.source.postMessage(m.data, "*");}, true);</script>'}, onOpen);
   });
 });

@@ -11,7 +11,9 @@
  * - 'Other User' is a special buddy that echos what you say back to you
  **/
 
-function LoopbackSocialProvider() {
+function LoopbackSocialProvider(dispatchEvent) {
+  this.dispatchEvent = dispatchEvent;
+
   //Constants
   this.NETWORK_ID = 'loopback';
   this.USER_ID = 'Test User';      //My userId

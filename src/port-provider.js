@@ -183,28 +183,32 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
     fdom.debug.warn('Cannot instantiate provider, since it is not provided');
     return null;
   }
-  var instance = new this.providerCls(),
-      events = {};
+
+  var events = {},
+      dispatchEvent,
+      instance;
 
   fdom.util.eachProp(this.definition, function(prop, name) {
     if (prop.type === 'event') {
       events[name] = prop;
     }
   });
-  
-  instance.dispatchEvent = function(events, id, name, value) {
-    if (events[name]) {
+
+  dispatchEvent = function(ev, id, name, value) {
+    if (ev[name]) {
       this.emit(this.emitChannel, {
         type: 'message',
         to: id,
         message: {
           name: name,
           type: 'event',
-          value: fdom.proxy.conform(events[name].value, value)
+          value: fdom.proxy.conform(ev[name].value, value)
         }
       });
     }
   }.bind(this, events, identifier);
+
+  instance = new this.providerCls(dispatchEvent);
 
   return function(port, msg) {
     if (msg.action === 'method') {

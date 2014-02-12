@@ -1,20 +1,5 @@
-
-fdom.apis.set("core.socket", {
-  'create': {type: "method", value: ["string", "object"]},
-  'connect': {type: "method", value: ["number", "string", "number"]},
-  'onData': {type: "event", value: {"socketId": "number", "data": "buffer"}},
-  'write': {type: "method", value: ["number", "buffer"]},
-  'disconnect': {type: "method", value: ["number"]},
-  'destroy': {type: "method", value: ["number"]},
-  'listen': {type: "method", value: ["number", "string", "number"]},
-  'onConnection': {type: "event", value: {
-    "serverSocketId": "number",
-    "clientSocketId": "number"}},
-  'getInfo': {type: "method", value: ["number"]}
-});
-
-
-function TransportProvider() {
+function TransportProvider(dispatchEvent) {
+  this.dispatchEvent = dispatchEvent;
   this.state = TransportProvider.state.DISCONNECTED;
   this.channel = null;
   this.socket = null;
