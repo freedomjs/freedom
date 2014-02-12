@@ -3,6 +3,9 @@ describe("unit: social.loopback.json", function () {
   var TIMEOUT = 1000;
 
   beforeEach(function() {
+    // Comment for more debugging messages.
+    spyOn(console, 'log');
+
     freedom = {
       social: mockIface([], [
         ['STATUS_NETWORK', fdom.apis.get("social").definition.STATUS_NETWORK.value],
