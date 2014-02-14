@@ -1,3 +1,6 @@
+/*globals freedom:true, WebSocket */
+/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
+
 /**
  * Implementation of a Social provider that depends on
  * the WebSockets server code in server/router.py
@@ -9,11 +12,12 @@
  * - no reliability
  * - out of order delivery
  * - ephemeral userIds and clientIds
+ * @class WSSocialProvider
+ * @constructor
+ * @param {Function} dispatchEvent callback to signal events
+ * @param {WebSocket} webSocket Alternative webSocket implementation for tests
  **/
-
-//var this.WS_URL = 'ws://localhost:8082/route/';
-
-function WSSocialProvider(dispatchEvent) {
+function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
   this.WS_URL = 'ws://p2pbr.com:8082/route/';
   this.NETWORK_ID = 'websockets';
@@ -23,7 +27,10 @@ function WSSocialProvider(dispatchEvent) {
   this.conn = null;   // Web Socket
   this.id = null;     // userId of this user
   this.roster = {};   // List of seen users
-  setTimeout(this._sendStatus.bind(this,'OFFLINE', 'offline'),0);
+
+  this.provider = webSocket || WebSocket;
+
+  setTimeout(this.sendStatus.bind(this, 'OFFLINE', 'offline'), 0);
 }
 
 /**
@@ -36,26 +43,36 @@ function WSSocialProvider(dispatchEvent) {
  * @return {Object} status - Same schema as 'onStatus' events
  **/
 WSSocialProvider.prototype.login = function(loginOpts, continuation) {
+  var finishLogin = {
+    finished: false,
+    continuation: continuation,
+    finish: function(msg) {
+      if (this.continuation) {
+        this.continuation(msg);
+        delete this.continuation;
+      }
+    }
+  };
+
   if (this.conn !== null) {
     console.warn("Already logged in");
-    continuation(this._sendStatus("ONLINE"));
+    finishLogin.finish(this.sendStatus("ONLINE"));
     return;
   }
-  this.conn = new WebSocket(this.WS_URL+loginOpts.agent);
+  this.conn = new this.provider(this.WS_URL + loginOpts.agent);
   // Save the continuation until we get a status message for
   // successful login.
-  this._cont = continuation;
-  this.conn.onmessage = this._onMessage.bind(this);
-  this.conn.onerror = (function (cont, error) {
+  this.conn.onmessage = this.onMessage.bind(this, finishLogin);
+  this.conn.onerror = function (cont, error) {
     this.conn = null;
-    this._cont(this._sendStatus('ERR_CONNECTION', error));
-  }).bind(this, continuation);
-  this.conn.onclose = (function (cont, msg) {
+    cont.finish(this.sendStatus('ERR_CONNECTION', error));
+  }.bind(this, finishLogin);
+  this.conn.onclose = function (cont, msg) {
     this.conn = null;
-    this._cont(this._sendStatus('OFFLINE', 'offline'));
-  }).bind(this, continuation);
+    cont.finish(this.sendStatus('OFFLINE', 'offline'));
+  }.bind(this, finishLogin);
 
-  this._sendStatus('CONNECTING', 'connecting');
+  this.sendStatus('CONNECTING', 'connecting');
 };
 
 /**
@@ -106,13 +123,13 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
   if (this.conn === null) { // We may not have been logged in
     console.warn("Already logged out");
-    continuation(this._sendStatus('OFFLINE', 'offline'));
+    continuation(this.sendStatus('OFFLINE', 'offline'));
     return;
   }
-  this.conn.onclose = function() {
+  this.conn.onclose = function(continuation) {
     this.conn = null;
-    continuation(this._sendStatus('OFFLINE', 'offline'));
-  }.bind(this);
+    continuation(this.sendStatus('OFFLINE', 'offline'));
+  }.bind(this, continuation);
   this.conn.close();
 };
 
@@ -123,12 +140,13 @@ WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
 /**
  * Dispatch an 'onStatus' event with the following status
  *
- * @method _sendStatus
+ * @method sendStatus
+ * @private
  * @param {String} stat - One of the error codes in STATUS_NETWORK
  * @param {String} message - Display message in the event
  * @return {Object} - same schema as 'onStatus' event
  **/
-WSSocialProvider.prototype._sendStatus = function(stat, message) {
+WSSocialProvider.prototype.sendStatus = function(stat, message) {
   var result = {
     network: this.NETWORK_ID,
     userId: this.id,
@@ -144,33 +162,37 @@ WSSocialProvider.prototype._sendStatus = function(stat, message) {
  * Add the following ID to the roster
  * All users only have 1 client which is always messageable
  *
- * @method _changeRoster
+ * @method changeRoster
+ * @private
  * @param {String} id - userId of user
  * @return nothing
  **/
-WSSocialProvider.prototype._changeRoster = function(id, online) {
+WSSocialProvider.prototype.changeRoster = function(id, online) {
   //Keep track if we've actually made changes
-  var sendChange = false;
+  var sendChange = false,
+      clients = {};
   //Create entry if not there
   if (!this.roster[id]) {
     sendChange = true;
-    var c = {};
-    c[id] = {
+    clients[id] = {
       clientId: id,
-      status: this.STATUS_CLIENT["MESSAGEABLE"]
+      network: this.NETWORK_ID,
+      status: this.STATUS_CLIENT.MESSAGEABLE
     };
     this.roster[id] = {
       userId: id,
       name: id,
-      clients: c
+      clients: clients
     };
   }
   //Update online/offline status
-  if (online && this.roster[id].clients[id].status !== this.STATUS_CLIENT["MESSAGEABLE"]) {
-    this.roster[id].clients[id].status = this.STATUS_CLIENT["MESSAGEABLE"];
+  if (online && this.roster[id].clients[id].status !==
+      this.STATUS_CLIENT.MESSAGEABLE) {
+    this.roster[id].clients[id].status = this.STATUS_CLIENT.MESSAGEABLE;
     sendChange = true;
-  } else if (!online && this.roster[id].clients[id].status !== this.STATUS_CLIENT["OFFLINE"]) {
-    this.roster[id].clients[id].status = this.STATUS_CLIENT["OFFLINE"];
+  } else if (!online && this.roster[id].clients[id].status !==
+             this.STATUS_CLIENT.OFFLINE) {
+    this.roster[id].clients[id].status = this.STATUS_CLIENT.OFFLINE;
     sendChange = true;
   }
   //Only dispatch change events if things have actually changed
@@ -186,31 +208,31 @@ WSSocialProvider.prototype._changeRoster = function(id, online) {
  * - State information from the server on initialization
  * - Roster change events (users go online/offline)
  *
- * @method _onMessage
- * @param {String} msg - message from the server (see server/router.py for schema)
+ * @method onMessage
+ * @private
+ * @param {Object} continuation Function to call upon successful login
+ * @param {String} msg Message from the server (see server/router.py for schema)
  * @return nothing
  **/
-WSSocialProvider.prototype._onMessage = function(msg) {
+WSSocialProvider.prototype.onMessage = function(continuation, msg) {
+  var i;
+
   msg = JSON.parse(msg.data);
   // If state information from the server
   // Store my own ID and all known users at the time
-  if (msg.cmd == 'state') {
+  if (msg.cmd === 'state') {
     this.id = msg.id;
-    this._changeRoster(this.id, true);
-    for (var i=0; i<msg.msg.length; i++) {
-      this._changeRoster(msg.msg[i], true);
+    this.changeRoster(this.id, true);
+    for (i = 0; i < msg.msg.length; i += 1) {
+      this.changeRoster(msg.msg[i], true);
     }
 
-    if (typeof this._cont === 'function') {
-      this.conn.onclose = null;
-      this.conn.onerror = null;
-      this._cont(this._sendStatus('ONLINE', 'online'));
-      this._cont = null;
+    if (!continuation.finished) {
+      continuation.finish(this.sendStatus('ONLINE', 'online'));
     }
-
     // If directed message, emit event
-  } else if (msg.cmd == 'message') {
-    this._changeRoster(msg.from, true);
+  } else if (msg.cmd === 'message') {
+    this.changeRoster(msg.from, true);
     this.dispatchEvent('onMessage', {
       fromUserId: msg.from,
       fromClientId: msg.from,
@@ -220,11 +242,11 @@ WSSocialProvider.prototype._onMessage = function(msg) {
       message: msg.msg
     });
   // Roster change event
-  } else if (msg.cmd == 'roster') {
-    this._changeRoster(msg.id, msg.online);
+  } else if (msg.cmd === 'roster') {
+    this.changeRoster(msg.id, msg.online);
   // No idea what this message is, but let's keep track of who it's from
   } else if (msg.from) {
-    this._changeRoster(msg.from, true);
+    this.changeRoster(msg.from, true);
   }
 };
 
