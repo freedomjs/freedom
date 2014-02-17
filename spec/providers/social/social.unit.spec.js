@@ -17,10 +17,10 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
       expect(status.status).toEqual(3);
       expect(status.userId).toEqual(jasmine.any(String));
       userId = status.userId;
-      p.logout({userId: userId}).done(d);
+      p.logout({userId: userId}).then(d);
     };
     p.login({ agent: "jasmine",
-             interactive: false}).done(callback);
+             interactive: false}).then(callback);
   });
 
   xit("logs in twice", function(d) {
@@ -32,22 +32,22 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
       expect(status.userId).toEqual(jasmine.any(String));
       userId = status.userId;
       p.login({agent: "jasmine",
-               interactive: false}).done(secondLoginCallback);
+               interactive: false}).then(secondLoginCallback);
     }
     function secondLoginCallback(status) {
       expect(status).not.toBe(undefined);
       expect(status).not.toBe(null);
       expect(status.status).toEqual(3);
       expect(status.userId).toEqual(userId);
-      p.logout().done(d);
+      p.logout().then(d);
     }
     p.login({agent: "jasmine",
-             interactive: false}).done(loginCallback);
+             interactive: false}).then(loginCallback);
   });
 
   xit("logs out when already logged out", function(done) {
     var logoutCallback = false;
-    p.logout().done(function(status) {
+    p.logout().then(function(status) {
       expect(status).not.toBe(undefined);
       expect(status).not.toBe(null);
       expect(status.status).toEqual(0);
@@ -60,16 +60,16 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
 
     var loginCallback = function callback(status) {
       userId = status.userId;
-      p.getRoster().done(function getRosterCallback(result) {
+      p.getRoster().then(function getRosterCallback(result) {
         var ids = Object.keys(result);
         expect(ids.length).toBeGreaterThan(0);
         expect(ids).toContain(userId);
-        p.logout({userId: userId}).done(done);
+        p.logout({userId: userId}).then(done);
       });
     };
 
     p.login({agent: "jasmine",
-             interactive: false}).done(loginCallback);
+             interactive: false}).then(loginCallback);
   });
 
   xit("sends message", function(d){
@@ -88,12 +88,12 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
       expect(message).not.toBe(null);
       if (message.toClientId === clientId &&
          message.message === "Hello World") {
-        p.logout({userId: userId}).done(d);
+        p.logout({userId: userId}).then(d);
       };
     });
 
     p.login({agent: "jasmine",
-             interactive: false}).done(loginCallback);
+             interactive: false}).then(loginCallback);
   });
 };
 

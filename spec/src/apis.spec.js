@@ -14,30 +14,27 @@ describe("fdom.apis", function() {
     expect(api.get('otherName')).toBeFalsy();
   });
 
-  it("should not allow core providers without an API.", function() {
+  it("should not allow core providers without an API.", function(done) {
     var provider = function() {};
 
     api.register('customCore', provider);
     var channel = api.getCore('customCore', null);
-    var failed = 0;
-    channel.fail(function() {
-      failed += 1;
+    channel.then(function() {}, function() {
+      done();
     });
-    expect(failed).toEqual(1);
   });
 
-  it("should register core providers", function() {
+  it("should register core providers", function(done) {
     var provider = function(arg) { this.arg = arg };
 
     api.set('customCore', provider);
     api.register('customCore', provider);
     var channel = api.getCore('customCore', 12);
-    var obj;
-    channel.done(function(prov) {
-      obj = new prov();
+    channel.then(function(prov) {
+      var obj = new prov();
+      expect(obj.arg).toEqual(12);
+      done();
     });
-
-    expect(obj.arg).toEqual(12);
   });
 
   it("allows late registration of core providers", function() {
@@ -47,15 +44,15 @@ describe("fdom.apis", function() {
     var channel = api.getCore('customCore', 12);
 
     var arg = 0;
-    channel.done(function(prov) {
+    channel.then(function(prov) {
       var mine = new prov();
       arg = mine.arg;
+      expect(arg).toEqual(12);
+      done();
     });
 
     expect(arg).toEqual(0);
     
     api.register('customCore', provider);
-    
-    expect(arg).toEqual(12);
   });
 });

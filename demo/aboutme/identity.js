@@ -7,7 +7,7 @@ IdentityProvider.prototype.login = function(args, continuation) {
   var promise = view.open("login", {
     file: "identityview.html"
   });
-  promise.done(function() {
+  promise.then(function() {
     view.show();
   });
 

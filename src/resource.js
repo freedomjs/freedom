@@ -1,4 +1,4 @@
-/*globals fdom:true, XMLHttpRequest */
+/*globals fdom:true, XMLHttpRequest, Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -28,49 +28,46 @@ var Resource = function() {
  * @method get
  * @param {String} manifest The canonical address of the module requesting.
  * @param {String} url The resource to get.
- * @returns {fdom.Proxy.Deferred} A promise for the resource address.
+ * @returns {Promise} A promise for the resource address.
  */
 Resource.prototype.get = function(manifest, url) {
-  var key = JSON.stringify([manifest, url]),
-      deferred = fdom.proxy.Deferred();
-  if (this.files[key]) {
-    deferred.resolve(this.files[key]);
-  } else {
-    this.resolve(manifest, url).always(function(key, deferred, address) {
-      this.files[key] = address;
-      fdom.debug.log('Resolved ' + key + ' to ' + address);
-      deferred.resolve(address);
-    }.bind(this, key, deferred));
-  }
-
-  return deferred.promise();
+  var key = JSON.stringify([manifest, url]);
+  
+  return new Promise(function(resolve, reject) {
+    if (this.files[key]) {
+      resolve(this.files[key]);
+    } else {
+      this.resolve(manifest, url).then(function(key, resolve, address) {
+        this.files[key] = address;
+        fdom.debug.log('Resolved ' + key + ' to ' + address);
+        resolve(address);
+      }.bind(this, key, resolve), reject);
+    }
+  }.bind(this));
 };
 
 /**
  * Get the contents of a resource.
  * @method getContents
  * @param {String} url The resource to read.
- * @returns {fdom.Proxy.Deferred} A promise for the resource contents.
+ * @returns {Promise} A promise for the resource contents.
  */
 Resource.prototype.getContents = function(url) {
-  var prop,
-      deferred = fdom.proxy.Deferred();
-  if (!url) {
-    fdom.debug.warn("Asked to get contents of undefined URL.");
-    deferred.reject();
-    return deferred.promise();
-  }
-  for (prop in this.contentRetreivers) {
-    if (this.contentRetreivers.hasOwnProperty(prop)) {
-      if (url.indexOf(prop + "://") === 0) {
-        this.contentRetreivers[prop](url, deferred);
-        return deferred.promise();
+  return new Promise(function(resolve, reject) {
+    var prop;
+    if (!url) {
+      fdom.debug.warn("Asked to get contents of undefined URL.");
+      return reject();
+    }
+    for (prop in this.contentRetreivers) {
+      if (this.contentRetreivers.hasOwnProperty(prop)) {
+        if (url.indexOf(prop + "://") === 0) {
+          return this.contentRetreivers[prop](url, resolve, reject);
+        }
       }
     }
-  }
-
-  deferred.reject();
-  return deferred.promise();
+    reject();
+  }.bind(this));
 };
 
 /**
@@ -80,31 +77,27 @@ Resource.prototype.getContents = function(url) {
  * @private
  * @param {String} manifest The module requesting the resource.
  * @param {String} url The resource to resolve;
- * @returns {fdom.proxy.Deferred} A promise for the resource address.
+ * @returns {Promise} A promise for the resource address.
  */
 Resource.prototype.resolve = function(manifest, url) {
-  var deferred = fdom.proxy.Deferred(),
-      i = 0;
-  if (url === undefined) {
-    deferred.reject();
-    return deferred.promise();
-  }
-  for (i = 0; i < this.resolvers.length; i += 1) {
-    if(this.resolvers[i](manifest, url, deferred)) {
-      return deferred.promise();
+  return new Promise(function(resolve, reject) {
+    var promises = [];
+    if (url === undefined) {
+      return reject();
     }
-  }
-  deferred.reject();
-  return deferred.promise();
+    fdom.util.eachReverse(this.resolvers, function(resolver) {
+      promises.push(new Promise(resolver.bind({}, manifest, url)));
+    }.bind(this));
+    Promise.race(promises).then(resolve, reject);
+  }.bind(this));
 };
 
 /**
  * Register resolvers: code that knows how to get resources
- * needed by the runtime. A resolver will be called with three
+ * needed by the runtime. A resolver will be called with four
  * arguments: the absolute manifest of the requester, the
- * resource being requested, and a deferred object to populate.
- * It returns a boolean of whether or not it can resolve the requested
- * resource.
+ * resource being requested, and a resolve / reject pair to
+ * fulfill a promise.
  * @method addResolver
  * @param {Function} resolver The resolver to add.
  */
@@ -134,17 +127,18 @@ Resource.prototype.addRetriever = function(proto, retriever) {
  * @private
  * @param {String} manifest The Manifest URL.
  * @param {String} url The URL to resolve.
- * @param {fdom.proxy.Deferred} deferred The deferred object to populate.
+ * @param {Function} resolve The promise to complete.
+ * @param {Function} reject The promise to reject.
  * @returns {Boolean} True if the URL could be resolved.
  */
-Resource.prototype.httpResolver = function(manifest, url, deferred) {
+Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
   var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
       dirname,
       i, protocolIdx, pathIdx,
       path, base;
   for (i = 0; i < protocols.length; i += 1) {
     if (url.indexOf(protocols[i] + "://") === 0) {
-      deferred.resolve(url);
+      resolve(url);
       return true;
     }
   }
@@ -161,9 +155,9 @@ Resource.prototype.httpResolver = function(manifest, url, deferred) {
       path = dirname.substr(pathIdx);
       base = dirname.substr(0, pathIdx);
       if (url.indexOf("/") === 0) {
-        deferred.resolve(base + url);
+        resolve(base + url);
       } else {
-        deferred.resolve(base + path + "/" + url);
+        resolve(base + path + "/" + url);
       }
       return true;
     }
@@ -179,16 +173,17 @@ Resource.prototype.httpResolver = function(manifest, url, deferred) {
  * @method manifestRetriever
  * @private
  * @param {String} manifest The Manifest URL
- * @param {fdom.proxy.Deferred} deferred The deferred object to populate.
+ * @param {Function} resolve The promise to complete.
+ * @param {Function} reject The promise to reject.
  */
-Resource.prototype.manifestRetriever = function(manifest, deferred) {
+Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
   var data;
   try {
     data = manifest.substr(11);
-    deferred.resolve(JSON.parse(data));
+    resolve(JSON.parse(data));
   } catch(e) {
     console.warn("Invalid manifest URL referenced:" + manifest);
-    deferred.reject();
+    reject();
   }
 };
 
@@ -197,18 +192,19 @@ Resource.prototype.manifestRetriever = function(manifest, deferred) {
  * @method xhrRetriever
  * @private
  * @param {String} url The resource to fetch.
- * @param {fdom.proxy.Deferred} deferred The deferred object to populate.
+ * @param {Function} resolve The promise to complete.
+ * @param {Function} reject The promise to reject.
  */
-Resource.prototype.xhrRetriever = function(url, deferred) {
+Resource.prototype.xhrRetriever = function(url, resolve, reject) {
   var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function(deferred) {
+  ref.addEventListener('readystatechange', function(resolve, reject) {
     if (ref.readyState === 4 && ref.responseText) {
-      deferred.resolve(ref.responseText);
+      resolve(ref.responseText);
     } else if (ref.readyState === 4) {
       console.warn("Failed to load file " + url + ": " + ref.status);
-      deferred.reject(ref.status);
+      reject(ref.status);
     }
-  }.bind({}, deferred), false);
+  }.bind({}, resolve, reject), false);
   ref.overrideMimeType('application/json');
   ref.open("GET", url, true);
   ref.send();

@@ -321,7 +321,7 @@ fdom.port.Manager.prototype.getCore = function(cb) {
   if (this.core) {
     cb(this.core);
   } else {
-    fdom.apis.getCore('core', this).done(function(core) {
+    fdom.apis.getCore('core', this).then(function(core) {
       this.core = core;
       cb(this.core);
     }.bind(this));

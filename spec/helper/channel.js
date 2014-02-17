@@ -8,7 +8,7 @@ freedom.on('create', function() {
   var thisid = id;
   id += 1;
 
-  core.createChannel().done(function(id, cinfo) {
+  core.createChannel().then(function(id, cinfo) {
     channels[id] = cinfo.channel;
     freedom.emit('message', 'creating custom channel ' + thisid);
     cinfo.channel.on('message', function(msg) {freedom.emit('message', msg);});
@@ -43,7 +43,7 @@ freedom.on('message', function(id) {
 freedom.on('peer', function() {
   var thisid = id;
   id++;
-  core.createChannel().done(function(cinfo) {
+  core.createChannel().then(function(cinfo) {
     var peer = freedom['core.echo']();
     peer.on('message', function(str) { 
       freedom.emit('message', "from provider: " + JSON.stringify(str));

@@ -1,4 +1,4 @@
-/*globals fdom:true, Blob, ArrayBuffer */
+/*globals fdom:true, Blob, ArrayBuffer, Promise */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -17,17 +17,18 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       this[name] = function() {
         // Note: inflight should be registered before message is passed
         // in order to prepare for synchronous in-window pipes.
-        var deferred = fdom.proxy.Deferred(),
-            thisReq = reqId;
+        var thisReq = reqId,
+            promise = new Promise(function(resolve, reject) {
+              inflight[thisReq] = resolve;
+            });
         reqId += 1;
-        inflight[thisReq] = deferred;
         emit({
           action: 'method',
           type: name,
           reqId: thisReq,
           value: fdom.proxy.conform(prop.value, arguments)
         });
-        return deferred.promise();
+        return promise;
       };
       break;
     case 'event':
@@ -59,9 +60,9 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
     }
     if (msg.type === 'method') {
       if (inflight[msg.reqId]) {
-        var deferred = inflight[msg.reqId];
+        var resolve = inflight[msg.reqId];
         delete inflight[msg.reqId];
-        deferred.resolve(msg.value);
+        resolve(msg.value);
       } else {
         fdom.debug.warn('Dropped response message with id ' + msg.reqId);
       }
@@ -81,6 +82,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
  * Force a collection of values to look like the types and length of an API template.
  */
 fdom.proxy.conform = function(template, value) {
+  /* jshint -W086 */
   if (typeof(value) === 'function') {
     value = undefined;
   }
@@ -101,7 +103,6 @@ fdom.proxy.conform = function(template, value) {
       fdom.debug.warn('conform expecting Blob, sees ' + (typeof value));
       return new Blob([]);
     }
-    break;
   case 'buffer':
     if (value instanceof ArrayBuffer) {  
       return value;
@@ -110,7 +111,6 @@ fdom.proxy.conform = function(template, value) {
       //TODO(ryscheng): bug in Chrome where passing Array Buffers over iframes loses this
       return new ArrayBuffer(0);
     }
-    break;
   case 'data':
     // TODO(willscott): should be opaque to non-creator.
     return value;

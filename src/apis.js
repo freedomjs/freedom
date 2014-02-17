@@ -1,4 +1,4 @@
-/*globals fdom:true */
+/*globals fdom:true, Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -55,8 +55,8 @@ Api.prototype.register = function(name, constructor) {
 
   if (this.waiters[name]) {
     for (i = 0; i < this.waiters[name].length; i += 1) {
-      this.waiters[name][i][0].resolve(constructor.bind({},
-          this.waiters[name][i][1]));
+      this.waiters[name][i][0](constructor.bind({},
+          this.waiters[name][i][2]));
     }
     delete this.waiters[name];
   }
@@ -67,25 +67,25 @@ Api.prototype.register = function(name, constructor) {
  * @method getCore
  * @param {String} name the API to retrieve.
  * @param {port.App} from The instantiating App.
- * @returns {fdom.proxy.Deferred} A promise of a fdom.App look-alike matching
+ * @returns {Promise} A promise of a fdom.App look-alike matching
  * a local API definition.
  */
 Api.prototype.getCore = function(name, from) {
-  var deferred = fdom.proxy.Deferred();
-  if (this.apis[name]) {
-    if (this.providers[name]) {
-      deferred.resolve(this.providers[name].bind({}, from));
-    } else {
-      if (!this.waiters[name]) {
-        this.waiters[name] = [];
+  return new Promise(function(resolve, reject) {
+    if (this.apis[name]) {
+      if (this.providers[name]) {
+        resolve(this.providers[name].bind({}, from));
+      } else {
+        if (!this.waiters[name]) {
+          this.waiters[name] = [];
+        }
+        this.waiters[name].push([resolve, reject, from]);
       }
-      this.waiters[name].push([deferred, from]);
+    } else {
+      fdom.debug.warn('Api.getCore asked for unknown core: ' + name);
+      reject(null);
     }
-  } else {
-    fdom.debug.warn('Api.getCore asked for unknown core: ' + name);
-    deferred.reject();
-  }
-  return deferred.promise();
+  }.bind(this));
 };
 
 /**

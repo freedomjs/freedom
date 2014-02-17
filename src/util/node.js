@@ -21,9 +21,9 @@ sources.forEach(function(dir) {
   });
 });
 
-fdom.resources.addResolver(function(manifest, url, deferred) {
+fdom.resources.addResolver(function(manifest, url, resolve) {
   if (manifest === 'node://') {
-    deferred.resolve(url);
+    resolve(url);
     return true;
   }
   return false;

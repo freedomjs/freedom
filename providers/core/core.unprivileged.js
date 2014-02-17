@@ -29,7 +29,6 @@ Core_unprivileged.contextId = undefined;
  */
 Core_unprivileged.prototype.createChannel = function(continuation) {
   var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface),
-      deferred = fdom.proxy.Deferred(),
       id = fdom.util.getId(),
       chan = this.getChannel(proxy);
   this.manager.setup(proxy);
@@ -50,9 +49,7 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
     proxy: proxy
   };
 
-  proxy.once('start', function(deferred, proxy) {
-    deferred.resolve(this.getChannel(proxy));
-  }.bind(this, deferred, proxy));
+  proxy.once('start', this.getChannel.bind(this, proxy));
 
   continuation({
     channel: chan,

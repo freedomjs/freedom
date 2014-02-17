@@ -3,7 +3,7 @@ var core = freedom.core();
 
 freedom.on('message', function(msg) {
   if(msg.cmd === 'create') {
-    core.bindChannel(msg.chan).done(function(id, chan) {
+    core.bindChannel(msg.chan).then(function(id, chan) {
       console.log('channel resolved: ' + id);
       channels[id] = chan;
       chan.on('message', handler.bind({}, id, chan));

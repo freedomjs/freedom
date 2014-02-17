@@ -1,4 +1,4 @@
-/*globals fdom:true */
+/*globals fdom:true, Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -53,7 +53,8 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
         message.manifest.app.script));
     this.loadLinks(objects);
   } else if (flow === 'default' && this.requests[message.id]) {
-    this.requests[message.id].resolve(message.data);
+    this.requests[message.id](message.data);
+    delete this.requests[message.id];
   }
 };
 
@@ -112,14 +113,14 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
   }
   
   // Allow resolution of files by parent.
-  fdom.resources.addResolver(function(manifest, url, deferred) {
+  fdom.resources.addResolver(function(manifest, url, resolve) {
     var id = Math.random();
     this.emit(this.externalChannel, {
       type: 'resolve',
       id: id,
       data: url
     });
-    this.requests[id] = deferred;
+    this.requests[id] = resolve;
     return true;
   }.bind(this));
 
@@ -214,9 +215,9 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
 fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
   var i = 0,
       safe = true,
-      importer = function importScripts(script, deferred) {
+      importer = function importScripts(script, resolve) {
         this.config.global.importScripts(script);
-        deferred.resolve();
+        resolve();
       }.bind(this),
       urls = [],
       outstanding = 0,
@@ -230,7 +231,7 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
             });
             this.tryLoad(importer, urls);
           } else {
-            this.tryLoad(importer, urls).done(function() {
+            this.tryLoad(importer, urls).then(function() {
               this.emit(this.externalChannel, {
                 type: 'ready'
               });
@@ -241,21 +242,21 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
 
   if (!this.config.global.importScripts) {
     safe = false;
-    importer = function(url, deferred) {
+    importer = function(url, resolve) {
       var script = this.config.global.document.createElement('script');
       script.src = url;
-      script.addEventListener('load', deferred.resolve.bind(deferred), true);
+      script.addEventListener('load', resolve, true);
       this.config.global.document.body.appendChild(script);
     }.bind(this);
   }
 
   if (typeof scripts === 'string') {
     outstanding = 1;
-    fdom.resources.get(from, scripts).done(load);
+    fdom.resources.get(from, scripts).then(load);
   } else {
     outstanding = scripts.length;
     for (i = 0; i < scripts.length; i += 1) {
-      fdom.resources.get(from, scripts[i]).done(load);
+      fdom.resources.get(from, scripts[i]).then(load);
     }
   }
 };
@@ -266,24 +267,14 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
  * @private
  * @param {Function} importer The actual import function
  * @param {String[]} urls The resoved URLs to load.
- * @returns {fdom.proxy.Deferred} completion of load
+ * @returns {Promise} completion of load
  */
 fdom.port.ModuleInternal.prototype.tryLoad = function(importer, urls) {
   var i,
-      deferred = fdom.proxy.Deferred(),
-      def,
-      left = urls.length,
-      finished = function() {
-        left -= 1;
-        if (left === 0) {
-          deferred.resolve();
-        }
-      };
+      promises = [];
   try {
     for (i = 0; i < urls.length; i += 1) {
-      def = fdom.proxy.Deferred();
-      def.done(finished);
-      importer(urls[i], def);
+      promises.push(new Promise(importer.bind({}, urls[i])));
     }
   } catch(e) {
     fdom.debug.warn(e.stack);
@@ -291,5 +282,5 @@ fdom.port.ModuleInternal.prototype.tryLoad = function(importer, urls) {
     fdom.debug.error("If the stack trace is not useful, see https://" +
         "github.com/UWNetworksLab/freedom/wiki/Debugging-Script-Parse-Errors");
   }
-  return deferred.promise();
+  return Promise.all(promises);
 };

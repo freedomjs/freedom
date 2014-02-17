@@ -33,5 +33,8 @@
   "scripts": {
     "test": "grunt freedom coverage --verbose",
     "preinstall": "make"
+  },
+  "dependencies": {
+    "es6-promise": "~0.1.1"
   }
 }

@@ -14,39 +14,54 @@ describe("unit: storage.shared.json", function () {
     provider = new SharedStorageProvider();
   });
 
-  it("returns owned keys", function() {
+  it("returns owned keys", function(done) {
     var d = jasmine.createSpy('keys');
     provider.keys(d);
-    expect(provider.store.keys).toHaveBeenCalled();
-    expect(d).toHaveBeenCalledWith(['myId;Test', 'otherTest']);
+    setTimeout(function() {
+      expect(provider.store.keys).toHaveBeenCalled();
+      expect(d).toHaveBeenCalledWith(['myId;Test', 'otherTest']);
+      done();
+    }, 0);
   });
 
-  it("gets saved items", function() {
+  it("gets saved items", function(done) {
     var d = jasmine.createSpy('get');
     provider.get('mykey', d);
-    expect(d).toHaveBeenCalledWith('value');
-    expect(provider.store.get).toHaveBeenCalledWith('mykey');
+    setTimeout(function() {
+      expect(d).toHaveBeenCalledWith('value');
+      expect(provider.store.get).toHaveBeenCalledWith('mykey');
+      done();
+    }, 0);
   });
 
-  it("sets items", function() {
+  it("sets items", function(done) {
     var d = jasmine.createSpy('set');
     provider.set('mykey', 'myval', d);
-    expect(d).toHaveBeenCalled();
-    expect(provider.store.set).toHaveBeenCalledWith('mykey', 'myval');
+    setTimeout(function() {
+      expect(d).toHaveBeenCalled();
+      expect(provider.store.set).toHaveBeenCalledWith('mykey', 'myval');
+      done();
+    }, 0);
   });
 
-  it("Removes items", function() {
+  it("Removes items", function(done) {
     var d = jasmine.createSpy('remove');
     provider.remove('mykey', d);
-    expect(d).toHaveBeenCalled();
-    expect(provider.store.remove).toHaveBeenCalledWith('mykey');
+    setTimeout(function() {
+      expect(d).toHaveBeenCalled();
+      expect(provider.store.remove).toHaveBeenCalledWith('mykey');
+      done();
+    });
   });
 
-  it("Clears storage", function() {
+  it("Clears storage", function(done) {
     var d = jasmine.createSpy('clear');
     provider.clear(d);
-    expect(d).toHaveBeenCalled();
-    expect(provider.store.clear).toHaveBeenCalled();
+    setTimeout(function() {
+      expect(d).toHaveBeenCalled();
+      expect(provider.store.clear).toHaveBeenCalled();
+      done();
+    });
   });
 
 });

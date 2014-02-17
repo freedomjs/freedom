@@ -19,7 +19,7 @@ function IsolatedStorageProvider() {
   this.magic = "";
   this.queue = [];
 
-  this.core.getId().done(function (val) {
+  this.core.getId().then(function (val) {
     for (i = 0; i < val.length; i += 1) {
       this.magic += val[i] + ";";
     }
@@ -33,8 +33,7 @@ IsolatedStorageProvider.prototype.keys = function(continuation) {
     return;
   }
 
-  var promise = this.store.keys();
-  promise.done(function(val) {
+  this.store.keys().then(function(val) {
     var result = [], i;
     //Check that our magic has been initialized
     //Only return keys in my partition
@@ -54,7 +53,7 @@ IsolatedStorageProvider.prototype.get = function(key, continuation) {
   } 
   
   var promise = this.store.get(this.toStoredKey(key));
-  promise.done(continuation);
+  promise.then(continuation);
 };
 
 IsolatedStorageProvider.prototype.set = function(key, value, continuation) {
@@ -64,7 +63,7 @@ IsolatedStorageProvider.prototype.set = function(key, value, continuation) {
   }
 
   var promise = this.store.set(this.toStoredKey(key), value);
-  promise.done(continuation);
+  promise.then(continuation);
 };
 
 IsolatedStorageProvider.prototype.remove = function(key, continuation) {
@@ -74,12 +73,12 @@ IsolatedStorageProvider.prototype.remove = function(key, continuation) {
   }
   
   var promise = this.store.remove(this.toStoredKey(key));
-  promise.done(continuation);
+  promise.then(continuation);
 };
 
 IsolatedStorageProvider.prototype.clear = function(continuation) {
   var promise = this.store.keys(), i;
-  promise.done(function(keys) {
+  promise.then(function(keys) {
     //Only remove keys in my partition
     for (i = 0; i < keys.length; i += 1) {
       if (this.isMyKey(keys[i])) {

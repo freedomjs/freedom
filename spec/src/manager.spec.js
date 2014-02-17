@@ -101,23 +101,25 @@ describe("fdom.Port.Manager", function() {
     fdom.resources = new Resource();
   });
 
-  it("Provides singleton access to the Core API", function() {
+  it("Provides singleton access to the Core API", function(done) {
     manager.onMessage('testing', {
       request: 'core'
     });
+    setTimeout(function() {
+      var response = port.gotMessage('control', {type: 'core'});
+      expect(response).not.toEqual(false);
+      var core = response.core;
 
-    var response = port.gotMessage('control', {type: 'core'});
-    expect(response).not.toEqual(false);
-    var core = response.core;
+      var otherPort = createTestPort('dest');
+      manager.setup(otherPort);
+      manager.onMessage('dest', {
+        request: 'core'
+      });
 
-    var otherPort = createTestPort('dest');
-    manager.setup(otherPort);
-    manager.onMessage('dest', {
-      request: 'core'
-    });
-
-    var otherResponse = otherPort.gotMessage('control', {type: 'core'});
-    expect(otherResponse.core).toEqual(core);
+      var otherResponse = otherPort.gotMessage('control', {type: 'core'});
+      expect(otherResponse.core).toEqual(core);
+      done();
+    }, 0);
   });
 
   it("Tears down Ports", function() {

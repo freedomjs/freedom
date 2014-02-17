@@ -13,7 +13,7 @@ describe("fdom.proxy.APIInterface", function() {
     api = new fdom.proxy.ApiInterface(iface, onMsg, emit);
   });
 
-  it("Creates an object looking like an interface.", function() {
+  it("Creates an object looking like an interface.", function(done) {
     expect(typeof(api.test)).toEqual('function');
     expect(typeof(api.on)).toEqual('function');
     expect(api.co).toEqual('12');
@@ -29,7 +29,7 @@ describe("fdom.proxy.APIInterface", function() {
       value: ['hi'] });
 
     var spy = jasmine.createSpy('ret');
-    promise.done(spy);
+    promise.then(spy);
     expect(spy).not.toHaveBeenCalled();
 
     reg('message', {
@@ -37,7 +37,10 @@ describe("fdom.proxy.APIInterface", function() {
       reqId: 0,
       value: 'boo!'
     });
-    expect(spy).toHaveBeenCalledWith('boo!');
+    setTimeout(function() {
+      expect(spy).toHaveBeenCalledWith('boo!');
+      done();
+    }, 0);
   });
 
   it("delivers events", function() {

@@ -22,7 +22,7 @@ function stats(player, other) {
   // are asynchronous. It returns a promise, which you can feed a callback
   // to call when the method completes.
   var promise = store.get('stats');
-  promise.done(function(val) {
+  promise.then(function(val) {
     var nv;
     try {
       nv = JSON.parse(val);

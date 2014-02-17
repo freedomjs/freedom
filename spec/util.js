@@ -34,9 +34,7 @@ var mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
     iface[p[0]] = function(r) {
-      var d = fdom.proxy.Deferred();
-      d.resolve(r);
-      return d.promise();
+      return Promise.resolve(r);
     }.bind({}, p[1]);
     spyOn(iface, p[0]).and.callThrough();
   });
@@ -89,7 +87,7 @@ var createProxyFor = function(app, api) {
   manager.setup(proxy);
   
   var link = location.protocol + "//" + location.host + location.pathname;
-  fdom.resources.get(link, site_cfg.manifest).done(function(url) {
+  fdom.resources.get(link, site_cfg.manifest).then(function(url) {
     var app = new fdom.port.Module(url, []);
     manager.setup(app);
     manager.createLink(proxy, 'default', app);
@@ -122,20 +120,20 @@ var getFreedomSource = function(id) {
 // Setup resource loading for the test environment, which uses file:// urls.
 function setupResolvers() { 
   fdom.resources = new Resource();
-  fdom.resources.addResolver(function(manifest, url, deferred) {
+  fdom.resources.addResolver(function(manifest, url, resolve) {
     if (url.indexOf('relative://') === 0) {
       var dirname = manifest.substr(0, manifest.lastIndexOf('/'));
-      deferred.resolve(dirname + '/' + url.substr(11));
+      resolve(dirname + '/' + url.substr(11));
       return true;
     }
     return false;
   });
-  fdom.resources.addResolver(function(manifest, url, deferred) {
+  fdom.resources.addResolver(function(manifest, url, resolve) {
     if (manifest.indexOf('file://') === 0) {
       manifest = 'http' + manifest.substr(4);
-      fdom.resources.resolve(manifest, url).done(function(addr) {
+      fdom.resources.resolve(manifest, url).then(function(addr) {
         addr = 'file' + addr.substr(4);
-        deferred.resolve(addr);
+        resolve(addr);
       });
       return true;
     }

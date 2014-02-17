@@ -19,11 +19,11 @@ freedom.on("create", function(action) {
 freedom.on("call", function(action){
   var p = providers[action.provider];
 	var promise = p[action.method].apply(null, action.args);
-	promise.done(function(ret){
-		freedom.emit("return", {
-      id: action.id,
-      data: ret
-    });
+    promise.then(function(ret) {
+      freedom.emit("return", {
+        id: action.id,
+        data: ret
+      });
 	});
 });
 
@@ -44,7 +44,7 @@ freedom.on('listenForEvent', function(listenEventInfo) {
 
 freedom.on("createChannel", function() {
   //providers.core.createChannel().done(function(chan) {
-  freedom.core().createChannel().done(function(chan) {
+  freedom.core().createChannel().then(function(chan) {
     channels[chan.identifier] = chan.channel;
     chan.channel.on("message", function(msg){
       freedom.emit("inFromChannel", {

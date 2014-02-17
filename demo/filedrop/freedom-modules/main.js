@@ -69,7 +69,7 @@ function setupConnection(name, targetId) {
     console.log("Receiving data with tag: " + message.tag);
     freedom.emit('download-data', message.data);
   });
-  core.createChannel().done(function (chan) {
+  core.createChannel().then(function (chan) {
     connections[targetId].setup(name, chan.identifier);
     chan.channel.on('message', function(msg) {
       social.sendMessage(targetId, JSON.stringify({

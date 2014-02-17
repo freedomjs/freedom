@@ -26,16 +26,16 @@ WebRTCTransportProvider.prototype.setup = function(name, channelId, continuation
   // console.log("TransportProvider.setup." + name);
   this.name = name;
   var promise = this.pc.setup(channelId, name, WebRTCTransportProvider.stun_servers);
-  promise.done(continuation);
+  promise.then(continuation);
 };
 
 WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
   // console.log("TransportProvider.send." + this.name);
   if (this._tags.indexOf(tag) >= 0) {
     var promise = this.pc.send({"channelLabel": tag, "buffer": data});
-    promise.done(continuation);
+    promise.then(continuation);
   } else {
-    this.pc.openDataChannel(tag).done(function(){
+    this.pc.openDataChannel(tag).then(function(){
       this._tags.push(tag);
       this.send(tag, data, continuation);
     }.bind(this));
@@ -45,7 +45,7 @@ WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
 WebRTCTransportProvider.prototype.close = function(continuation) {
   // TODO: Close data channels.
   this._tags = [];
-  this.pc.close().done(continuation);
+  this.pc.close().then(continuation);
 };
 
 // Called when the peer-connection receives data, it then passes it here.

@@ -28,6 +28,7 @@ describe("freedom", function() {
     for (var i = 0; i < frames.length; i++) {
       frames[i].parentNode.removeChild(frames[i]);
     }
+    freedom = null;
   });
 
   it("creates modules", function(done) {

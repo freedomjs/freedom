@@ -260,13 +260,15 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
     this.started = true;
     this.emit('start');
   } else if (name === 'ModInternal' && message.type === 'resolve') {
-    fdom.resources.get(this.manifestId, message.data).done(function(id, data) {
+    fdom.resources.get(this.manifestId, message.data).then(function(id, data) {
       this.port.onMessage(this.modInternal, {
         type: 'resolve response',
         id: id,
         data: data
       });
-    }.bind(this, message.id));
+    }.bind(this, message.id), function() {
+      fdom.debug.warn('Error Resolving URL for Module.');
+    });
   } else {
     this.emit(this.externalPortMap[name], message);
   }
@@ -279,7 +281,7 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
  * @private
  */
 fdom.port.Module.prototype.loadManifest = function() {
-  fdom.resources.getContents(this.manifestId).done(function(data) {
+  fdom.resources.getContents(this.manifestId).then(function(data) {
     var resp = {};
     try {
       resp = JSON.parse(data);
@@ -308,7 +310,7 @@ fdom.port.Module.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
         dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-        fdom.apis.getCore(name, this).done(finishLink.bind(this, dep));
+        fdom.apis.getCore(name, this).then(finishLink.bind(this, dep));
 
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,
@@ -324,7 +326,7 @@ fdom.port.Module.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }
-      fdom.resources.get(this.manifestId, desc.url).done(function (url) {
+      fdom.resources.get(this.manifestId, desc.url).then(function (url) {
         var dep = new fdom.port.Module(url, this.lineage);
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,

@@ -6,45 +6,60 @@ describe("fdom.resources", function() {
     fdom.debug = new fdom.port.Debug();
   });
 
-  it("should resolve URLs", function() {
-    var deferred = resources.get("http://localhost/folder/manifest.json",
+  it("should resolve URLs", function(done) {
+    var promise = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
     var spy = jasmine.createSpy('resolver');
-    deferred.done(spy);
-    expect(spy).toHaveBeenCalledWith('http://localhost/folder/file.js');
+    promise.then(spy);
+    setTimeout(function() {
+      expect(spy).toHaveBeenCalledWith('http://localhost/folder/file.js');
+      done();
+    }, 0);
   });
 
-  it("should cache resolved URLs", function() {
+  it("should cache resolved URLs", function(done) {
     spyOn(resources, 'resolve').and.callThrough();
     var deferred = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
-    deferred = resources.get("http://localhost/folder/manifest.json",
-                                 "file.js");
-    expect(resources.resolve.calls.count()).toEqual(1);
+    setTimeout(function() {
+      deferred = resources.get("http://localhost/folder/manifest.json",
+                               "file.js");
+      expect(resources.resolve.calls.count()).toEqual(1);
+      done();
+    }, 0);
   });
 
-  it("should fetch URLs", function() {
-    var deferred, response;
-    deferred = resources.getContents('manifest://{"name":"test"}');
-    deferred.done(function(data) {response = data;});
-    expect(response.name).toEqual("test");
+  it("should fetch URLs", function(done) {
+    var promise, response;
+    promise = resources.getContents('manifest://{"name":"test"}');
+    promise.then(function(data) {response = data;});
+    setTimeout(function() {
+      expect(response.name).toEqual("test");
+      done();
+    }, 0);
   });
   
-  it("should warn on degenerate URLs", function() {
-    var deferred = resources.getContents();
+  it("should warn on degenerate URLs", function(done) {
+    var promise = resources.getContents();
     var spy = jasmine.createSpy('r');
-    deferred.fail(spy);
-    expect(spy).toHaveBeenCalled();
+    promise.then(function() {}, spy);
+    setTimeout(function() {
+      expect(spy).toHaveBeenCalled();
 
-    deferred = resources.resolve('test');
-    deferred.fail(spy);
-    expect(spy.calls.count()).toEqual(2);
+      promise = resources.resolve('test');
+      promise.then(function() {}, spy);
+    
+      setTimeout(function() {
+        expect(spy.calls.count()).toEqual(2);
+        done();
+      }, 0);
+    }, 0);
   });
 
-  it("should handle custom resolvers", function() {
-    var resolver = function(manifest, url, deferred) {
+  it("should handle custom resolvers", function(done) {
+    var resolver = function(manifest, url, resolve) {
       if (manifest.indexOf('test') === 0) {
-        deferred.resolve('resolved://' + url);
+        resolve('resolved://' + url);
         return true;
       } else {
         return false;
@@ -52,31 +67,39 @@ describe("fdom.resources", function() {
     };
     resources.addResolver(resolver);
 
-    var deferred = resources.get('test://manifest', 'myurl');
-    var result;
-    deferred.done(function(url) {result = url;});
-    expect(result).toEqual('resolved://myurl');
-    
-    deferred = resources.get('otherprot://manifest', 'myurl');
-    deferred.done(function(f) {result = f;});
-    expect(result).toEqual(undefined);
+    var promise = resources.get('test://manifest', 'myurl');
+    var r1, r2;
+    promise.then(function(url) {r1 = url;});
+
+    promise = resources.get('otherprot://manifest', 'myurl');
+    promise.then(function(url) {r2 = url;});
+
+    setTimeout(function() {
+      expect(r1).toEqual('resolved://myurl');
+      expect(r2).toEqual(undefined);
+      done();
+    }, 0);
   });
 
-  it("should handle custom retrievers", function() {
-    var retriever = function(url, deferred) {
+  it("should handle custom retrievers", function(done) {
+    var retriever = function(url, resolve) {
       expect(url).toContain("test://");
-      deferred.resolve('Custom content!');
+      resolve('Custom content!');
     };
     resources.addRetriever('test', retriever);
 
-    var deferred = resources.getContents('test://url');
-    var result;
-    deferred.done(function(data) {result = data;});
-    expect(result).toEqual('Custom content!');
+    var r1, r2;
+    var promise = resources.getContents('test://url');
+    promise.then(function(data) {r1 = data;});
 
-    deferred = resources.getContents('unknown://url');
-    deferred.fail(function() {result = 'failed';});
-    expect(result).toEqual('failed');
+    promise = resources.getContents('unknown://url');
+    promise.then(function() {r2 = 'success';}, function() {r2 = 'failed';});
+
+    setTimeout(function() {
+      expect(r1).toEqual('Custom content!');
+      expect(r2).toEqual('failed');
+      done();
+    }, 0);
   });
 
   it("should not allow replacing retrievers", function() {
@@ -91,32 +114,31 @@ describe("fdom.resources", function() {
 });
 
 describe('fdom.resources.httpResolver', function() {
-  var deferred, spy, resources;
+  var r, f, spy, resources;
 
   beforeEach(function() {
     resources = new Resource();
-    deferred = fdom.proxy.Deferred();
-    spy = jasmine.createSpy('resolvedURL');
-    deferred.done(spy);
+    r = spy = jasmine.createSpy('resolvedURL');
+    f = function() {};
   });
 
   it("should resolve relative URLs", function() {
-    resources.httpResolver('http://www.example.com/path/manifest.json', 'test.html', deferred);
+    resources.httpResolver('http://www.example.com/path/manifest.json', 'test.html', r, f);
     expect(spy).toHaveBeenCalledWith('http://www.example.com/path/test.html');
   });
 
   it("should resolve path absolute URLs", function() {
-    resources.httpResolver('http://www.example.com/path/manifest.json', '/test.html', deferred);
+    resources.httpResolver('http://www.example.com/path/manifest.json', '/test.html', r, f);
     expect(spy).toHaveBeenCalledWith('http://www.example.com/test.html');
   });
 
   it("should resolve absolute URLs", function() {
-    resources.httpResolver('http://www.example.com/path/manifest.json', 'http://www.other.com/test.html', deferred);
+    resources.httpResolver('http://www.example.com/path/manifest.json', 'http://www.other.com/test.html', r, f);
     expect(spy).toHaveBeenCalledWith('http://www.other.com/test.html');
   });
 
   it("should not resolve URLs without manifest", function() {
-    resources.httpResolver(undefined, 'test.html', deferred);
+    resources.httpResolver(undefined, 'test.html', r, f);
     expect(spy).not.toHaveBeenCalled();
   });
 });

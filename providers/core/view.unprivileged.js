@@ -45,7 +45,7 @@ View_unprivileged.prototype.open = function(name, what, continuation) {
   var frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts allow-forms");
   if (what['file']) {
-    fdom.resources.get(this.app.manifestId, what['file']).done(function(fname) {
+    fdom.resources.get(this.app.manifestId, what['file']).then(function(fname) {
       this.finishOpen(root, frame, fname, continuation);
     }.bind(this));
   } else if (what['code']) {

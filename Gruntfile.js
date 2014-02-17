@@ -1,5 +1,11 @@
 var FILES = {
-  preamble: ['src/util/preamble.js'],
+  preamble: [
+    'src/util/preamble.js',
+    'node_modules/es6-promise/dist/promise-*.js',
+    '!node_modules/es6-promise/dist/promise-*amd.js',
+    '!node_modules/es6-promise/dist/promise-*min.js',
+    'src/util/jshinthelper.js',
+  ],
   postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 
@@ -9,6 +15,9 @@ var FILES = {
     'providers/core/*.js',
   ],
   jasminehelper: [
+    'node_modules/es6-promise/dist/promise-*.js',
+    '!node_modules/es6-promise/dist/promise-*amd.js',
+    '!node_modules/es6-promise/dist/promise-*min.js',
     'spec/util.js',
   ],
   srcprovider: [

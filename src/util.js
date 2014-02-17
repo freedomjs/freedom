@@ -252,7 +252,7 @@ fdom.util.handleEvents = function(obj) {
  * @static
  */
 fdom.util.isAppContext=function() {
-  return (typeof window === 'undefined');
+  return (typeof document === 'undefined');
 };
 
 /**

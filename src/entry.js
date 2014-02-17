@@ -89,7 +89,7 @@ fdom.setup = function (global, freedom_src, config) {
     } else if (site_cfg.location) {
       link = site_cfg.location;
     }
-    fdom.resources.get(link, site_cfg.manifest).done(function(url) {
+    fdom.resources.get(link, site_cfg.manifest).then(function(url) {
       setupApp(new fdom.port.Module(url, []));
     });
   }

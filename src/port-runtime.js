@@ -123,7 +123,7 @@ fdom.port.Runtime.prototype.message = function(msg) {
     var data = JSON.parse(msg.data);
     // Handle runtime support requests.
     if (data[0] === 'runtime' && data[1].request === 'load') {
-      fdom.resources.getContents(data[1].url).done(function(url, from, data) {
+      fdom.resources.getContents(data[1].url).then(function(url, from, data) {
         this.onMessage('runtime', {
           response: 'load',
           file: url,
@@ -173,7 +173,7 @@ fdom.port.Runtime.prototype.runtime = function(link, app) {
  * to talk with the created app.
  */
 fdom.port.Runtime.prototype.runtime.prototype.createApp = function(manifest, proxy) {
-  fdom.resources.get(this.app.manifestId, manifest).done(function(url) {
+  fdom.resources.get(this.app.manifestId, manifest).then(function(url) {
     this.link.onMessage('runtime', {
       request: 'createApp',
       from: this.app.manifestId,
@@ -183,7 +183,7 @@ fdom.port.Runtime.prototype.runtime.prototype.createApp = function(manifest, pro
     // The created channel gets terminated with the runtime port.
     // Messages are then tunneled to the runtime.
     // Messages from the runtime are delivered in Runtime.message.
-    this.link.core.bindChannel(proxy).done(function(iface) {
+    this.link.core.bindChannel(proxy).then(function(iface) {
       iface.on(function(flow, msg) {
         this.link.onMessage('runtime', {
           request: 'message',
