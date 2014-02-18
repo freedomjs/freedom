@@ -3,7 +3,6 @@
   "description": "Embracing a distributed web",
   "version": "0.3.0",
   "homepage": "http://freedomjs.com",
-  "main": "src/util/node.js",
   "bugs": {
     "url": "http://github.com/UWNetworksLab/freedom/issues",
     "email": "freedom@cs.washington.edu"
