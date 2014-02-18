@@ -54,6 +54,7 @@ TransportProvider.prototype.send = function(tag, data, continuation) {
 TransportProvider.prototype._sendInChunks = function(tag, data, continuation) {
   // We send in chunks. The first 8 bytes of the first chunk of a
   // message encodes the number of bytes in the message.
+  var dataView = new Uint8Array(data);
   var promises = [];
   var promise;
   var size = data.byteLength;
@@ -61,31 +62,39 @@ TransportProvider.prototype._sendInChunks = function(tag, data, continuation) {
   
   var sizeBuffer = this._sizeToBuffer(size);
   var bufferToSend = new Uint8Array(Math.min(this._chunkSize,
-                                             size + 8));
+                                             size + sizeBuffer.byteLength));
 
   bufferToSend.set(sizeBuffer, 0);
-  var end = this._chunkSize - sizeBuffer.byteLength;
-  bufferToSend.set(data.slice(0, end), sizeBuffer.byteLength);
+  var end = Math.min(this._chunkSize - sizeBuffer.byteLength,
+                     bufferToSend.byteLength);
+  bufferToSend.set(dataView.subarray(0, end), sizeBuffer.byteLength);
   promise = this.pc.send({"channelLabel": tag, "buffer": bufferToSend.buffer});
   promises.push(promise);
-  lastByteSent += end;
+  lastByteSent = end;
 
   while (lastByteSent < size) {
     end = lastByteSent + this._chunkSize;
     promise = this.pc.send({"channelLabel": tag,
                             "buffer": data.slice(lastByteSent, end)});
     promises.push(promise);
+    // We are fudging the numbers here a little. lastByteSent may be
+    // greater than the actual number of bytes if we have sent all of
+    // the bytes already.
     lastByteSent = end;
   }
 
+  function promiseReturnFactory(promise) {
+    return function() {
+      return promise;
+    };
+  }
   var nextPromise;
   promise = promises.shift();
   nextPromise = promise;
+
   while (promises.length > 0) {
     nextPromise = promises.shift();
-    promise.done(function() {
-      return nextPromise;
-    });
+    promise.done(promiseReturnFactory(nextPromise));
     promise = nextPromise;
   }
   nextPromise.done(continuation);
@@ -190,7 +199,7 @@ TransportProvider.prototype._assembleBuffers = function(tag) {
   var view = new Uint8Array(result);
   this._chunks[tag].buffers.forEach(function(buffer) {
 
-    view.set(buffer, bytesCopied);
+    view.set(new Uint8Array(buffer), bytesCopied);
     bytesCopied += buffer.byteLength;
   });
   return result;
