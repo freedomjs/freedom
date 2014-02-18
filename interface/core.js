@@ -34,8 +34,10 @@ fdom.apis.set("core.socket", {
   'destroy': {type: "method", value: ["number"]},
   'listen': {type: "method", value: ["number", "string", "number"]},
   'onConnection': {type: "event", value: {
-    "serverSocketId": "number",
-    "clientSocketId": "number"}},
+    'serverSocketId': "number",
+    'clientSocketId': "number"}},
+  'onDisconnect': {type: "event", value: {
+    "socketId": "number", "error": "string"}},
   'getInfo': {type: "method", value: ["number"]}
 });
 

@@ -1,7 +1,7 @@
 describe("transport.webrtc.json unit tests.", function () {
   var transport, peerconnection, dispatchedEvents;
-  var sizeToBuffer = TransportProvider.prototype._sizeToBuffer;
-  var bufferToSize = TransportProvider.prototype._bufferToSize;
+  var sizeToBuffer = WebRTCTransportProvider.prototype._sizeToBuffer;
+  var bufferToSize = WebRTCTransportProvider.prototype._bufferToSize;
   function defineSlice(arrayBuffer) {
     arrayBuffer.slice = function(begin, end) {
       begin = (begin|0) || 0;
@@ -88,7 +88,7 @@ describe("transport.webrtc.json unit tests.", function () {
         return peerconnection;
       }
     };
-    transport = new TransportProvider();
+    transport = new WebRTCTransportProvider();
     transport.dispatchEvent = function(event, data) {
       dispatchedEvents[event] = data;
     };
@@ -97,7 +97,7 @@ describe("transport.webrtc.json unit tests.", function () {
     function postSetup() {
       expect(peerconnection.setup).toHaveBeenCalledWith(undefined,
                                                        "unit-tests",
-                                                        stun_servers);
+                                                        WebRTCTransportProvider.stun_servers);
       done();
     }
   });

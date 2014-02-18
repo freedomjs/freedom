@@ -1,8 +1,9 @@
 var window = {};
 var view = freedom['core.view']();
 
-function IdentityProvider() {
+function IdentityProvider(dispatchEvent) {
   console.log("Manual Identity Provider");
+  this.dispatchEvent = dispatchEvent;
   this.status = 'offline';
   this.userId = 'manual';
   this.profile = {

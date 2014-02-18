@@ -8,7 +8,8 @@
  * @private
  * @param {App} app The application creating this provider.
  */
-var View_unprivileged = function(app) {
+var View_unprivileged = function(app, dispatchEvent) {
+  this.dispatchEvent = dispatchEvent;
   this.host = null;
   this.win = null;
   this.app = app;
@@ -91,7 +92,7 @@ View_unprivileged.prototype.close = function(continuation) {
 
 View_unprivileged.prototype.onMessage = function(m) {
   if (m.source == this.win.contentWindow) {
-    this['dispatchEvent']('message', m.data);
+    this.dispatchEvent('message', m.data);
   }
 };
 

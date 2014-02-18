@@ -1,8 +1,10 @@
 describe("unit: social.loopback.json", function () {
   var provider;
-  var TIMEOUT = 1000;
 
   beforeEach(function() {
+    // Comment for more debugging messages.
+    spyOn(console, 'log');
+
     freedom = {
       social: mockIface([], [
         ['STATUS_NETWORK', fdom.apis.get("social").definition.STATUS_NETWORK.value],
@@ -11,8 +13,7 @@ describe("unit: social.loopback.json", function () {
     };
 
     jasmine.clock().install();
-    provider = new LoopbackSocialProvider();
-    provider.dispatchEvent = jasmine.createSpy('dispatchEvent');
+    provider = new LoopbackSocialProvider(jasmine.createSpy('dispatchEvent'));
   });
   
   afterEach(function() {

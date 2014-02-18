@@ -9,7 +9,7 @@
  * @private
  * @param {App} app The application creating this provider.
  */
-var Storage_unprivileged = function(app) {
+var Storage_unprivileged = function(app, dispatchEvent) {
   this.app = app;
   fdom.util.handleEvents(this);
 };

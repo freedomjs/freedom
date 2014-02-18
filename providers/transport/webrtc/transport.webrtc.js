@@ -1,18 +1,10 @@
-var stun_servers = [
-  "stun:stun.l.google.com:19302",
-  "stun:stun1.l.google.com:19302",
-  "stun:stun2.l.google.com:19302",
-  "stun:stun3.l.google.com:19302",
-  "stun:stun4.l.google.com:19302"
-];
-
 /*
  * Peer 2 Peer transport provider.
  *
  */
 
-function TransportProvider() {
-  // console.log("TransportProvider: running in worker " + self.location.href);
+var WebRTCTransportProvider = function(dispatchEvent) {
+  this.dispatchEvent = dispatchEvent;
   this.name = null;
   this.pc = freedom['core.peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));
@@ -28,18 +20,26 @@ function TransportProvider() {
   this._chunkSize = 15000;
   // Javascript has trouble representing integers larger than 2^53 exactly
   this._maxMessageSize = Math.pow(2, 53);
-}
+};
+
+WebRTCTransportProvider.stun_servers = [
+  "stun:stun.l.google.com:19302",
+  "stun:stun1.l.google.com:19302",
+  "stun:stun2.l.google.com:19302",
+  "stun:stun3.l.google.com:19302",
+  "stun:stun4.l.google.com:19302"
+];
 
 // The argument |channelId| is a freedom communication channel id to use
 // to open a peer connection. 
-TransportProvider.prototype.setup = function(name, channelId, continuation) {
+WebRTCTransportProvider.prototype.setup = function(name, channelId, continuation) {
   // console.log("TransportProvider.setup." + name);
   this.name = name;
-  var promise = this.pc.setup(channelId, name, stun_servers);
+  var promise = this.pc.setup(channelId, name, WebRTCTransportProvider.stun_servers);
   promise.done(continuation);
 };
 
-TransportProvider.prototype.send = function(tag, data, continuation) {
+WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
   // console.log("TransportProvider.send." + this.name);
   if (this._tags.indexOf(tag) >= 0) {
     this._sendInChunks(tag, data, continuation);
@@ -51,7 +51,7 @@ TransportProvider.prototype.send = function(tag, data, continuation) {
   }
 };
 
-TransportProvider.prototype._sendInChunks = function(tag, data, continuation) {
+WebRTCTransportProvider.prototype._sendInChunks = function(tag, data, continuation) {
   // We send in chunks. The first 8 bytes of the first chunk of a
   // message encodes the number of bytes in the message.
   var dataView = new Uint8Array(data);
@@ -100,14 +100,15 @@ TransportProvider.prototype._sendInChunks = function(tag, data, continuation) {
   nextPromise.done(continuation);
 };
 
-TransportProvider.prototype.close = function(continuation) {
+
+WebRTCTransportProvider.prototype.close = function(continuation) {
   // TODO: Close data channels.
   this._tags = [];
   this.pc.close().done(continuation);
 };
 
 // Called when the peer-connection receives data, it then passes it here.
-TransportProvider.prototype.onData = function(msg) {
+WebRTCTransportProvider.prototype.onData = function(msg) {
   // console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
   if (msg.buffer) {
     this._handleData(msg.channelLabel, msg.buffer);
@@ -120,7 +121,7 @@ TransportProvider.prototype.onData = function(msg) {
   }
 };
 
-TransportProvider.prototype._handleData = function(tag, buffer) {
+WebRTCTransportProvider.prototype._handleData = function(tag, buffer) {
   var currentTag;
   if (tag in this._chunks) {
     currentTag = this._chunks[tag];
@@ -154,17 +155,17 @@ TransportProvider.prototype._handleData = function(tag, buffer) {
   
 };
 
-TransportProvider.prototype.onNewTag = function(event) {
+WebRTCTransportProvider.prototype.onNewTag = function(event) {
   this._tags.push(event.channelId);
 };
 
-TransportProvider.prototype.onClose = function() {
+WebRTCTransportProvider.prototype.onClose = function() {
   this._tags = [];
   this.dispatchEvent('onClose', null);
 };
 
 
-TransportProvider.prototype._sizeToBuffer = function(size) {
+WebRTCTransportProvider.prototype._sizeToBuffer = function(size) {
   // Bit shifts have overflow issues for any integers with more than
   // 32 bits, so use division.
   var buffer = new ArrayBuffer(8);
@@ -177,7 +178,7 @@ TransportProvider.prototype._sizeToBuffer = function(size) {
   return view;
 };
 
-TransportProvider.prototype._bufferToSize = function(buffer) {
+WebRTCTransportProvider.prototype._bufferToSize = function(buffer) {
   var view = new Uint8Array(buffer);
   var number = 0;
   for ( var i = view.byteLength - 1; i >= 0; i--) {
@@ -192,7 +193,7 @@ TransportProvider.prototype._bufferToSize = function(buffer) {
  * @param {String} 
  * @return {ArrayBuffer} Result of concatenating all buffers for tag
  */
-TransportProvider.prototype._assembleBuffers = function(tag) {
+WebRTCTransportProvider.prototype._assembleBuffers = function(tag) {
   var size = this._chunks[tag].totalByteCount;
   var bytesCopied = 0;
   var result = new ArrayBuffer(size);
@@ -207,12 +208,5 @@ TransportProvider.prototype._assembleBuffers = function(tag) {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.transport().provideAsynchronous(TransportProvider);
-}
-
-function printBuffer(buffer) {
-  var test = new Uint8Array(buffer);
-  for (var i = 0; i < buffer.byteLength; i++) {
-       console.log(test[i]);
-  }
+  freedom.transport().provideAsynchronous(WebRTCTransportProvider);
 }

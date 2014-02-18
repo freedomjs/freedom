@@ -9,9 +9,10 @@
  * @constructor
  * @param {App} app The application creating this provider.
  */
-var Echo_unprivileged = function(app) {
+var Echo_unprivileged = function(app, dispatchEvent) {
   fdom.debug.log('Echo Created!');
   this.app = app;
+  this.dispatchEvent = dispatchEvent;
   fdom.util.handleEvents(this);
 
   // The Core object for managing channels.
