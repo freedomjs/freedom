@@ -1,6 +1,9 @@
 describe("unit: storage.isolated.json", function () {
   var provider;
   beforeEach(function() {
+    // Comment for log messages.
+    spyOn(console, "log");
+
     freedom = {
       core: mockIface([['getId', ['myId']]]),
       'core.storage': mockIface([

@@ -268,9 +268,11 @@ SimpleDataPeer.prototype._onDataChannel = function(event) {
 };
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
-function PeerConnection(portApp) {
+function PeerConnection(portApp, dispatchEvent) {
+  // Channel for emitting events to consumer.
+  this.dispatchEvent = dispatchEvent;
 
-    // a (hopefully unique) ID for debugging.
+  // a (hopefully unique) ID for debugging.
   this.peerName = "p" + Math.random();
 
   // This is the portApp (defined in freedom/src/port-app.js). A way to speak

@@ -10,7 +10,7 @@
  * @param {Port.Manager} manager The manager this core is connected with.
  * @private
  */
-var Core_unprivileged = function(manager) {
+var Core_unprivileged = function(manager, postMessage) {
   this.manager = manager;
 };
 
