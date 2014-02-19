@@ -19,6 +19,7 @@ function RTCDataChannel(label, dict) {
   RTCDataChannel.mostRecent = this;
 
   this.label = label;
+  this.bufferedAmount = 0;
   this._closed = false;
   setTimeout(function() {
     if (typeof this.onopen === 'function') {
@@ -184,6 +185,30 @@ describe("providers/core/peerconnection", function() {
       expect(message.text).toEqual("Hello World");
 
       done();
+    }
+  });
+
+  it("getBufferAmount", function(done) {
+    peerconnection.openDataChannel("bufAmountDC", openDataChannelContinuation);
+    function openDataChannelContinuation() {
+      var dataChannel = RTCDataChannel.mostRecent;
+      peerconnection.
+        getBufferedAmmount("bufAmountDC",
+                           checkBufferedAmmount.bind(undefined, 0));
+
+      dataChannel.bufferedAmount = 1;
+      peerconnection.
+        getBufferedAmmount("bufAmountDC",
+                           checkBufferedAmmount.bind(undefined, 1));
+
+      dataChannel.bufferedAmount = 1337;
+      peerconnection.
+        getBufferedAmmount("bufAmountDC",
+                           checkBufferedAmmount.bind(undefined, 1337));
+      done();
+    }
+    function checkBufferedAmmount(expected, valueReturned) {
+      expect(valueReturned).toEqual(expected);
     }
   });
 

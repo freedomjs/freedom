@@ -101,6 +101,11 @@ fdom.apis.set('core.peerconnection', {
   // The channale with this id has been closed.
   'onCloseDataChannel': {type: "event", value: {"channelId": "string"}},
 
+  // Returns the number of bytes that have queued using "send", but not
+  // yet sent out. Currently just exposes:
+  // http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-bufferedAmount
+  "getBufferedAmount": {type: "method", value: ["string"]},
+
   // Close the peer connection.
   'close': {type: "method", value: []},
   // The peer connection has been closed.
