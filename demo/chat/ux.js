@@ -22,6 +22,18 @@ window.onload = function() {
     log.appendChild(br);
     br.scrollIntoView();
   }
+  
+  var onClick = function(jid, child) {
+    if (activeId != jid) {
+      activeId = jid;
+      child.innerHTML = "[" + val[i] + "]";
+    } else {
+      activeId = undefined;
+      child.innerHTML = val[i];
+    }
+    console.log("Messages will be sent to: " + activeId);
+    document.getElementById('msg-input').focus();
+  };
 
   // on changes to the buddylist, redraw entire buddylist
   window.freedom.on('recv-buddylist', function(val) {
@@ -34,17 +46,7 @@ window.onload = function() {
       var child = document.createElement('div');
       child.innerHTML = val[i];
       // If the user clicks on a buddy, change our current destination for messages
-      child.addEventListener('click', function(jid, child) {
-        if (activeId != jid) {
-          activeId = jid;
-          child.innerHTML = "[" + val[i] + "]";
-        } else {
-          activeId = undefined;
-          child.innerHTML = val[i];
-        }
-        console.log("Messages will be sent to: " + activeId);
-        document.getElementById('msg-input').focus();
-      }.bind(this, val[i], child), true);
+      child.addEventListener('click', onClick.bind(this, val[i], child), true);
       buddylist.appendChild(child);
     }
   });
@@ -82,4 +84,4 @@ window.onload = function() {
       window.freedom.emit('send-message', {to: activeId, message: text});
     }
   };
-}
+};
