@@ -69,8 +69,9 @@ function setupConnection(name, targetId) {
     console.log("Receiving data with tag: " + message.tag);
     freedom.emit('download-data', message.data);
   });
-  core.createChannel().then(function (chan) {
-    connections[targetId].setup(name, chan.identifier);
+  return core.createChannel().then(function (chan) {
+    // Set up the signalling channel first, it may be needed in the
+    // peerconnection setup.
     chan.channel.on('message', function(msg) {
       social.sendMessage(targetId, JSON.stringify({
         cmd: 'signal',
@@ -78,6 +79,7 @@ function setupConnection(name, targetId) {
       }));
     });
     signallingChannels[targetId] = chan.channel;
+    return connections[targetId].setup(name, chan.identifier);
   });
 }
 
@@ -155,18 +157,18 @@ social.on('onMessage', function(data) {
     targetId = data.fromClientId;
 
     console.log("social.onMessage: Received request for " + key + " from " + targetId);
-    setupConnection("server-"+targetId, targetId);
-    //SEND IT
-    if (files[key]) {
-      console.log("social.onMessage: Sending " + key + " to " + targetId);
-      connections[targetId].send('filedrop', files[key]);
-    } else {
-      console.log("social.onMessage: I don't have key: " + key);
-      social.sendMessage(targetId, JSON.stringify({
-        cmd: 'error',
-        data: 'File missing!'
-      }));
-    }
+    setupConnection("server-"+targetId, targetId).then(function(){ //SEND IT
+      if (files[key]) {
+        console.log("social.onMessage: Sending " + key + " to " + targetId);
+        connections[targetId].send('filedrop', files[key]);
+      } else {
+        console.log("social.onMessage: I don't have key: " + key);
+        social.sendMessage(targetId, JSON.stringify({
+          cmd: 'error',
+          data: 'File missing!'
+        }));
+      }
+    });
   } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'error') {
     console.log('social.onMessage: ' + msg.data);
     freedom.emit('download-error', msg.data);
