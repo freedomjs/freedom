@@ -6,6 +6,7 @@
 var WebRTCTransportProvider = function(dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
   this.name = null;
+  this._setup = false;
   this.pc = freedom['core.peerconnection']();
   this.pc.on('onReceived', this.onData.bind(this));
   this.pc.on('onClose', this.onClose.bind(this));
@@ -36,11 +37,15 @@ WebRTCTransportProvider.prototype.setup = function(name, channelId, continuation
   // console.log("TransportProvider.setup." + name);
   this.name = name;
   var promise = this.pc.setup(channelId, name, WebRTCTransportProvider.stun_servers);
+  this._setup = true;
   promise.then(continuation);
 };
 
 WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
   // console.log("TransportProvider.send." + this.name);
+  if(!this._setup) {
+    throw new Error("send called before setup in WebRTCTransportProvider");
+  }
   if (this._tags.indexOf(tag) >= 0) {
     this._sendInChunks(tag, data, continuation);
   } else {
@@ -83,21 +88,7 @@ WebRTCTransportProvider.prototype._sendInChunks = function(tag, data, continuati
     lastByteSent = end;
   }
 
-  function promiseReturnFactory(promise) {
-    return function() {
-      return promise;
-    };
-  }
-  var nextPromise;
-  promise = promises.shift();
-  nextPromise = promise;
-
-  while (promises.length > 0) {
-    nextPromise = promises.shift();
-    promise.then(promiseReturnFactory(nextPromise));
-    promise = nextPromise;
-  }
-  nextPromise.then(continuation);
+  Promise.all(promises).then(continuation);
 };
 
 
