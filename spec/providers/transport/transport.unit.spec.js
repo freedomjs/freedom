@@ -81,7 +81,8 @@ describe("transport.webrtc.json unit tests.", function () {
           ["setup", undefined],
           ["send", undefined],
           ["openDataChannel", undefined],
-          ["close", undefined]
+          ["close", undefined],
+          ["getBufferedAmount", 0]
         ]);
         peerconnection = iface();
         makeEventTarget(peerconnection);

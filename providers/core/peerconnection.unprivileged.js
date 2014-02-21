@@ -103,7 +103,8 @@ SimpleDataPeer.prototype.closeChannel= function(channelId) {
   }
 };
 
-SimpleDataPeer.prototype.getBufferedAmmount = function(channelId) {
+SimpleDataPeer.prototype.getBufferedAmount = function(channelId,
+                                                       continuation) {
   if(channelId in this._channels) {
     var dataChannel = this._channels[channelId];
     return dataChannel.bufferedAmount;
@@ -390,9 +391,9 @@ PeerConnection.prototype.send = function(sendInfo, continuation) {
   this._peer.send(sendInfo.channelLabel, objToSend, continuation);
 };
 
-PeerConnection.prototype.getBufferedAmmount =
+PeerConnection.prototype.getBufferedAmount =
   function(channelId, continuation) {
-    continuation(this._peer.getBufferedAmmount(channelId));
+    continuation(this._peer.getBufferedAmount(channelId));
 };
 
 PeerConnection.prototype.close = function(continuation) {

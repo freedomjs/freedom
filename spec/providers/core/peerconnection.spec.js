@@ -193,21 +193,21 @@ describe("providers/core/peerconnection", function() {
     function openDataChannelContinuation() {
       var dataChannel = RTCDataChannel.mostRecent;
       peerconnection.
-        getBufferedAmmount("bufAmountDC",
-                           checkBufferedAmmount.bind(undefined, 0));
+        getBufferedAmount("bufAmountDC",
+                           checkBufferedAmount.bind(undefined, 0));
 
       dataChannel.bufferedAmount = 1;
       peerconnection.
-        getBufferedAmmount("bufAmountDC",
-                           checkBufferedAmmount.bind(undefined, 1));
+        getBufferedAmount("bufAmountDC",
+                           checkBufferedAmount.bind(undefined, 1));
 
       dataChannel.bufferedAmount = 1337;
       peerconnection.
-        getBufferedAmmount("bufAmountDC",
-                           checkBufferedAmmount.bind(undefined, 1337));
+        getBufferedAmount("bufAmountDC",
+                           checkBufferedAmount.bind(undefined, 1337));
       done();
     }
-    function checkBufferedAmmount(expected, valueReturned) {
+    function checkBufferedAmount(expected, valueReturned) {
       expect(valueReturned).toEqual(expected);
     }
   });

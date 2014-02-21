@@ -19,6 +19,9 @@ var WebRTCTransportProvider = function(dispatchEvent) {
   // Messages may be limited to a 16KB length
   // http://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-07#section-6.6
   this._chunkSize = 15000;
+  // The maximum amount of bytes we should allow to get queued up in
+  // peerconnection, any more and we start queueing ourself.
+  this._pcQueueLimit = 1024 * 250;
   // Javascript has trouble representing integers larger than 2^53 exactly
   this._maxMessageSize = Math.pow(2, 53);
 };
@@ -47,7 +50,8 @@ WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
     throw new Error("send called before setup in WebRTCTransportProvider");
   }
   if (this._tags.indexOf(tag) >= 0) {
-    this._sendInChunks(tag, data, continuation);
+    var buffers = this._chunk(data);
+    this._waitSend(tag, buffers).then(continuation);
   } else {
     this.pc.openDataChannel(tag).then(function(){
       this._tags.push(tag);
@@ -56,39 +60,79 @@ WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
   }
 };
 
-WebRTCTransportProvider.prototype._sendInChunks = function(tag, data, continuation) {
-  // We send in chunks. The first 8 bytes of the first chunk of a
-  // message encodes the number of bytes in the message.
+WebRTCTransportProvider.prototype._chunk = function(data) {
+  // The first 8 bytes of the first chunk of a message encodes the
+  // number of bytes in the message.
   var dataView = new Uint8Array(data);
-  var promises = [];
-  var promise;
+  var buffers = [];
   var size = data.byteLength;
-  var lastByteSent = 0; // exclusive range
+  var lowerBound = 0; // exclusive range
+  var upperBound;
+
+  // lowerBound points to the byte after the last byte to be chunked
+  // from the original data buffer.  It should be the case that
+  // lowerBound < upperBound.
+  // Buffer: [------------------------------------------------]
+  //          ^              ^              ^  
+  //          lB_0           uB_0/lB_1      uB_1/lB_2 ...    ^uB_n
   
   var sizeBuffer = this._sizeToBuffer(size);
-  var bufferToSend = new Uint8Array(Math.min(this._chunkSize,
+  var firstBuffer = new Uint8Array(Math.min(this._chunkSize,
                                              size + sizeBuffer.byteLength));
 
-  bufferToSend.set(sizeBuffer, 0);
-  var end = Math.min(this._chunkSize - sizeBuffer.byteLength,
-                     bufferToSend.byteLength);
-  bufferToSend.set(dataView.subarray(0, end), sizeBuffer.byteLength);
-  promise = this.pc.send({"channelLabel": tag, "buffer": bufferToSend.buffer});
-  promises.push(promise);
-  lastByteSent = end;
+  firstBuffer.set(sizeBuffer, 0);
+  upperBound = Math.min(this._chunkSize - sizeBuffer.byteLength,
+                        firstBuffer.byteLength);
+  firstBuffer.set(dataView.subarray(0, upperBound), sizeBuffer.byteLength);
+  buffers.push(firstBuffer.buffer);
+  lowerBound = upperBound;
 
-  while (lastByteSent < size) {
-    end = lastByteSent + this._chunkSize;
-    promise = this.pc.send({"channelLabel": tag,
-                            "buffer": data.slice(lastByteSent, end)});
-    promises.push(promise);
-    // We are fudging the numbers here a little. lastByteSent may be
-    // greater than the actual number of bytes if we have sent all of
-    // the bytes already.
-    lastByteSent = end;
+  while (lowerBound < size) {
+    upperBound = lowerBound + this._chunkSize;
+    buffers.push(data.slice(lowerBound, upperBound));
+    lowerBound = upperBound;
   }
 
-  Promise.all(promises).then(continuation);
+  return buffers;
+};
+
+WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
+  console.info("_waitSend called");
+  var bufferBound = 0; // upper bound on the # of bytes buffered
+
+  var sendBuffers = function() {
+    var promises = [];
+    while(bufferBound + this._chunkSize <= this._pcQueueLimit &&
+          buffers.length > 0) {
+      var nextBuffer = buffers.shift();
+      promises.push(this.pc.send({"channelLabel": tag,
+                                  "buffer": nextBuffer}));
+      bufferBound += nextBuffer.byteLength;
+    }
+
+    var allSends = Promise.all(promises);
+    if (buffers.length === 0) {
+      return allSends;
+    }
+    return allSends.then(checkBufferedAmount);
+  }.bind(this);
+
+  var checkBufferedAmount = function() {
+    return this.pc.getBufferedAmount(tag).then(function(bufferedAmount) {
+      bufferBound = bufferedAmount;
+      if (bufferedAmount + this._chunkSize > this._pcQueueLimit) {
+        return new Promise(function(resolve) {
+          setTimeout(function() {
+            resolve(checkBufferedAmount());
+          }, 100);
+        });
+      } else {
+        return sendBuffers();
+      }
+    });
+  }.bind(this);
+  // Check first, in case there is data in the pc buffer from another message.
+  return checkBufferedAmount();
 };
 
 
