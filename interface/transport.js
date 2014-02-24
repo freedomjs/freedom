@@ -33,7 +33,10 @@ fdom.apis.set("transport", {
   'send': {type: "method", value: ["string", "buffer"]},
 
   /**
-   * Close the connection
+   * Close the connection. Any data queued for sending, or in the
+   * process of sending, may be dropped. If the state of the promse of
+   * the send method is "pending" then the data for that send call may
+   * be sending or queued.
    * 
    * @method close
    * @return nothing

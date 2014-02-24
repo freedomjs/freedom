@@ -12,9 +12,18 @@ var WebRTCTransportProvider = function(dispatchEvent) {
   this.pc.on('onClose', this.onClose.bind(this));
   this.pc.on('onOpenDataChannel', this.onNewTag.bind(this));
   this._tags = [];
-  // Entries in this dictionary map tags to chunks of messages. If
-  // there is no entry for a tag in the dictionary, then we have not
-  // received the first chunk of the next message.
+  // Maps tags to booleans. The boolean corresponding to a given tag
+  // is true if this WebRTCTransportProvider is currently sending out
+  // chunks of a message for that tag.
+  this._sending = {};
+  // Maps tags to lists of whole outgoing messages that are waiting to
+  // be sent over the wire. Messages must be sent one at a time to
+  // prevent the interleaving of chunks from two or messages.
+  this._queuedMessages = {};
+  // Entries in this dictionary map tags to arrays containing chunks
+  // of incoming messages. If there is no entry for a tag in the
+  // dictionary, then we have not received the first chunk of the next
+  // message.
   this._chunks = {};
   // Messages may be limited to a 16KB length
   // http://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-07#section-6.6
@@ -50,16 +59,45 @@ WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
     throw new Error("send called before setup in WebRTCTransportProvider");
   }
   if (this._tags.indexOf(tag) >= 0) {
+    if (this._sending[tag]) {
+      // A message is currently being sent. Queue this message to
+      // prevent message interleaving.
+      this._queuedMessages[tag].push({tag: tag,
+                                      data: data,
+                                      continuation: continuation});
+      return;
+    }
     var buffers = this._chunk(data);
-    this._waitSend(tag, buffers).then(continuation);
+    this._sending[tag] = true;
+    this._waitSend(tag, buffers).then(function afterSending() {
+      this._sending[tag] = false;
+      if ((typeof this._queuedMessages[tag] !== "undefined") &&
+          this._queuedMessages[tag].length > 0) {
+        var next = this._queuedMessages[tag].shift();
+        this.send(next.tag, next.data, next.continuation);
+      }
+    }.bind(this)).then(continuation);
   } else {
     this.pc.openDataChannel(tag).then(function(){
       this._tags.push(tag);
+      this._sending[tag] = false;
+      this._queuedMessages[tag] = [];
+
       this.send(tag, data, continuation);
     }.bind(this));
   }
 };
 
+
+
+/**
+ * Chunk a single ArrayBuffer into multiple ArrayBuffers of
+ * this._chunkSize length.
+ * @param {ArrayBuffer} data - Data to chunk.
+ * @return {Array} - Array of ArrayBuffer objects such that the
+ * concatenation of all array buffer objects equals the data
+ * parameter.
+ */
 WebRTCTransportProvider.prototype._chunk = function(data) {
   // The first 8 bytes of the first chunk of a message encodes the
   // number of bytes in the message.
@@ -97,7 +135,6 @@ WebRTCTransportProvider.prototype._chunk = function(data) {
 };
 
 WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
-  console.info("_waitSend called");
   var bufferBound = 0; // upper bound on the # of bytes buffered
 
   var sendBuffers = function() {
@@ -139,6 +176,9 @@ WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
 WebRTCTransportProvider.prototype.close = function(continuation) {
   // TODO: Close data channels.
   this._tags = [];
+  this._sending = {};
+  this._queuedMessages = {};
+  this._chunks = {};
   this.pc.close().then(continuation);
 };
 
@@ -196,6 +236,9 @@ WebRTCTransportProvider.prototype.onNewTag = function(event) {
 
 WebRTCTransportProvider.prototype.onClose = function() {
   this._tags = [];
+  this._sending = {};
+  this._queuedMessages = {};
+  this._chunks = {};
   this.dispatchEvent('onClose', null);
 };
 
