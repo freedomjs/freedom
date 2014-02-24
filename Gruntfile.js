@@ -239,3 +239,5 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('default', ['freedom']);
 };
+
+module.exports.FILES = FILES;
