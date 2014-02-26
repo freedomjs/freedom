@@ -19,7 +19,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
         // in order to prepare for synchronous in-window pipes.
         var thisReq = reqId,
             promise = new Promise(function(resolve, reject) {
-              inflight[thisReq] = resolve;
+              inflight[thisReq] = [resolve, reject];
             });
         reqId += 1;
         emit({
@@ -62,7 +62,11 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
       if (inflight[msg.reqId]) {
         var resolve = inflight[msg.reqId];
         delete inflight[msg.reqId];
-        resolve(msg.value);
+        if (msg.error) {
+          resolve[1](msg.error);
+        } else {
+          resolve[0](msg.value);
+        }
       } else {
         fdom.debug.warn('Dropped response message with id ' + msg.reqId);
       }
