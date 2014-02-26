@@ -43,6 +43,23 @@ describe("fdom.proxy.APIInterface", function() {
     }, 0);
   });
 
+  it("Rejects methods on failure.", function(done) {
+    var promise = api.test('hi'),
+        spy = jasmine.createSpy('fail');
+    promise.catch(spy);
+    
+    reg('message', {
+      type: 'method',
+      reqId: 0,
+      value: 'errval',
+      error: 'Error Occured'
+    });
+    setTimeout(function() {
+      expect(spy).toHaveBeenCalledWith('Error Occured');
+      done();
+    }, 0);
+  });
+
   it("delivers events", function() {
     var cb = jasmine.createSpy('cb');
     api.on('ev', cb);
