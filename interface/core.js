@@ -41,6 +41,57 @@ fdom.apis.set("core.socket", {
   'getInfo': {type: "method", value: ["number"]}
 });
 
+// A UDP socket.
+// Generally, to use you just need to call bind() at which point onData
+// events will start to flow. Note that bind() should only be called
+// once per instance.
+fdom.apis.set('core.udpsocket', {
+  // Creates a socket, binds it to an interface and port and listens for
+  // messages, dispatching each message as on onData event.
+  // Returns an integer, with zero meaning success and any other value
+  // being implementation-dependant.
+  'bind': {type: 'method',
+    value: [
+      // Interface (address) on which to bind.
+      'string',
+      // Port on which to bind.
+      'number'
+    ]},
+
+  // Sends data to a server.
+  // The socket must be bound.
+  // Returns an integer indicating the number of bytes written, with no
+  // guarantee that the remote side received the data.
+  'sendTo': {type: 'method',
+    value: [
+      // Data to send.
+      'buffer',
+      // Destination address.
+      'string',
+      // Destination port.
+      'number'
+    ]},
+
+  // Releases all resources associated with this socket.
+  // No-op if the socket is not bound.
+  'destroy': {type: 'method', value: []},
+
+  // Called once for each message received on this socket, once it's
+  // been successfully bound.
+  'onData': {type: 'event',
+    value: {
+      // Zero means success, any other value is implementation-dependent.
+      'resultCode': 'number',
+      // Address from which data was received.
+      'address': 'string',
+      // Port from which data was received.
+      'port': 'number',
+      // Data received.
+      'data': 'buffer'
+    }
+  }
+});
+
 fdom.apis.set("core.runtime", {
   'createApp': {type: "method", value: ["string", "proxy"]},
   'resolve': {type: "method", value: ["string", "string"]},
