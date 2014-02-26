@@ -38,6 +38,39 @@ describe("fdom.Port.Provider", function() {
     expect(constructspy).toHaveBeenCalled();
   });
 
+  it("allows promises to be used.", function(done) {
+    var iface = port.getInterface();
+    var o = function() {};
+    var called = false, resp;
+    o.prototype.m1 = function(str) {
+      called = true;
+      return Promise.resolve('resolved ' + str);
+    };
+
+    iface.providePromises(o);
+    port.onMessage('default', {
+      channel: 'message'
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message:{
+      'type': 'construct',
+    }});
+
+    port.onMessage('default', {to: 'testInst', type:'message', message: {
+      'action': 'method',
+      'type': 'm1',
+      'value': 'mystr',
+      'reqId': 1
+    }});
+
+    expect(called).toEqual(true);
+
+    port.on('message', function(n) {
+      expect(n.message.value).toEqual('resolved mystr');
+      done();
+    });
+  });
+
   it("Allows closing", function() {
     var iface = port.getProxyInterface();
     var maker = iface();
