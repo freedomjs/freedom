@@ -18,10 +18,22 @@ fdom.port.Provider = function(def) {
   fdom.util.handleEvents(this);
   
   this.definition = def;
-  this.synchronous = false;
+  this.mode = fdom.port.Provider.mode.synchronous;
   this.iface = null;
   this.providerCls = null;
   this.providerInstances = {};
+};
+
+/**
+ * Provider modes of operation.
+ * @property mode
+ * @static
+ * @type number
+ */
+fdom.port.Provider.mode = {
+  synchronous: 0,
+  asynchronous: 1,
+  promises: 2
 };
 
 /**
@@ -34,7 +46,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
     this.emit(this.emitChannel, {
-      type: 'channel announcment',
+      type: 'channel announcement',
       channel: message.reverse
     });
     this.emit('start');
@@ -56,10 +68,12 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
     } else if (message.to && this.providerInstances[message.to]) {
       message.message.to = message.to;
       this.providerInstances[message.to](message.message);
-    } else if (message.to && message.message && message.message.type === 'construct') {
+    } else if (message.to && message.message &&
+        message.message.type === 'construct') {
       this.providerInstances[message.to] = this.getProvider(message.to);
     } else {
-      fdom.debug.warn(this.toString() + ' dropping message ' + JSON.stringify(message));
+      fdom.debug.warn(this.toString() + ' dropping message ' +
+          JSON.stringify(message));
     }
   }
 };
@@ -97,10 +111,15 @@ fdom.port.Provider.prototype.getInterface = function() {
     this.iface = {
       provideSynchronous: function(prov) {
         this.providerCls = prov;
+        this.mode = fdom.port.Provider.mode.synchronous;
       }.bind(this),
       provideAsynchronous: function(prov) {
         this.providerCls = prov;
-        this.synchronous = false;
+        this.mode = fdom.port.Provider.mode.asynchronous;
+      }.bind(this),
+      providePromises: function(prov) {
+        this.providerCls = prov;
+        this.mode = fdom.port.Provider.mode.promises;
       }.bind(this),
       close: function() {
         this.close();
@@ -217,7 +236,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
         return;
       }
       var args = msg.value,
-          ret = function(to, req, type, ret) {
+          ret = function(to, req, type, ret, err) {
             this.emit(this.emitChannel, {
               type: 'method',
               to: to,
@@ -226,17 +245,20 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
                 type: 'method',
                 reqId: req,
                 name: type,
-                value: ret
+                value: ret,
+                error: err
               }
             });
           }.bind(port, msg.to, msg.reqId, msg.type);
       if (!Array.isArray(args)) {
         args = [args];
       }
-      if (port.synchronous) {
+      if (port.mode === fdom.port.Provider.mode.synchronous) {
         ret(this[msg.type].apply(this, args));
-      } else {
+      } else if (port.mode === fdom.port.Provider.mode.asynchronous) {
         this[msg.type].apply(instance, args.concat(ret));
+      } else if (port.mode === fdom.port.Provider.mode.promises) {
+        this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
       }
     }
   }.bind(instance, this);
