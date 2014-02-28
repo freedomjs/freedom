@@ -28,11 +28,24 @@ function stats(player, other) {
       nv = JSON.parse(val);
       val = JSON.parse(val);
     } catch(e) {}
-    if (!nv || typeof nv !== "object") nv = {win: 0, lose: 0};
-    if (!nv['win']) nv['win'] = 0;
-    if (!nv['lose']) nv['lose'] = 0;
-    if (player) nv['win'] += 1;
-    if (other) nv['lose'] += 1;
+    if (!nv || typeof nv !== "object") {
+      nv = {
+        win: 0, 
+        lose: 0
+      };
+    }
+    if (!nv.win) {
+      nv.win = 0;
+    }
+    if (!nv.lose) {
+      nv.lose = 0;
+    }
+    if (player) {
+      nv.win += 1;
+    }
+    if (other) {
+      nv.lose += 1;
+    }
 
     if (nv !== val) {
       store.set('stats', JSON.stringify(nv));
@@ -51,7 +64,7 @@ freedom.on('move', function(val) {
     board[val] = 1;
     checkWin();
     playerMove = false;
-    AIMove();
+    aiMove();
   }
 
   var b = {};
@@ -70,7 +83,7 @@ function reset() {
 reset();
 
 // Implements a simple TicTakToe AI
-function AIMove() {
+function aiMove() {
   if (playerMove) {
     return;
   }
@@ -86,7 +99,9 @@ function AIMove() {
   for (var s = 0; s < sets.length; s++) {
     var set = sets[s].split("");
     for (var p = 0; p < 3; p++) {
-      if (board[set[p === 0? 1 : 0]] == 1 && board[set[p!= 2 ? 2 : 1]] == 1 && board[set[p]] === 0) {
+      if (board[set[p === 0 ? 1 : 0]] === 1 &&
+          board[set[p !== 2 ? 2 : 1]] === 1 &&
+          board[set[p]] === 0) {
         board[set[p]] = 2;
         checkWin();
         playerMove = true;
@@ -112,14 +127,17 @@ function checkWin() {
   var sets = "012,345,678,036,147,258,048,246".split(",");
   for (var s = 0; s < sets.length; s++) {
     var set = sets[s].split("");
-    if (board[set[0]] == board[set[1]] && board[set[1]] == board[set[2]] && board[set[2]] == 1) {
-      //playerwin
-      stats(1, 0);
-      reset();
-    } else if (board[set[0]] == board[set[1]] && board[set[1]] == board[set[2]] && board[set[2]] == 2) {
-      //otherwin
-      stats(0, 1);
-      reset();
+    if (board[set[0]] === board[set[1]] &&
+        board[set[1]] === board[set[2]]) {
+      if (board[set[2]] === 1) {
+        // player wins
+        stats(1, 0);
+        reset();
+      } else if (board[set[2]] === 2) {
+        // other wins
+        stats(0, 1);
+        reset();
+      }
     }
   }
   var open = 0;
