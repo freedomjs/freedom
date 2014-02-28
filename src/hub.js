@@ -65,6 +65,23 @@ fdom.Hub.prototype.getDestination = function(source) {
 };
 
 /**
+ * Get the local source port of a flow.
+ * @method getSource
+ * @param {Port} source The flow identifier to retrieve.
+ * @return {Port} The source port.
+ */
+fdom.Hub.prototype.getSource = function(source) {
+  if (!source) {
+    return false;
+  }
+  if (!this.apps[source.id]) {
+    fdom.debug.warn("No registered source '" + source.id + "'");
+    return false;
+  }
+  return this.apps[source.id];
+};
+
+/**
  * Register a destination for messages with this hub.
  * @method register
  * @param {Port} app The Port to register.
@@ -106,15 +123,9 @@ fdom.Hub.prototype.deregister = function(app) {
  * @return {String} A routing source identifier for sending messages.
  */
 fdom.Hub.prototype.install = function(source, destination, flow) {
+  source = this.getSource(source);
   if (!source) {
-    fdom.debug.warn("Unable to install route for null source");
     return;
-  }
-  if (!this.apps[source.id]) {
-    fdom.debug.warn("Unwilling to generate a source for " + source.id);
-    return;
-  } else {
-    source = this.apps[source.id];
   }
   if (!destination) {
     fdom.debug.warn("Unwilling to generate a flow to nowhere from " + source.id);
@@ -142,12 +153,11 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
  * @return {Boolean} Whether the route was able to be uninstalled.
  */
 fdom.Hub.prototype.uninstall = function(source, flow) {
-  if (!this.apps[source.id]) {
-    fdom.debug.warn("Unable to find routes for unknown source " + source.id);
-    return false;
-  } else {
-    source = this.apps[source.id];
+  source = this.getSource(source);
+  if (!source) {
+    return;
   }
+
   var route = this.routes[flow];
   if (!route) {
     return false;
