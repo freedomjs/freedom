@@ -19,7 +19,7 @@
  **/
 function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
-  this.WS_URL = 'ws://p2pbr.com:8082/route/';
+  this.WS_URL = 'wss://p2pbr.com/route/';
   this.NETWORK_ID = 'websockets';
   var social = freedom.social();
   this.STATUS_NETWORK = social.STATUS_NETWORK;
