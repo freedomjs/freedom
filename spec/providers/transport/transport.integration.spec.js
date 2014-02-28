@@ -1,4 +1,4 @@
-var TRANSPORT_INTEGRATION_SPEC = function(transportId) { return function() {
+describe("transport.webrtc.json", function() {
   var TIMEOUT = 3000;
   var freedom, helper;
 
@@ -11,65 +11,56 @@ var TRANSPORT_INTEGRATION_SPEC = function(transportId) { return function() {
     cleanupIframes();
   });
   
-  it("is all good in the hood", function() {expect(true).toEqual(true)});
-
-  it("generates signals", function() {
+  it("generates signals", function(done) {
     var ids = {};
     var chanId = undefined;
     var signals = [];
-    runs(function() {
-      helper.createProvider("t", transportId);
-      helper.createChannel(function(newChanId) {
-        chanId = newChanId;
-      });
-    });
-    waitsFor("create channel", function() {
-      return chanId != undefined; 
-    }, TIMEOUT);
-
-    runs(function() {
+    helper.createProvider("t", "transport.webrtc");
+    helper.createChannel(function(newChanId) {
+      chanId = newChanId;
       helper.setChannelCallback(chanId, function(msg) {
         signals.push(msg);
+        expect(signals.length).toBeGreaterThan(0);
+        done();
       });
       var sendData = helper.str2ab("HI");
       ids[0] = helper.call('t', "setup", ["t", chanId]);
       ids[1] = helper.call('t', "send", ["tag", sendData]);
     });
-    waitsFor("signalling messages", function() {
-      return signals.length > 0;
-    }, TIMEOUT);
-
-    runs(function() {
-      expect(signals.length).toBeGreaterThan(0);
-    });
   });
 
-  it("sends data", function() {
+  it("sends data", function(done) {
     var testString = "Hi";
     var ids = {};
     var signals = [];
     var chanId1 = undefined;
     var chanId2 = undefined;
-    var result = undefined;
+    var doSend;
     
-    runs(function() {
-      helper.createProvider("t1", transportId);
-      helper.createProvider("t2", transportId);
-      helper.createChannel(function(newChanId) {
-        chanId1 = newChanId;
-      });
-      helper.createChannel(function(newChanId) {
-        chanId2 = newChanId;
-      });
+    helper.createProvider("t1", "transport.webrtc");
+    helper.createProvider("t2", "transport.webrtc");
+    helper.createChannel(function(newChanId) {
+      chanId1 = newChanId;
+      if (chanId2) {
+        doSend()
+      }
     });
-    waitsFor("create channels", function() {
-      return chanId1 != undefined && chanId2 != undefined;
-    }, TIMEOUT);
+    helper.createChannel(function(newChanId) {
+      chanId2 = newChanId;
+      if (chanId1) {
+        doSend();
+      }
+    });
 
-    runs(function() {
-      helper.on("t2", "onData", function(data) {
-        result = data;
+    doSend = function() {
+      helper.on("t2", "onData", function(result) {
+        var resultStr = helper.ab2str(result.data);
+        expect(signals.length).toBeGreaterThan(0);
+        expect(result.data instanceof ArrayBuffer).toBe(true);
+        expect(result.tag).toEqual("tag");
+        done();
       });
+
       helper.setChannelCallback(chanId1, function(msg) {
         signals.push(msg);
         helper.sendToChannel(chanId2, msg);
@@ -82,24 +73,6 @@ var TRANSPORT_INTEGRATION_SPEC = function(transportId) { return function() {
       ids[0] = helper.call("t1", "setup", ["t1", chanId1]);
       ids[1] = helper.call("t2", "setup", ["t2", chanId2]);
       ids[2] = helper.call("t1", "send", ["tag", sendData]);
-    });
-    waitsFor("data received", function() {
-      return result != undefined;
-    }, TIMEOUT);
-
-    runs(function() {
-      var resultStr = helper.ab2str(result.data);
-      expect(signals.length).toBeGreaterThan(0);
-      expect(result.data instanceof ArrayBuffer).toBe(true);
-      expect(result.tag).toEqual("tag");
-      //expect(resultStr).toEqual(testString);
-      console.log(result);
-      console.log(resultStr);
-    });
-
+    };
   });
-
-
-}};
-
-describe("transport.webrtc.json", TRANSPORT_INTEGRATION_SPEC("transport.webrtc"));
+});

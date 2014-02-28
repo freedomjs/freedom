@@ -143,8 +143,9 @@ function setupResolvers() {
 }
 
 function cleanupIframes() {
-  var frames = document.getElementsByTagName('iframe');
-  for (var i=0; i<frames.length; i++) {
+  var frames = document.getElementsByTagName('iframe'),
+      i;
+  for (i = 0; i < frames.length; i += 1) {
     frames[i].parentNode.removeChild(frames[i]);
   }
 }
@@ -194,7 +195,10 @@ ProviderHelper.prototype.call = function(provider, method, args, cb) {
   return this.callId;
 };
 ProviderHelper.prototype.ret = function(obj) {
-  this.callbacks[obj.id](obj.data);
+  if (this.callbacks[obj.id]) {
+    this.callbacks[obj.id](obj.data);
+    delete this.callbacks[obj.id];
+  }
 };
 
 ProviderHelper.prototype._on = function(eventInfo) {
