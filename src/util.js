@@ -1,5 +1,6 @@
-/*globals fdom:true, XMLHttpRequest, crypto */
-/*jslint indent:2,white:true,node:true,sloppy:true */
+/*globals fdom:true, crypto, freedomcfg, WebKitBlobBuilder, Blob, URL */
+/*globals webkitURL, Uint8Array */
+/*jslint indent:2,white:true,browser:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -108,11 +109,11 @@ fdom.util.getId = function() {
  */
 fdom.util.handleEvents = function(obj) {
   var eventState = {
-    listeners: {},
-    conditional: [],
-    oneshots: {},
-    onceConditional: []
-  };
+    multiple: {},
+    maybemultiple: [],
+    single: {},
+    maybesingle: []
+  }, filter, push;
 
   /**
    * Filter a list based on a predicate. The list is filtered in place, with
@@ -122,7 +123,7 @@ fdom.util.handleEvents = function(obj) {
    * @param {Function} predicate The method to run on each item.
    * @returns {Array} Selected items
    */
-  var filter = function(list, predicate) {
+  filter = function(list, predicate) {
     var ret = [], i;
 
     if (!list || !list.length) {
@@ -138,20 +139,29 @@ fdom.util.handleEvents = function(obj) {
   };
 
   /**
+   * Enqueue a handler for a specific type.
+   * @method
+   * @param {String} to The queue ('single' or 'multiple') to queue on.
+   * @param {String} type The type of event to wait for.
+   * @param {Function} handler The handler to enqueue.
+   */
+  push = function(to, type, handler) {
+    if (typeof type === 'function') {
+      this['maybe' + to].push([type, handler]);
+    } else if (this[to][type]) {
+      this[to][type].push(handler);
+    } else {
+      this[to][type] = [handler];
+    }
+  };
+
+  /**
    * Register a method to be executed when an event of a specific type occurs.
    * @method on
    * @param {String|Function} type The type of event to register against.
    * @param {Function} handler The handler to run when the event occurs.
    */
-  obj['on'] = function(type, handler) {
-    if (typeof type === 'function') {
-      this.conditional.push([type, handler]);
-    } else if (this.listeners[type]) {
-      this.listeners[type].push(handler);
-    } else {
-      this.listeners[type] = [handler];
-    }
-  }.bind(eventState);
+  obj.on = push.bind(eventState, 'multiple');
 
   /**
    * Register a method to be execute the next time an event occurs.
@@ -160,15 +170,7 @@ fdom.util.handleEvents = function(obj) {
    * @param {Function} handler The handler to run the next time a matching event
    *     is raised.
    */
-  obj['once'] = function(type, handler) {
-    if (typeof type === 'function') {
-      this.onceConditional.push([type, handler]);
-    } else if (this.oneshots[type]) {
-      this.oneshots[type].push(handler);
-    } else {
-      this.oneshots[type] = [handler];
-    }
-  }.bind(eventState);
+  obj.once = push.bind(eventState, 'single');
 
   /**
    * Emit an event on this object.
@@ -176,30 +178,30 @@ fdom.util.handleEvents = function(obj) {
    * @param {String} type The type of event to raise.
    * @param {Object} data The payload of the event.
    */
-  obj['emit'] = function(type, data) {
+  obj.emit = function(type, data) {
     var i, queue;
-    if (this.listeners[type]) {
-      for (i = 0; i < this.listeners[type].length; i += 1) {
-        if (this.listeners[type][i](data) === false) {
+    if (this.multiple[type]) {
+      for (i = 0; i < this.multiple[type].length; i += 1) {
+        if (this.multiple[type][i](data) === false) {
           return;
         }
       }
     }
-    if (this.oneshots[type]) {
-      queue = this.oneshots[type];
-      this.oneshots[type] = [];
+    if (this.single[type]) {
+      queue = this.single[type];
+      this.single[type] = [];
       for (i = 0; i < queue.length; i += 1) {
         queue[i](data);
       }
     }
-    for (i = 0; i < this.conditional.length; i += 1) {
-      if (this.conditional[i][0](type, data)) {
-        this.conditional[i][1](data);
+    for (i = 0; i < this.maybemultiple.length; i += 1) {
+      if (this.maybemultiple[i][0](type, data)) {
+        this.maybemultiple[i][1](data);
       }
     }
-    for (i = this.onceConditional.length - 1; i >= 0; i -= 1) {
-      if (this.onceConditional[i][0](type, data)) {
-        queue = this.onceConditional.splice(i, 1);
+    for (i = this.maybesingle.length - 1; i >= 0; i -= 1) {
+      if (this.maybesingle[i][0](type, data)) {
+        queue = this.maybesingle.splice(i, 1);
         queue[0][1](data);
       }
     }
@@ -211,33 +213,32 @@ fdom.util.handleEvents = function(obj) {
    * @param {String} type The type of event to remove.
    * @param {Function?} handler The handler to remove.
    */
-  obj['off'] = function(type, handler) {
-    var i;
+  obj.off = function(type, handler) {
     if (!type) {
-      this.listeners = {};
-      this.conditional = [];
-      this.oneshots = {};
-      this.onceConditional = [];
+      this.multiple = {};
+      this.maybemultiple = [];
+      this.single = {};
+      this.maybesingle = [];
       return;
     }
 
     if (typeof type === 'function') {
-      filter(this.onceConditional, function(item) {
+      filter(this.maybesingle, function(item) {
         return item[0] === type && (!handler || item[1] === handler);
       });
-      filter(this.conditional, function(item) {
+      filter(this.maybemultiple, function(item) {
         return item[0] === type && (!handler || item[1] === handler);
       });
     }
 
     if (!handler) {
-      delete this.listeners[type];
-      delete this.oneshots[type];
+      delete this.multiple[type];
+      delete this.single[type];
     } else {
-      filter(this.listeners[type], function(item) {
+      filter(this.multiple[type], function(item) {
         return item === handler;
       });
-      filter(this.oneshots[type], function(item) {
+      filter(this.single[type], function(item) {
         return item === handler;
       });
     }
@@ -323,7 +324,7 @@ fdom.util.advertise = function(force) {
   if (typeof location !== 'undefined') {
     if ((location.protocol === 'chrome-extension:' ||
         location.protocol === 'chrome:' ||
-        location.protocol == 'resource:' || force) &&
+        location.protocol === 'resource:' || force) &&
         typeof freedomcfg !== "undefined") {
       freedomcfg(fdom.apis.register.bind(fdom.apis));
     }
