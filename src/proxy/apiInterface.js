@@ -110,9 +110,13 @@ fdom.proxy.conform = function(template, value) {
   case 'buffer':
     if (value instanceof ArrayBuffer) {  
       return value;
+    } else if (value.constructor.name === "ArrayBuffer" &&
+        typeof value.prototype === "undefined") {
+      // Workaround for webkit origin ownership issue.
+      // https://github.com/UWNetworksLab/freedom/issues/28
+      return new DataView(value).buffer;
     } else {
       fdom.debug.warn('conform expecting ArrayBuffer, sees ' + (typeof value));
-      //TODO(ryscheng): bug in Chrome where passing Array Buffers over iframes loses this
       return new ArrayBuffer(0);
     }
   case 'data':
