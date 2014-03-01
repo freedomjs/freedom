@@ -7,17 +7,13 @@ fdom.link = fdom.link || {};
 
 /**
  * A port providing message transport between two freedom contexts via iFrames.
- * @class Link.Frame
- * @extends Port
+ * @class link.Frame
+ * @extends Link
  * @uses handleEvents
  * @constructor
  */
 fdom.link.Frame = function() {
-  this.id = 'Frame ' + Math.random();
-  this.config = {};
-  this.src = null;
-
-  fdom.util.handleEvents(this);
+  fdom.Link.call(this);
 };
 
 /**
@@ -50,7 +46,7 @@ fdom.link.Frame.prototype.stop = function() {
  * @return {String} the description of this port.
  */
 fdom.link.Frame.prototype.toString = function() {
-  return "[" + this.id + "]";
+  return "[Frame" + this.id + "]";
 };
 
 /**
@@ -71,19 +67,6 @@ fdom.link.Frame.prototype.setupListener = function() {
     delete this.obj;
   };
   this.emit('started');
-};
-
-/**
- * Emit messages to the the hub, mapping control channels.
- * @method emitMessage
- * @param {String} flow the flow to emit the message on.
- * @param {Object} messgae The message to emit.
- */
-fdom.link.Frame.prototype.emitMessage = function(flow, message) {
-  if (flow === 'control' && this.controlChannel) {
-    flow = this.controlChannel;
-  }
-  this.emit(flow, message);
 };
 
 /**
@@ -152,28 +135,20 @@ fdom.link.Frame.prototype.makeFrame = function(src, inject) {
 /**
  * Receive messages from the hub to this port.
  * Received messages will be emitted from the other side of the port.
- * @method onMessage
+ * @method deliverMessage
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Frame.prototype.onMessage = function(flow, message) {
-  if (flow === 'control' && !this.controlChannel) {
-    if (!this.controlChannel && message.channel) {
-      this.controlChannel = message.channel;
-      fdom.util.mixin(this.config, message.config);
-      this.start();
-    }
+fdom.link.Frame.prototype.deliverMessage = function(flow, message) {
+  if (this.obj) {
+    //fdom.debug.log('message sent to worker: ', flow, message);
+    this.obj.postMessage({
+      src: this.src,
+      flow: flow,
+      message: message
+    }, '*');
   } else {
-    if (this.obj) {
-      //fdom.debug.log('message sent to worker: ', flow, message);
-      this.obj.postMessage({
-        src: this.src,
-        flow: flow,
-        message: message
-      }, '*');
-    } else {
-      this.once('started', this.onMessage.bind(this, flow, message));
-    }
+    this.once('started', this.onMessage.bind(this, flow, message));
   }
 };
 

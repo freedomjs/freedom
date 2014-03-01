@@ -13,10 +13,7 @@ fdom.link = fdom.link || {};
  * @constructor
  */
 fdom.link.Worker = function() {
-  this.id = 'Worker ' + Math.random();
-  this.config = {};
-
-  fdom.util.handleEvents(this);
+  fdom.Link.call(this);
 };
 
 /**
@@ -47,7 +44,7 @@ fdom.link.Worker.prototype.stop = function() {
  * @return {String} the description of this port.
  */
 fdom.link.Worker.prototype.toString = function() {
-  return "[" + this.id + "]";
+  return "[Worker" + this.id + "]";
 };
 
 /**
@@ -66,19 +63,6 @@ fdom.link.Worker.prototype.setupListener = function() {
     delete this.obj;
   };
   this.emit('started');
-};
-
-/**
- * Emit messages to the the hub, mapping control channels.
- * @method emitMessage
- * @param {String} flow the flow to emit the message on.
- * @param {Object} messgae The message to emit.
- */
-fdom.link.Worker.prototype.emitMessage = function(flow, message) {
-  if (flow === 'control' && this.controlChannel) {
-    flow = this.controlChannel;
-  }
-  this.emit(flow, message);
 };
 
 /**
@@ -114,18 +98,12 @@ fdom.link.Worker.prototype.setupWorker = function() {
 /**
  * Receive messages from the hub to this port.
  * Received messages will be emitted from the other side of the port.
- * @method onMessage
+ * @method deliverMessage
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Worker.prototype.onMessage = function(flow, message) {
-  if (flow === 'control' && !this.controlChannel) {
-    if (!this.controlChannel && message.channel) {
-      this.controlChannel = message.channel;
-      fdom.util.mixin(this.config, message.config);
-      this.start();
-    }
-  } else if (flow === 'control' && message.type === 'close' &&
+fdom.link.Worker.prototype.deliverMessage = function(flow, message) {
+  if (flow === 'control' && message.type === 'close' &&
       message.channel === 'control') {
     this.stop();
   } else {

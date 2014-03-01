@@ -16,11 +16,7 @@ fdom.link = fdom.link || {};
  * @constructor
  */
 fdom.link.Direct = function() {
-  this.id = 'Link.Direct ' + Math.random();
-  this.config = {};
-  this.src = null;
-
-  fdom.util.handleEvents(this);
+  fdom.Link.call(this);
 };
 
 /**
@@ -65,39 +61,31 @@ fdom.link.Direct.prototype.stop = function() {
  * @return {String} the description of this port.
  */
 fdom.link.Direct.prototype.toString = function() {
-  return "[" + this.id + "]";
+  return "[Direct" + this.id + "]";
 };
 
 /**
  * Receive messages from the hub to this port.
  * Received messages will be emitted from the other side of the port.
- * @method onMessage
+ * @method deliverMessage
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Direct.prototype.onMessage = function(flow, message) {
-  if (flow === 'control' && !this.controlChannel) {
-    if (!this.controlChannel && message.channel) {
-      this.controlChannel = message.channel;
-      fdom.util.mixin(this.config, message.config);
-      this.start();
-    }
-  } else {
-    if (this.other) {
-      /* //- For Debugging Purposes -
-      if (this === this.config.global.directLink) {
-        console.warn('->[' + flow + '] ' + JSON.stringify(message));
-      } else {
-        console.warn('<-[' + flow + '] ' + JSON.stringify(message));
-      }
-      */
-      if (flow === 'control') {
-        flow = this.other.controlChannel;
-      }
-      setTimeout(this.other.emit.bind(this.other, flow, message), 0);
+fdom.link.Direct.prototype.deliverMessage = function(flow, message) {
+  if (this.other) {
+    /* //- For Debugging Purposes -
+    if (this === this.config.global.directLink) {
+      console.warn('->[' + flow + '] ' + JSON.stringify(message));
     } else {
-      this.once('started', this.onMessage.bind(this, flow, message));
+      console.warn('<-[' + flow + '] ' + JSON.stringify(message));
     }
+    */
+    if (flow === 'control') {
+      flow = this.other.controlChannel;
+    }
+    setTimeout(this.other.emit.bind(this.other, flow, message), 0);
+  } else {
+    this.once('started', this.onMessage.bind(this, flow, message));
   }
 };
 

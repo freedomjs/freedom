@@ -293,18 +293,23 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
 
   delete this.reverseFlowMap[name];
   delete this.reverseFlowMap[rflow];
-  if (this.dataFlows[reverse.id]) {
-    for (i = 0; i < this.dataFlows[reverse.id].length; i += 1) {
-      if (this.dataFlows[reverse.id][i] === rflow) {
-        this.dataFlows[reverse.id].splice(i, 1);
-        break;
-      }
-    }
-  }
-  if (this.dataFlows[port.id]) {
-    for (i = 0; i < this.dataFlows[port.id].length; i += 1) {
-      if (this.dataFlows[port.id][i] === name) {
-        this.dataFlows[port.id].splice(i, 1);
+  this.forgetFlow(reverse.id, rflow);
+  this.forgetFlow(port.id, name);
+};
+
+/**
+ * Forget the flow from id with a given name.
+ * @method forgetFlow
+ * @private
+ * @param {String} id The port ID of the source.
+ * @param {String} name The flow name.
+ */
+fdom.port.Manager.prototype.forgetFlow = function(id, name) {
+  var i;
+  if (this.dataFlows[id]) {
+    for (i = 0; i < this.dataFlows[id].length; i += 1) {
+      if (this.dataFlows[id][i] === name) {
+        this.dataFlows[id].splice(i, 1);
         break;
       }
     }
