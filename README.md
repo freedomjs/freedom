@@ -15,10 +15,14 @@ Use freedom.js
 
 If you want to drop freedom.js into your website, grab the copy [here](https://homes.cs.washington.edu/~wrs/freedom.js).
 
+If you want to use freedom.js in a privileged extension, look at our packages for [chrome](https://github.com/freedomjs/freedom-runtime-chrome) and firefox (soon).
+
+If you want to use freedom.js in a node.js application, look at our [node runtime](https://github.com/freedomjs/freedom-runtime-node).
+
 If you want to include freedom.js in your build process, run ```npm install freedom```.
 
 More documentation for building freedom.js, and including it in your project is
-on the github [wiki](https://github.com/UWNetworksLab/freedom/wiki).
+on our github [wiki](https://github.com/UWNetworksLab/freedom/wiki).
 
 See freedom.js
 -------
