@@ -49,7 +49,7 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
 
     var objects = this.mapProxies(message.manifest);
 
-    this.once('start', this.loadScripts.bind(this, message.id, 
+    this.once('start', this.loadScripts.bind(this, message.id,
         message.manifest.app.script));
     this.loadLinks(objects);
   } else if (flow === 'default' && this.requests[message.id]) {

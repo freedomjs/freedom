@@ -13,7 +13,7 @@
     "regexp"        : true,
     "undef"         : true,
     "strict"        : true,
-    "trailing"      : false,
+    "trailing"      : true,
     
     "asi"           : false,
     "boss"          : false,

@@ -90,7 +90,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     if (message.exposeManager) {
       message.args = this;
     }
-    this.createLink(origin, message.name, 
+    this.createLink(origin, message.name,
         new fdom.port[message.service](message.args));
   } else if (message.request === 'bindport') {
     this.createLink({id: message.id},
@@ -206,7 +206,7 @@ fdom.port.Manager.prototype.destroy = function(port) {
 fdom.port.Manager.prototype.createLink = function(port, name, destination, destName, toDest) {
   if (!this.config.global) {
     this.once('config', this.createLink.bind(this, port, name, destination, destName));
-    return; 
+    return;
   }
   
   if (!this.controlFlows[port.id]) {

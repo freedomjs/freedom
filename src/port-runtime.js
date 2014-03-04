@@ -42,7 +42,7 @@ fdom.port.Runtime.status = {
  * @returns {String} The description of this port.
  */
 fdom.port.Runtime.prototype.toString = function() {
-  return "[Port to Priviledged Runtime]"; 
+  return "[Port to Priviledged Runtime]";
 };
 
 

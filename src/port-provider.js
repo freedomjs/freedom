@@ -162,7 +162,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
           });
           return true;
         }
-      }.bind(this));      
+      }.bind(this));
     } else {
       // Close the channel.
       this.close();

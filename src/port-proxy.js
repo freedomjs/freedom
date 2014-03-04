@@ -109,7 +109,7 @@ fdom.port.Proxy.prototype.getProxyInterface = function() {
           });
           return true;
         }
-      }.bind(this));      
+      }.bind(this));
     } else {
       // Close the channel.
       this.doClose();
@@ -167,7 +167,7 @@ fdom.port.Proxy.prototype.getInterfaceConstructor = function() {
   return this.interfaceCls.bind({}, function(id, obj, binder) {
     this.ifaces[id] = obj;
     this.emits[id] = binder;
-  }.bind(this, id), this.doEmit.bind(this, id));  
+  }.bind(this, id), this.doEmit.bind(this, id));
 };
 
 /**

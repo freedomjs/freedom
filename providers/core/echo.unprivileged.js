@@ -67,7 +67,7 @@ Echo_unprivileged.prototype.send = function(str, continuation) {
   if (this.chan) {
     this.chan.emit('message', str);
   } else {
-    this.dispatchEvent('message', 'no channel available');    
+    this.dispatchEvent('message', 'no channel available');
   }
 };
 

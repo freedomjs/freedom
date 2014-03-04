@@ -75,7 +75,7 @@ fdom.link.Frame.prototype.setupListener = function() {
  */
 fdom.link.Frame.prototype.setupFrame = function() {
   var frame, onMsg;
-  frame = this.makeFrame(this.config.src, this.config.inject);  
+  frame = this.makeFrame(this.config.src, this.config.inject);
   
   if (!document.body) {
     document.appendChild(document.createElement("body"));

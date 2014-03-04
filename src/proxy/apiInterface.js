@@ -1,4 +1,4 @@
-/*globals fdom:true, Blob, ArrayBuffer, Promise */
+/*globals fdom:true, Blob, ArrayBuffer, DataView, Promise */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -108,7 +108,7 @@ fdom.proxy.conform = function(template, value) {
       return new Blob([]);
     }
   case 'buffer':
-    if (value instanceof ArrayBuffer) {  
+    if (value instanceof ArrayBuffer) {
       return value;
     } else if (value.constructor.name === "ArrayBuffer" &&
         typeof value.prototype === "undefined") {
