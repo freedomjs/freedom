@@ -1,4 +1,4 @@
-/*globals fdom:true */
+/*globals fdom:true, console */
 /*jslint indent:2,white:true,sloppy:true */
 
 /**
@@ -7,19 +7,19 @@
  * channel implementation.
  * @Class Echo_unprivileged
  * @constructor
- * @param {App} app The application creating this provider.
+ * @param {Module} mod The module creating this provider.
  */
-var Echo_unprivileged = function(app, dispatchEvent) {
+var Echo_unprivileged = function(mod, dispatchEvent) {
   fdom.debug.log('Echo Created!');
-  this.app = app;
+  this.mod = mod;
   this.dispatchEvent = dispatchEvent;
   fdom.util.handleEvents(this);
 
   // The Core object for managing channels.
-  this.app.once('core', function(Core) {
+  this.mod.once('core', function(Core) {
     this.core = new Core();
   }.bind(this));
-  this.app.emit(this.app.controlChannel, {
+  this.mod.emit(this.mod.controlChannel, {
     type: 'core request delegated to echo',
     request: 'core'
   });

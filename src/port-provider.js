@@ -70,7 +70,8 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       this.providerInstances[message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
-      this.providerInstances[message.to] = this.getProvider(message.to);
+      this.providerInstances[message.to] =
+        this.getProvider(message.to, message.message.args);
     } else {
       fdom.debug.warn(this.toString() + ' dropping message ' +
           JSON.stringify(message));
@@ -195,9 +196,10 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
  * Get a new instance of the registered provider.
  * @method getProvider
  * @param {String} identifier the messagable address for this provider.
+ * @param {Array} args Constructor arguments for the provider.
  * @return {Function} A function to send messages to the provider.
  */
-fdom.port.Provider.prototype.getProvider = function(identifier) {
+fdom.port.Provider.prototype.getProvider = function(identifier, args) {
   if (!this.providerCls) {
     fdom.debug.warn('Cannot instantiate provider, since it is not provided');
     return null;
@@ -227,7 +229,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier) {
     }
   }.bind(this, events, identifier);
 
-  instance = new this.providerCls(dispatchEvent);
+  instance = new this.providerCls(dispatchEvent, args || []);
 
   return function(port, msg) {
     if (msg.action === 'method') {

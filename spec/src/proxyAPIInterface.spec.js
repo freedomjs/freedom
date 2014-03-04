@@ -18,8 +18,9 @@ describe("fdom.proxy.APIInterface", function() {
     expect(typeof(api.on)).toEqual('function');
     expect(api.co).toEqual('12');
 
-    expect(emit).not.toHaveBeenCalledWith({
-      'action': 'construct'
+    expect(emit).toHaveBeenCalledWith({
+      'type': 'construct',
+      'args': undefined
     });
     var promise = api.test('hi');
     expect(emit).toHaveBeenCalledWith({
@@ -41,6 +42,26 @@ describe("fdom.proxy.APIInterface", function() {
       expect(spy).toHaveBeenCalledWith('boo!');
       done();
     }, 0);
+  });
+
+  it("Delivers constructor arguments.", function(done) {
+    var iface = {
+      'constructor': {value: ['string']}
+    },
+      onMsg = function(obj, r) {
+        reg = r;
+      },
+      apimaker = fdom.proxy.ApiInterface.bind({}, iface, onMsg, emit);
+    var api = new apimaker('my param');
+
+    setTimeout(function() {
+      expect(emit).toHaveBeenCalledWith({
+        'type': 'construct',
+        'args': ['my param']
+      });
+      done();
+    }, 0);
+
   });
 
   it("Rejects methods on failure.", function(done) {

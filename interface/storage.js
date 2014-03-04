@@ -7,6 +7,30 @@
  * Exposes a key-value get/put interface
  **/
 fdom.apis.set("storage", {
+  /** 
+   * List of scopes that can preferred when accessing storage.
+  **/
+  'scope': {type: 'constant', value: {
+    // Storage should only last while the app is active.
+    'SESSION': 0,
+    // Storage should be limited to host the app is bound to.
+    'DEVICE_LOCAL': 1,
+    // Storage should be synchronized between user devices.
+    'USER_LOCAL': 2,
+    // Storage should be synchronized across users.
+    'SHARED': 3
+  }},
+
+  /**
+   * Create a storage provider.
+   * @param {Object} options
+   *    scope {storage.scope} The preferred storage scope.
+   * @constructor
+   */
+  'constructor': { value: [{
+    'scope': 'number'
+  }]},
+
   /**
    * Fetch an array of all keys
    * e.g. storage.keys() => [string]

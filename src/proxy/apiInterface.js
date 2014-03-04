@@ -9,7 +9,8 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
   var inflight = {},
       events = null,
       emitter = null,
-      reqId = 0;
+      reqId = 0,
+      args = arguments;
 
   fdom.util.eachProp(def, function(prop, name) {
     switch(prop.type) {
@@ -77,8 +78,12 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
     }
   }.bind(this));
 
+  args = fdom.proxy.conform(def.constructor ? def.constructor.value : [],
+                            Array.prototype.slice.call(args, 3));
+  
   emit({
-    'type': 'construct'
+    'type': 'construct',
+    'args': args
   });
 };
 
