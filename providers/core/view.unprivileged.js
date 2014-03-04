@@ -1,3 +1,5 @@
+/*globals fdom, document */
+/*jslint indent:2,sloppy:true */
 /**
  * A FreeDOM view is provided as a core service for displaying some UI.
  * Implementation is currently designed as a sandboxed iFrame that the
@@ -8,7 +10,7 @@
  * @private
  * @param {App} app The application creating this provider.
  */
-var View_unprivileged = function(app, dispatchEvent) {
+var View_unprivileged = function (app, dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
   this.host = null;
   this.win = null;
@@ -24,38 +26,40 @@ var View_unprivileged = function(app, dispatchEvent) {
  * @param {Object} what What UI to load.
  * @param {Function} continuation Function to call when view is loaded.
  */
-View_unprivileged.prototype.open = function(name, what, continuation) {
+View_unprivileged.prototype.open = function (name, what, continuation) {
   this.host = document.createElement("div");
   this.host.style.width = "100%";
   this.host.style.height = "100%";
   this.host.style.display = "relative";
 
-  var container = document.body;
-  var config = this.app.config.views;
+  var container = document.body,
+    config = this.app.config.views,
+    root,
+    frame;
   if (config && config[name] && document.getElementById(name)) {
     container = document.getElementById(name);
   }
 
   container.appendChild(this.host);
-  var root = this.host;
+  root = this.host;
   // TODO(willscott): Support shadow root as available.
   // if (this.host['webkitCreateShadowRoot']) {
   //   root = this.host['webkitCreateShadowRoot']();
   // }
-  var frame = document.createElement("iframe");
+  frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts allow-forms");
-  if (what['file']) {
-    fdom.resources.get(this.app.manifestId, what['file']).then(function(fname) {
+  if (what.file) {
+    fdom.resources.get(this.app.manifestId, what.file).then(function (fname) {
       this.finishOpen(root, frame, fname, continuation);
     }.bind(this));
-  } else if (what['code']) {
-    this.finishOpen(root, frame, "data:text/html;charset=utf-8," + what['code'], continuation);
+  } else if (what.code) {
+    this.finishOpen(root, frame, "data:text/html;charset=utf-8," + what.code, continuation);
   } else {
     continuation(false);
   }
 };
 
-View_unprivileged.prototype.finishOpen = function(root, frame, src, continuation) {
+View_unprivileged.prototype.finishOpen = function (root, frame, src, continuation) {
   frame.src = src;
   frame.style.width = "100%";
   frame.style.height = "100%";
@@ -69,29 +73,29 @@ View_unprivileged.prototype.finishOpen = function(root, frame, src, continuation
   continuation({});
 };
 
-View_unprivileged.prototype.show = function(continuation) {
+View_unprivileged.prototype.show = function (continuation) {
   continuation();
 };
 
-View_unprivileged.prototype.postMessage = function(args, continuation) {
+View_unprivileged.prototype.postMessage = function (args, continuation) {
   this.win.contentWindow.postMessage(args, '*');
   continuation();
 };
 
-View_unprivileged.prototype.close = function(continuation) {
+View_unprivileged.prototype.close = function (continuation) {
   if (this.host) {
     this.host.parentNode.removeChild(this.host);
     this.host = null;
   }
   if (this.win) {
-    removeEventListener('message', this.onMessage.bind(this), true);
+    this.app.config.global.removeEventListener('message', this.onMessage.bind(this), true);
     this.win = null;
   }
   continuation();
 };
 
-View_unprivileged.prototype.onMessage = function(m) {
-  if (m.source == this.win.contentWindow) {
+View_unprivileged.prototype.onMessage = function (m) {
+  if (m.source === this.win.contentWindow) {
     this.dispatchEvent('message', m.data);
   }
 };

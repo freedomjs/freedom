@@ -1,3 +1,5 @@
+/*globals fdom, localStorage */
+/*jslint indent:2,sloppy:true */
 /**
  * A FreeDOM core.storage provider that depends on localStorage
  * Thus, this only works in the context of a webpage and has
@@ -9,7 +11,7 @@
  * @private
  * @param {App} app The application creating this provider.
  */
-var Storage_unprivileged = function(app, dispatchEvent) {
+var Storage_unprivileged = function (app, dispatchEvent) {
   this.app = app;
   fdom.util.handleEvents(this);
 };
@@ -18,9 +20,10 @@ var Storage_unprivileged = function(app, dispatchEvent) {
  * Lists keys in the storage repository
  * @method keys
  */
-Storage_unprivileged.prototype.keys = function(continuation) {
-  var result = [];
-  for (var i = 0; i < localStorage.length; i++) {
+Storage_unprivileged.prototype.keys = function (continuation) {
+  var result = [],
+    i;
+  for (i = 0; i < localStorage.length; i += 1) {
     result.push(localStorage.key(i));
   }
   continuation(result);
@@ -31,11 +34,11 @@ Storage_unprivileged.prototype.keys = function(continuation) {
  * @param {String} key The item to get from storage.
  * @method get
  */
-Storage_unprivileged.prototype.get = function(key, continuation) {
+Storage_unprivileged.prototype.get = function (key, continuation) {
   try {
     var val = localStorage.getItem(key);
     continuation(val);
-  } catch(e) {
+  } catch (e) {
     continuation(null);
   }
 };
@@ -46,7 +49,7 @@ Storage_unprivileged.prototype.get = function(key, continuation) {
  * @param {String} value The value to save in storage.
  * @method set
  */
-Storage_unprivileged.prototype.set = function(key, value, continuation) {
+Storage_unprivileged.prototype.set = function (key, value, continuation) {
   localStorage.setItem(key, value);
   continuation();
 };
@@ -56,7 +59,7 @@ Storage_unprivileged.prototype.set = function(key, value, continuation) {
  * @param {String} key The item to remove from storage;
  * @method remove
  */
-Storage_unprivileged.prototype.remove = function(key, continuation) {
+Storage_unprivileged.prototype.remove = function (key, continuation) {
   localStorage.removeItem(key);
   continuation();
 };
@@ -65,7 +68,7 @@ Storage_unprivileged.prototype.remove = function(key, continuation) {
  * Reset the contents of the storage repository.
  * @method clear
  */
-Storage_unprivileged.prototype.clear = function(continuation) {
+Storage_unprivileged.prototype.clear = function (continuation) {
   localStorage.clear();
   continuation();
 };

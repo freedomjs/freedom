@@ -1,3 +1,6 @@
+/*globals fdom:true */
+/*jslint indent:2,sloppy:true */
+
 fdom.apis.set("core", {
   'createChannel': {type: "method", value: []},
   'bindChannel': {type: "method", value: ["proxy"]},
@@ -6,8 +9,8 @@ fdom.apis.set("core", {
 
 fdom.apis.set("core.view", {
   'open': {type: "method", value: ["string", {
-    'file':"string",
-    'code':"string"
+    'file': "string",
+    'code': "string"
   }]},
   'show': {type: "method", value: []},
   'close': {type: "method", value: []},
@@ -35,9 +38,12 @@ fdom.apis.set("core.socket", {
   'listen': {type: "method", value: ["number", "string", "number"]},
   'onConnection': {type: "event", value: {
     'serverSocketId': "number",
-    'clientSocketId': "number"}},
+    'clientSocketId': "number"
+  }},
   'onDisconnect': {type: "event", value: {
-    "socketId": "number", "error": "string"}},
+    "socketId": "number",
+    "error": "string"
+  }},
   'getInfo': {type: "method", value: ["number"]}
 });
 
@@ -50,19 +56,22 @@ fdom.apis.set('core.udpsocket', {
   // messages, dispatching each message as on onData event.
   // Returns an integer, with zero meaning success and any other value
   // being implementation-dependant.
-  'bind': {type: 'method',
+  'bind': {
+    type: 'method',
     value: [
       // Interface (address) on which to bind.
       'string',
       // Port on which to bind.
       'number'
-    ]},
+    ]
+  },
 
   // Sends data to a server.
   // The socket must be bound.
   // Returns an integer indicating the number of bytes written, with no
   // guarantee that the remote side received the data.
-  'sendTo': {type: 'method',
+  'sendTo': {
+    type: 'method',
     value: [
       // Data to send.
       'buffer',
@@ -70,7 +79,8 @@ fdom.apis.set('core.udpsocket', {
       'string',
       // Destination port.
       'number'
-    ]},
+    ]
+  },
 
   // Releases all resources associated with this socket.
   // No-op if the socket is not bound.
@@ -78,7 +88,8 @@ fdom.apis.set('core.udpsocket', {
 
   // Called once for each message received on this socket, once it's
   // been successfully bound.
-  'onData': {type: 'event',
+  'onData': {
+    type: 'event',
     value: {
       // Zero means success, any other value is implementation-dependent.
       'resultCode': 'number',
@@ -107,7 +118,8 @@ fdom.apis.set('core.echo', {
 
 fdom.apis.set('core.peerconnection', {
   // Setup the link to the peer and options for this peer connection.
-  'setup': {type: "method",
+  'setup': {
+    type: "method",
     value: [
       // The 'proxy' object is a freedom channel identifier used to send/receive
       // text messages to/from a signalling chanel.
@@ -118,7 +130,7 @@ fdom.apis.set('core.peerconnection', {
       // The format of a single entry is stun:HOST:PORT, where HOST
       // and PORT are a stun server hostname and port, respectively.
       ["array", "string"]
-      ]
+    ]
   },
 
   // Send a message to the peer.
@@ -160,6 +172,6 @@ fdom.apis.set('core.peerconnection', {
   // Close the peer connection.
   'close': {type: "method", value: []},
   // The peer connection has been closed.
-  'onClose': {type: "event", value: {}},
+  'onClose': {type: "event", value: {}}
 });
 

@@ -106,7 +106,12 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
-      beforeconcat: FILES.src,
+      beforeconcat: {
+        files: { src: FILES.src },
+        options: {
+          jshintrc: true
+        }
+      },
       afterconcat: ['freedom.js'],
       providers: FILES.srcprovider,
       demo: ['demo/**/*.js'],

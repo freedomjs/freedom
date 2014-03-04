@@ -1,7 +1,9 @@
+/*globals fdom:true, Promise, document, location */
+/*jslint indent:2,sloppy:true */
+
 /**
  * @module freedom
  */
- 
 if (typeof fdom === 'undefined') {
   fdom = {};
 }
@@ -21,19 +23,21 @@ fdom.setup = function (global, freedom_src, config) {
   fdom.debug = new fdom.port.Debug();
 
   var hub = new fdom.Hub(),
-      site_cfg = {
-        'debug': true,
-        'stayLocal': false,
-        'portType': 'Worker',
-        'appContext': (!config || typeof(config.isApp) === "undefined") ? fdom.util.isAppContext() : config.isApp
-      },
-      manager = new fdom.port.Manager(hub),
-      external = new fdom.port.Proxy(fdom.proxy.EventInterface),
-      setupApp = function(app) {
-        manager.setup(app);
-        manager.createLink(external, 'default', app);
-      },
-      link;
+    site_cfg = {
+      'debug': true,
+      'stayLocal': false,
+      'portType': 'Worker',
+      'appContext': (!config || typeof (config.isApp) === "undefined") ?
+          fdom.util.isAppContext() :
+          config.isApp
+    },
+    manager = new fdom.port.Manager(hub),
+    external = new fdom.port.Proxy(fdom.proxy.EventInterface),
+    setupApp = function (app) {
+      manager.setup(app);
+      manager.createLink(external, 'default', app);
+    },
+    link;
 
   manager.setup(external);
 
@@ -54,8 +58,8 @@ fdom.setup = function (global, freedom_src, config) {
     // Configure against data-manifest.
     if (typeof document !== 'undefined') {
       fdom.util.eachReverse(fdom.util.scripts(global), function (script) {
-        var manifest = script.getAttribute('data-manifest');
-        var source = script.src;
+        var manifest = script.getAttribute('data-manifest'),
+          source = script.src;
         if (manifest) {
           site_cfg.source = source;
           site_cfg.manifest = manifest;
@@ -74,12 +78,12 @@ fdom.setup = function (global, freedom_src, config) {
     site_cfg.global = global;
     site_cfg.src = freedom_src;
     site_cfg.resources = fdom.resources;
-    if(config) {
+    if (config) {
       fdom.util.mixin(site_cfg, config, true);
     }
 
     //Try to talk to local FreeDOM Manager
-    if (!site_cfg['stayLocal']) {
+    if (!site_cfg.stayLocal) {
       link = new fdom.port.Runtime();
       manager.setup(link);
     }
@@ -89,7 +93,7 @@ fdom.setup = function (global, freedom_src, config) {
     } else if (site_cfg.location) {
       link = site_cfg.location;
     }
-    fdom.resources.get(link, site_cfg.manifest).then(function(url) {
+    fdom.resources.get(link, site_cfg.manifest).then(function (url) {
       setupApp(new fdom.port.Module(url, []));
     });
   }

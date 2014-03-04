@@ -1,3 +1,5 @@
+/*globals fdom:true */
+/*jslint indent:2,sloppy:true */
 /**
  * SOCIAL API
  *

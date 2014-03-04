@@ -1,3 +1,5 @@
+/*globals fdom:true */
+/*jslint indent:2,sloppy:true */
 /**
  * STORAGE API
  *
@@ -11,7 +13,7 @@ fdom.apis.set("storage", {
    *
    * @method keys
    * @return an array with all keys in the store 
-   **/ 
+   **/
   'keys': {type: "method", value: []},
 
   /**

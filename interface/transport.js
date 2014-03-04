@@ -1,3 +1,5 @@
+/*globals fdom:true */
+/*jslint indent:2,sloppy:true */
 /**
  * TRANSPORT API
  *
@@ -16,7 +18,7 @@ fdom.apis.set("transport", {
    * @param {proxy} channel - signalling channel
    * @return {channel} - a channel which the calling module must use to
    *    forward signalling messages (e.g. through a the Social API)
-   **/ 
+   **/
   'setup': {type: "method", value: ["string", "proxy"]},
 
   /**
