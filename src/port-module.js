@@ -111,7 +111,7 @@ fdom.port.Module.prototype.deregisterFlow = function(flow, internal) {
           to: this.externalPortMap[key]
         });
       } else {
-        this.port.onMessage(flow, {
+        this.port.onMessage('control', {
           type: 'close',
           channel: this.internalPortMap[key]
         });
@@ -291,6 +291,8 @@ fdom.port.Module.prototype.loadManifest = function() {
     }
     this.manifest = resp;
     this.start();
+  }.bind(this), function(err) {
+    fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
   }.bind(this));
 };
 

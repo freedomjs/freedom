@@ -34,7 +34,7 @@ describe("fdom.resources", function() {
     promise = resources.getContents('manifest://{"name":"test"}');
     promise.then(function(data) {response = data;});
     setTimeout(function() {
-      expect(response.name).toEqual("test");
+      expect(JSON.parse(response).name).toEqual("test");
       done();
     }, 0);
   });

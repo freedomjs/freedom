@@ -180,7 +180,8 @@ Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
   var data;
   try {
     data = manifest.substr(11);
-    resolve(JSON.parse(data));
+    JSON.parse(data);
+    resolve(data);
   } catch(e) {
     console.warn("Invalid manifest URL referenced:" + manifest);
     reject();
