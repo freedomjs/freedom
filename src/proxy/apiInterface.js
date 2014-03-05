@@ -146,7 +146,7 @@ fdom.proxy.conform = function(template, value) {
       }
     } else {
       for (i = 0; i < template.length; i += 1) {
-        if (value[i] === null || value[i] === 0 || value[i]) {
+        if (value[i] !== undefined) {
           val.push(fdom.proxy.conform(template[i], value[i]));
         } else {
           val.push(undefined);

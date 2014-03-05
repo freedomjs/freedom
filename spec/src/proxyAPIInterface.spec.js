@@ -180,7 +180,7 @@ describe("fdom.proxy.conform", function() {
       'p6': conformed.p6,
       'p8': undefined,
       'p9': ['1', '[object Object]'],
-      'p10': ['true', undefined],
+      'p10': ['true', 0],
       'p11': {}
     });
   });
