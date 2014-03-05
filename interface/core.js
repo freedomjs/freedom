@@ -66,6 +66,12 @@ fdom.apis.set('core.udpsocket', {
     ]
   },
 
+  // Retrieves the state of the socket.
+  // Returns an object with the following properties:
+  //  - localAddress: the socket's local address, if bound
+  //  - localPort: the socket's local port, if bound
+  'getInfo': {type: 'method', value: []},
+
   // Sends data to a server.
   // The socket must be bound.
   // Returns an integer indicating the number of bytes written, with no
