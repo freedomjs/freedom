@@ -34,25 +34,34 @@
 
 fdom.apis.set('social', {
   /** 
-   * List of error codes that can be returned in 'onStatus'
-   * events. Because 'login' and 'logout' methods turn 'onStatus'
-   * events, those use the same codes
+   * List of error codes that can be returned when a method fails
   **/
-  'RETCODE': {type: 'constant', value: {
-    // Not connected to any social network.
-    // There are no guarantees other methods or events will work until
-    // the user calls 'login'
-    'OFFLINE': 0,
-    // Fetching login credentials or authorization tokens
-    'AUTHENTICATING': 1,
-    // Connecting to the social network
-    'CONNECTING': 2,
-    // Online!
-    'ONLINE': 3,
+  'ERRCODE': {type: 'constant', value: {
+    /** GENERAL **/
+    // Unknown
+    'OFFLINE': 'User is currently offline',
+    'UNKNOWN': 'WTF is going on?',
+
+    /** LOGIN **/
     // Error with authenticating to the server
-    'ERR_AUTHENTICATION': -1,
+    'LOGIN_BADCREDENTIALS': 'Missing or invalid user credentials',
     // Error with connecting to the server
-    'ERR_CONNECTION': -2
+    'LOGIN_FAILEDCONNECTION': 'Error connecting to the login server',
+    // Already logged in
+    'LOGIN_ALREADYONLINE': 'User is already logged in',
+
+    /** CLEARCACHEDCREDENTIALS**/
+    // None at the moment
+    
+    /** GETROSTER **/
+    // See GENERAL
+
+    /** SENDMESSAGE **/
+    'SEND_INVALIDDESTINATION': 'Trying to send a message to an invalid destination',
+
+    /** LOGOUT **/
+    // See GENERAL
+
   }},
   
   /**
@@ -81,7 +90,7 @@ fdom.apis.set('social', {
    *
    * @method login
    * @param {Object} loginOptions - See below
-   * @return {Object} status - Same schema as 'onStatus' events
+   * @return {Object} <state card> - Same schema as 'onUserUpdate' events
    **/
   'login': {type: 'method', value: [{
     'agent': 'string',    //Name of the application
@@ -89,7 +98,6 @@ fdom.apis.set('social', {
     'url': 'string',      //URL of application
     'interactive': 'bool' //If true, always prompt for login. If false, try with cached credentials
     'rememberLogin': 'bool' //Cache the login credentials
-    'userId': 'string'    //Log in a particular user
   }]},
 
   /**
@@ -97,7 +105,7 @@ fdom.apis.set('social', {
    * e.g. social.clearCachedCredentials()
    *
    * @method clearCachedCredentials
-   * @return {}
+   * @return nothing
    **/
   'clearCachedCredentials': {type: 'method', value: []},
 
@@ -112,6 +120,7 @@ fdom.apis.set('social', {
    *    'userId2': <state card>,
    *     ...
    * }
+   *  On failure, rejects with an error code (see above)
    **/
   'getRoster': {type: 'method', value: []},
 
@@ -126,6 +135,7 @@ fdom.apis.set('social', {
    * @param {String} destination_id - target
    * @param {String} message
    * @return nothing
+   *  On failure, rejects with an error code (see above)
    **/
   'sendMessage': {type: 'method', value: ['string', 'string']},
 
@@ -134,7 +144,8 @@ fdom.apis.set('social', {
    * e.g. logout()
    * 
    * @method logout
-   * @return {Object} status - same schema as 'onStatus' events
+   * @return {Object} <state card> - same schema as 'onUserUpdate' events
+   *  On failure, rejects with an error code (see above)
    **/
   'logout': {type: 'method', value: []},
 
