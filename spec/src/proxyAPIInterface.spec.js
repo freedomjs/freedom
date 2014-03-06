@@ -180,7 +180,7 @@ describe("fdom.proxy.conform", function() {
       'p6': conformed.p6,
       'p8': undefined,
       'p9': ['1', '[object Object]'],
-      'p10': ['true', undefined],
+      'p10': ['true', 0],
       'p11': {}
     });
   });
@@ -190,6 +190,8 @@ describe("fdom.proxy.conform", function() {
     expect(fdom.proxy.conform("number", "mystring")).toEqual(jasmine.any(Number));
     expect(fdom.proxy.conform("bool", "mystring")).toEqual(false);
     expect(fdom.proxy.conform("", "mystring")).toEqual(undefined);
+    expect(fdom.proxy.conform(["string", "number"], ["test", 0]))
+      .toEqual(["test", 0]);
     expect(fdom.proxy.conform("number", 0)).toEqual(0);
   });
 
