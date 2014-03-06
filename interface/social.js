@@ -96,7 +96,7 @@ fdom.apis.set('social', {
     'agent': 'string',    //Name of the application
     'version': 'string',  //Version of application
     'url': 'string',      //URL of application
-    'interactive': 'bool' //If true, always prompt for login. If false, try with cached credentials
+    'interactive': 'bool', //If true, always prompt for login. If false, try with cached credentials
     'rememberLogin': 'bool' //Cache the login credentials
   }]},
 
@@ -171,7 +171,7 @@ fdom.apis.set('social', {
   'onRosterUpdate': {type: 'event', value: {
     //REQUIRED
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-    'status': 'number'    // Status of the client. See the 'STATUS' constants
+    'status': 'number',    // Status of the client. See the 'STATUS' constants
     //OPTIONAL
     'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
     'name': 'string',     // Name (e.g. Alice Underpants)
@@ -185,7 +185,7 @@ fdom.apis.set('social', {
    **/
   'onUserUpdate': {type: 'event', value: {
     //REQUIRED
-    'status': 'number'    // Status of the client. See the 'STATUS' constants
+    'status': 'number',   // Status of the client. See the 'STATUS' constants
     //OPTIONAL
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
     'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
