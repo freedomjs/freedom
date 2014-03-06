@@ -256,7 +256,11 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
         args = [args];
       }
       if (port.mode === fdom.port.Provider.mode.synchronous) {
-        ret(this[msg.type].apply(this, args));
+        try {
+          ret(this[msg.type].apply(this, args));
+        } catch(e) {
+          ret(undefined, e.message);
+        }
       } else if (port.mode === fdom.port.Provider.mode.asynchronous) {
         this[msg.type].apply(instance, args.concat(ret));
       } else if (port.mode === fdom.port.Provider.mode.promises) {
