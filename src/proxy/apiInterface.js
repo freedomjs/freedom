@@ -20,7 +20,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
         // in order to prepare for synchronous in-window pipes.
         var thisReq = reqId,
             promise = new Promise(function(resolve, reject) {
-              inflight[thisReq] = [resolve, reject];
+              inflight[thisReq] = {resolve:resolve, reject:reject};
             });
         reqId += 1;
         emit({
@@ -61,26 +61,27 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
     }
     if (msg.type === 'method') {
       if (inflight[msg.reqId]) {
-        var resolve = inflight[msg.reqId];
+        var resolver = inflight[msg.reqId];
         delete inflight[msg.reqId];
         if (msg.error) {
-          resolve[1](msg.error);
+          resolver.reject(msg.error);
         } else {
-          resolve[0](msg.value);
+          resolver.resolve(msg.value);
         }
       } else {
         fdom.debug.warn('Dropped response message with id ' + msg.reqId);
       }
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
-        emitter(msg.name, fdom.proxy.conform(events[msg.name].value, msg.value));
+        emitter(msg.name, fdom.proxy.conform(events[msg.name].value,
+                msg.value));
       }
     }
   }.bind(this));
 
   args = fdom.proxy.conform(def.constructor ? def.constructor.value : [],
                             Array.prototype.slice.call(args, 3));
-  
+
   emit({
     'type': 'construct',
     'args': args
@@ -88,7 +89,8 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
 };
 
 /**
- * Force a collection of values to look like the types and length of an API template.
+ * Force a collection of values to look like the types and length of an API
+ * template.
  */
 fdom.proxy.conform = function(template, value) {
   /* jshint -W086 */
@@ -168,10 +170,10 @@ fdom.proxy.conform = function(template, value) {
 };
 
 /**
- * Recursively traverse a [nested] object and freeze its keys from being writable.
- * Note, the result can have new keys added to it, but existing ones cannot be overwritten.
- * Doesn't do anything for arrays or other collections.
- * 
+ * Recursively traverse a [nested] object and freeze its keys from being
+ * writable. Note, the result can have new keys added to it, but existing ones
+ * cannot be  overwritten. Doesn't do anything for arrays or other collections.
+ *
  * @method recursiveFreezeObject
  * @static
  * @param {Object} obj - object to be frozen
