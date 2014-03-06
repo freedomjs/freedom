@@ -6,11 +6,7 @@
  * API for connecting to social networks and messaging of users.
  * Note that the following properties depend on the specific implementation (provider)
  * behind this API that you choose.
- * Depending on the Social provider, it may also expose multiple networks simultaneously.
- * In this case, you may 'login' to each separately and receive multiple <user cards> for yourself.
- * Note that the network identifier will be exposed in 'onStatus' events.
- * It is highly advised to react to 'onStatus' events, as opposed to hardcoding in network identifiers,
- * as these identifiers are subject to change.
+ * An instance of a social provider encapsulates a single user logging into a single network.
  *
  * Variable properties dependent on choice of provider:
  * - Edges in the social network (who is on your roster)
@@ -21,29 +17,18 @@
  *
  * Invariants across all providers:
  * - The userId for each user does not change between logins
- * - The Social provider should output an 'onStatus' event upon initialization (after constructor)
+ * - The Social provider should output an 'onUserUpdate' event upon initialization (after constructor)
  *   with its current state.
  *
- * Define a <client card>, as the following:
- * - Information related to a specific device or client of a user
+ * Define a <state card>, as the following:
+ * - Information related to a specific (device, login) or client of a user
  * {
+ *   'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
  *   'clientId': 'string',  // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
- *   'network': 'string',   // Name of network this client is logged into
- *   'status': 'number'     // Status of the client. See the 'STATUS_CLIENT' constants
- * }
- *
- * Define a <user card>, as the following:
- * - Information related to a specific user, who may have multiple client devices
- * {
- *    'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
- *    'name': 'string',     // Name (e.g. Alice Underpants)
- *    'url': 'string',      // Homepage URL
- *    'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
- *    'clients': {          // List of clients indexed by their clientId
- *      'client1': <client card>, 
- *      'client2': <client card>,
- *      ...
- *    }
+ *   'status': 'number'     // Status of the client. See the 'STATUS' constants
+ *   'name': 'string',     // Name (e.g. Alice Underpants)
+ *   'url': 'string',      // Homepage URL
+ *   'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
  * }
  **/
 
@@ -53,7 +38,7 @@ fdom.apis.set('social', {
    * events. Because 'login' and 'logout' methods turn 'onStatus'
    * events, those use the same codes
   **/
-  'STATUS_NETWORK': {type: 'constant', value: {
+  'RETCODE': {type: 'constant', value: {
     // Not connected to any social network.
     // There are no guarantees other methods or events will work until
     // the user calls 'login'
@@ -71,16 +56,16 @@ fdom.apis.set('social', {
   }},
   
   /**
-   * List of possible statuses in the <client card>
+   * List of possible statuses in the <state card>
    **/
-  'STATUS_CLIENT': {type: 'constant', value: {
+  'STATUS': {type: 'constant', value: {
     // Not logged in
     'OFFLINE': 0,
-    // This client is online, but does not run the same app
-    // (i.e. can be useful to invite others to your FreeDOM app)
+    // This client runs the same freedom.js app as you and is online
     'ONLINE': 1,
-    // This client runs the same FreeDOM app as you and is online
-    'MESSAGEABLE': 2
+    // This client is online, but does not run the same app (chat client)
+    // (i.e. can be useful to invite others to your freedom.js app)
+    'ONLINE_WITH_OTHER_CLIENT': 2
   }},
 
   /**
@@ -99,22 +84,32 @@ fdom.apis.set('social', {
    * @return {Object} status - Same schema as 'onStatus' events
    **/
   'login': {type: 'method', value: [{
-    'network': 'string',  //Network name (as emitted by 'onStatus' events)
     'agent': 'string',    //Name of the application
     'version': 'string',  //Version of application
     'url': 'string',      //URL of application
-    'interactive': 'bool' //Prompt user for login if credentials not cached?
+    'interactive': 'bool' //If true, always prompt for login. If false, try with cached credentials
+    'rememberLogin': 'bool' //Cache the login credentials
+    'userId': 'string'    //Log in a particular user
   }]},
 
   /**
-   * Returns all the <user card>s that we've seen so far (from 'onChange' events)
+   * Clears the cached credentials
+   * e.g. social.clearCachedCredentials()
+   *
+   * @method clearCachedCredentials
+   * @return {}
+   **/
+  'clearCachedCredentials': {type: 'method', value: []},
+
+  /**
+   * Returns all the <state card>s that we've seen so far (from 'onUserUpdate' and 'onUserUpdate' events)
    * Note: the user's own <user card> will be somewhere in this list
    * e.g. social.getRoster();
    *
    * @method getRoster
    * @return {Object} { List of <user cards> indexed by userId
-   *    'userId1': <user card>,
-   *    'userId2': <user card>,
+   *    'userId1': <state card>,
+   *    'userId2': <state card>,
    *     ...
    * }
    **/
@@ -135,36 +130,13 @@ fdom.apis.set('social', {
   'sendMessage': {type: 'method', value: ['string', 'string']},
 
   /**
-   * Logs out the specific user of the specified network
-   * If userId is null, but network is not - log out of all accounts on that network
-   * If networkName is null, but userId is not - log out of that account
-   * If both fields are null, log out of all accounts on all networks
-   * e.g. logout(Object options)
+   * Logs out the user of the network
+   * e.g. logout()
    * 
    * @method logout
-   * @param {Object} logoutOptions - see below 
    * @return {Object} status - same schema as 'onStatus' events
    **/
-  'logout': {type: 'method', value: [{
-    'network': 'string',  // Network to log out of
-    'userId': 'string'    // User to log out
-  }]},
-
-  /**
-   * Event that is sent on changes to a <user card> 
-   * (for either yourself or one of your friends)
-   * This event must match the schema for an entire <user card> (see above)
-   * 
-   * Current contract is that clients grows monotonically, when clients go
-   * offline, they are kept in the clients and have |status| "offline".
-   **/
-  'onChange': {type: 'event', value: {
-    'userId': 'string',     // Unique identifier of the user (e.g. alice@gmail.com)
-    'name': 'string',       // Display name (e.g. Alice Foo)
-    'url': 'string',        // Homepage URL (e.g. https://alice.com)
-    'imageData': 'string',  // Data URI of image binary (e.g. data:image/png;base64,adkwe3...)
-    'clients': 'object'     // List of clients keyed by clientId
-  }},
+  'logout': {type: 'method', value: []},
 
   /**
    * Event on incoming messages
@@ -174,24 +146,41 @@ fdom.apis.set('social', {
     'fromClientId': 'string', // clientId of user message is from
     'toUserId': 'string',     // userId of user message is to
     'toClientId': 'string',   // clientId of user message is to
-    'network': 'string',      // the network id the message came from.
     'message': 'string'       // message contents
   }},
 
   /**
-   * Events describing the connection status of a particular network
-   * NOTE: userId is not guaranteed to be present
-   * e.g. if status == ONLINE | CONNECTING, it should be present
-   *      if status == OFFLINE, it could be missing if the user hasn't logged in yet
-   *                     if could be present if the user just logged off
-   * All other parameters are always there.
+   * Event that is sent on changes to a <state card> of someone on your roster
+   * (e.g. if a friend comes online)
+   * This event must match the schema for an entire <state card> (see above)
+   * 
+   * Current contract is that clients grows monotonically, when clients go
+   * offline, they are kept in the clients and have |status| "OFFLINE".
    **/
-  'onStatus': {type: 'event', value: {
-    'network': 'string',  // Name of the network (chosen by social provider)
-    'userId': 'string',   // userId of myself on this network
-    'clientId': 'string', // clientId of my client on this network
-    'status': 'number',   // One of the constants defined in 'STATUS_NETWORK'
-    'message': 'string'   // More detailed message about status
+  'onRosterUpdate': {type: 'event', value: {
+    //REQUIRED
+    'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
+    'status': 'number'    // Status of the client. See the 'STATUS' constants
+    //OPTIONAL
+    'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
+    'name': 'string',     // Name (e.g. Alice Underpants)
+    'url': 'string',      // Homepage URL (e.g. https://alice.com)
+    'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
+  }},
+
+  /**
+   * Event that is sent on changes to your own <state card>
+   * (e.g. You get disconnected)
+   **/
+  'onUserUpdate': {type: 'event', value: {
+    //REQUIRED
+    'status': 'number'    // Status of the client. See the 'STATUS' constants
+    //OPTIONAL
+    'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
+    'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
+    'name': 'string',     // Name (e.g. Alice Underpants)
+    'url': 'string',      // Homepage URL (e.g. https://alice.com)
+    'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
   }}
 
 });
