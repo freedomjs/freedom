@@ -15,11 +15,10 @@ function LoopbackSocialProvider(dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
 
   //Constants
-  this.NETWORK_ID = 'loopback';
+  this.TIME = (new Date()).getTime();
   this.USER_ID = 'Test User';      //My userId
   this.CLIENT_ID = 'Test User.0';  //My clientId
-  this.client_codes = freedom.social().STATUS_CLIENT;
-  this.net_codes = freedom.social().STATUS_NETWORK;
+  this.status_codes = freedom.social().STATUS;
   console.log("Loopback Social Provider");
 
   //Populate a fake roster
@@ -28,10 +27,12 @@ function LoopbackSocialProvider(dispatchEvent) {
       userId: this.USER_ID,
       name: this.USER_ID,
       clients: {'Test User.0': {
+        'userId': this.USER_ID,
         'clientId': this.CLIENT_ID,
-        'network': this.NETWORK_ID,
-        'status': this.client_codes["MESSAGEABLE"]
-      }}
+        'status': this.status_codes["ONLINE"],
+        'timestamp': this.TIME
+      }},
+      timestamp: this.TIME
     },
     "Other User": {
       userId: "Other User",
@@ -40,7 +41,8 @@ function LoopbackSocialProvider(dispatchEvent) {
         'clientId': "Other User.0", 
         'network': this.NETWORK_ID,
         'status': this.client_codes["MESSAGEABLE"]
-      }}
+      }},
+      timestamp: this.TIME
     },
     'Johnny Appleseed': this.makeRosterEntry('Johnny Appleseed'),
     'Betty Boop': this.makeRosterEntry('Betty Boop'),

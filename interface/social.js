@@ -23,8 +23,8 @@
  * Define a <client_state>, as the following:
  * - Information related to a specific device or client of a user
  * - Use cases: 
- *   - Stored as part of the <user_state> for a particular user
- *   - Returned for my instance in 'getUserState' and 'onUserState'
+ *   - Returned on changes for friends or my instance in 'onClientState'
+ *   - Returned in a global list from 'getClients'
  * {
  *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
  *   'clientId': 'string',  // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
@@ -32,24 +32,17 @@
  *   'timestamp': 'number'  // Timestamp of last received change to <client_state>
  * }
  * 
- * Define a <user_state>, as the following:
- * - Information related to a specific user
+ * Define a <user_profile>, as the following:
+ * - Information related to a specific user (profile information)
  * - Use cases:
- *   - Returned on changes for friends or myself in 'onRosterUpdate'
- *   - Returned in a global list from 'getRoster'
+ *   - Returned on changes for friends or myself in 'onUserProfile'
+ *   - Returned in a global list from 'getUsers'
  * {
  *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
  *   'name': 'string',      // Name (e.g. Alice Underpants)
  *   'url': 'string',       // Homepage URL
  *   'imageData': 'string', // Data URI of image data (e.g. data:image/png;base64,adkwe329...)
- *   'clients': {           // List of all clients indexed by their clientId, 
- *                          // except only stores most recent card with status=='OFFLINE'
- *     'client1': <client_state>, 
- *     'client2': <client_state>,
- *     ...
- *   },
- *   'timestamp': 'number'  // Timestamp of last received change to <user_state>
- *                          // (not including changes to 'clients')
+ *   'timestamp': 'number'  // Timestamp of last received change to <user_profile>
  * }
  *
  **/
@@ -132,30 +125,38 @@ fdom.apis.set('social', {
   'clearCachedCredentials': {type: 'method', value: []},
 
   /**
-   * Returns the current <client_state> of this instance/client
-   * e.g. social.getUserState()
+   * Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
+   * Note: this instance's own <client_state> will be somewhere in this list
+   * Use the clientId returned from social.login() to extract your element
+   * NOTE: This does not guarantee to be entire roster, just clients we're currently aware of at the moment
+   * e.g. social.getClients()
    * 
-   * @method getUserState
-   * @return {Object} <client_state> 
-   **/
-  'getMyClientState': {type: 'method', value: []},
-
-  /**
-   * Returns all the <user_state>s that we've seen so far (from 'onAnyUserState' events)
-   * Note: the user's own <user_state> will be somewhere in this list. 
-   * Use the current client state to extract this element
-   * NOTE: This does not guarantee to be entire roster, just users we're currently aware of at the moment
-   * e.g. social.getRoster();
-   *
-   * @method getRoster
+   * @method getClients
    * @return {Object} { 
-   *    'userId1': <user_state>,
-   *    'userId2': <user_state>,
+   *    'clientId1': <client_state>,
+   *    'clientId2': <client_state>,
    *     ...
-   * } List of <user_state>s indexed by userId
+   * } List of <client_state>s indexed by clientId
    *   On failure, rejects with an error code (see above)
    **/
-  'getRoster': {type: 'method', value: []},
+  'getClients': {type: 'method', value: []},
+
+  /**
+   * Returns all the <user_profile>s that we've seen so far (from 'onUserProfile' events)
+   * Note: the user's own <user_profile> will be somewhere in this list. 
+   * Use the userId returned from social.login() to extract your element
+   * NOTE: This does not guarantee to be entire roster, just users we're currently aware of at the moment
+   * e.g. social.getUsers();
+   *
+   * @method getUsers
+   * @return {Object} { 
+   *    'userId1': <user_profile>,
+   *    'userId2': <user_profile>,
+   *     ...
+   * } List of <user_profile>s indexed by userId
+   *   On failure, rejects with an error code (see above)
+   **/
+  'getUsers': {type: 'method', value: []},
 
   /** 
    * Send a message to user on your network
@@ -186,27 +187,34 @@ fdom.apis.set('social', {
    * Event on incoming messages
    **/
   'onMessage': {type: 'event', value: {
-    'fromUserId': 'string',   // userId of user message is from
-    'fromClientId': 'string', // clientId of user message is from
-    'toUserId': 'string',     // userId of user message is to
-    'toClientId': 'string',   // clientId of user message is to
-    'message': 'string'       // message contents
+    'from': {               // message source (fits <client_state>)
+      'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
+      'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
+      'status': 'number',   // Status of the client. See the 'STATUS' constants
+      'timestamp': 'number' // Timestamp of last received change to <client_state>
+    },
+    'to': {                 // message destination (fits <client_state>)
+      'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
+      'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
+      'status': 'number',   // Status of the client. See the 'STATUS' constants
+      'timestamp': 'number' // Timestamp of last received change to <client_state>
+    },
+    'message': 'string'     // message contents
   }},
 
   /**
-   * Event that is sent on changes to a <user_state> of either yourself
+   * Event that is sent on changes to a <user_profile> of either yourself
    * or someone on your roster
-   * (e.g. if a friend comes online, if your picture changes)
-   * This event must match the schema for an entire <user_state> (see above)
+   * (e.g. if a picture changes)
+   * This event must match the schema for an entire <user_profile> (see above)
    * 
    * Clients will include all clients that are |status| !== "OFFLINE"
    * and the most recent client that went OFFLINE
    **/
-  'onAnyUserState': {type: 'event', value: {
+  'onUserProfile': {type: 'event', value: {
     //REQUIRED
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-    'clients': 'object',  // List of all clients indexed by their clientId
-    'timestamp': 'number'  // Timestamp of last received change to <user_state>
+    'timestamp': 'number'  // Timestamp of last received change to <user_profile>
     //OPTIONAL
     'name': 'string',     // Name (e.g. Alice Underpants)
     'url': 'string',      // Homepage URL (e.g. https://alice.com)
@@ -217,12 +225,12 @@ fdom.apis.set('social', {
    * Event that is sent on changes to your own <client_state>
    * (e.g. You get disconnected)
    **/
-  'onMyClientState': {type: 'event', value: {
+  'onClientState': {type: 'event', value: {
     //REQUIRED
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
     'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
     'status': 'number',   // Status of the client. See the 'STATUS' constants
-    'timestamp': 'number'  // Timestamp of last received change to <client_state>
+    'timestamp': 'number' // Timestamp of last received change to <client_state>
     //OPTIONAL
     //None
   }}
