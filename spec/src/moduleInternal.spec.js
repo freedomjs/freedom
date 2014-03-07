@@ -45,8 +45,55 @@ describe('fdom.port.ModuleInternal', function() {
   
     callback = function() {
       expect(fileIncluded).toEqual(true);
+      delete callback;
       done();
     }
     app.loadScripts(loc, 'relative://spec/helper/beacon.js');
+  });
+
+  it('exposes dependency apis', function(done) {
+    var source = createTestPort('test');
+    manager.setup(source);
+    manager.createLink(source, 'default', app, 'default');
+    source.on('onMessage', function(msg) {
+      // Dependencies will be requested via 'createLink' messages. resolve those.
+      if (msg.channel && msg.name !== 'default') {
+        hub.onMessage(msg.channel, {
+          type: 'channel announcement',
+          channel: msg.reverse
+        });
+      } else if (msg.type === 'resolve') {
+        hub.onMessage(source.messages[1][1].channel, {
+          id: msg.id,
+          data: 'spec/' + msg.data
+        });
+      }
+    });
+
+    global.document = document;
+
+    hub.onMessage(source.messages[1][1].channel, {
+      channel: source.messages[1][1].reverse,
+      appId: 'testApp',
+      lineage: ['global', 'testApp'],
+      manifest: {
+        app: {
+          script: 'helper/beacon.js'
+        },
+        dependencies: {
+          "test": {
+            "url": "relative://spec/helper/friend.json",
+            "api": "social"
+          }
+        }
+      },
+      id: 'relative://spec/helper/manifest.json',
+    });
+
+    callback = function() {
+      expect(global.freedom.test.api).toEqual('social');
+      delete callback;
+      done();
+    };
   });
 });
