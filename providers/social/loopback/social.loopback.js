@@ -22,143 +22,131 @@ function LoopbackSocialProvider(dispatchEvent) {
   console.log("Loopback Social Provider");
 
   //Populate a fake roster
-  this.roster = {
-    "Test User": {
-      userId: this.USER_ID,
-      name: this.USER_ID,
-      clients: {'Test User.0': {
-        'userId': this.USER_ID,
-        'clientId': this.CLIENT_ID,
-        'status': this.status_codes["ONLINE"],
-        'timestamp': this.TIME
-      }},
-      timestamp: this.TIME
-    },
-    "Other User": {
-      userId: "Other User",
-      name: "Other User",
-      clients: {'Other User.0':{
-        'clientId': "Other User.0", 
-        'network': this.NETWORK_ID,
-        'status': this.client_codes["MESSAGEABLE"]
-      }},
-      timestamp: this.TIME
-    },
-    'Johnny Appleseed': this.makeRosterEntry('Johnny Appleseed'),
-    'Betty Boop': this.makeRosterEntry('Betty Boop'),
-    'Big Bird': this.makeRosterEntry('Big Bird'),
-    'Bugs Bunny': this.makeRosterEntry('Bugs Bunny'),
-    'Daffy Duck': this.makeRosterEntry('Daffy Duck'),
-    'Kermit the Frog': this.makeRosterEntry('Kermit the Frog'),
-    'Minnie Mouse': this.makeRosterEntry('Minnie Mouse'),
-    'Porky Pig': this.makeRosterEntry('Porky Pig'),
-    'Swedish Chef': this.makeRosterEntry('Swedish Chef'),
-    'Yosemite Sam': this.makeRosterEntry('Yosemite Sam')
+  this.users = {
+    "Test User": this.makeUserEntry(this.USER_ID),
+    "Other User": this.makeUserEntry("Other User"),
+    'Johnny Appleseed': this.makeUserEntry('Johnny Appleseed'),
+    'Betty Boop': this.makeUserEntry('Betty Boop'),
+    'Big Bird': this.makeUserEntry('Big Bird'),
+    'Bugs Bunny': this.makeUserEntry('Bugs Bunny'),
+    'Daffy Duck': this.makeUserEntry('Daffy Duck'),
+    'Kermit the Frog': this.makeUserEntry('Kermit the Frog'),
+    'Minnie Mouse': this.makeUserEntry('Minnie Mouse'),
+    'Porky Pig': this.makeUserEntry('Porky Pig'),
+    'Swedish Chef': this.makeUserEntry('Swedish Chef'),
+    'Yosemite Sam': this.makeUserEntry('Yosemite Sam')
   };
-  // Send an offline status on start
-  setTimeout((function() {
-    this.dispatchEvent('onStatus', this.makeOnStatus('OFFLINE'));
-  }).bind(this), 0);
+  this.clients = {};
 }
-
-// Generate an 'onStatus' message
-LoopbackSocialProvider.prototype.makeOnStatus = function(stat) {
-  return {
-    network: this.NETWORK_ID,
-    userId: this.USER_ID,
-    clientId: this.CLIENT_ID,
-    status: this.net_codes[stat],
-    message: "Woo!"
-  };
-};
 
 // Autocreates fake rosters with variable numbers of clients
 // and random statuses
-LoopbackSocialProvider.prototype.makeRosterEntry = function(userId, opts) {
-  var STATUSES = ['MESSAGEABLE', 'ONLINE', 'OFFLINE'];
-  opts = opts || {};
-  var entry = {
+LoopbackSocialProvider.prototype.makeUserEntry = function(userId) {
+  return {
     userId: userId,
-    name: opts.name || userId,
+    name: userId,
+    timestamp: this.TIME
   };
-  if (opts.clients) {
-    entry.clients = opts.clients;
-  } else {
-    var clients = {};
-    var nclients = userId.charCodeAt(0) % 3;
-    for (var i = 0; i < nclients; ++i) {
-      var clientId = userId+'/-client'+i;
-      clients[clientId] = {
-        clientId: clientId,
-        network: this.NETWORK_ID,
-        status: this.client_codes[STATUSES[i]]
-      };
+};
+
+LoopbackSocialProvider.prototype.fillClients = function(userId, opts) {
+  var STATUSES = ['ONLINE', 'OFFLINE', 'ONLINE_WITH_OTHER_APP'];
+  this.clients = {
+    "Test User.0": {
+      'userId': this.USER_ID,
+      'clientId': this.CLIENT_ID,
+      'status': this.status_codes["ONLINE"],
+      'timestamp': this.TIME
+    },
+    "Other User.0": {
+      'userId': "Other User",
+      'clientId': "Other User.0", 
+      'status': this.status_codes["ONLINE"],
+      'timestamp': this.TIME
     }
-    entry.clients = clients;
+  };
+
+  for (var userId in this.users) {
+    if (this.users.hasOwnProperty(userId)) {
+      var nclients = userId.charCodeAt(0) % 3;
+      for (var i = 0; i < nclients; ++i) {
+        var clientId = userId+'/-client'+i;
+        this.clients[clientId] = {
+          userId: userId,
+          clientId: clientId,
+          status: this.status_codes[STATUSES[i]],
+          timestamp: this.TIME
+        };
+      }
+    }
   }
-  return entry;
+  return;
 };
 
 // Log in. Options are ignored
 // Roster is only emitted to caller after log in
 LoopbackSocialProvider.prototype.login = function(opts, continuation) {
-  var ret = this.makeOnStatus('ONLINE');
-  for (var id in this.roster) {
-    if (this.roster.hasOwnProperty(id)) {
-      this.dispatchEvent('onChange', this.roster[id]);
+  this.fillClients();
+  for (var id in this.users) {
+    if (this.users.hasOwnProperty(id)) {
+      this.dispatchEvent('onUserProfile', this.users[id]);
     }
   }
-  this.dispatchEvent('onStatus', ret);
-  continuation(ret);
+  for (var id in this.clients) {
+    if (this.clients.hasOwnProperty(id)) {
+      this.dispatchEvent('onClientState', this.clients[id]);
+    }
+  }
+  continuation(this.clients[this.clientId]);
 };
 
-// Return the roster
-LoopbackSocialProvider.prototype.getRoster = function(continuation) {
-  continuation(this.roster);
+// Clear credentials (there are none)
+LoopbackSocialProvider.prototype.clearCachedCredentials = function(continuation) {
+  return;
+};
+
+// Return the user profiles
+LoopbackSocialProvider.prototype.getUsers = function(continuation) {
+  continuation(this.users);
+};
+
+// Return the clients
+LoopbackSocialProvider.prototype.getClients = function(continuation) {
+  continuation(this.clients);
 };
 
 // Send a message to someone.
 // All messages not sent to this.USER_ID will be echoed back to self as if
 // sent by 'Other User'
 LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
-  var message;
-  if (to === this.USER_ID) {
-    message = {
-      fromUserId: this.USER_ID,
-      fromClientId: this.CLIENT_ID,
-      toUserId: this.USER_ID,
-      toClientId: this.CLIENT_ID,
-      network: this.NETWORK_ID,
+  if (to === this.USER_ID || to === this.CLIENT_ID) {
+    this.dispatchEvent('onMessage', {
+      from: this.clients[this.CLIENT_ID],
+      to: this.clients[this.CLIENT_ID],
       message: msg
-    };
+    });
   } else {
-    message = {
-      fromUserId: "Other User",
-      fromClientId: "Other User.0",
-      toUserId: this.USER_ID,
-      toClientId: this.CLIENT_ID,
-      network: this.NETWORK_ID,
+    this.dispatchEvent('onMessage', {
+      from: this.clients["Other User.0"],
+      to: this.clients[this.CLIENT_ID],
       message: msg
-    };
+    });
   }
-  this.dispatchEvent('onMessage', message);
   continuation();
 };
 
 // Log out. All users in the roster will go offline
 // Options are ignored
 LoopbackSocialProvider.prototype.logout = function(opts, continuation) {
-  var ret = this.makeOnStatus('OFFLINE');
-  // Remove all clients in the roster and emit these changes
-  for (var id in this.roster) {
-    if (this.roster.hasOwnProperty(id)) {
-      var card = JSON.parse(JSON.stringify(this.roster[id]));
-      card.clients = {};
-      this.dispatchEvent('onChange', card);
+  for (var clientId in this.clients) {
+    if (this.clients.hasOwnProperty(clientId)) {
+      this.clients[clientId].status = this.status_codes['OFFLINE'];
+      this.dispatchEvent('onClientState', this.clients[clientId]);
     }
   }
-  this.dispatchEvent('onStatus', ret);
-  continuation(ret);
+
+  this.clients = {};
+  continuation();
 };
 
 /** REGISTER PROVIDER **/

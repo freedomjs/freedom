@@ -68,7 +68,10 @@ fdom.apis.set('social', {
     /** CLEARCACHEDCREDENTIALS**/
     // None at the moment
     
-    /** GETROSTER **/
+    /** GETCLIENTS **/
+    // See GENERAL
+    
+    /** GETUSERS **/
     // See GENERAL
 
     /** SENDMESSAGE **/

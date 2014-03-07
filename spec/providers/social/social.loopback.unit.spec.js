@@ -7,8 +7,7 @@ describe("unit: social.loopback.json", function () {
 
     freedom = {
       social: mockIface([], [
-        ['STATUS_NETWORK', fdom.apis.get("social").definition.STATUS_NETWORK.value],
-        ['STATUS_CLIENT', fdom.apis.get("social").definition.STATUS_CLIENT.value]
+        ['STATUS', fdom.apis.get("social").definition.STATUS.value]
       ])
     };
 
