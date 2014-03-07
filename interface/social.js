@@ -20,16 +20,38 @@
  * - The Social provider should output an 'onUserUpdate' event upon initialization (after constructor)
  *   with its current state.
  *
- * Define a <state card>, as the following:
- * - Information related to a specific (device, login) or client of a user
+ * Define a <client_state>, as the following:
+ * - Information related to a specific device or client of a user
+ * - Use cases: 
+ *   - Stored as part of the <user_state> for a particular user
+ *   - Returned for my instance in 'getUserState' and 'onUserState'
  * {
- *   'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
+ *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
  *   'clientId': 'string',  // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
- *   'status': 'number'     // Status of the client. See the 'STATUS' constants
- *   'name': 'string',     // Name (e.g. Alice Underpants)
- *   'url': 'string',      // Homepage URL
- *   'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
+ *   'status': 'number',    // Status of the client. See the 'STATUS' constants
+ *   'timestamp': 'number'  // Timestamp of last received change to <client_state>
  * }
+ * 
+ * Define a <user_state>, as the following:
+ * - Information related to a specific user
+ * - Use cases:
+ *   - Returned on changes for friends or myself in 'onRosterUpdate'
+ *   - Returned in a global list from 'getRoster'
+ * {
+ *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
+ *   'name': 'string',      // Name (e.g. Alice Underpants)
+ *   'url': 'string',       // Homepage URL
+ *   'imageData': 'string', // Data URI of image data (e.g. data:image/png;base64,adkwe329...)
+ *   'clients': {           // List of all clients indexed by their clientId, 
+ *                          // except only stores most recent card with status=='OFFLINE'
+ *     'client1': <client_state>, 
+ *     'client2': <client_state>,
+ *     ...
+ *   },
+ *   'timestamp': 'number'  // Timestamp of last received change to <user_state>
+ *                          // (not including changes to 'clients')
+ * }
+ *
  **/
 
 fdom.apis.set('social', {
@@ -74,7 +96,7 @@ fdom.apis.set('social', {
     'ONLINE': 1,
     // This client is online, but does not run the same app (chat client)
     // (i.e. can be useful to invite others to your freedom.js app)
-    'ONLINE_WITH_OTHER_CLIENT': 2
+    'ONLINE_WITH_OTHER_APP': 2
   }},
 
   /**
@@ -90,7 +112,7 @@ fdom.apis.set('social', {
    *
    * @method login
    * @param {Object} loginOptions - See below
-   * @return {Object} <state card> - Same schema as 'onUserUpdate' events
+   * @return {Object} <client_state>
    **/
   'login': {type: 'method', value: [{
     'agent': 'string',    //Name of the application
@@ -110,17 +132,28 @@ fdom.apis.set('social', {
   'clearCachedCredentials': {type: 'method', value: []},
 
   /**
-   * Returns all the <state card>s that we've seen so far (from 'onUserUpdate' and 'onUserUpdate' events)
-   * Note: the user's own <user card> will be somewhere in this list
+   * Returns the current <client_state> of this instance/client
+   * e.g. social.getUserState()
+   * 
+   * @method getUserState
+   * @return {Object} <client_state> 
+   **/
+  'getMyClientState': {type: 'method', value: []},
+
+  /**
+   * Returns all the <user_state>s that we've seen so far (from 'onAnyUserState' events)
+   * Note: the user's own <user_state> will be somewhere in this list. 
+   * Use the current client state to extract this element
+   * NOTE: This does not guarantee to be entire roster, just users we're currently aware of at the moment
    * e.g. social.getRoster();
    *
    * @method getRoster
-   * @return {Object} { List of <user cards> indexed by userId
-   *    'userId1': <state card>,
-   *    'userId2': <state card>,
+   * @return {Object} { 
+   *    'userId1': <user_state>,
+   *    'userId2': <user_state>,
    *     ...
-   * }
-   *  On failure, rejects with an error code (see above)
+   * } List of <user_state>s indexed by userId
+   *   On failure, rejects with an error code (see above)
    **/
   'getRoster': {type: 'method', value: []},
 
@@ -144,7 +177,7 @@ fdom.apis.set('social', {
    * e.g. logout()
    * 
    * @method logout
-   * @return {Object} <state card> - same schema as 'onUserUpdate' events
+   * @return nothing
    *  On failure, rejects with an error code (see above)
    **/
   'logout': {type: 'method', value: []},
@@ -161,37 +194,37 @@ fdom.apis.set('social', {
   }},
 
   /**
-   * Event that is sent on changes to a <state card> of someone on your roster
-   * (e.g. if a friend comes online)
-   * This event must match the schema for an entire <state card> (see above)
+   * Event that is sent on changes to a <user_state> of either yourself
+   * or someone on your roster
+   * (e.g. if a friend comes online, if your picture changes)
+   * This event must match the schema for an entire <user_state> (see above)
    * 
-   * Current contract is that clients grows monotonically, when clients go
-   * offline, they are kept in the clients and have |status| "OFFLINE".
+   * Clients will include all clients that are |status| !== "OFFLINE"
+   * and the most recent client that went OFFLINE
    **/
-  'onRosterUpdate': {type: 'event', value: {
+  'onAnyUserState': {type: 'event', value: {
     //REQUIRED
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-    'status': 'number',    // Status of the client. See the 'STATUS' constants
+    'clients': 'object',  // List of all clients indexed by their clientId
+    'timestamp': 'number'  // Timestamp of last received change to <user_state>
     //OPTIONAL
-    'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
     'name': 'string',     // Name (e.g. Alice Underpants)
     'url': 'string',      // Homepage URL (e.g. https://alice.com)
     'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
   }},
 
   /**
-   * Event that is sent on changes to your own <state card>
+   * Event that is sent on changes to your own <client_state>
    * (e.g. You get disconnected)
    **/
-  'onUserUpdate': {type: 'event', value: {
+  'onMyClientState': {type: 'event', value: {
     //REQUIRED
-    'status': 'number',   // Status of the client. See the 'STATUS' constants
-    //OPTIONAL
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
     'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-    'name': 'string',     // Name (e.g. Alice Underpants)
-    'url': 'string',      // Homepage URL (e.g. https://alice.com)
-    'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
+    'status': 'number',   // Status of the client. See the 'STATUS' constants
+    'timestamp': 'number'  // Timestamp of last received change to <client_state>
+    //OPTIONAL
+    //None
   }}
 
 });
