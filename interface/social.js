@@ -217,11 +217,11 @@ fdom.apis.set('social', {
   'onUserProfile': {type: 'event', value: {
     //REQUIRED
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-    'timestamp': 'number'  // Timestamp of last received change to <user_profile>
+    'timestamp': 'number',  // Timestamp of last received change to <user_profile>
     //OPTIONAL
     'name': 'string',     // Name (e.g. Alice Underpants)
     'url': 'string',      // Homepage URL (e.g. https://alice.com)
-    'imageData': 'string',// Data URI of image data (e.g. data:image/png;base64,adkwe329...)
+    'imageData': 'string' // Data URI of image data (e.g. data:image/png;base64,adkwe329...)
   }},
 
   /**

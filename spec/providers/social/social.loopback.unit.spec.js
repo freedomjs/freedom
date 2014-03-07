@@ -11,89 +11,103 @@ describe("unit: social.loopback.json", function () {
       ])
     };
 
-    jasmine.clock().install();
     provider = new LoopbackSocialProvider(jasmine.createSpy('dispatchEvent'));
   });
   
   afterEach(function() {
-    jasmine.clock().uninstall();
   });
-  
-  it("emits offline at start", function() {
-    jasmine.clock().tick(100);
-    expect(provider.dispatchEvent).toHaveBeenCalled();
-    expect(provider.dispatchEvent).toHaveBeenCalledWith("onStatus", {
-      network: "loopback",
-      userId: "Test User",
-      clientId: "Test User.0",
-      status: freedom.social().STATUS_NETWORK["OFFLINE"],
-      message: "Woo!"
-    });
-  });
-
+ 
   it("logs in", function() {
     var d = jasmine.createSpy("login");
     var expectedResult = {
-      network: "loopback",
       userId: "Test User",
       clientId: "Test User.0",
-      status: freedom.social().STATUS_NETWORK["ONLINE"],
-      message: "Woo!"
+      status: freedom.social().STATUS["ONLINE"],
+      timestamp: jasmine.any(Number)
     };
     provider.login({}, d);
-    expect(provider.dispatchEvent).toHaveBeenCalled();
-    expect(provider.dispatchEvent).toHaveBeenCalledWith("onStatus", expectedResult);
-    expect(provider.dispatchEvent).toHaveBeenCalledWith("onChange", {
-      userId: "Other User",
-      name: "Other User",
-      clients: { "Other User.0": {
-        clientId: "Other User.0",
-        network: "loopback",
-        status: freedom.social().STATUS_CLIENT["MESSAGEABLE"]
-      }}
-    });
     expect(d).toHaveBeenCalled();
     expect(d).toHaveBeenCalledWith(expectedResult);
+    expect(provider.dispatchEvent).toHaveBeenCalled();
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", expectedResult);
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
+      userId: "Other User",
+      clientId: "Other User.0",
+      status: freedom.social().STATUS["ONLINE"],
+      timestamp: jasmine.any(Number)
+    });
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onUserProfile", {
+      userId: "Test User",
+      name: "Test User",
+      timestamp: jasmine.any(Number)
+    });
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onUserProfile", {
+      userId: "Other User",
+      name: "Other User",
+      timestamp: jasmine.any(Number)
+    });
   });
 
-  it("can getRoster", function() {
-    var d = jasmine.createSpy("getRoster");
+  it("can getClients", function() {
+    var d = jasmine.createSpy("getClients");
     provider.login({}, function() {});
-    provider.getRoster(d);
+    provider.getClients(d);
     expect(d.calls.count()).toEqual(1);
     expect(d.calls.mostRecent().args.length).toBeGreaterThan(0);
+    expect(d.calls.mostRecent().args[0]["Test User.0"]).toBeDefined();
+    expect(d.calls.mostRecent().args[0]["Test User.0"]).toEqual({
+      userId: "Test User",
+      clientId: "Test User.0",
+      status: freedom.social().STATUS["ONLINE"],
+      timestamp: jasmine.any(Number)
+    });
+    expect(d.calls.mostRecent().args[0]["Other User.0"]).toBeDefined();
+    expect(d.calls.mostRecent().args[0]["Other User.0"]).toEqual({
+      userId: "Other User",
+      clientId: "Other User.0",
+      status: freedom.social().STATUS["ONLINE"],
+      timestamp: jasmine.any(Number)
+    });
+  });
+
+  it("can getUsers", function() {
+    var d = jasmine.createSpy("getUsers");
+    provider.login({}, function() {});
+    provider.getUsers(d);
+    expect(d.calls.count()).toEqual(1);
+    expect(d.calls.mostRecent().args.length).toBeGreaterThan(0);
+    expect(d.calls.mostRecent().args[0]["Test User"]).toBeDefined();
+    expect(d.calls.mostRecent().args[0]["Test User"]).toEqual({
+      userId: "Test User",
+      name: "Test User",
+      timestamp: jasmine.any(Number)
+    });
     expect(d.calls.mostRecent().args[0]["Other User"]).toBeDefined();
     expect(d.calls.mostRecent().args[0]["Other User"]).toEqual({
       userId: "Other User",
       name: "Other User",
-      clients: {"Other User.0": {
-        clientId: "Other User.0",
-        network: "loopback",
-        status: freedom.social().STATUS_CLIENT["MESSAGEABLE"]
-      }}
+      timestamp: jasmine.any(Number)
     });
   });
 
   it("logs out", function() {
     var d = jasmine.createSpy("logout");
-    var expectedResult = {
-      network: "loopback",
-      userId: "Test User",
-      clientId: "Test User.0",
-      status: freedom.social().STATUS_NETWORK["OFFLINE"],
-      message: "Woo!"
-    };
     provider.login({}, function() {});
     provider.logout({}, d);
-    expect(provider.dispatchEvent).toHaveBeenCalled();
-    expect(provider.dispatchEvent).toHaveBeenCalledWith("onStatus", expectedResult);
-    expect(provider.dispatchEvent).toHaveBeenCalledWith("onChange", {
-      userId: "Other User",
-      name: "Other User",
-      clients: {}
-    });
     expect(d).toHaveBeenCalled();
-    expect(d).toHaveBeenCalledWith(expectedResult);
+    expect(provider.dispatchEvent).toHaveBeenCalled();
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
+      userId: "Test User",
+      clientId: "Test User.0",
+      status: freedom.social().STATUS["OFFLINE"],
+      timestamp: jasmine.any(Number)
+    });
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
+      userId: "Other User",
+      clientId: "Other User.0",
+      status: freedom.social().STATUS["OFFLINE"],
+      timestamp: jasmine.any(Number)
+    });
   
   });
 
@@ -101,16 +115,23 @@ describe("unit: social.loopback.json", function () {
     var d = jasmine.createSpy("sendMessage");
     provider.login({}, function() {});
     provider.sendMessage("Other User", "Hello World", d);
+    expect(d).toHaveBeenCalled();
     expect(provider.dispatchEvent).toHaveBeenCalled();
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onMessage", {
-      fromUserId: "Other User",
-      fromClientId: "Other User.0",
-      toUserId: "Test User",
-      toClientId: "Test User.0",
-      network: "loopback",
+      from: {
+        userId: "Other User",
+        clientId: "Other User.0",
+        status: freedom.social().STATUS["ONLINE"],
+        timestamp: jasmine.any(Number)
+      },
+      to: {
+        userId: "Test User",
+        clientId: "Test User.0",
+        status: freedom.social().STATUS["ONLINE"],
+        timestamp: jasmine.any(Number)
+      },
       message: "Hello World"
     });
-    expect(d).toHaveBeenCalled();
   });
 
 

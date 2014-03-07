@@ -97,6 +97,6 @@ var SOCIAL_UNIT_SPEC = function(manifest_url) {
   });
 };
 
-describe("unit: social.ws.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/websocket-server/social.ws.json"));
-describe("unit: social.loopback.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/loopback/social.loopback.json"));
+//describe("unit: social.ws.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/websocket-server/social.ws.json"));
+//describe("unit: social.loopback.json", SOCIAL_UNIT_SPEC.bind(this, "providers/social/loopback/social.loopback.json"));
 

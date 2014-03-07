@@ -49,7 +49,7 @@ LoopbackSocialProvider.prototype.makeUserEntry = function(userId) {
   };
 };
 
-LoopbackSocialProvider.prototype.fillClients = function(userId, opts) {
+LoopbackSocialProvider.prototype.fillClients = function() {
   var STATUSES = ['ONLINE', 'OFFLINE', 'ONLINE_WITH_OTHER_APP'];
   this.clients = {
     "Test User.0": {
@@ -87,17 +87,17 @@ LoopbackSocialProvider.prototype.fillClients = function(userId, opts) {
 // Roster is only emitted to caller after log in
 LoopbackSocialProvider.prototype.login = function(opts, continuation) {
   this.fillClients();
-  for (var id in this.users) {
-    if (this.users.hasOwnProperty(id)) {
-      this.dispatchEvent('onUserProfile', this.users[id]);
+  for (var userId in this.users) {
+    if (this.users.hasOwnProperty(userId)) {
+      this.dispatchEvent('onUserProfile', this.users[userId]);
     }
   }
-  for (var id in this.clients) {
-    if (this.clients.hasOwnProperty(id)) {
-      this.dispatchEvent('onClientState', this.clients[id]);
+  for (var clientId in this.clients) {
+    if (this.clients.hasOwnProperty(clientId)) {
+      this.dispatchEvent('onClientState', this.clients[clientId]);
     }
   }
-  continuation(this.clients[this.clientId]);
+  continuation(this.clients[this.CLIENT_ID]);
 };
 
 // Clear credentials (there are none)
