@@ -67,7 +67,7 @@ var STORAGE_INTEGRATION_SPEC = function(storageId) {
     helper.call("s", "set", ["key", "value"], callbackOne);
   });
 
-  it("shares data between different instances", function() {
+  it("shares data between different instances", function(done) {
     var callbackOne = function(ret) {
       helper.call("s2", "get", ["key"], callbackTwo);
     };
