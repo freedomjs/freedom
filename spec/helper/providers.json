@@ -17,6 +17,10 @@
       "url": "../../providers/transport/webrtc/transport.webrtc.json",
       "api": "transport"
     },
+    "social.loopback": {
+      "url": "../../providers/social/loopback/social.loopback.json",
+      "api": "social"
+    },
     "social.ws": {
       "url": "../../providers/social/websocket-server/social.ws.json",
       "api": "social"

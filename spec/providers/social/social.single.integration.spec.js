@@ -1,4 +1,4 @@
-var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name, network_id) {
+var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
   const TIMEOUT = 2000;
   var freedom, helper;
 
@@ -15,7 +15,6 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name, network_id) {
 
   function makeOnStatus(status) {
     return {
-      network: network_id,
       userId: jasmine.any(String),
       clientId: jasmine.any(String),
       status: fdom.apis.get("social").definition.STATUS_NETWORK.value[status],
@@ -27,7 +26,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name, network_id) {
     var ids = {};
     
     runs(function() {
-      ids[0] = helper.call("SocialA", "login", [{network: network_id, agent: "jasmine", interactive: false}]);
+      ids[0] = helper.call("SocialA", "login", [{agent: "jasmine", interactive: false}]);
     });
     waitsFor("logs in", helper.hasReturned.bind(helper, ids), TIMEOUT);
 
@@ -60,5 +59,5 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name, network_id) {
  
 };
 
-describe("integration-single: social.loopback.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "social.loopback", "loopback"));
-describe("integration-single: social.ws.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "social.ws", "websockets"));
+describe("integration-single: social.loopback.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "social.loopback"));
+describe("integration-single: social.ws.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "social.ws"));

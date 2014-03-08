@@ -1,4 +1,4 @@
-var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
+var STORAGE_INTEGRATION_SPEC = function(storageId) { 
   var freedom, helper;
 
   beforeEach(function(done) {
@@ -81,7 +81,7 @@ var STORAGE_INTEGRATION_SPEC = function(storageId) { return function() {
     helper.createProvider("s2", storageId);
     helper.call("s", "set", ["key", "value"], callbackOne);
   });
-}};
+};
 
-describe("integration: storage.isolated.json", STORAGE_INTEGRATION_SPEC("storage.isolated"));
-describe("integration: storage.shared.json", STORAGE_INTEGRATION_SPEC("storage.shared"));
+describe("integration: storage.isolated.json", STORAGE_INTEGRATION_SPEC.bind(this, "storage.isolated"));
+describe("integration: storage.shared.json", STORAGE_INTEGRATION_SPEC.bind(this, "storage.shared"));

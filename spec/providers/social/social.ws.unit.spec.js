@@ -24,23 +24,25 @@ describe("unit: social.ws.json", function () {
   afterEach(function() {
     jasmine.clock().uninstall();
   });
+
+  function makeClientState(id, status) {
+    return {
+      userId: id,
+      clientId: id,
+      status: freedom.social().STATUS[status],
+      timestamp: jasmine.any(Number)
+    };
+  }
   
   it("logs in", function() {
     var d = jasmine.createSpy("login");
-    var expectedResult = {
-      userId: "yourId",
-      clientId: "yourId",
-      status: freedom.social().STATUS["ONLINE"],
-      timestamp: jasmine.any(Number)
-    };
-
     provider.login({}, d);
     expect(d).not.toHaveBeenCalled();
 
     ws.onmessage({data: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':''})});
     
-    expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", expectedResult);
-    expect(d).toHaveBeenCalledWith(expectedResult, undefined);
+    expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", makeClientState("yourId", "ONLINE"));
+    expect(d).toHaveBeenCalledWith(makeClientState("yourId", "ONLINE"), undefined);
   });
 
   it("can getClients", function() {
@@ -50,13 +52,8 @@ describe("unit: social.ws.json", function () {
     provider.getClients(d);
     expect(d.calls.count()).toEqual(1);
     expect(d.calls.mostRecent().args.length).toBeGreaterThan(0);
-    expect(d.calls.mostRecent().args[0]["tom"]).toBeDefined();
-    expect(d.calls.mostRecent().args[0]["bill"]).toEqual({
-      userId: "bill",
-      clientId: "bill",
-      status: freedom.social().STATUS["ONLINE"],
-      timestamp: jasmine.any(Number)
-    });
+    expect(d.calls.mostRecent().args[0]["tom"]).toEqual(makeClientState("tom", "ONLINE"));
+    expect(d.calls.mostRecent().args[0]["bill"]).toEqual(makeClientState("bill", "ONLINE"));
   });
 
   it("can getUsers", function() {
@@ -96,18 +93,8 @@ describe("unit: social.ws.json", function () {
 
     ws.onmessage({data: JSON.stringify({'cmd': 'message', 'from':'tom', 'msg':'hello'})});
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onMessage", {
-      from: {
-        userId: "tom",
-        clientId: "tom",
-        status: freedom.social().STATUS["ONLINE"],
-        timestamp: jasmine.any(Number)
-      },
-      to: {
-        userId: "yourId",
-        clientId: "yourId",
-        status: freedom.social().STATUS["ONLINE"],
-        timestamp: jasmine.any(Number)
-      },
+      from: makeClientState("tom", "ONLINE"),
+      to: makeClientState("yourId", "ONLINE"),
       message: "hello"
     });
   });
