@@ -2,7 +2,7 @@ describe("fdom.proxy.APIInterface", function() {
   var emit, reg, api;
   beforeEach(function() {
         var iface = {
-      'test': {'type': 'method', 'value': ['string']},
+      'test': {'type': 'method', 'value': ['string'], 'ret': 'string'},
       'ev': {'type': 'event', 'value': 'string'},
       'co': {'type': 'constant', 'value': '12'}
     };
@@ -20,14 +20,17 @@ describe("fdom.proxy.APIInterface", function() {
 
     expect(emit).toHaveBeenCalledWith({
       'type': 'construct',
-      'args': undefined
+      'text': undefined,
+      'binary': []
     });
     var promise = api.test('hi');
     expect(emit).toHaveBeenCalledWith({
       action: 'method',
       type: 'test',
       reqId: 0,
-      value: ['hi'] });
+      text: ['hi'],
+      binary: []
+    });
 
     var spy = jasmine.createSpy('ret');
     promise.then(spy);
@@ -36,7 +39,8 @@ describe("fdom.proxy.APIInterface", function() {
     reg('message', {
       type: 'method',
       reqId: 0,
-      value: 'boo!'
+      text: 'boo!',
+      binary: []
     });
     setTimeout(function() {
       expect(spy).toHaveBeenCalledWith('boo!');
@@ -57,7 +61,8 @@ describe("fdom.proxy.APIInterface", function() {
     setTimeout(function() {
       expect(emit).toHaveBeenCalledWith({
         'type': 'construct',
-        'args': ['my param']
+        'text': ['my param'],
+        'binary': []
       });
       done();
     }, 0);
@@ -72,7 +77,7 @@ describe("fdom.proxy.APIInterface", function() {
     reg('message', {
       type: 'method',
       reqId: 0,
-      value: 'errval',
+      text: 'errval',
       error: 'Error Occured'
     });
     setTimeout(function() {
@@ -89,7 +94,8 @@ describe("fdom.proxy.APIInterface", function() {
     reg('message', {
       'type': 'event',
       'name': 'ev',
-      'value': 'boo!'
+      'text': 'boo!',
+      'binary': []
     });
     expect(cb).toHaveBeenCalledWith('boo!');
   });
@@ -136,7 +142,6 @@ describe("fdom.proxy.conform", function() {
       'p4': 'object',
       'p5': 'blob',
       'p6': 'buffer',
-      'p7': 'data',
       'p8': 'proxy',
       'p9': ['array', 'string'],
       'p10': ['string', 'number'],
@@ -147,15 +152,17 @@ describe("fdom.proxy.conform", function() {
       'p2': 12,
       'p3': true,
       'p4': {'x': 12, 'y': 43},
-      'p5': blob,
-      'p6': new ArrayBuffer(2),
-      'p7': 'data',
+      'p5': 0,
+      'p6': 1,
       'p8': ['app', 'flow', 'id'],
       'p9': ['string', 'string2', 'string3'],
       'p10': ['test', 12],
       'p11': {'a': 'hi', 'b': 12}
     };
-    var conformed = fdom.proxy.conform(template, correct);
+    var conformed = fdom.proxy.conform(template, correct,
+                                       [blob, new ArrayBuffer(2)], false);
+    correct['p5'] = conformed['p5'];
+    correct['p6'] = conformed['p6'];
     expect(conformed).toEqual(correct);
 
     var incorrect = {
@@ -171,7 +178,7 @@ describe("fdom.proxy.conform", function() {
       'p11': []
     };
 
-    conformed = fdom.proxy.conform(template, incorrect);
+    conformed = fdom.proxy.conform(template, incorrect, [0, blob, blob], false);
     expect(conformed).toEqual({
       'p1': '12',
       'p2': 12,
@@ -186,22 +193,22 @@ describe("fdom.proxy.conform", function() {
   });
 
   it("conforms simple arguments", function() {
-    expect(fdom.proxy.conform("string", "mystring")).toEqual("mystring");
-    expect(fdom.proxy.conform("number", "mystring")).toEqual(jasmine.any(Number));
-    expect(fdom.proxy.conform("bool", "mystring")).toEqual(false);
-    expect(fdom.proxy.conform("", "mystring")).toEqual(undefined);
-    expect(fdom.proxy.conform(["string", "number"], ["test", 0]))
+    expect(fdom.proxy.conform("string", "mystring", [], false)).toEqual("mystring");
+    expect(fdom.proxy.conform("number", "mystring", [], false)).toEqual(jasmine.any(Number));
+    expect(fdom.proxy.conform("bool", "mystring", [], false)).toEqual(false);
+    expect(fdom.proxy.conform("", "mystring", [], false)).toEqual(undefined);
+    expect(fdom.proxy.conform(["string", "number"], ["test", 0], [], false))
       .toEqual(["test", 0]);
-    expect(fdom.proxy.conform("number", 0)).toEqual(0);
+    expect(fdom.proxy.conform("number", 0, [], false)).toEqual(0);
   });
 
   it("conforms complex arguments", function() {
-    expect(fdom.proxy.conform({"key":"string"}, {"key":"good", "other":"bad"})).
+    expect(fdom.proxy.conform({"key":"string"}, {"key":"good", "other":"bad"},[], false)).
         toEqual({"key":"good"});
-    expect(fdom.proxy.conform(["string"], ["test", 12])).toEqual(["test"]);
-    expect(fdom.proxy.conform(["array", "string"], ["test", 12])).toEqual(["test", "12"]);
-    expect(fdom.proxy.conform("object", {"simple":"string"})).toEqual({"simple": "string"});
-    expect(fdom.proxy.conform.bind({}, "object", function() {})).toThrow();
+    expect(fdom.proxy.conform(["string"], ["test", 12],[], false)).toEqual(["test"]);
+    expect(fdom.proxy.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
+    expect(fdom.proxy.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
+    expect(fdom.proxy.conform.bind({}, "object", function() {},[], false)).toThrow();
   });
 
   it("conforms binary arguments", function() {
@@ -213,7 +220,10 @@ describe("fdom.proxy.conform", function() {
      */
 
     var buffer = new ArrayBuffer(4);
-    expect(fdom.proxy.conform("buffer", buffer)).toEqual(buffer);
-    expect(fdom.proxy.conform("buffer", "string")).toEqual(jasmine.any(ArrayBuffer));
+    var externals = [];
+    expect(fdom.proxy.conform("buffer", buffer, externals, true)).toEqual(0);
+    expect(externals.length).toEqual(1);
+    expect(fdom.proxy.conform("buffer", 0, ["string"], false)).toEqual(jasmine.any(ArrayBuffer));
+    expect(fdom.proxy.conform("buffer", 0, externals, false)).toEqual(buffer);
   });
 });
