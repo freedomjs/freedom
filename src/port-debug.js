@@ -112,7 +112,11 @@ fdom.port.Debug.prototype.print = function(message) {
         i += 1;
       }
     }
-    if (message.source) {
+
+    if (typeof process !== 'undefined' && message.source) {
+      arr.unshift('\x1B[39m');
+      arr.unshift('\x1B[31m' + message.source);
+    } else if (message.source) {
       arr.unshift('color: red');
       arr.unshift('%c ' + message.source);
     }
