@@ -98,13 +98,23 @@ fdom.apis.set('social', {
    * @param {Object} loginOptions - See below
    * @return {Object} status - Same schema as 'onStatus' events
    **/
-  'login': {type: 'method', value: [{
-    'network': 'string',  //Network name (as emitted by 'onStatus' events)
-    'agent': 'string',    //Name of the application
-    'version': 'string',  //Version of application
-    'url': 'string',      //URL of application
-    'interactive': 'bool' //Prompt user for login if credentials not cached?
-  }]},
+  'login': {
+    type: 'method',
+    value: [{
+      'network': 'string',  //Network name (as emitted by 'onStatus' events)
+      'agent': 'string',    //Name of the application
+      'version': 'string',  //Version of application
+      'url': 'string',      //URL of application
+      'interactive': 'bool' //Prompt user for login if credentials not cached?
+    }],
+    ret: {
+      'network': 'string',  // Name of the network (chosen by social provider)
+      'userId': 'string',   // userId of myself on this network
+      'clientId': 'string', // clientId of my client on this network
+      'status': 'number',   // One of the constants defined in 'STATUS_NETWORK'
+      'message': 'string'   // More detailed message about status
+    }
+  },
 
   /**
    * Returns all the <user card>s that we've seen so far (from 'onChange' events)
@@ -118,7 +128,7 @@ fdom.apis.set('social', {
    *     ...
    * }
    **/
-  'getRoster': {type: 'method', value: []},
+  'getRoster': {type: 'method', value: [], ret: "object"},
 
   /** 
    * Send a message to user on your network
@@ -148,7 +158,13 @@ fdom.apis.set('social', {
   'logout': {type: 'method', value: [{
     'network': 'string',  // Network to log out of
     'userId': 'string'    // User to log out
-  }]},
+  }], ret: {
+    'network': 'string',  // Name of the network (chosen by social provider)
+    'userId': 'string',   // userId of myself on this network
+    'clientId': 'string', // clientId of my client on this network
+    'status': 'number',   // One of the constants defined in 'STATUS_NETWORK'
+    'message': 'string'   // More detailed message about status
+  }},
 
   /**
    * Event that is sent on changes to a <user card> 
