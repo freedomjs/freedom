@@ -19,18 +19,18 @@
  **/
 function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
+  this.websocket = webSocket || WebSocket;
+
   this.WS_URL = 'wss://p2pbr.com/route/';
-  this.NETWORK_ID = 'websockets';
-  var social = freedom.social();
-  this.STATUS_NETWORK = social.STATUS_NETWORK;
-  this.STATUS_CLIENT = social.STATUS_CLIENT;
+  this.STATUS = freedom.social().STATUS;
+
   this.conn = null;   // Web Socket
   this.id = null;     // userId of this user
-  this.roster = {};   // List of seen users
+  
+  //Note that in this.websocket, there is a 1-1 relationship between user and client
+  this.users = {};    // List of seen users (<user_profile>)
+  this.clients = {};  // List of seen clients (<client_state>)
 
-  this.provider = webSocket || WebSocket;
-
-  setTimeout(this.sendStatus.bind(this, 'OFFLINE', 'offline'), 0);
 }
 
 /**
@@ -44,11 +44,10 @@ function WSSocialProvider(dispatchEvent, webSocket) {
  **/
 WSSocialProvider.prototype.login = function(loginOpts, continuation) {
   var finishLogin = {
-    finished: false,
     continuation: continuation,
-    finish: function(msg) {
+    finish: function(msg, err) {
       if (this.continuation) {
-        this.continuation(msg);
+        this.continuation(msg, err);
         delete this.continuation;
       }
     }
@@ -56,10 +55,10 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
 
   if (this.conn !== null) {
     console.warn("Already logged in");
-    finishLogin.finish(this.sendStatus("ONLINE"));
+    finishLogin.finish(this.changeRoster(this.id, true));
     return;
   }
-  this.conn = new this.provider(this.WS_URL + loginOpts.agent);
+  this.conn = new this.websocket(this.WS_URL + loginOpts.agent);
   // Save the continuation until we get a status message for
   // successful login.
   this.conn.onmessage = this.onMessage.bind(this, finishLogin);
@@ -69,33 +68,53 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
   }.bind(this, finishLogin);
   this.conn.onclose = function (cont, msg) {
     this.conn = null;
-    cont.finish(this.sendStatus('OFFLINE', 'offline'));
+    this.changeRoster(this.id, false);
   }.bind(this, finishLogin);
 
-  this.sendStatus('CONNECTING', 'connecting');
 };
 
 /**
- * Returns all the <user card>s that we've seen so far (from 'onChange' events)
- * Note: the user's own <user card> will be somewhere in this list
- * All user cards will only consist of 1 client, where the clientId is the same as the userId
- * e.g. social.getRoster();
+ * Returns all the <user_profile>s that we've seen so far (from 'onUserProfile' events)
+ * Note: the user's own <user_profile> will be somewhere in this list. 
+ * Use the userId returned from social.login() to extract your element
+ * NOTE: This does not guarantee to be entire roster, just users we're currently aware of at the moment
+ * e.g. social.getUsers();
  *
- * @method getRoster
- * @return {Object} { List of <user cards> indexed by userId
- *    'userId1': <user card>,
- *    'userId2': <user card>,
+ * @method getUsers
+ * @return {Object} { 
+ *    'userId1': <user_profile>,
+ *    'userId2': <user_profile>,
  *     ...
- * }
+ * } List of <user_profile>s indexed by userId
+ *   On failure, rejects with an error code (see above)
  **/
-WSSocialProvider.prototype.getRoster = function(continuation) {
-  continuation(this.roster);
+WSSocialProvider.prototype.getUsers = function(continuation) {
+  continuation(this.users);
+};
+
+/**
+ * Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
+ * Note: this instance's own <client_state> will be somewhere in this list
+ * Use the clientId returned from social.login() to extract your element
+ * NOTE: This does not guarantee to be entire roster, just clients we're currently aware of at the moment
+ * e.g. social.getClients()
+ * 
+ * @method getClients
+ * @return {Object} { 
+ *    'clientId1': <client_state>,
+ *    'clientId2': <client_state>,
+ *     ...
+ * } List of <client_state>s indexed by clientId
+ *   On failure, rejects with an error code (see above)
+ **/
+WSSocialProvider.prototype.getClients = function(continuation) {
+  continuation(this.clients);
 };
 
 /** 
  * Send a message to user on your network
  * If the destination is not specified or invalid, the message is dropped
- * Note: userId and clientId are the same for this provider
+ * Note: userId and clientId are the same for this.websocket
  * e.g. sendMessage(String destination_id, String message)
  * 
  * @method sendMessage
@@ -123,12 +142,14 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
   if (this.conn === null) { // We may not have been logged in
     console.warn("Already logged out");
-    continuation(this.sendStatus('OFFLINE', 'offline'));
+    this.changeRoster(this.id, false);
+    continuation();
     return;
   }
   this.conn.onclose = function(continuation) {
     this.conn = null;
-    continuation(this.sendStatus('OFFLINE', 'offline'));
+    this.changeRoster(this.id, false);
+    continuation();
   }.bind(this, continuation);
   this.conn.close();
 };
@@ -138,67 +159,50 @@ WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
  **/
 
 /**
- * Dispatch an 'onStatus' event with the following status
- *
- * @method sendStatus
- * @private
- * @param {String} stat - One of the error codes in STATUS_NETWORK
- * @param {String} message - Display message in the event
- * @return {Object} - same schema as 'onStatus' event
- **/
-WSSocialProvider.prototype.sendStatus = function(stat, message) {
-  var result = {
-    network: this.NETWORK_ID,
-    userId: this.id,
-    clientId: this.id,
-    status: this.STATUS_NETWORK[stat],
-    message: message
-  };
-  this.dispatchEvent('onStatus', result);
-  return result;
-};
-
-/**
- * Add the following ID to the roster
- * All users only have 1 client which is always messageable
+ * Dispatch an 'onClientState' event with the following status and return the <client_card>
+ * Modify entries in this.users and this.clients if necessary
+ * Note, because this provider has a global buddylist of ephemeral clients, we trim all OFFLINE users
  *
  * @method changeRoster
  * @private
- * @param {String} id - userId of user
- * @return nothing
+ * @param {String} id - userId and clientId are the same in this provider
+ * @param {Boolean} stat - true if "ONLINE", false if "OFFLINE".
+ *                          "ONLINE_WITH_OTHER_APP"
+ * @return {Object} - same schema as 'onStatus' event
  **/
-WSSocialProvider.prototype.changeRoster = function(id, online) {
-  //Keep track if we've actually made changes
-  var sendChange = false,
-      clients = {};
-  //Create entry if not there
-  if (!this.roster[id]) {
-    sendChange = true;
-    clients[id] = {
-      clientId: id,
-      network: this.NETWORK_ID,
-      status: this.STATUS_CLIENT.MESSAGEABLE
-    };
-    this.roster[id] = {
-      userId: id,
-      name: id,
-      clients: clients
-    };
+WSSocialProvider.prototype.changeRoster = function(id, stat) {
+  var newStatus;
+  var result = {
+    userId: id,
+    clientId: id,
+    timestamp: (new Date()).getTime()
+  };
+  if (stat) {
+    newStatus = this.STATUS["ONLINE"];
+  } else {
+    newStatus = this.STATUS["OFFLINE"];
   }
-  //Update online/offline status
-  if (online && this.roster[id].clients[id].status !==
-      this.STATUS_CLIENT.MESSAGEABLE) {
-    this.roster[id].clients[id].status = this.STATUS_CLIENT.MESSAGEABLE;
-    sendChange = true;
-  } else if (!online && this.roster[id].clients[id].status !==
-             this.STATUS_CLIENT.OFFLINE) {
-    this.roster[id].clients[id].status = this.STATUS_CLIENT.OFFLINE;
-    sendChange = true;
+  result.status = newStatus;
+  if (!this.clients.hasOwnProperty(id) || 
+      (this.clients[id] && this.clients[id].status !== newStatus)) {
+    this.dispatchEvent('onClientState', result);
   }
-  //Only dispatch change events if things have actually changed
-  if (sendChange) {
-    this.dispatchEvent('onChange', this.roster[id]);
+
+  if (stat) {
+    this.clients[id] = result;
+    if (!this.users.hasOwnProperty(id)) {
+      this.users[id] = {
+        userId: id,
+        name: id,
+        timestamp: (new Date()).getTime()
+      };
+      this.dispatchEvent('onUserProfile', this.users[id]);
+    }
+  } else {
+    delete this.users[id];
+    delete this.clients[id];
   }
+  return result;
 };
 
 /**
@@ -210,35 +214,27 @@ WSSocialProvider.prototype.changeRoster = function(id, online) {
  *
  * @method onMessage
  * @private
- * @param {Object} continuation Function to call upon successful login
+ * @param {Object} finishLogin Function to call upon successful login
  * @param {String} msg Message from the server (see server/router.py for schema)
  * @return nothing
  **/
-WSSocialProvider.prototype.onMessage = function(continuation, msg) {
+WSSocialProvider.prototype.onMessage = function(finishLogin, msg) {
   var i;
-
   msg = JSON.parse(msg.data);
+
   // If state information from the server
   // Store my own ID and all known users at the time
   if (msg.cmd === 'state') {
     this.id = msg.id;
-    this.changeRoster(this.id, true);
     for (i = 0; i < msg.msg.length; i += 1) {
       this.changeRoster(msg.msg[i], true);
     }
-
-    if (!continuation.finished) {
-      continuation.finish(this.sendStatus('ONLINE', 'online'));
-    }
-    // If directed message, emit event
+    finishLogin.finish(this.changeRoster(this.id, true));
+  // If directed message, emit event
   } else if (msg.cmd === 'message') {
-    this.changeRoster(msg.from, true);
     this.dispatchEvent('onMessage', {
-      fromUserId: msg.from,
-      fromClientId: msg.from,
-      toUserId: this.id,
-      toClientId: this.id,
-      network: this.NETWORK_ID,
+      from: this.changeRoster(msg.from, true),
+      to: this.changeRoster(this.id, true),
       message: msg.msg
     });
   // Roster change event
