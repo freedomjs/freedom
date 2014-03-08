@@ -1,6 +1,6 @@
 {
   "name": "freedom",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "homepage": "http://freedomjs.com",
   "repository": {"type": "git", "url": "git://github.com/UWNetworksLab/freedom.git"},
   "authors": [
