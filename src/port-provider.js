@@ -229,7 +229,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
     }
   }.bind(this, events, identifier);
 
-  instance = new this.providerCls(dispatchEvent, args || []);
+  instance = new this.providerCls(dispatchEvent, args || undefined);
 
   return function(port, msg) {
     if (msg.action === 'method') {
