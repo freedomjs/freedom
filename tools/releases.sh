@@ -1,8 +1,9 @@
 #!/bin/bash
 # Get The locations that the current checked-out version lives.
+FREEDOM="https://github.com/UWNetworksLab/freedom/commit"
 COMMIT=$(git rev-parse HEAD)
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-TAG=$(git describe --tags HEAD 2>/dev/null)
+BRANCH=$(git name-rev --name-only HEAD | cut -d "/" -f3)
+TAG=$(git describe --exact-match --tags HEAD 2>/dev/null)
 
 git clone git@github.com:freedomjs/freedomjs.github.io.git tools/freedomjs
 mkdir -p tools/freedomjs/release/$BRANCH
@@ -24,5 +25,5 @@ fi
 
 cd tools/freedomjs
 git add .
-git commit -m $COMMIT
+git commit -m $FREEDOM/$COMMIT
 git push origin master
