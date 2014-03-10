@@ -20,7 +20,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     return {
       userId: userId,
       clientId: clientId,
-      status: fdom.apis.get("social").definition.STATUS.value[status],
+      status: status,
       timestamp: jasmine.any(Number)
     };
   }

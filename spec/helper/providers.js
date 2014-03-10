@@ -19,12 +19,17 @@ freedom.on("create", function(action) {
 freedom.on("call", function(action){
   var p = providers[action.provider];
 	var promise = p[action.method].apply(null, action.args);
-    promise.then(function(ret) {
-      freedom.emit("return", {
-        id: action.id,
-        data: ret
-      });
-	});
+  promise.then(function(ret) {
+    freedom.emit("return", {
+      id: action.id,
+      data: ret
+    });
+	}, function(err) {
+    freedom.emit("error", {
+      id: action.id,
+      data: err
+    });
+  });
 });
 
 freedom.on('listenForEvent', function(listenEventInfo) {

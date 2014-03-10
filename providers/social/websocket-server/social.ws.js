@@ -26,7 +26,7 @@ function WSSocialProvider(dispatchEvent, webSocket) {
   } else {
     this.WS_URL = 'wss://p2pbr.com/route/';
   }
-  this.STATUS = freedom.social().STATUS;
+  this.social= freedom.social();
 
   this.conn = null;   // Web Socket
   this.id = null;     // userId of this user
@@ -126,6 +126,10 @@ WSSocialProvider.prototype.getClients = function(continuation) {
  * @return nothing
  **/
 WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
+  if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
+    continuation(undefined, this.social.ERRCODE["SEND_INVALIDDESTINATION"]);
+    return;
+  }
   if (this.conn) {
     this.conn.send(JSON.stringify({to: to, msg: msg}));
   } else {
@@ -180,9 +184,9 @@ WSSocialProvider.prototype.changeRoster = function(id, stat) {
     timestamp: (new Date()).getTime()
   };
   if (stat) {
-    newStatus = this.STATUS.ONLINE;
+    newStatus = "ONLINE";
   } else {
-    newStatus = this.STATUS.OFFLINE;
+    newStatus = "OFFLINE";
   }
   result.status = newStatus;
   if (!this.clients.hasOwnProperty(id) || 

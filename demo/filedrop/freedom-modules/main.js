@@ -50,7 +50,7 @@ freedom.on('serve-data', function(data) {
     freedom.emit('serve-descriptor', {
       targetId: clientIds,
       key: data.key,
-      name: data.name    
+      name: data.name
     });
     // DEBUG - remove later
     freedom.emit('stats', {
