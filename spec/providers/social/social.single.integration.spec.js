@@ -21,7 +21,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     };
   }
   
-  it("logs in", function() {
+  xit("logs in", function() {
     var ids = {};
     
     runs(function() {

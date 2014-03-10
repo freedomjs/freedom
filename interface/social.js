@@ -113,17 +113,17 @@ fdom.apis.set('social', {
   'login': {
     type: 'method',
     value: [{
-      'agent': 'string',    //Name of the application
-      'version': 'string',  //Version of application
-      'url': 'string',      //URL of application
-      'interactive': 'bool' //Prompt user for login if credentials not cached?
+      'agent': 'string',      //Name of the application
+      'version': 'string',    //Version of application
+      'url': 'string',        //URL of application
+      'interactive': 'bool',  //Prompt user for login if credentials not cached?
       'rememberLogin': 'bool' //Cache the login credentials
     }],
     ret: {
-      'userId': 'string',   // userId of myself on this network
-      'clientId': 'string', // clientId of my client on this network
-      'status': 'number',   // One of the constants defined in 'STATUS'
-      'timestamp': 'number' // Timestamp of last received change to <client_state>
+      'userId': 'string',     // userId of myself on this network
+      'clientId': 'string',   // clientId of my client on this network
+      'status': 'number',     // One of the constants defined in 'STATUS'
+      'timestamp': 'number'   // Timestamp of last received change to <client_state>
     }
   },
 
