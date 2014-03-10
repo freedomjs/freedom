@@ -11,9 +11,6 @@
 
 function IsolatedStorageProvider() {
   var i;
-  if (typeof location !== 'undefined') {
-    console.log("Isolated Storage Provider, running in worker " + location.href);
-  }
   this.core = freedom.core();
   this.store = freedom['core.storage']();
   this.magic = "";
