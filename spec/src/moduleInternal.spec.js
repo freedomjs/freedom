@@ -93,6 +93,12 @@ describe('fdom.port.ModuleInternal', function() {
     callback = function() {
       expect(global.freedom.test.api).toEqual('social');
       delete callback;
+      hub.onMessage(source.messages[1][1].channel, {
+        type: 'manifest',
+        name: 'test',
+        manifest: {name: 'test manifest'}
+      });
+      expect(global.freedom.test.manifest.name).toEqual('test manifest');
       done();
     };
   });

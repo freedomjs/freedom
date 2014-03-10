@@ -16,6 +16,7 @@ fdom.port = fdom.port || {};
 fdom.port.ModuleInternal = function(manager) {
   this.config = {};
   this.manager = manager;
+  this.manifests = {};
   
   this.id = 'ModuleInternal-' + Math.random();
   this.pendingPorts = 0;
@@ -55,6 +56,8 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
   } else if (flow === 'default' && this.requests[message.id]) {
     this.requests[message.id](message.data);
     delete this.requests[message.id];
+  } else if (flow === 'default' && message.type === 'manifest') {
+    this.updateManifest(message.name, message.manifest);
   }
 };
 
@@ -82,6 +85,9 @@ fdom.port.ModuleInternal.prototype.attach = function(name, proxy, api) {
     exp[name] = proxy.getProxyInterface();
     if (api) {
       exp[name].api = api;
+    }
+    if (this.manifests[name]) {
+      exp[name].manifest = this.manifests[name];
     }
   }
 
@@ -154,6 +160,25 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
 
   if (this.pendingPorts === 0) {
     this.emit('start');
+  }
+};
+
+/**
+ * Update the exported manifest of a dependency.
+ * Sets it internally if not yet exported, or attaches the property if it
+ * is loaded after the module has started (we don't delay start to retreive
+ * the manifest of the dependency.)
+ * @method updateManifest
+ * @param {String} name The Dependency
+ * @param {Object} manifest The manifest of the dependency
+ */
+fdom.port.ModuleInternal.prototype.updateManifest = function(name, manifest) {
+  var exp = this.config.global.freedom;
+
+  if (exp[name]) {
+    exp[name].manifest = manifest;
+  } else {
+    this.manifests[name] = manifest;
   }
 };
 
