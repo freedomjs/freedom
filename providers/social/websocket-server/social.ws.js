@@ -1,4 +1,4 @@
-/*globals freedom:true, WebSocket */
+/*globals freedom:true, WebSocket, DEBUG */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 
 /**
@@ -21,8 +21,11 @@ function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
 
   this.websocket = webSocket || WebSocket;
-
-  this.WS_URL = 'wss://p2pbr.com/route/';
+  if (typeof DEBUG !== 'undefined' && DEBUG) {
+    this.WS_URL = 'ws://p2pbr.com:8082/route/';
+  } else {
+    this.WS_URL = 'wss://p2pbr.com/route/';
+  }
   this.STATUS = freedom.social().STATUS;
 
   this.conn = null;   // Web Socket
@@ -171,16 +174,15 @@ WSSocialProvider.prototype.logout = function(continuation) {
  * @return {Object} - same schema as 'onStatus' event
  **/
 WSSocialProvider.prototype.changeRoster = function(id, stat) {
-  var newStatus;
-  var result = {
+  var newStatus, result = {
     userId: id,
     clientId: id,
     timestamp: (new Date()).getTime()
   };
   if (stat) {
-    newStatus = this.STATUS["ONLINE"];
+    newStatus = this.STATUS.ONLINE;
   } else {
-    newStatus = this.STATUS["OFFLINE"];
+    newStatus = this.STATUS.OFFLINE;
   }
   result.status = newStatus;
   if (!this.clients.hasOwnProperty(id) || 

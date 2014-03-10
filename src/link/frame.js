@@ -23,6 +23,7 @@ fdom.link.Frame = function() {
  */
 fdom.link.Frame.prototype.start = function() {
   if (this.config.appContext) {
+    this.config.global.DEBUG = true;
     this.setupListener();
     this.src = 'in';
   } else {
