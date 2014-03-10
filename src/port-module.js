@@ -239,6 +239,7 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
         lineage: this.lineage,
         channel: message.reverse
       });
+      this.emit('modInternal');
     } else if (message.type === 'createLink') {
       // A design decision was that the default channel is
       // overridden when acting as a provider.
@@ -290,6 +291,7 @@ fdom.port.Module.prototype.loadManifest = function() {
       return;
     }
     this.manifest = resp;
+    this.emit('manifest', this.manifest);
     this.start();
   }.bind(this), function(err) {
     fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
@@ -330,6 +332,8 @@ fdom.port.Module.prototype.loadLinks = function() {
       }
       fdom.resources.get(this.manifestId, desc.url).then(function (url) {
         var dep = new fdom.port.Module(url, this.lineage);
+        dep.once('manifest', this.updateEnv.bind(this, name));
+
         this.emit(this.controlChannel, {
           type: 'Link to ' + name,
           request: 'link',
@@ -344,6 +348,33 @@ fdom.port.Module.prototype.loadLinks = function() {
     this.externalPortMap[channels[i]] = this.externalPortMap[channels[i]] || false;
     this.internalPortMap[channels[i]] = false;
   }
+};
+
+/**
+ * Update the module environment with information about a dependent manifest.
+ * @method updateEnv
+ * @param {String} dep The dependency
+ * @param {Object} manifest The manifest of the dependency
+ */
+fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
+  if (!manifest) {
+    return;
+  }
+  if (!this.modInternal) {
+    this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
+  }
+  // Decide if/what other properties should be exported.
+  var metadata = {
+    name: manifest.name,
+    icon: manifest.icon,
+    description: manifest.description
+  };
+  
+  this.port.onMessage(this.modInternal, {
+    type: 'manifest',
+    name: dep,
+    manifest: metadata
+  });
 };
 
 fdom.port.Module.prototype.serialize = function() {
