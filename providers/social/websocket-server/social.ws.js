@@ -19,6 +19,7 @@
  **/
 function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
+
   this.websocket = webSocket || WebSocket;
 
   this.WS_URL = 'wss://p2pbr.com/route/';

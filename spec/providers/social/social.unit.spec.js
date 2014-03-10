@@ -1,5 +1,4 @@
 var SOCIAL_UNIT_SPEC = function(manifest_url) {
-  const TIMEOUT = 2000;
   var proxy, p;
   beforeEach(function(done) {
     proxy = createProxyFor(manifest_url, "social");

@@ -1,4 +1,4 @@
-var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
+var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
   var freedom, helper;
 
   beforeEach(function(done) {
@@ -15,47 +15,41 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
     cleanupIframes();
   });
 
-  xit("A-B: sends message between A->B", function() {
+  it("A-B: sends message between A->B", function(done) {
     var ids = {};
     var msg = "Hello World";
-    ids[0] = helper.call("SocialA", "login", [{network: network_id,
-                                             agent: "jasmine"}]);
-    ids[1] = helper.call("SocialB", "login", [{network: network_id,
-                                             agent: "jasmine"}]);
-    waitsFor("login", helper.hasReturned.bind(helper, ids), TIMEOUT);
+    var clientStateA, clientStateB;
 
-    var gotMessage = false;
-    runs(function() {
-      var socialAStatus = helper.returns[ids[0]];
-      var socialBStatus = helper.returns[ids[1]];
-      helper.on("SocialB", "onMessage", function(message) {
-        expect(message).not.toBe(undefined);
-        expect(message).not.toBe(null);
-        expect(message.fromUserId).toBe(socialAStatus.userId);
-        expect(message.toUserId).toBe(socialBStatus.userId);
-        expect(message.message).toEqual(msg);
-        gotMessage = true;
+    helper.on("SocialB", "onMessage", function(message) {
+      expect(message.from).toEqual(jasmine.objectContaining({
+        userId: clientStateA.userId,
+        clientId: clientStateA.clientId,
+        status: fdom.apis.get("social").definition.STATUS.value["ONLINE"]
+      }));
+      expect(message.to).toEqual(jasmine.objectContaining({
+        userId: clientStateB.userId,
+        clientId: clientStateB.clientId,
+        status: fdom.apis.get("social").definition.STATUS.value["ONLINE"]
+      }));
+      expect(message.message).toEqual(msg);
+      // Cleanup and finish
+      ids[3] = helper.call("SocialA", "logout", [{}], function(ret) {
+        ids[4] = helper.call("SocialB", "logout", [{}], function(ret) {
+          done();
+        });
       });
-      
-      ids[2] = helper.call("SocialA", "sendMessage", [socialBStatus.userId,
-                                             msg]);
     });
+    
+    var callbackOne = function(ret) {
+      clientStateA = ret;
+      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      clientStateB = ret;
+      ids[2] = helper.call("SocialA", "sendMessage", [socialBStatus.userId, msg]);
+    };
 
-    waitsFor("message sent from A", helper.hasReturned.bind(helper, ids),
-             TIMEOUT);
-    waitsFor("message received from A", function() {
-      return gotMessage;
-    }, TIMEOUT);
-
-    runs(function() {
-      ids[3] = helper.call("SocialA", "logout", [{}]);
-      ids[4] = helper.call("SocialB", "logout", [{}]);
-    });
-
-    waitsFor("SocialA and SocialB to log out",
-             helper.hasReturned.bind(helper, ids),
-             TIMEOUT);
-
+    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
   });
 
   xit("A-B: sends roster updates through the onChange event.", function() {
@@ -64,8 +58,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
     function waitForIds() {
       return helper.hasReturned(ids);
     }
-    ids[0] = helper.call("SocialA", "login", [{network: network_id,
-                                               agent: "jasmine"}]);
+    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}]);
 
     waitsFor("SocialA to log in", helper.hasReturned.bind(helper, ids));
     
@@ -83,8 +76,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
           }
         });
       });
-      ids[1] = helper.call("SocialB", "login", [{network: network_id,
-                                                 agent: "jasmine"}]);
+      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}]);
     });
 
     waitsFor("SocialB to log in", helper.hasReturned.bind(helper, ids),
@@ -133,14 +125,12 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
       });
     }
 
-    ids[0] = helper.call("SocialA", "login", [{network: network_id,
-                                             agent: "jasmine"}]);
+    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}]);
 
     waitsFor("SocialA login", helper.hasReturned.bind(helper, ids), TIMEOUT);
 
     runs(function() {
-      ids[1] = helper.call("SocialB", "login", [{network: network_id,
-                                                 agent: "jasmine"}]);
+      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}]);
     });
 
     waitsFor("SocialB login", helper.hasReturned.bind(helper, ids), TIMEOUT);
@@ -165,4 +155,4 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name, network_id) {
  
 };
 
-describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "social.ws", "websockets"));
+describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "social.ws"));

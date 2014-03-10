@@ -1,5 +1,4 @@
 var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
-  const TIMEOUT = 2000;
   var freedom, helper;
 
   beforeEach(function() {
@@ -13,16 +12,16 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     cleanupIframes();
   });
 
-  function makeOnStatus(status) {
+  function makeClientState(status) {
     return {
       userId: jasmine.any(String),
       clientId: jasmine.any(String),
-      status: fdom.apis.get("social").definition.STATUS_NETWORK.value[status],
-      message: jasmine.any(String)
+      status: fdom.apis.get("social").definition.STATUS.value[status],
+      timestamp: jasmine.any(Number)
     };
   }
   
-  xit("logs in", function() {
+  it("logs in", function() {
     var ids = {};
     
     runs(function() {
