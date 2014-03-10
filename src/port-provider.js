@@ -70,8 +70,10 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       this.providerInstances[message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
-      this.providerInstances[message.to] =
-        this.getProvider(message.to, message.message.args);
+      var args = fdom.proxy.portableToMessage(
+          this.definition.constructor ? this.definition.constructor.value : [],
+          message.message);
+      this.providerInstances[message.to] = this.getProvider(message.to, args);
     } else {
       fdom.debug.warn(this.toString() + ' dropping message ' +
           JSON.stringify(message));
@@ -207,6 +209,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
 
   var events = {},
       dispatchEvent,
+      BoundClass,
       instance;
 
   fdom.util.eachProp(this.definition, function(prop, name) {
@@ -217,19 +220,24 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
 
   dispatchEvent = function(ev, id, name, value) {
     if (ev[name]) {
+      var streams = fdom.proxy.messageToPortable(ev[name].value, value);
       this.emit(this.emitChannel, {
         type: 'message',
         to: id,
         message: {
           name: name,
           type: 'event',
-          value: fdom.proxy.conform(ev[name].value, value)
+          text: streams.text,
+          binary: streams.binary
         }
       });
     }
   }.bind(this, events, identifier);
 
-  instance = new this.providerCls(dispatchEvent, args || []);
+  // this is all to say: new providerCls(dispatchEvent, args[0], args[1],...)
+  BoundClass = this.providerCls.bind.apply(this.providerCls,
+      [this.providerCls, dispatchEvent].concat(args || []));
+  instance = new BoundClass();
 
   return function(port, msg) {
     if (msg.action === 'method') {
@@ -237,21 +245,24 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
         fdom.debug.warn("Provider does not implement " + msg.type + "()!");
         return;
       }
-      var args = msg.value,
-          ret = function(to, req, type, ret, err) {
+      var prop = port.definition[msg.type],
+          args = fdom.proxy.portableToMessage(prop.value, msg),
+          ret = function(msg, prop, ret, err) {
+            var streams = fdom.proxy.messageToPortable(prop.ret, ret);
             this.emit(this.emitChannel, {
               type: 'method',
-              to: to,
+              to: msg.to,
               message: {
-                to: to,
+                to: msg.to,
                 type: 'method',
-                reqId: req,
-                name: type,
-                value: ret,
+                reqId: msg.reqId,
+                name: msg.type,
+                text: streams.text,
+                binary: streams.binary,
                 error: err
               }
             });
-          }.bind(port, msg.to, msg.reqId, msg.type);
+          }.bind(port, msg, prop);
       if (!Array.isArray(args)) {
         args = [args];
       }

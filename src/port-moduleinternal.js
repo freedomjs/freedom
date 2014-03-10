@@ -72,13 +72,17 @@ fdom.port.ModuleInternal.prototype.toString = function() {
  * @method attach
  * @param {String} name The name of the proxy.
  * @param {Proxy} proxy The proxy to attach.
+ * @param {String} api The API the proxy implements.
  * @private.
  */
-fdom.port.ModuleInternal.prototype.attach = function(name, proxy) {
+fdom.port.ModuleInternal.prototype.attach = function(name, proxy, api) {
   var exp = this.config.global.freedom;
 
   if (!exp[name]) {
     exp[name] = proxy.getProxyInterface();
+    if (api) {
+      exp[name].api = api;
+    }
   }
 
   this.pendingPorts -= 1;
@@ -95,32 +99,35 @@ fdom.port.ModuleInternal.prototype.attach = function(name, proxy) {
  * @private
  */
 fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
-  var i, proxy, provider, core;
+  var i, proxy, provider, core, api;
   for (i = 0; i < items.length; i += 1) {
+    api = undefined;
     if (items[i].def) {
+      api = items[i].def.name;
       if (items[i].provides) {
-        proxy = new fdom.port.Provider(items[i].def);
+        proxy = new fdom.port.Provider(items[i].def.definition);
       } else {
-        proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, items[i].def));
+        proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({},
+            items[i].def.definition));
       }
     } else {
       proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
     }
     
+    proxy.once('start', this.attach.bind(this, items[i].name, proxy, api));
     this.manager.createLink(this.port, items[i].name, proxy);
     this.pendingPorts += 1;
-    proxy.once('start', this.attach.bind(this, items[i].name, proxy));
   }
   
   // Allow resolution of files by parent.
   fdom.resources.addResolver(function(manifest, url, resolve) {
     var id = Math.random();
+    this.requests[id] = resolve;
     this.emit(this.externalChannel, {
       type: 'resolve',
       id: id,
       data: url
     });
-    this.requests[id] = resolve;
     return true;
   }.bind(this));
 
@@ -165,7 +172,7 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
         name: manifest.permissions[i],
         def: undefined
       };
-      obj.def = fdom.apis.get(obj.name).definition;
+      obj.def = fdom.apis.get(obj.name);
       if (seen.indexOf(obj.name) < 0 && obj.def) {
         proxies.push(obj);
         seen.push(obj.name);
@@ -180,7 +187,7 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
       };
       if (seen.indexOf(name) < 0) {
         if (desc.api) {
-          obj.def = fdom.apis.get(desc.api).definition;
+          obj.def = fdom.apis.get(desc.api);
         }
         proxies.push(obj);
         seen.push(name);
@@ -195,7 +202,7 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
         def: undefined,
         provides: true
       };
-      obj.def = fdom.apis.get(obj.name).definition;
+      obj.def = fdom.apis.get(obj.name);
       if (seen.indexOf(obj.name) < 0 && obj.def) {
         proxies.push(obj);
         seen.push(obj.name);

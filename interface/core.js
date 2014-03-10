@@ -2,9 +2,12 @@
 /*jslint indent:2,sloppy:true */
 
 fdom.apis.set("core", {
-  'createChannel': {type: "method", value: []},
-  'bindChannel': {type: "method", value: ["proxy"]},
-  'getId': {type: "method", value: []}
+  'createChannel': {type: "method", value: [], ret: {
+    channel: "proxy",
+    identifier: "string"
+  }},
+  'bindChannel': {type: "method", value: ["string"], ret: "proxy"},
+  'getId': {type: "method", value: [], ret: ["array", "string"]}
 });
 
 fdom.apis.set("core.view", {
@@ -21,21 +24,29 @@ fdom.apis.set("core.view", {
 });
 
 fdom.apis.set("core.storage", {
-  'keys': {type: "method", value: []},
-  'get': {type: "method", value: ["string"]},
-  'set': {type: "method", value: ["string", "string"]},
-  'remove': {type: "method", value: ["string"]},
+  'keys': {type: "method", value: [], ret: ["array", "string"]},
+  'get': {type: "method", value: ["string"], ret: "string"},
+  'set': {type: "method", value: ["string", "string"], ret: "string"},
+  'remove': {type: "method", value: ["string"], ret: "string"},
   'clear': {type: "method", value: []}
 });
 
 fdom.apis.set("core.socket", {
-  'create': {type: "method", value: ["string", "object"]},
-  'connect': {type: "method", value: ["number", "string", "number"]},
+  'create': {type: "method", value: ["string", "object"], ret: "number"},
+  'connect': {
+    type: "method",
+    value: ["number", "string", "number"],
+    ret: "number"
+  },
   'onData': {type: "event", value: {"socketId": "number", "data": "buffer"}},
-  'write': {type: "method", value: ["number", "buffer"]},
+  'write': {type: "method", value: ["number", "buffer"], ret: "number"},
   'disconnect': {type: "method", value: ["number"]},
   'destroy': {type: "method", value: ["number"]},
-  'listen': {type: "method", value: ["number", "string", "number"]},
+  'listen': {
+    type: "method",
+    value: ["number", "string", "number"],
+    ret: "number"
+  },
   'onConnection': {type: "event", value: {
     'serverSocketId': "number",
     'clientSocketId': "number"
@@ -44,7 +55,14 @@ fdom.apis.set("core.socket", {
     "socketId": "number",
     "error": "string"
   }},
-  'getInfo': {type: "method", value: ["number"]}
+  'getInfo': {type: "method", value: ["number"], ret: {
+    "type": "string",
+    "connected": "boolean",
+    "peerAddress": "string",
+    "peerPort": "number",
+    "localAddress": "string",
+    "localPort": "number"
+  }}
 });
 
 // A UDP socket.
@@ -63,14 +81,18 @@ fdom.apis.set('core.udpsocket', {
       'string',
       // Port on which to bind.
       'number'
-    ]
+    ],
+    ret: 'number'
   },
 
   // Retrieves the state of the socket.
   // Returns an object with the following properties:
   //  - localAddress: the socket's local address, if bound
   //  - localPort: the socket's local port, if bound
-  'getInfo': {type: 'method', value: []},
+  'getInfo': {type: 'method', value: [], ret: {
+    'localAddress': 'string',
+    'localPort': 'number'
+  }},
 
   // Sends data to a server.
   // The socket must be bound.
@@ -85,7 +107,8 @@ fdom.apis.set('core.udpsocket', {
       'string',
       // Destination port.
       'number'
-    ]
+    ],
+    ret: 'number'
   },
 
   // Releases all resources associated with this socket.
@@ -116,7 +139,7 @@ fdom.apis.set("core.runtime", {
 });
 
 fdom.apis.set('core.echo', {
-  'setup': {type: "method", value: ["proxy"]},
+  'setup': {type: "method", value: ["string"]},
   'send': {type: "method", value: ["string"]},
   'message': {type: "event", value: "string"}
 });
@@ -127,9 +150,8 @@ fdom.apis.set('core.peerconnection', {
   'setup': {
     type: "method",
     value: [
-      // The 'proxy' object is a freedom channel identifier used to send/receive
-      // text messages to/from a signalling chanel.
-      "proxy",
+      // The freedom.js channel identifier used to setup a signalling chanel.
+      "string",
       // The peerName, used debugging and console messages.
       "string",
       // The list of STUN servers to use.

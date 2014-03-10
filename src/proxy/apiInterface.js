@@ -20,14 +20,20 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
         // in order to prepare for synchronous in-window pipes.
         var thisReq = reqId,
             promise = new Promise(function(resolve, reject) {
-              inflight[thisReq] = {resolve:resolve, reject:reject};
-            });
+              inflight[thisReq] = {
+                resolve:resolve,
+                reject:reject,
+                template: prop.ret
+              };
+            }),
+            streams = fdom.proxy.messageToPortable(prop.value, arguments);
         reqId += 1;
         emit({
           action: 'method',
           type: name,
           reqId: thisReq,
-          value: fdom.proxy.conform(prop.value, arguments)
+          text: streams.text,
+          binary: streams.binary
         });
         return promise;
       };
@@ -61,112 +67,173 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
     }
     if (msg.type === 'method') {
       if (inflight[msg.reqId]) {
-        var resolver = inflight[msg.reqId];
+        var resolver = inflight[msg.reqId],
+            template = resolver.template;
         delete inflight[msg.reqId];
         if (msg.error) {
           resolver.reject(msg.error);
         } else {
-          resolver.resolve(msg.value);
+          resolver.resolve(fdom.proxy.portableToMessage(template, msg));
         }
       } else {
         fdom.debug.warn('Dropped response message with id ' + msg.reqId);
       }
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
-        emitter(msg.name, fdom.proxy.conform(events[msg.name].value,
-                msg.value));
+        emitter(msg.name, fdom.proxy.portableToMessage(events[msg.name].value,
+                msg));
       }
     }
   }.bind(this));
 
-  args = fdom.proxy.conform(def.constructor ? def.constructor.value : [],
-                            Array.prototype.slice.call(args, 3));
+  args = fdom.proxy.messageToPortable(
+      def.constructor ? def.constructor.value : [],
+      Array.prototype.slice.call(args, 3));
 
   emit({
-    'type': 'construct',
-    'args': args
+    type: 'construct',
+    text: args.text,
+    binary: args.binary
   });
+};
+
+/**
+ * Convert a structured data structure into a message stream conforming to
+ * a template and an array of binary data elements.
+ * @static
+ * @method messageToPortable
+ * @param {Object} template The template to conform to
+ * @param {Object} value The instance of the data structure to confrom
+ * @return {{text: Object, binary: Array}} Separated data streams.
+ */
+fdom.proxy.messageToPortable = function(template, value) {
+  var externals = [],
+      message = fdom.proxy.conform(template, value, externals, true);
+  return {
+    text: message,
+    binary: externals
+  };
+};
+
+/**
+ * Convert Structured Data streams into a data structure conforming to a
+ * template.
+ * @static
+ * @method portableToMessage
+ * @param {Object} template The template to conform to
+ * @param {{text: Object, binary: Array}} streams The streams to conform
+ * @return {Object} The data structure matching the template.
+ */
+fdom.proxy.portableToMessage = function(template, streams) {
+  return fdom.proxy.conform(template, streams.text, streams.binary, false);
 };
 
 /**
  * Force a collection of values to look like the types and length of an API
  * template.
+ * @static
+ * @method conform
+ * @param {Object} template The template to conform to
+ * @param {Object} from The value to conform
+ * @param {Array} externals Listing of binary elements in the template
+ * @param {Boolean} Whether to to separate or combine streams.
  */
-fdom.proxy.conform = function(template, value) {
+fdom.proxy.conform = function(template, from, externals, separate) {
   /* jshint -W086 */
-  if (typeof(value) === 'function') {
-    value = undefined;
+  if (typeof(from) === 'function') {
+    from = undefined;
   }
   switch(template) {
   case 'string':
-    return String('') + value;
+    return String('') + from;
   case 'number':
-    return Number(1) * value;
+    return Number(1) * from;
   case 'bool':
-    return Boolean(value === true);
+    return Boolean(from === true);
   case 'object':
     // TODO(willscott): Allow removal if sandboxing enforces this.
-    return JSON.parse(JSON.stringify(value));
+    return JSON.parse(JSON.stringify(from));
   case 'blob':
-    if (value instanceof Blob) {
-      return value;
+    if (separate) {
+      if (from instanceof Blob) {
+        externals.push(from);
+        return externals.length - 1;
+      } else {
+        fdom.debug.warn('conform expecting Blob, sees ' + (typeof from));
+        externals.push(new Blob([]));
+        return externals.length - 1;
+      }
     } else {
-      fdom.debug.warn('conform expecting Blob, sees ' + (typeof value));
-      return new Blob([]);
+      return externals[from];
     }
   case 'buffer':
-    if (value instanceof ArrayBuffer) {
-      return value;
-    } else if (value.constructor.name === "ArrayBuffer" &&
-        typeof value.prototype === "undefined") {
-      // Workaround for webkit origin ownership issue.
-      // https://github.com/UWNetworksLab/freedom/issues/28
-      return new DataView(value).buffer;
+    if (separate) {
+      externals.push(fdom.proxy.makeArrayBuffer(from));
+      return externals.length - 1;
     } else {
-      fdom.debug.warn('conform expecting ArrayBuffer, sees ' + (typeof value));
-      return new ArrayBuffer(0);
+      return fdom.proxy.makeArrayBuffer(externals[from]);
     }
-  case 'data':
-    // TODO(willscott): should be opaque to non-creator.
-    return value;
   case 'proxy':
-    if (Array.isArray(value)) {
-      return value;
-    } else {
-      // TODO: make proxy.
-      return value;
-    }
+    return from;
   }
   var val, i;
-  if (Array.isArray(template)) {
+  if (Array.isArray(template) && from !== undefined) {
     val = [];
     i = 0;
     if (template.length === 2 && template[0] === 'array') {
       //console.log("template is array, value is " + JSON.stringify(value));
-      for (i = 0; i < value.length; i += 1) {
-        val.push(fdom.proxy.conform(template[1], value[i]));
+      for (i = 0; i < from.length; i += 1) {
+        val.push(fdom.proxy.conform(template[1], from[i], externals,
+                                    separate));
       }
     } else {
       for (i = 0; i < template.length; i += 1) {
-        if (value[i] !== undefined) {
-          val.push(fdom.proxy.conform(template[i], value[i]));
+        if (from[i] !== undefined) {
+          val.push(fdom.proxy.conform(template[i], from[i], externals,
+                                      separate));
         } else {
           val.push(undefined);
         }
       }
     }
     return val;
-  } else if (typeof template === 'object') {
+  } else if (typeof template === 'object' && from !== undefined) {
     val = {};
     fdom.util.eachProp(template, function(prop, name) {
-      if (value[name]) {
-        val[name] = fdom.proxy.conform(prop, value[name]);
+      if (from[name] !== undefined) {
+        val[name] = fdom.proxy.conform(prop, from[name], externals, separate);
       }
     });
     return val;
   }
   fdom.debug.log('Conform ignoring value for template:' + template);
-  fdom.debug.log(value);
+  fdom.debug.log(from);
+};
+
+/**
+ * Make a thing into an Array Buffer
+ * @static
+ * @method makeArrayBuffer
+ * @param {Object} thing
+ * @return {ArrayBuffer} An Array Buffer
+ */
+fdom.proxy.makeArrayBuffer = function(thing) {
+  if (!thing) {
+    return new ArrayBuffer(0);
+  }
+
+  if (thing instanceof ArrayBuffer) {
+    return thing;
+  } else if (thing.constructor.name === "ArrayBuffer" &&
+      typeof thing.prototype === "undefined") {
+    // Workaround for webkit origin ownership issue.
+    // https://github.com/UWNetworksLab/freedom/issues/28
+    return new DataView(thing).buffer;
+  } else {
+    fdom.debug.warn('expecting ArrayBuffer, but saw ' +
+        (typeof thing) + ': ' + JSON.stringify(thing));
+    return new ArrayBuffer(0);
+  }
 };
 
 /**

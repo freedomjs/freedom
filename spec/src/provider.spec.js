@@ -2,7 +2,7 @@ describe("fdom.Port.Provider", function() {
   var port, o, constructspy;
   beforeEach(function() {
     var definition = {
-      'm1': {type: 'method', value:['string']},
+      'm1': {type: 'method', value:['string'], ret:'string'},
       'm2': {type: 'method', value:[{'name':'string'}]},
       'e1': {type: 'event', value:'string'},
       'c1': {type: 'constant', value:"test_constant"}
@@ -59,14 +59,14 @@ describe("fdom.Port.Provider", function() {
     port.onMessage('default', {to: 'testInst', type:'message', message: {
       'action': 'method',
       'type': 'm1',
-      'value': 'mystr',
+      'text': ['mystr'],
       'reqId': 1
     }});
 
     expect(called).toEqual(true);
 
     port.on('message', function(n) {
-      expect(n.message.value).toEqual('resolved mystr');
+      expect(n.message.text).toEqual('resolved mystr');
       done();
     });
   });

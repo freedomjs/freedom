@@ -16,8 +16,7 @@ fdom.apis.set("transport", {
    * @method setup
    * @param {string} name - give this connection a name for logging
    * @param {proxy} channel - signalling channel
-   * @return {channel} - a channel which the calling module must use to
-   *    forward signalling messages (e.g. through a the Social API)
+   * @return nothing.
    **/
   'setup': {type: "method", value: ["string", "proxy"]},
 

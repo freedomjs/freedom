@@ -38,7 +38,7 @@ fdom.apis.set("storage", {
    * @method keys
    * @return an array with all keys in the store 
    **/
-  'keys': {type: "method", value: []},
+  'keys': {type: "method", value: [], ret: ["array", "string"]},
 
   /**
    * Fetch a value for a key
@@ -48,7 +48,7 @@ fdom.apis.set("storage", {
    * @param {String} key - key to fetch
    * @return {String} Returns a string with the value, null if doesn't exist
    **/
-  'get': {type: "method", value: ["string"]},
+  'get': {type: "method", value: ["string"], ret: "string"},
 
   /**
    * Sets a value to a key
@@ -57,9 +57,9 @@ fdom.apis.set("storage", {
    * @method set
    * @param {String} key - key of value to set
    * @param {String} value - value
-   * @return nothing
+   * @return {String} previous value of key if there was one.
    **/
-  'set': {type: "method", value: ["string", "string"]},
+  'set': {type: "method", value: ["string", "string"], ret: "string"},
   
   /**
    * Removes a single key
@@ -67,9 +67,9 @@ fdom.apis.set("storage", {
    *
    * @method remove
    * @param {String} key - key to remove
-   * @return nothing
+   * @return {String} previous value of key if there was one.
    **/
-  'remove': {type: "method", value: ["string"]},
+  'remove': {type: "method", value: ["string"], ret: "string"},
   
   /**
    * Removes all data from storage

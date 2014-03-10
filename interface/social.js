@@ -110,13 +110,22 @@ fdom.apis.set('social', {
    * @param {Object} loginOptions - See below
    * @return {Object} <client_state>
    **/
-  'login': {type: 'method', value: [{
-    'agent': 'string',    //Name of the application
-    'version': 'string',  //Version of application
-    'url': 'string',      //URL of application
-    'interactive': 'bool', //If true, always prompt for login. If false, try with cached credentials
-    'rememberLogin': 'bool' //Cache the login credentials
-  }]},
+  'login': {
+    type: 'method',
+    value: [{
+      'agent': 'string',    //Name of the application
+      'version': 'string',  //Version of application
+      'url': 'string',      //URL of application
+      'interactive': 'bool' //Prompt user for login if credentials not cached?
+      'rememberLogin': 'bool' //Cache the login credentials
+    }],
+    ret: {
+      'userId': 'string',   // userId of myself on this network
+      'clientId': 'string', // clientId of my client on this network
+      'status': 'number',   // One of the constants defined in 'STATUS'
+      'timestamp': 'number' // Timestamp of last received change to <client_state>
+    }
+  },
 
   /**
    * Clears the cached credentials
@@ -159,7 +168,7 @@ fdom.apis.set('social', {
    * } List of <user_profile>s indexed by userId
    *   On failure, rejects with an error code (see above)
    **/
-  'getUsers': {type: 'method', value: []},
+  'getUsers': {type: 'method', value: [], ret: "object"},
 
   /** 
    * Send a message to user on your network
