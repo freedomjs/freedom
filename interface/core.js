@@ -6,7 +6,7 @@ fdom.apis.set("core", {
     channel: "proxy",
     identifier: "string"
   }},
-  'bindChannel': {type: "method", value: ["proxy"], ret: "proxy"},
+  'bindChannel': {type: "method", value: ["string"], ret: "proxy"},
   'getId': {type: "method", value: [], ret: ["array", "string"]}
 });
 
@@ -139,7 +139,7 @@ fdom.apis.set("core.runtime", {
 });
 
 fdom.apis.set('core.echo', {
-  'setup': {type: "method", value: ["proxy"]},
+  'setup': {type: "method", value: ["string"]},
   'send': {type: "method", value: ["string"]},
   'message': {type: "event", value: "string"}
 });
@@ -150,9 +150,8 @@ fdom.apis.set('core.peerconnection', {
   'setup': {
     type: "method",
     value: [
-      // The 'proxy' object is a freedom channel identifier used to send/receive
-      // text messages to/from a signalling chanel.
-      "proxy",
+      // The freedom.js channel identifier used to setup a signalling chanel.
+      "string",
       // The peerName, used debugging and console messages.
       "string",
       // The list of STUN servers to use.
