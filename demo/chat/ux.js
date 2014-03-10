@@ -23,20 +23,20 @@ window.onload = function() {
     br.scrollIntoView();
   }
   
-  var onClick = function(jid, child) {
-    if (activeId != jid) {
-      activeId = jid;
-      child.innerHTML = "[" + val[i] + "]";
-    } else {
-      activeId = undefined;
-      child.innerHTML = val[i];
-    }
-    console.log("Messages will be sent to: " + activeId);
-    document.getElementById('msg-input').focus();
-  };
-
   // on changes to the buddylist, redraw entire buddylist
   window.freedom.on('recv-buddylist', function(val) {
+    var onClick = function(jid, child) {
+      if (activeId != jid) {
+        activeId = jid;
+        child.innerHTML = "[" + val[i] + "]";
+      } else {
+        activeId = undefined;
+        child.innerHTML = val[i];
+      }
+      console.log("Messages will be sent to: " + activeId);
+      document.getElementById('msg-input').focus();
+    };
+
     var buddylist = document.getElementById('buddylist');
     // Remove all elements in there now
     buddylist.innerHTML = "<b>Buddylist</b>";
@@ -52,7 +52,7 @@ window.onload = function() {
   });
   // On new messages, append it to our message log
   window.freedom.on('recv-message', function(data) {
-    var message = data.fromUserId + ": " + data.message;
+    var message = data.from.userId + ": " + data.message;
     appendLog(document.createTextNode(message));
   });
 

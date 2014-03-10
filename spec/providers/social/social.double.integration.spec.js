@@ -15,7 +15,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     cleanupIframes();
   });
 
-  xit("A-B: sends message between A->B", function(done) {
+  it("A-B: sends message between A->B", function(done) {
     var ids = {};
     var msg = "Hello World";
     var clientStateA, clientStateB;

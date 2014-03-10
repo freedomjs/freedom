@@ -8,8 +8,9 @@
  **/
 
 var social = freedom.socialprovider();
-var roster = {};    //Keep track of the roster
-var networks = {};
+var userList = {};    //Keep track of the roster
+var clientList = {};
+var myClientState = null;
 
 /** 
  * on a 'send-message' event from the parent (the outer page)
@@ -17,35 +18,6 @@ var networks = {};
  **/
 freedom.on('send-message', function(val) {
   social.sendMessage(val.to, val.message);
-});
-
-/**
- * on a 'onStatus' from the Social provider
- * Just forward it to the outer page
- * If we see our userId, send that as a separate event
- **/
-social.on('onStatus', function(msg) {
-  //If never seen this network before, try logging in
-  if (!networks.hasOwnProperty(msg.network)) {
-    social.login({
-      network: msg.network,
-      agent: 'chatdemo', 
-      version: '0.1', 
-      url: '',
-      interactive: true 
-    });
-  }
-  networks[msg.network] = msg;
-
-  if (msg.userId) {
-    freedom.emit('recv-uid', msg.userId);
-  }
-  if (msg.status == social.STATUS_NETWORK["ONLINE"]) {
-    freedom.emit('recv-status', 'online');
-  } else {
-    freedom.emit('recv-status', msg.message);
-  }
-
 });
 
 /**
@@ -57,39 +29,58 @@ social.on('onMessage', function(data) {
 });
 
 /**
- * On roster changes, let's keep track of them
+ * On user profile changes, let's keep track of them
  **/
-social.on('onChange', function(data) {
-  roster[data.userId] = data;
+social.on('onUserProfile', function(data) {
+  //Just save it for now
+  userList[data.userId] = data;
+});
+
+/**
+ * On newly online or offline clients, let's update the roster
+ **/
+social.on('onClientState', function(data) {
+  if (data.status == social.STATUS["OFFLINE"]) {
+    if (clientList.hasOwnProperty(data.clientId)) {
+      delete clientList[data.clientId];
+    }
+  } else {  //Only track non-offline clients
+    clientList[data.clientId] = data;
+  }
+  //If mine, send to the page
+  if (myClientState !== null && data.clientId == myClientState.clientId) {
+    if (data.status == social.STATUS["ONLINE"]) {
+      freedom.emit('recv-status', "online");
+    } else {
+      freedom.emit('recv-status', "offline");
+    }
+  }
   // Iterate over our roster and just send over userId's where there is at least 1 client online
   var buddylist = [];
-  for (var k in roster) {
-    if (roster.hasOwnProperty(k) && hasOnlineClient(roster[k])) {
+  for (var k in clientList) {
+    if (clientList.hasOwnProperty(k)) {
       buddylist.push(k);
     }
   }
   freedom.emit('recv-buddylist', buddylist);
 });
 
-
-/**
- * Iterate over a <user card> (see interface/social.js for schema)
- * and check for a client that's online
- * 
- * @method hasOnlineClient
- * @param {Object} data - <user card>
- * @return {Boolean} - true if there's at least 1 online client 
- **/
-function hasOnlineClient(data) {
-  if (data.clients) {
-    for (var k in data.clients) {
-      if (data.clients.hasOwnProperty(k) && 
-          data.clients[k].status &&
-          data.clients[k].status !== social.STATUS_CLIENT['OFFLINE']) {
-        return true;
-      }
-    }
+/** LOGIN AT START **/
+social.login({
+  agent: 'chatdemo',
+  version: '0.1',
+  url: '',
+  interactive: true,
+  rememberLogin: false
+}).then(function(ret) {
+  myClientState = ret;
+  console.log("!!!"+JSON.stringify(myClientState));
+  if (ret.status == social.STATUS["ONLINE"]) {
+    freedom.emit('recv-uid', ret.clientId);
+    freedom.emit('recv-status', "online");
+  } else {
+    freedom.emit('recv-status', "offline");
   }
-  return false;
-}
-
+}, function(err) {
+  freedom.emit("recv-err", err);
+});
