@@ -19,7 +19,6 @@ function LoopbackSocialProvider(dispatchEvent) {
   this.USER_ID = 'Test User';      //My userId
   this.CLIENT_ID = 'Test User.0';  //My clientId
   this.status_codes = freedom.social().STATUS;
-  console.log("Loopback Social Provider");
 
   //Populate a fake roster
   this.users = {

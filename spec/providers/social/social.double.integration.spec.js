@@ -16,6 +16,15 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     done();
   });
 
+  function makeClientState(userId, clientId, status) {
+    return {
+      userId: userId,
+      clientId: clientId,
+      status: fdom.apis.get("social").definition.STATUS.value[status],
+      timestamp: jasmine.any(Number)
+    };
+  }
+
   it("A-B: sends message between A->B", function(done) {
     var ids = {};
     var msg = "Hello World";
@@ -43,75 +52,51 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     
     var callbackOne = function(ret) {
       clientStateA = ret;
-      console.log(JSON.stringify(ret));
       ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
     };
     var callbackTwo = function(ret) {
       clientStateB = ret;
-      console.log(JSON.stringify(ret));
       ids[2] = helper.call("SocialA", "sendMessage", [clientStateB.userId, msg]);
     };
 
     ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
-    console.log("");
   });
 
-  xit("A-B: sends roster updates through the onChange event.", function(done) {
+  it("A-B: sends roster updates through the onChange event.", function(done) {
     var ids = {};
-    var socialAStatus;
-    function waitForIds() {
-      return helper.hasReturned(ids);
+    var clientStateA, clientStateB = null;
+    var receivedClientState = [];
+    var receivedUserProfiles = [];
+    var ranExpectations = false;
+  
+    helper.on("SocialA", "onUserProfile", function(info) {
+      receivedUserProfiles.push(info);
+    });
+
+    helper.on("SocialA", "onClientState", function(info) {
+      receivedClientState.push(info);
+      if (receivedClientState.length >= 2 && clientStateB !== null && !ranExpectations) {
+        ranExpectations = true;
+        expect(receivedUserProfiles).toContain(jasmine.objectContaining({
+          userId: clientStateB.userId,
+          timestamp: jasmine.any(Number)
+        }));
+        expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
+        expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "OFFLINE"));
+        ids[3] = helper.call("SocialA", "logout", [], done);
+      }
+    });
+
+    var callbackOne = function(ret) {
+      clientStateA = ret;
+      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
     }
-    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}]);
+    var callbackTwo = function(ret) {
+      clientStateB = ret;
+      ids[2] = helper.call("SocialB", "logout", []);
+    };
 
-    waitsFor("SocialA to log in", helper.hasReturned.bind(helper, ids));
-    
-    var rosterUpdateLogin = false;
-    runs(function() {
-      socialAStatus = helper.returns[ids[0]];
-      helper.on("SocialA", "onChange", function(info) {        
-        waitsFor("SocialB to log in", helper.hasReturned.bind(helper, ids),
-                 TIMEOUT);
-        runs(function() {
-          var socialBStatus = helper.returns[ids[1]];
-          if (info.userId === socialBStatus.userId) {
-            expect(info.clients[info.userId].status).toEqual(2);
-            rosterUpdateLogin = true;
-          }
-        });
-      });
-      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}]);
-    });
-
-    waitsFor("SocialB to log in", helper.hasReturned.bind(helper, ids),
-             TIMEOUT);
-    waitsFor("SocialA to get roster update for SocialB login", function() {
-      return rosterUpdateLogin;
-    }, TIMEOUT);
-
-    var rosterUpdateLogout = false;
-    runs(function() {
-      helper.removeListeners("SocialA");
-      helper.on("SocialA", "onChange", function(info) {
-        var socialBStatus = helper.returns[ids[1]];
-        expect(info.userId).toEqual(socialBStatus.userId);
-        expect(info.clients[info.userId].status).toEqual(0);
-        rosterUpdateLogout = true;
-      });
-      ids[2] = helper.call("SocialB", "logout", [{}]);
-    });
-
-    waitsFor("SocialB to log out", helper.hasReturned.bind(helper, ids),
-             TIMEOUT);
-    waitsFor("SocialA to get roster update for SocialB logout", function() {
-      return rosterUpdateLogout;
-    }, TIMEOUT);
-
-    runs(function() {
-      ids[3] = helper.call("SocialA", "logout", [{}]);
-    });
-    waitsFor("SocialA to log out", helper.hasReturned.bind(helper, ids),
-             TIMEOUT);
+    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
   });
 
   xit("A-B: can return the roster", function(done) {
