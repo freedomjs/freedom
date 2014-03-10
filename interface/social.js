@@ -151,7 +151,7 @@ fdom.apis.set('social', {
    * } List of <client_state>s indexed by clientId
    *   On failure, rejects with an error code (see above)
    **/
-  'getClients': {type: 'method', value: []},
+  'getClients': {type: 'method', value: [], ret: "object"},
 
   /**
    * Returns all the <user_profile>s that we've seen so far (from 'onUserProfile' events)

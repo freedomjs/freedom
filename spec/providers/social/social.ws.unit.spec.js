@@ -75,7 +75,7 @@ describe("unit: social.ws.json", function () {
   it("logs out", function() {
     var d = jasmine.createSpy("logout");
     provider.login({}, function() {});
-    provider.logout({}, d);
+    provider.logout(d);
     expect(d).toHaveBeenCalled();
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", jasmine.objectContaining({
       status: freedom.social().STATUS["OFFLINE"]

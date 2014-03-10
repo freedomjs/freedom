@@ -93,7 +93,7 @@ describe("unit: social.loopback.json", function () {
   it("logs out", function() {
     var d = jasmine.createSpy("logout");
     provider.login({}, function() {});
-    provider.logout({}, d);
+    provider.logout(d);
     expect(d).toHaveBeenCalled();
     expect(provider.dispatchEvent).toHaveBeenCalled();
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {

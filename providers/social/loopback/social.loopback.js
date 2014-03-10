@@ -137,7 +137,7 @@ LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 
 // Log out. All users in the roster will go offline
 // Options are ignored
-LoopbackSocialProvider.prototype.logout = function(opts, continuation) {
+LoopbackSocialProvider.prototype.logout = function(continuation) {
   for (var clientId in this.clients) {
     if (this.clients.hasOwnProperty(clientId)) {
       this.clients[clientId].status = this.status_codes['OFFLINE'];

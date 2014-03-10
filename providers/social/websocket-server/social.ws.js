@@ -137,10 +137,9 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
    * No options needed
    * 
    * @method logout
-   * @param {Object} logoutOptions
    * @return {Object} status - same schema as 'onStatus' events
    **/
-WSSocialProvider.prototype.logout = function(logoutOpts, continuation) {
+WSSocialProvider.prototype.logout = function(continuation) {
   if (this.conn === null) { // We may not have been logged in
     console.warn("Already logged out");
     this.changeRoster(this.id, false);

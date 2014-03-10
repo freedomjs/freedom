@@ -9,10 +9,11 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     done();
   });
   
-  afterEach(function() {
+  afterEach(function(done) {
     helper.removeListeners("SocialA");
     helper.removeListeners("SocialB");
     cleanupIframes();
+    done();
   });
 
   it("A-B: sends message between A->B", function(done) {
@@ -42,17 +43,20 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     
     var callbackOne = function(ret) {
       clientStateA = ret;
+      console.log(JSON.stringify(ret));
       ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
     };
     var callbackTwo = function(ret) {
       clientStateB = ret;
-      ids[2] = helper.call("SocialA", "sendMessage", [socialBStatus.userId, msg]);
+      console.log(JSON.stringify(ret));
+      ids[2] = helper.call("SocialA", "sendMessage", [clientStateB.userId, msg]);
     };
 
     ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
+    console.log("");
   });
 
-  xit("A-B: sends roster updates through the onChange event.", function() {
+  xit("A-B: sends roster updates through the onChange event.", function(done) {
     var ids = {};
     var socialAStatus;
     function waitForIds() {
@@ -110,7 +114,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
              TIMEOUT);
   });
 
-  xit("A-B: can return the roster", function() {
+  xit("A-B: can return the roster", function(done) {
     var ids = {};
     var socialAStatus, socialBStatus;
 
