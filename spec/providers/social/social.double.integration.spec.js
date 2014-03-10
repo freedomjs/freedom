@@ -25,22 +25,21 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     };
   }
 
+  function makeUserProfile(userId) {
+    return jasmine.objectContaining({
+      userId: userId,
+      timestamp: jasmine.any(Number)
+    });
+  }
+
   it("A-B: sends message between A->B", function(done) {
     var ids = {};
     var msg = "Hello World";
     var clientStateA, clientStateB;
 
     helper.on("SocialB", "onMessage", function(message) {
-      expect(message.from).toEqual(jasmine.objectContaining({
-        userId: clientStateA.userId,
-        clientId: clientStateA.clientId,
-        status: fdom.apis.get("social").definition.STATUS.value["ONLINE"]
-      }));
-      expect(message.to).toEqual(jasmine.objectContaining({
-        userId: clientStateB.userId,
-        clientId: clientStateB.clientId,
-        status: fdom.apis.get("social").definition.STATUS.value["ONLINE"]
-      }));
+      expect(message.from).toEqual(makeClientState(clientStateA.userId, clientStateA.clientId, "ONLINE"));
+      expect(message.to).toEqual(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
       expect(message.message).toEqual(msg);
       // Cleanup and finish
       ids[3] = helper.call("SocialA", "logout", [], function(ret) {
@@ -77,10 +76,7 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
       receivedClientState.push(info);
       if (receivedClientState.length >= 2 && clientStateB !== null && !ranExpectations) {
         ranExpectations = true;
-        expect(receivedUserProfiles).toContain(jasmine.objectContaining({
-          userId: clientStateB.userId,
-          timestamp: jasmine.any(Number)
-        }));
+        expect(receivedUserProfiles).toContain(makeUserProfile(clientStateB.userId));
         expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
         expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "OFFLINE"));
         ids[3] = helper.call("SocialA", "logout", [], done);
@@ -99,47 +95,45 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
     ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
   });
 
-  xit("A-B: can return the roster", function(done) {
+  it("A-B: can return the roster", function(done) {
     var ids = {};
-    var socialAStatus, socialBStatus;
+    var clientStateA, clientStateB = null;
+    var callbackCount = 0;
+    var loggingOut = false;
 
-    function checkRoster(social, returnId) {
-      ids[returnId] = helper.call(social, "getRoster");
-      waitsFor("gets " + social + " roster to return",
-               helper.hasReturned.bind(helper, ids), TIMEOUT);
-      runs(function() {
-        var roster = helper.returns[ids[returnId]];
-        expect(Object.keys(roster)).toContain(socialBStatus.userId);
-        expect(Object.keys(roster)).toContain(socialAStatus.userId);
-      });
-    }
-
-    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}]);
-
-    waitsFor("SocialA login", helper.hasReturned.bind(helper, ids), TIMEOUT);
-
-    runs(function() {
-      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}]);
-    });
-
-    waitsFor("SocialB login", helper.hasReturned.bind(helper, ids), TIMEOUT);
-
-    runs(function() {
-      socialAStatus = helper.returns[ids[0]];
-      socialBStatus = helper.returns[ids[1]];
-    });
-
-    runs(checkRoster.bind(undefined, "SocialB", 2));
-    runs(checkRoster.bind(undefined, "SocialA", 3));
+    var callbackOne = function(ret) {
+      clientStateA = ret;
+      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      clientStateB = ret;
+      ids[2] = helper.call("SocialA", "getUsers", [], callbackGetUsers);
+      ids[3] = helper.call("SocialB", "getUsers", [], callbackGetUsers);
+      ids[4] = helper.call("SocialA", "getClients", [], callbackGetClients);
+      ids[5] = helper.call("SocialB", "getClients", [], callbackGetClients);
+    };
+    var callbackGetUsers = function(ret) {
+      callbackCount++;
+      expect(ret[clientStateA.userId]).toEqual(makeUserProfile(clientStateA.userId));
+      expect(ret[clientStateB.userId]).toEqual(makeUserProfile(clientStateB.userId));
+      checkDone();
+    };
+    var callbackGetClients = function(ret) {
+      callbackCount++;
+      expect(ret[clientStateA.clientId]).toEqual(makeClientState(clientStateA.userId, clientStateA.clientId, "ONLINE"));
+      expect(ret[clientStateB.clientId]).toEqual(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
+      checkDone();
+    };
+    var checkDone = function() {
+      if (callbackCount >= 4 && !loggingOut) {
+        loggingOut = true;
+        ids[6] = helper.call("SocialA", "logout", [], function(ret) {
+          ids[7] = helper.call("SocialB", "logout", [], done);
+        });
+      }
+    };
     
-    runs(function() {
-      ids[4] = helper.call("SocialA", "logout", [{}]);
-      ids[5] = helper.call("SocialB", "logout", [{}]);
-    });
-
-    waitsFor("SocialA and SocialB to log out",
-             helper.hasReturned.bind(helper, ids),
-             TIMEOUT);
+    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
   });
  
 };
