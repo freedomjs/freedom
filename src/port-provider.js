@@ -247,8 +247,8 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
       }
       var prop = port.definition[msg.type],
           args = fdom.proxy.portableToMessage(prop.value, msg),
-          ret = function(msg, prop, ret, err) {
-            var streams = fdom.proxy.messageToPortable(prop.ret, ret);
+          ret = function(msg, prop, resolve, reject) {
+            var streams = fdom.proxy.messageToPortable(prop.ret, resolve);
             this.emit(this.emitChannel, {
               type: 'method',
               to: msg.to,
@@ -259,7 +259,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
                 name: msg.type,
                 text: streams.text,
                 binary: streams.binary,
-                error: err
+                error: reject
               }
             });
           }.bind(port, msg, prop);

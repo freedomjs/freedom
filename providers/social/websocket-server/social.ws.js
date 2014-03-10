@@ -58,8 +58,7 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
   };
 
   if (this.conn !== null) {
-    console.warn("Already logged in");
-    finishLogin.finish(this.changeRoster(this.id, true));
+    finishLogin.finish(undefined, this.social.ERRCODE["LOGIN_ALREADYONLINE"]);
     return;
   }
   this.conn = new this.websocket(this.WS_URL + loginOpts.agent);

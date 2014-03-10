@@ -119,11 +119,19 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
   
   });
 
-  xit("ERRCODE-LOGIN_ALREADYONLINE", function(done) {
+  it("ERRCODE-LOGIN_ALREADYONLINE", function(done) {
     var ids = {};
     var myClientState;
-    
-  
+    var callbackOne = function(ret) {
+      myClientState = ret;
+      ids[1] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], dead, errHandler);
+    };
+    var errHandler = function(err) {
+      expect(err).toEqual(ERRCODE["LOGIN_ALREADYONLINE"]);
+      ids[2] = helper.call("s", "logout", [], done);
+    }
+        
+    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
   });
   
   it("ERRCODE-SEND_INVALIDDESTINATION", function(done) {
@@ -134,7 +142,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
       ids[1] = helper.call("s", "sendMessage", ["invalid-destination", "pooballs"], dead, errHandler);
     };
     var errHandler = function(err) {
-      //expect(err).toEqual(ERRCODE["SEND_INVALIDDESTINATION"]);
+      expect(err).toEqual(ERRCODE["SEND_INVALIDDESTINATION"]);
       ids[2] = helper.call("s", "logout", [], done);
     }
         

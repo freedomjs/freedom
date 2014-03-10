@@ -85,6 +85,10 @@ LoopbackSocialProvider.prototype.fillClients = function() {
 // Log in. Options are ignored
 // Roster is only emitted to caller after log in
 LoopbackSocialProvider.prototype.login = function(opts, continuation) {
+  if (this.clients.hasOwnProperty(this.clientId)) {
+    continuation(undefined, this.social.ERRCODE["LOGIN_ALREADYONLINE"]);
+    return;
+  }
   this.fillClients();
   for (var userId in this.users) {
     if (this.users.hasOwnProperty(userId)) {
