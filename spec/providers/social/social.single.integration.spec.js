@@ -21,19 +21,17 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     };
   }
   
-  xit("logs in", function() {
+  it("logs in", function() {
     var ids = {};
+    var callbackOne = function(ret) {
+      expect(ret).toEqual(makeOnStatus("ONLINE"));
     
-    runs(function() {
-      ids[0] = helper.call("SocialA", "login", [{agent: "jasmine", interactive: false}]);
-    });
-    waitsFor("logs in", helper.hasReturned.bind(helper, ids), TIMEOUT);
-
-    runs(function() {
-      expect(helper.returns[ids[0]]).toBeDefined();
-      expect(helper.returns[ids[0]]).toEqual(makeOnStatus("ONLINE"));
-      ids[1] = helper.call("SocialA", "logout", [{}]);
-    });
+      ids[1] = helper.call("s", "logout", [], function(ret) {
+        done();
+      });
+    };
+    
+    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
   });
 
   xit("logs in, then out (x5)", function() {

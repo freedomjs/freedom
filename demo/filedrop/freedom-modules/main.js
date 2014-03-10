@@ -15,7 +15,8 @@ var storage = freedom.storageprovider();
 
 // Internal State
 var networks = {};
-var roster = {};
+var userList = {};
+var clientList = {};
 var files = {};       // Files served from this node
 var fetchQueue = [];  // Files on queue to be downloaded
 
@@ -135,8 +136,12 @@ social.on('onStatus', function(msg) {
   }
 });
 
-social.on('onChange', function(data) {
-  roster[data.userId] = data;
+social.on('onUserProfile', function(data) {
+  userList[data.userId] = data;
+});
+
+social.on('onClientList', function(data) {
+  clientList[data.clientId] = data;
 });
 
 social.on('onMessage', function(data) {

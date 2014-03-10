@@ -33,8 +33,8 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
       }));
       expect(message.message).toEqual(msg);
       // Cleanup and finish
-      ids[3] = helper.call("SocialA", "logout", [{}], function(ret) {
-        ids[4] = helper.call("SocialB", "logout", [{}], function(ret) {
+      ids[3] = helper.call("SocialA", "logout", [], function(ret) {
+        ids[4] = helper.call("SocialB", "logout", [], function(ret) {
           done();
         });
       });
