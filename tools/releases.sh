@@ -15,6 +15,7 @@ cp -r tools/doc tools/freedomjs/docs/$BRANCH
 mkdir -p tools/freedomjs/demo/$BRANCH
 cp -r demo tools/freedomjs/demo/$BRANCH/demo
 cp -r providers tools/freedomjs/demo/$BRANCH/providers
+cp freedom.js tools/freedomjs/demo/$BRANCH/freedom.js
 
 if [ "$TAG" ]; then
   cp freedom.js tools/freedomjs/release/$BRANCH/freedom.$TAG.js
