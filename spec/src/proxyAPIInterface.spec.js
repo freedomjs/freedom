@@ -138,7 +138,7 @@ describe("fdom.proxy.conform", function() {
     var template = {
       'p1': 'string',
       'p2': 'number',
-      'p3': 'bool',
+      'p3': 'boolean',
       'p4': 'object',
       'p5': 'blob',
       'p6': 'buffer',
@@ -195,7 +195,7 @@ describe("fdom.proxy.conform", function() {
   it("conforms simple arguments", function() {
     expect(fdom.proxy.conform("string", "mystring", [], false)).toEqual("mystring");
     expect(fdom.proxy.conform("number", "mystring", [], false)).toEqual(jasmine.any(Number));
-    expect(fdom.proxy.conform("bool", "mystring", [], false)).toEqual(false);
+    expect(fdom.proxy.conform("boolean", "mystring", [], false)).toEqual(false);
     expect(fdom.proxy.conform("", "mystring", [], false)).toEqual(undefined);
     expect(fdom.proxy.conform(["string", "number"], ["test", 0], [], false))
       .toEqual(["test", 0]);

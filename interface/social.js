@@ -116,8 +116,8 @@ fdom.apis.set('social', {
       'agent': 'string',      //Name of the application
       'version': 'string',    //Version of application
       'url': 'string',        //URL of application
-      'interactive': 'bool',  //Prompt user for login if credentials not cached?
-      'rememberLogin': 'bool' //Cache the login credentials
+      'interactive': 'boolean',  //Prompt user for login if credentials not cached?
+      'rememberLogin': 'boolean' //Cache the login credentials
     }],
     ret: {
       'userId': 'string',     // userId of myself on this network
