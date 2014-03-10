@@ -148,7 +148,7 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     return String('') + from;
   case 'number':
     return Number(1) * from;
-  case 'bool':
+  case 'boolean':
     return Boolean(from === true);
   case 'object':
     // TODO(willscott): Allow removal if sandboxing enforces this.
