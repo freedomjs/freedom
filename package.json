@@ -1,7 +1,7 @@
 {
   "name": "freedom",
   "description": "Embracing a distributed web",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "homepage": "http://freedomjs.com",
   "bugs": {
     "url": "http://github.com/UWNetworksLab/freedom/issues",
@@ -16,7 +16,7 @@
     "url": "https://github.com/UWNetworksLab/freedom"
   },
   "devDependencies": {
-    "grunt": "~0.4.1",
+    "grunt": "~0.4.3",
     "grunt-contrib-jasmine": "~0.6.1",
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-contrib-concat": "~0.3.0",
