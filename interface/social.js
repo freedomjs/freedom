@@ -97,8 +97,10 @@ fdom.apis.set('social', {
       'agent': 'string',         // Name of the application
       'version': 'string',       // Version of application
       'url': 'string',           // URL of application
-      'interactive': 'boolean',  // Allow user interaction from provider
-      'rememberLogin': 'boolean' // Cache login credentials
+      'interactive': 'boolean',  // Allow user interaction from provider.
+                                 // If not set, interpreted as true.
+      'rememberLogin': 'boolean' // Cache login credentials, if not set,
+                                 // interpreted as true.
     }],
     ret: {                       // <client_state>, defined above.
       'userId': 'string',
