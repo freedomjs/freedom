@@ -125,12 +125,6 @@ describe("unit: social.loopback.json", function () {
         status: "ONLINE",
         timestamp: jasmine.any(Number)
       },
-      to: {
-        userId: "Test User",
-        clientId: "Test User.0",
-        status: "ONLINE",
-        timestamp: jasmine.any(Number)
-      },
       message: "Hello World"
     });
   });

@@ -58,7 +58,7 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
   };
 
   if (this.conn !== null) {
-    finishLogin.finish(undefined, this.social.ERRCODE["LOGIN_ALREADYONLINE"]);
+    finishLogin.finish(undefined, this.err("LOGIN_ALREADYONLINE"));
     return;
   }
   this.conn = new this.websocket(this.WS_URL + loginOpts.agent);
@@ -67,7 +67,7 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
   this.conn.onmessage = this.onMessage.bind(this, finishLogin);
   this.conn.onerror = function (cont, error) {
     this.conn = null;
-    cont.finish(this.sendStatus('ERR_CONNECTION', error));
+    cont.finish(undefined, this.err('ERR_CONNECTION'));
   }.bind(this, finishLogin);
   this.conn.onclose = function (cont, msg) {
     this.conn = null;
@@ -93,7 +93,7 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
  **/
 WSSocialProvider.prototype.getUsers = function(continuation) {
   if (this.conn === null) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   }
   continuation(this.users);
@@ -116,7 +116,7 @@ WSSocialProvider.prototype.getUsers = function(continuation) {
  **/
 WSSocialProvider.prototype.getClients = function(continuation) {
   if (this.conn === null) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   }
   continuation(this.clients);
@@ -134,10 +134,10 @@ WSSocialProvider.prototype.getClients = function(continuation) {
  **/
 WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   if (this.conn === null) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   } else if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
-    continuation(undefined, this.social.ERRCODE["SEND_INVALIDDESTINATION"]);
+    continuation(undefined, this.err("SEND_INVALIDDESTINATION"));
     return;
   }
 
@@ -156,7 +156,7 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 WSSocialProvider.prototype.logout = function(continuation) {
   if (this.conn === null) { // We may not have been logged in
     this.changeRoster(this.id, false);
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   }
   this.conn.onclose = function(continuation) {
@@ -246,7 +246,6 @@ WSSocialProvider.prototype.onMessage = function(finishLogin, msg) {
   } else if (msg.cmd === 'message') {
     this.dispatchEvent('onMessage', {
       from: this.changeRoster(msg.from, true),
-      to: this.changeRoster(this.id, true),
       message: msg.msg
     });
   // Roster change event
@@ -256,6 +255,14 @@ WSSocialProvider.prototype.onMessage = function(finishLogin, msg) {
   } else if (msg.from) {
     this.changeRoster(msg.from, true);
   }
+};
+
+WSSocialProvider.prototype.err = function(code) {
+  var err = {
+    errcode: code,
+    message: this.social.ERRCODE[code]
+  };
+  return err;
 };
 
 /** REGISTER PROVIDER **/

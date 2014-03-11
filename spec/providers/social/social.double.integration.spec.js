@@ -39,7 +39,6 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
 
     helper.on("SocialB", "onMessage", function(message) {
       expect(message.from).toEqual(makeClientState(clientStateA.userId, clientStateA.clientId, "ONLINE"));
-      expect(message.to).toEqual(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
       expect(message.message).toEqual(msg);
       // Cleanup and finish
       ids[3] = helper.call("SocialA", "logout", [], function(ret) {
