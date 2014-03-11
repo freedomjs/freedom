@@ -14,17 +14,13 @@
  * - Persistent clientId - Whether your clientId changes between logins when
  *    connecting from the same device
  *
- * The API does enforce some properties:
- * - The userId for each user does not change between logins
- * - The Social provider must output an 'onUserUpdate' event upon
- *    initialization with its current state.
- *
  * A <client_state>, used in this API, is defined as:
  * - Information related to a specific device or client of a user
  * - Use cases: 
  *   - Returned on changes for friends or my instance in 'onClientState'
  *   - Returned in a global list from 'getClients'
  * {
+ *   // Mandatory
  *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
  *   'clientId': 'string',  // Unique ID of client
  *                          // (e.g. alice@gmail.com/Android-23nadsv32f)
