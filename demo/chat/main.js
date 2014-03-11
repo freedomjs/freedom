@@ -74,7 +74,7 @@ social.login({
   rememberLogin: false
 }).then(function(ret) {
   myClientState = ret;
-  console.log("!!!"+JSON.stringify(myClientState));
+  console.log("state: " + JSON.stringify(myClientState));
   if (ret.status == social.STATUS["ONLINE"]) {
     freedom.emit('recv-uid', ret.clientId);
     freedom.emit('recv-status', "online");

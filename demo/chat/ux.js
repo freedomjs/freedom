@@ -28,10 +28,10 @@ window.onload = function() {
     var onClick = function(jid, child) {
       if (activeId != jid) {
         activeId = jid;
-        child.innerHTML = "[" + val[i] + "]";
+        child.innerHTML = "[" + jid + "]";
       } else {
         activeId = undefined;
-        child.innerHTML = val[i];
+        child.innerHTML = jid;
       }
       console.log("Messages will be sent to: " + activeId);
       document.getElementById('msg-input').focus();

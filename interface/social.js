@@ -90,9 +90,9 @@ fdom.apis.set('social', {
    **/
   'STATUS': {type: 'constant', value: {
     // Not logged in
-    'OFFLINE': 'ONLINE',
+    'OFFLINE': 'OFFLINE',
     // This client runs the same freedom.js app as you and is online
-    'ONLINE': 'OFFLINE',
+    'ONLINE': 'ONLINE',
     // This client is online, but does not run the same app (chat client)
     // (i.e. can be useful to invite others to your freedom.js app)
     'ONLINE_WITH_OTHER_APP': 'ONLINE_WITH_OTHER_APP'
