@@ -93,10 +93,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     var sendSpy = jasmine.createSpy("sendMessage");
 
     helper.on("s", "onMessage", function(message) {
-      expect(message.to).toEqual(makeClientState("ONLINE"));
       expect(message.from).toEqual(makeClientState("ONLINE"));
-      expect(message.to.userId).toEqual(myClientState.userId);
-      expect(message.to.clientId).toEqual(myClientState.clientId);
       expect(message.from.userId).toEqual(myClientState.userId);
       expect(message.from.clientId).toEqual(myClientState.clientId);
       expect(message.message).toEqual(msg);
@@ -125,7 +122,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     };
     var errHandler = function(err) {
       callbackCount++;
-      expect(err).toEqual(ERRCODE["OFFLINE"]);
+      expect(err.errcode).toEqual("OFFLINE");
       checkDone();
     };
 
@@ -144,7 +141,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
       ids[1] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], dead, errHandler);
     };
     var errHandler = function(err) {
-      expect(err).toEqual(ERRCODE["LOGIN_ALREADYONLINE"]);
+      expect(err.errcode).toEqual("LOGIN_ALREADYONLINE");
       ids[2] = helper.call("s", "logout", [], done);
     }
         
@@ -159,7 +156,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
       ids[1] = helper.call("s", "sendMessage", ["invalid-destination", "pooballs"], dead, errHandler);
     };
     var errHandler = function(err) {
-      expect(err).toEqual(ERRCODE["SEND_INVALIDDESTINATION"]);
+      expect(err.errcode).toEqual("SEND_INVALIDDESTINATION");
       ids[2] = helper.call("s", "logout", [], done);
     }
         

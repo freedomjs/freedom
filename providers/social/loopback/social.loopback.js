@@ -1,3 +1,6 @@
+/*globals freedom:true */
+/*jslint indent:2, white:true, sloppy:true, browser:true */
+
 /**
  * Implementation of a Social provider with a fake buddylist
  * 'Other User' echos everything you send to it back to you
@@ -49,7 +52,8 @@ LoopbackSocialProvider.prototype.makeUserEntry = function(userId) {
 };
 
 LoopbackSocialProvider.prototype.fillClients = function() {
-  var STATUSES = ['ONLINE', 'OFFLINE', 'ONLINE_WITH_OTHER_APP'];
+  var STATUSES = ['ONLINE', 'OFFLINE', 'ONLINE_WITH_OTHER_APP'],
+      userId, nClients, clientId, i;
   this.clients = {
     "Test User.0": {
       'userId': this.userId,
@@ -65,11 +69,11 @@ LoopbackSocialProvider.prototype.fillClients = function() {
     }
   };
 
-  for (var userId in this.users) {
+  for (userId in this.users) {
     if (this.users.hasOwnProperty(userId)) {
-      var nclients = userId.charCodeAt(0) % 3;
-      for (var i = 0; i < nclients; ++i) {
-        var clientId = userId+'/-client'+i;
+      nClients = userId.charCodeAt(0) % 3;
+      for (i = 0; i < nClients; i += 1) {
+        clientId = userId + '/-client' + (i + 1);
         this.clients[clientId] = {
           userId: userId,
           clientId: clientId,
@@ -85,17 +89,19 @@ LoopbackSocialProvider.prototype.fillClients = function() {
 // Log in. Options are ignored
 // Roster is only emitted to caller after log in
 LoopbackSocialProvider.prototype.login = function(opts, continuation) {
+  var userId, clientId;
+
   if (this.clients.hasOwnProperty(this.clientId)) {
-    continuation(undefined, this.social.ERRCODE["LOGIN_ALREADYONLINE"]);
+    continuation(undefined, this.err("LOGIN_ALREADYONLINE"));
     return;
   }
   this.fillClients();
-  for (var userId in this.users) {
+  for (userId in this.users) {
     if (this.users.hasOwnProperty(userId)) {
       this.dispatchEvent('onUserProfile', this.users[userId]);
     }
   }
-  for (var clientId in this.clients) {
+  for (clientId in this.clients) {
     if (this.clients.hasOwnProperty(clientId)) {
       this.dispatchEvent('onClientState', this.clients[clientId]);
     }
@@ -111,7 +117,7 @@ LoopbackSocialProvider.prototype.clearCachedCredentials = function(continuation)
 // Return the user profiles
 LoopbackSocialProvider.prototype.getUsers = function(continuation) {
   if (!this.clients.hasOwnProperty(this.clientId)) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   }
   continuation(this.users);
@@ -120,7 +126,7 @@ LoopbackSocialProvider.prototype.getUsers = function(continuation) {
 // Return the clients
 LoopbackSocialProvider.prototype.getClients = function(continuation) {
   if (!this.clients.hasOwnProperty(this.clientId)) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   }
   continuation(this.clients);
@@ -131,23 +137,21 @@ LoopbackSocialProvider.prototype.getClients = function(continuation) {
 // sent by 'Other User'
 LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   if (!this.clients.hasOwnProperty(this.clientId)) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   } else if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
-    continuation(undefined, this.social.ERRCODE["SEND_INVALIDDESTINATION"]);
+    continuation(undefined, this.err("SEND_INVALIDDESTINATION"));
     return;
   }
 
   if (to === this.userId || to === this.clientId) {
     this.dispatchEvent('onMessage', {
       from: this.clients[this.clientId],
-      to: this.clients[this.clientId],
       message: msg
     });
   } else {
     this.dispatchEvent('onMessage', {
       from: this.clients["Other User.0"],
-      to: this.clients[this.clientId],
       message: msg
     });
   }
@@ -157,12 +161,13 @@ LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 // Log out. All users in the roster will go offline
 // Options are ignored
 LoopbackSocialProvider.prototype.logout = function(continuation) {
+  var clientId;
   if (!this.clients.hasOwnProperty(this.clientId)) {
-    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    continuation(undefined, this.err("OFFLINE"));
     return;
   }
 
-  for (var clientId in this.clients) {
+  for (clientId in this.clients) {
     if (this.clients.hasOwnProperty(clientId)) {
       this.clients[clientId].status = 'OFFLINE';
       this.dispatchEvent('onClientState', this.clients[clientId]);
@@ -171,6 +176,14 @@ LoopbackSocialProvider.prototype.logout = function(continuation) {
 
   this.clients = {};
   continuation();
+};
+
+LoopbackSocialProvider.prototype.err = function(code) {
+  var err = {
+    errcode: code,
+    message: this.social.ERRCODE[code]
+  };
+  return err;
 };
 
 /** REGISTER PROVIDER **/
