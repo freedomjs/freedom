@@ -110,11 +110,19 @@ LoopbackSocialProvider.prototype.clearCachedCredentials = function(continuation)
 
 // Return the user profiles
 LoopbackSocialProvider.prototype.getUsers = function(continuation) {
+  if (!this.clients.hasOwnProperty(this.clientId)) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  }
   continuation(this.users);
 };
 
 // Return the clients
 LoopbackSocialProvider.prototype.getClients = function(continuation) {
+  if (!this.clients.hasOwnProperty(this.clientId)) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  }
   continuation(this.clients);
 };
 
@@ -122,10 +130,14 @@ LoopbackSocialProvider.prototype.getClients = function(continuation) {
 // All messages not sent to this.userId will be echoed back to self as if
 // sent by 'Other User'
 LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
-  if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
+  if (!this.clients.hasOwnProperty(this.clientId)) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  } else if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
     continuation(undefined, this.social.ERRCODE["SEND_INVALIDDESTINATION"]);
     return;
   }
+
   if (to === this.userId || to === this.clientId) {
     this.dispatchEvent('onMessage', {
       from: this.clients[this.clientId],
@@ -145,6 +157,11 @@ LoopbackSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 // Log out. All users in the roster will go offline
 // Options are ignored
 LoopbackSocialProvider.prototype.logout = function(continuation) {
+  if (!this.clients.hasOwnProperty(this.clientId)) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  }
+
   for (var clientId in this.clients) {
     if (this.clients.hasOwnProperty(clientId)) {
       this.clients[clientId].status = 'OFFLINE';

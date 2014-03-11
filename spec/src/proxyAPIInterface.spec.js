@@ -208,7 +208,8 @@ describe("fdom.proxy.conform", function() {
     expect(fdom.proxy.conform(["string"], ["test", 12],[], false)).toEqual(["test"]);
     expect(fdom.proxy.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
     expect(fdom.proxy.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
-    expect(fdom.proxy.conform.bind({}, "object", function() {},[], false)).toThrow();
+    //expect(fdom.proxy.conform.bind({}, "object", function() {},[], false)).toThrow();
+    expect(fdom.proxy.conform("object", function() {},[], false)).not.toBeDefined();
   });
 
   it("conforms binary arguments", function() {

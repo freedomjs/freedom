@@ -113,9 +113,26 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
   });
   
-  xit("ERRCODE-OFFLINE", function(done) {
+  it("ERRCODE-OFFLINE", function(done) {
     var ids = {};
-    var myClientState;
+    var callbackCount = 0;
+
+    var checkDone = function() {
+      var keys = Object.keys(ids);
+      if (callbackCount >= keys.length) {
+        done();
+      }
+    };
+    var errHandler = function(err) {
+      callbackCount++;
+      expect(err).toEqual(ERRCODE["OFFLINE"]);
+      checkDone();
+    };
+
+    ids[0] = helper.call("s", "getUsers", [], dead, errHandler);
+    ids[1] = helper.call("s", "getClients", [], dead, errHandler);
+    ids[2] = helper.call("s", "sendMessage", ["",""], dead, errHandler);
+    ids[3] = helper.call("s", "logout", [], dead, errHandler);
   
   });
 

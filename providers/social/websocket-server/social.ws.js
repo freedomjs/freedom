@@ -92,6 +92,10 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
  *   On failure, rejects with an error code (see above)
  **/
 WSSocialProvider.prototype.getUsers = function(continuation) {
+  if (this.conn === null) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  }
   continuation(this.users);
 };
 
@@ -111,6 +115,10 @@ WSSocialProvider.prototype.getUsers = function(continuation) {
  *   On failure, rejects with an error code (see above)
  **/
 WSSocialProvider.prototype.getClients = function(continuation) {
+  if (this.conn === null) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  }
   continuation(this.clients);
 };
 
@@ -125,15 +133,15 @@ WSSocialProvider.prototype.getClients = function(continuation) {
  * @return nothing
  **/
 WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
-  if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
+  if (this.conn === null) {
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
+    return;
+  } else if (!this.clients.hasOwnProperty(to) && !this.users.hasOwnProperty(to)) {
     continuation(undefined, this.social.ERRCODE["SEND_INVALIDDESTINATION"]);
     return;
   }
-  if (this.conn) {
-    this.conn.send(JSON.stringify({to: to, msg: msg}));
-  } else {
-    console.error('WS Social Provider: trying to sendMessage when connection not established');
-  }
+
+  this.conn.send(JSON.stringify({to: to, msg: msg}));
   continuation();
 };
 
@@ -147,9 +155,8 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
    **/
 WSSocialProvider.prototype.logout = function(continuation) {
   if (this.conn === null) { // We may not have been logged in
-    console.warn("Already logged out");
     this.changeRoster(this.id, false);
-    continuation();
+    continuation(undefined, this.social.ERRCODE["OFFLINE"]);
     return;
   }
   this.conn.onclose = function(continuation) {
