@@ -14,7 +14,7 @@ var social = freedom.socialprovider();
 var storage = freedom.storageprovider();
 
 // Internal State
-var networks = {};
+var myClientState = null;
 var userList = {};
 var clientList = {};
 var files = {};       // Files served from this node
@@ -26,29 +26,16 @@ var signallingChannels = {};
 
 console.log('File Drop root module');
 
-function getMyClientIds() {
-  var result = [];
-  for (var k in networks) {
-    if (networks.hasOwnProperty(k) && networks[k].clientId && 
-        networks[k].status && networks[k].status == social.STATUS_NETWORK['ONLINE']) {
-      result.push(networks[k].clientId);
-    }
-  }
-  return result;
-}
-
 freedom.on('serve-data', function(data) {
   if (!data.key || !data.value) {
     console.log('serve-data: malformed request ' + JSON.stringify(data));
     return;
   }
-
   console.log('serve-data: now serving ' + data.key);
   files[data.key] = data.value;
-  var clientIds = getMyClientIds();
-  if (clientIds.length > 0) {
+  if (myClientState.status == social.STATUS["ONLINE"]) {
     freedom.emit('serve-descriptor', {
-      targetId: clientIds,
+      targetId: myClientState.clientId,
       key: data.key,
       name: data.name
     });
@@ -84,19 +71,9 @@ function setupConnection(name, targetId) {
   });
 }
 
-// Am I online some Social network right now?
-function isOnline() {
-  for (var k in networks) {
-    if (networks.hasOwnProperty(k) && networks[k].status && networks[k].status == social.STATUS_NETWORK['ONLINE']) {
-      return true;
-    }
-  }
-  return false;
-} 
-
 function fetch(data) {
   //@todo smarter way to choose a target in the future
-  var serverId = data.targetId[0];
+  var serverId = data.targetId;
   var key = data.key;
   
   console.log("fetch: downloading " + key + " from " + serverId);
@@ -109,30 +86,11 @@ function fetch(data) {
 }
 
 freedom.on('download', function(data) {
-  if (isOnline()) {
+  if (myClientState !== null && 
+      myClientState.status == social.STATUS["ONLINE"]) {
     fetch(data);
   } else {
     fetchQueue.push(data);
-  }
-});
-
-social.on('onStatus', function(msg) {
-  if (!networks.hasOwnProperty(msg.network)) {
-    console.log('Logging into ' + msg.network);
-    social.login({
-      network: msg.network,
-      agent: 'filedrop', 
-      version: '0.1', 
-      url: '',
-      interactive: true 
-    });
-  }
-  networks[msg.network] = msg;
-  if (msg.status && msg.status == social.STATUS_NETWORK['ONLINE']) {
-    console.log('social.onStatus: ONLINE!');
-    while (fetchQueue.length > 0) {
-      fetch(fetchQueue.shift());
-    }
   }
 });
 
@@ -140,8 +98,12 @@ social.on('onUserProfile', function(data) {
   userList[data.userId] = data;
 });
 
-social.on('onClientList', function(data) {
+social.on('onClientState', function(data) {
   clientList[data.clientId] = data;
+  if (myClientState !== null && 
+      data.clientId == myClientState.clientId) {
+    myClientState = data;
+  }
 });
 
 social.on('onMessage', function(data) {
@@ -157,9 +119,9 @@ social.on('onMessage', function(data) {
     return;
   }
   
-  if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'fetch') {
+  if (data.from.clientId && msg.cmd && msg.data && msg.cmd == 'fetch') {
     key = msg.data;
-    targetId = data.fromClientId;
+    targetId = data.from.clientId;
 
     console.log("social.onMessage: Received request for " + key + " from " + targetId);
     setupConnection("server-"+targetId, targetId).then(function(){ //SEND IT
@@ -174,12 +136,12 @@ social.on('onMessage', function(data) {
         }));
       }
     });
-  } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'error') {
+  } else if (data.from.clientId && msg.cmd && msg.data && msg.cmd == 'error') {
     console.log('social.onMessage: ' + msg.data);
     freedom.emit('download-error', msg.data);
-  } else if (data.fromClientId && msg.cmd && msg.data && msg.cmd == 'signal') {
+  } else if (data.from.clientId && msg.cmd && msg.data && msg.cmd == 'signal') {
     console.log('social.onMessage: signalling message');
-    targetId = data.fromClientId;
+    targetId = data.from.clientId;
     if (signallingChannels[targetId]) {
       signallingChannels[targetId].emit('message', msg.data);
     } else {
@@ -191,3 +153,26 @@ social.on('onMessage', function(data) {
   }
   
 });
+
+/** LOGIN AT START **/
+console.log('Logging in to social API');
+social.login({
+  agent: 'filedrop', 
+  version: '0.1', 
+  url: '',
+  interactive: true,
+  rememberLogin: false
+}).then(function(ret) {
+  myClientState = ret;
+  if (ret.status == social.STATUS["ONLINE"]) {
+    console.log('social.onStatus: ONLINE!');
+    while (fetchQueue.length > 0) {
+      fetch(fetchQueue.shift());
+    }
+  } else {
+    freedom.emit("serve-error", "Failed logging in. Status: "+ret.status);
+  }
+}, function(err) {
+  freedom.emit("serve-error", err.message); 
+});
+

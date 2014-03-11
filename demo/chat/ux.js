@@ -62,6 +62,11 @@ window.onload = function() {
     var message = data.from.userId + ": " + data.message;
     appendLog(document.createTextNode(message));
   });
+  
+  // On new messages, append it to our message log
+  window.freedom.on('recv-err', function(data) {
+    document.getElementById('uid').innerText = "Error: "+data.message;
+  });
 
   // Display our own userId when we get it
   window.freedom.on('recv-uid', function(data) {
