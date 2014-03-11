@@ -5,6 +5,7 @@ window.onload = function() {
   document.getElementById('msg-input').focus();
   // If messages are going to a specific user, store that here.
   var activeId;
+  var buddylist;
 
   function clearLog() {
     var log = document.getElementById('messagelist');
@@ -22,34 +23,40 @@ window.onload = function() {
     log.appendChild(br);
     br.scrollIntoView();
   }
-  
-  // on changes to the buddylist, redraw entire buddylist
-  window.freedom.on('recv-buddylist', function(val) {
+
+  function redrawBuddylist() {
     var onClick = function(jid, child) {
-      if (activeId != jid) {
-        activeId = jid;
-        child.innerHTML = "[" + jid + "]";
-      } else {
-        activeId = undefined;
-        child.innerHTML = jid;
-      }
       console.log("Messages will be sent to: " + activeId);
+      activeId = jid;
+      redrawBuddylist();
       document.getElementById('msg-input').focus();
     };
 
-    var buddylist = document.getElementById('buddylist');
+    var buddylistDiv = document.getElementById('buddylist');
     // Remove all elements in there now
-    buddylist.innerHTML = "<b>Buddylist</b>";
+    buddylistDiv.innerHTML = "<b>Buddylist</b>";
 
     // Create a new element for each buddy
-    for (var i in val) {
+    for (var i in buddylist) {
       var child = document.createElement('div');
-      child.innerHTML = val[i];
+      if (activeId == buddylist[i]) {
+        child.innerHTML = "[" + buddylist[i] + "]";
+      } else {
+        child.innerHTML = buddylist[i];
+      }
       // If the user clicks on a buddy, change our current destination for messages
-      child.addEventListener('click', onClick.bind(this, val[i], child), true);
-      buddylist.appendChild(child);
+      child.addEventListener('click', onClick.bind(this, buddylist[i], child), true);
+      buddylistDiv.appendChild(child);
     }
+
+  }
+  
+  // on changes to the buddylist, redraw entire buddylist
+  window.freedom.on('recv-buddylist', function(val) {
+    buddylist = val;
+    redrawBuddylist();
   });
+
   // On new messages, append it to our message log
   window.freedom.on('recv-message', function(data) {
     var message = data.from.userId + ": " + data.message;
