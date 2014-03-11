@@ -4,89 +4,73 @@
  * SOCIAL API
  *
  * API for connecting to social networks and messaging of users.
- * Note that the following properties depend on the specific implementation (provider)
- * behind this API that you choose.
- * An instance of a social provider encapsulates a single user logging into a single network.
+ * An instance of a social provider encapsulates a single user logging into
+ * a single network.
  *
- * Variable properties dependent on choice of provider:
+ * The semantics of some properties are defined by the specific provider, eg
  * - Edges in the social network (who is on your roster)
  * - Reliable message passing (or unreliable)
  * - In-order message delivery (or out of order)
  * - Persistent clientId - Whether your clientId changes between logins when
  *    connecting from the same device
  *
- * Invariants across all providers:
- * - The userId for each user does not change between logins
- * - The Social provider should output an 'onUserUpdate' event upon initialization (after constructor)
- *   with its current state.
- *
- * Define a <client_state>, as the following:
+ * A <client_state>, used in this API, is defined as:
  * - Information related to a specific device or client of a user
  * - Use cases: 
  *   - Returned on changes for friends or my instance in 'onClientState'
  *   - Returned in a global list from 'getClients'
  * {
+ *   // Mandatory
  *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
- *   'clientId': 'string',  // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
- *   'status': 'string',    // Status of the client. See the 'STATUS' constants
- *   'timestamp': 'number'  // Timestamp of last received change to <client_state>
+ *   'clientId': 'string',  // Unique ID of client
+ *                          // (e.g. alice@gmail.com/Android-23nadsv32f)
+ *   'status': 'string',    // Status of the client. 'STATUS' member.
+ *   'timestamp': 'number'  // Timestamp of the last seen time of this device.
  * }
  * 
- * Define a <user_profile>, as the following:
+ * A <user_profile>, used in this API, is defined as:
  * - Information related to a specific user (profile information)
  * - Use cases:
  *   - Returned on changes for friends or myself in 'onUserProfile'
  *   - Returned in a global list from 'getUsers'
  * {
+ *   // Mandatory
  *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
- *   'name': 'string',      // Name (e.g. Alice Underpants)
+ *   'timestamp': 'number'  // Timestamp of last change to the profile
+ *   // Optional
+ *   'name': 'string',      // Name (e.g. Alice)
  *   'url': 'string',       // Homepage URL
- *   'imageData': 'string', // Data URI of image data (e.g. data:image/png;base64,adkwe329...)
- *   'timestamp': 'number'  // Timestamp of last received change to <user_profile>
+ *   'imageData': 'string', // URI of a profile image.
  * }
- *
  **/
 
 fdom.apis.set('social', {
   /** 
-   * List of error codes that can be returned when a method fails
-  **/
+   * error codes and default messages that may be returned on failures.
+   */
   'ERRCODE': {type: 'constant', value: {
     /** GENERAL **/
-    'SUCCESS': {errcode: "SUCCESS", message: "Success!"},
+    'SUCCESS': 'Success!',
     // Unknown
-    'UNKNOWN': {errcode: 'UNKNOWN', message: "Unknown error"},
+    'UNKNOWN': 'Unknown error',
     // User is currently offline
-    'OFFLINE': {errcode: 'OFFLINE', message: "User is currently offline"},
+    'OFFLINE': 'User is currently offline',
 
     /** LOGIN **/
-    // Error with authenticating to the server (e.g. missing or invalid credentials)
-    'LOGIN_BADCREDENTIALS': {errcode: 'LOGIN_BADCREDENTIALS', message: "Error authenticating with server"},
+    // Error authenticating to the server (e.g. invalid credentials)
+    'LOGIN_BADCREDENTIALS': 'Error authenticating with server',
     // Error with connecting to the server
-    'LOGIN_FAILEDCONNECTION': {errcode: 'LOGIN_FAILEDCONNECTION', message: "Error connecting to server"},
+    'LOGIN_FAILEDCONNECTION': 'Error connecting to server',
     // User is already logged in
-    'LOGIN_ALREADYONLINE': {errcode: 'LOGIN_ALREADYONLINE', message: "User is already logged in"},
-
-    /** CLEARCACHEDCREDENTIALS**/
-    // None at the moment
-    
-    /** GETCLIENTS **/
-    // See GENERAL
-    
-    /** GETUSERS **/
-    // See GENERAL
+    'LOGIN_ALREADYONLINE': 'User is already logged in',
 
     /** SENDMESSAGE **/
-    // Trying to send a message to an invalid destination (e.g. not in user's roster)
-    'SEND_INVALIDDESTINATION': {errcode: 'SEND_INVALIDDESTINATION', message: "Trying to send a message to an invalid destination"},
-
-    /** LOGOUT **/
-    // See GENERAL
-
+    // Message sent to invalid destination (e.g. not in user's roster)
+    'SEND_INVALIDDESTINATION': 'Message sent to an invalid destination'
   }},
   
   /**
-   * List of possible statuses in the <state card>
+   * List of possible statuses for <client_state>.status
    **/
   'STATUS': {type: 'constant', value: {
     // Not logged in
@@ -99,13 +83,6 @@ fdom.apis.set('social', {
   }},
 
   /**
-   * Stores a list of your userId's
-   * NOTE: This is not yet implemented because 'property' is not working
-   * e.g. var id = social.id
-   **/
-  'id': {type: 'property', value: ['string']},
-
-  /**
    * Log into the network (See below for parameters)
    * e.g. social.login(Object options)
    *
@@ -116,23 +93,29 @@ fdom.apis.set('social', {
   'login': {
     type: 'method',
     value: [{
-      'agent': 'string',      //Name of the application
-      'version': 'string',    //Version of application
-      'url': 'string',        //URL of application
-      'interactive': 'boolean',  //Prompt user for login if credentials not cached?
-      'rememberLogin': 'boolean' //Cache the login credentials
+      // Optional
+      'agent': 'string',         // Name of the application
+      'version': 'string',       // Version of application
+      'url': 'string',           // URL of application
+      'interactive': 'boolean',  // Allow user interaction from provider.
+                                 // If not set, interpreted as true.
+      'rememberLogin': 'boolean' // Cache login credentials, if not set,
+                                 // interpreted as true.
     }],
-    ret: {
-      'userId': 'string',     // userId of myself on this network
-      'clientId': 'string',   // clientId of my client on this network
-      'status': 'string',     // One of the constants defined in 'STATUS'
-      'timestamp': 'number'   // Timestamp of last received change to <client_state>
+    ret: {                       // <client_state>, defined above.
+      'userId': 'string',
+      'clientId': 'string',
+      'status': 'string',
+      'timestamp': 'number'
+    },
+    err: {
+      'errcode': 'string',
+      'message': 'string'
     }
   },
 
   /**
-   * Clears the cached credentials
-   * e.g. social.clearCachedCredentials()
+   * Clears cached credentials of the provider.
    *
    * @method clearCachedCredentials
    * @return nothing
@@ -140,11 +123,10 @@ fdom.apis.set('social', {
   'clearCachedCredentials': {type: 'method', value: []},
 
   /**
-   * Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
-   * Note: this instance's own <client_state> will be somewhere in this list
-   * Use the clientId returned from social.login() to extract your element
-   * NOTE: This does not guarantee to be entire roster, just clients we're currently aware of at the moment
-   * e.g. social.getClients()
+   * Get <client_state>s that have been observed.
+   * The providers <client_state> may be in this list
+   * getClients may not represent an entire roster, since it may not be
+   * enumerable.
    * 
    * @method getClients
    * @return {Object} { 
@@ -152,16 +134,23 @@ fdom.apis.set('social', {
    *    'clientId2': <client_state>,
    *     ...
    * } List of <client_state>s indexed by clientId
-   *   On failure, rejects with an error code (see above)
+   *   On failure, rejects with an error code.
    **/
-  'getClients': {type: 'method', value: [], ret: "object"},
+  'getClients': {
+    type: 'method',
+    value: [],
+    ret: 'object',
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
 
   /**
-   * Returns all the <user_profile>s that we've seen so far (from 'onUserProfile' events)
-   * Note: the user's own <user_profile> will be somewhere in this list. 
-   * Use the userId returned from social.login() to extract your element
-   * NOTE: This does not guarantee to be entire roster, just users we're currently aware of at the moment
-   * e.g. social.getUsers();
+   * Get <user_profile>s that have been observed.
+   * The providers <user_profile> may be in this list
+   * getUsers may not represent an entire roster, since it may not be
+   * enumerable.
    *
    * @method getUsers
    * @return {Object} { 
@@ -169,86 +158,86 @@ fdom.apis.set('social', {
    *    'userId2': <user_profile>,
    *     ...
    * } List of <user_profile>s indexed by userId
-   *   On failure, rejects with an error code (see above)
+   *   On failure, rejects with an error code.
    **/
-  'getUsers': {type: 'method', value: [], ret: "object"},
+  'getUsers': {
+    type: 'method',
+    value: [],
+    ret: 'object',
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
 
   /** 
-   * Send a message to user on your network
-   * If the message is sent to a userId, it is sent to all clients
-   * If the message is sent to a clientId, it is sent to just that one client
-   * If the destination is not specified or invalid, the message is dropped
-   * e.g. sendMessage(String destination_id, String message)
+   * Send a message.
+   * Destination may be a userId or a clientId. If it is a userId, all clients
+   * for that user should receive the message.
    * 
    * @method sendMessage
-   * @param {String} destination_id - target
-   * @param {String} message
+   * @param {String} destination_id The userId or clientId to send to
+   * @param {String} message The message to send.
    * @return nothing
-   *  On failure, rejects with an error code (see above)
+   *  On failure, rejects with an error code
    **/
-  'sendMessage': {type: 'method', value: ['string', 'string']},
+  'sendMessage': {
+    type: 'method',
+    value: ['string', 'string'],
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
 
   /**
-   * Logs out the user of the network
-   * e.g. logout()
+   * Logout of the network
    * 
    * @method logout
    * @return nothing
-   *  On failure, rejects with an error code (see above)
+   *  On failure, rejects with an error code
    **/
-  'logout': {type: 'method', value: []},
+  'logout': {
+    type: 'method',
+    value: [],
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
 
   /**
-   * Event on incoming messages
+   * Receive an incoming message.
    **/
   'onMessage': {type: 'event', value: {
-    'from': {               // message source (fits <client_state>)
-      'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-      'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-      'status': 'string',   // Status of the client. See the 'STATUS' constants
-      'timestamp': 'number' // Timestamp of last received change to <client_state>
-    },
-    'to': {                 // message destination (fits <client_state>)
-      'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-      'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-      'status': 'string',   // Status of the client. See the 'STATUS' constants
-      'timestamp': 'number' // Timestamp of last received change to <client_state>
+    'from': {               // <client_state>, defined above.
+      'userId': 'string',
+      'clientId': 'string',
+      'status': 'string',
+      'timestamp': 'number'
     },
     'message': 'string'     // message contents
   }},
 
   /**
-   * Event that is sent on changes to a <user_profile> of either yourself
-   * or someone on your roster
-   * (e.g. if a picture changes)
-   * This event must match the schema for an entire <user_profile> (see above)
-   * 
-   * Clients will include all clients that are |status| !== "OFFLINE"
-   * and the most recent client that went OFFLINE
+   * Receive a change to a <user_profile>.
    **/
-  'onUserProfile': {type: 'event', value: {
-    //REQUIRED
-    'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-    'timestamp': 'number',  // Timestamp of last received change to <user_profile>
-    //OPTIONAL
-    'name': 'string',     // Name (e.g. Alice Underpants)
-    'url': 'string',      // Homepage URL (e.g. https://alice.com)
-    'imageData': 'string' // Data URI of image data (e.g. data:image/png;base64,adkwe329...)
+  'onUserProfile': {type: 'event', value: { // <user_profile>, defined above.
+    'userId': 'string',
+    'timestamp': 'number',
+    'name': 'string',
+    'url': 'string',
+    'imageData': 'string'
   }},
 
   /**
-   * Event that is sent on changes to your own <client_state>
-   * (e.g. You get disconnected)
+   * Receive a change to a <client_state>.
    **/
-  'onClientState': {type: 'event', value: {
-    //REQUIRED
-    'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
-    'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-    'status': 'string',   // Status of the client. See the 'STATUS' constants
-    'timestamp': 'number' // Timestamp of last received change to <client_state>
-    //OPTIONAL
-    //None
+  'onClientState': {type: 'event', value: { // <client_state>, defined above.
+    'userId': 'string',
+    'clientId': 'string',
+    'status': 'string',
+    'timestamp': 'number'
   }}
-
 });
 

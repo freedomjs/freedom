@@ -95,7 +95,6 @@ describe("unit: social.ws.json", function () {
     ws.onmessage({data: JSON.stringify({'cmd': 'message', 'from':'tom', 'msg':'hello'})});
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onMessage", {
       from: makeClientState("tom", "ONLINE"),
-      to: makeClientState("yourId", "ONLINE"),
       message: "hello"
     });
   });
