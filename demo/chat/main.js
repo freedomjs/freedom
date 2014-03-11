@@ -17,7 +17,11 @@ var myClientState = null;
  * Just forward it to the Social provider
  **/
 freedom.on('send-message', function(val) {
-  social.sendMessage(val.to, val.message);
+  social.sendMessage(val.to, val.message).then(function(ret) {
+    //Fulfill - sendMessage succeeded
+  }, function(err) {
+    freedom.emit("recv-err", err);
+  });
 });
 
 /**
