@@ -255,7 +255,8 @@ fdom.proxy.recursiveFreezeObject = function(obj) {
     if (obj.hasOwnProperty(k)) {
       Object.defineProperty(ret, k, {
         value: fdom.proxy.recursiveFreezeObject(obj[k]),
-        writable: false
+        writable: false,
+        enumerable: true
       });
     }
   }

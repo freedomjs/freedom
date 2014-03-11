@@ -1,5 +1,6 @@
 var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
   var freedom, helper;
+  var ERRCODE = fdom.apis.get("social").definition.ERRCODE.value;
 
   beforeEach(function(done) {
     freedom = setupModule("relative://spec/helper/providers.json");
@@ -18,10 +19,14 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     return {
       userId: jasmine.any(String),
       clientId: jasmine.any(String),
-      status: fdom.apis.get("social").definition.STATUS.value[status],
+      status: status,
       timestamp: jasmine.any(Number)
     };
   }
+
+  function dead() {
+    console.error("This should never be called");
+  };
   
   it("logs in", function(done) {
     var ids = {};
@@ -33,14 +38,6 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
     };
     
     ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
-  });
-
-  xit("logs in twice", function(done) {
-  
-  });
-
-  xit("logs out when already logged out", function(done) {
-  
   });
 
   it("returns clients", function(done) {
@@ -115,6 +112,43 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
         
     ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
   });
+  
+  xit("ERRCODE-OFFLINE", function(done) {
+    var ids = {};
+    var myClientState;
+  
+  });
+
+  it("ERRCODE-LOGIN_ALREADYONLINE", function(done) {
+    var ids = {};
+    var myClientState;
+    var callbackOne = function(ret) {
+      myClientState = ret;
+      ids[1] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], dead, errHandler);
+    };
+    var errHandler = function(err) {
+      expect(err).toEqual(ERRCODE["LOGIN_ALREADYONLINE"]);
+      ids[2] = helper.call("s", "logout", [], done);
+    }
+        
+    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+  });
+  
+  it("ERRCODE-SEND_INVALIDDESTINATION", function(done) {
+    var ids = {};
+    var myClientState;
+    var callbackOne = function(ret) {
+      myClientState = ret;
+      ids[1] = helper.call("s", "sendMessage", ["invalid-destination", "pooballs"], dead, errHandler);
+    };
+    var errHandler = function(err) {
+      expect(err).toEqual(ERRCODE["SEND_INVALIDDESTINATION"]);
+      ids[2] = helper.call("s", "logout", [], done);
+    }
+        
+    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+  });
+
  
 };
 

@@ -169,12 +169,14 @@ function setupModule(manifest_url) {
 function ProviderHelper(inFreedom) {
   this.callId = 0;
   this.callbacks = {};
+  this.errcallbacks = {};
   this.unboundChanCallbacks = [];
   this.chanCallbacks = {};
   this.freedom = inFreedom;
   this._eventListeners = {};
   this.freedom.on("eventFired", this._on.bind(this));
   this.freedom.on("return", this.ret.bind(this));
+  this.freedom.on("error", this.err.bind(this));
   this.freedom.on("initChannel", this.onInitChannel.bind(this));
   this.freedom.on("inFromChannel", this.onInFromChannel.bind(this));
 }
@@ -183,9 +185,10 @@ ProviderHelper.prototype.create = function(name, provider) {
                          provider: provider});
 };
 
-ProviderHelper.prototype.call = function(provider, method, args, cb) {
+ProviderHelper.prototype.call = function(provider, method, args, cb, errcb) {
   this.callId += 1;
   this.callbacks[this.callId] = cb;
+  this.errcallbacks[this.callId] = errcb;
   this.freedom.emit('call', {
     id: this.callId,
     provider: provider,
@@ -200,6 +203,12 @@ ProviderHelper.prototype.ret = function(obj) {
     delete this.callbacks[obj.id];
   }
 };
+ProviderHelper.prototype.err = function(obj) {
+  if (this.errcallbacks[obj.id]) {
+    this.errcallbacks[obj.id](obj.data);
+    delete this.errcallbacks[obj.id];
+  }
+}
 
 ProviderHelper.prototype._on = function(eventInfo) {
   var provider = eventInfo.provider;

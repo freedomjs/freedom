@@ -7,7 +7,8 @@ describe("unit: social.loopback.json", function () {
 
     freedom = {
       social: mockIface([], [
-        ['STATUS', fdom.apis.get("social").definition.STATUS.value]
+        ['STATUS', fdom.apis.get("social").definition.STATUS.value],
+        ['ERRCODE', fdom.apis.get("social").definition.ERRCODE.value]
       ])
     };
 
@@ -22,7 +23,7 @@ describe("unit: social.loopback.json", function () {
     var expectedResult = {
       userId: "Test User",
       clientId: "Test User.0",
-      status: freedom.social().STATUS["ONLINE"],
+      status: "ONLINE",
       timestamp: jasmine.any(Number)
     };
     provider.login({}, d);
@@ -33,7 +34,7 @@ describe("unit: social.loopback.json", function () {
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
       userId: "Other User",
       clientId: "Other User.0",
-      status: freedom.social().STATUS["ONLINE"],
+      status: "ONLINE",
       timestamp: jasmine.any(Number)
     });
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onUserProfile", {
@@ -58,14 +59,14 @@ describe("unit: social.loopback.json", function () {
     expect(d.calls.mostRecent().args[0]["Test User.0"]).toEqual({
       userId: "Test User",
       clientId: "Test User.0",
-      status: freedom.social().STATUS["ONLINE"],
+      status: "ONLINE",
       timestamp: jasmine.any(Number)
     });
     expect(d.calls.mostRecent().args[0]["Other User.0"]).toBeDefined();
     expect(d.calls.mostRecent().args[0]["Other User.0"]).toEqual({
       userId: "Other User",
       clientId: "Other User.0",
-      status: freedom.social().STATUS["ONLINE"],
+      status: "ONLINE",
       timestamp: jasmine.any(Number)
     });
   });
@@ -99,13 +100,13 @@ describe("unit: social.loopback.json", function () {
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
       userId: "Test User",
       clientId: "Test User.0",
-      status: freedom.social().STATUS["OFFLINE"],
+      status: "OFFLINE",
       timestamp: jasmine.any(Number)
     });
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
       userId: "Other User",
       clientId: "Other User.0",
-      status: freedom.social().STATUS["OFFLINE"],
+      status: "OFFLINE",
       timestamp: jasmine.any(Number)
     });
   
@@ -121,13 +122,13 @@ describe("unit: social.loopback.json", function () {
       from: {
         userId: "Other User",
         clientId: "Other User.0",
-        status: freedom.social().STATUS["ONLINE"],
+        status: "ONLINE",
         timestamp: jasmine.any(Number)
       },
       to: {
         userId: "Test User",
         clientId: "Test User.0",
-        status: freedom.social().STATUS["ONLINE"],
+        status: "ONLINE",
         timestamp: jasmine.any(Number)
       },
       message: "Hello World"

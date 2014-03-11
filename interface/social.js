@@ -28,7 +28,7 @@
  * {
  *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
  *   'clientId': 'string',  // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
- *   'status': 'number',    // Status of the client. See the 'STATUS' constants
+ *   'status': 'string',    // Status of the client. See the 'STATUS' constants
  *   'timestamp': 'number'  // Timestamp of last received change to <client_state>
  * }
  * 
@@ -53,17 +53,19 @@ fdom.apis.set('social', {
   **/
   'ERRCODE': {type: 'constant', value: {
     /** GENERAL **/
+    'SUCCESS': {errcode: "SUCCESS", message: "Success!"},
     // Unknown
-    'OFFLINE': 'User is currently offline',
-    'UNKNOWN': 'WTF is going on?',
+    'UNKNOWN': {errcode: 'UNKNOWN', message: "Unknown error"},
+    // User is currently offline
+    'OFFLINE': {errcode: 'OFFLINE', message: "User is currently offline"},
 
     /** LOGIN **/
-    // Error with authenticating to the server
-    'LOGIN_BADCREDENTIALS': 'Missing or invalid user credentials',
+    // Error with authenticating to the server (e.g. missing or invalid credentials)
+    'LOGIN_BADCREDENTIALS': {errcode: 'LOGIN_BADCREDENTIALS', message: "Error authenticating with server"},
     // Error with connecting to the server
-    'LOGIN_FAILEDCONNECTION': 'Error connecting to the login server',
-    // Already logged in
-    'LOGIN_ALREADYONLINE': 'User is already logged in',
+    'LOGIN_FAILEDCONNECTION': {errcode: 'LOGIN_FAILEDCONNECTION', message: "Error connecting to server"},
+    // User is already logged in
+    'LOGIN_ALREADYONLINE': {errcode: 'LOGIN_ALREADYONLINE', message: "User is already logged in"},
 
     /** CLEARCACHEDCREDENTIALS**/
     // None at the moment
@@ -75,7 +77,8 @@ fdom.apis.set('social', {
     // See GENERAL
 
     /** SENDMESSAGE **/
-    'SEND_INVALIDDESTINATION': 'Trying to send a message to an invalid destination',
+    // Trying to send a message to an invalid destination (e.g. not in user's roster)
+    'SEND_INVALIDDESTINATION': {errcode: 'SEND_INVALIDDESTINATION', message: "Trying to send a message to an invalid destination"},
 
     /** LOGOUT **/
     // See GENERAL
@@ -87,12 +90,12 @@ fdom.apis.set('social', {
    **/
   'STATUS': {type: 'constant', value: {
     // Not logged in
-    'OFFLINE': 0,
+    'OFFLINE': 'ONLINE',
     // This client runs the same freedom.js app as you and is online
-    'ONLINE': 1,
+    'ONLINE': 'OFFLINE',
     // This client is online, but does not run the same app (chat client)
     // (i.e. can be useful to invite others to your freedom.js app)
-    'ONLINE_WITH_OTHER_APP': 2
+    'ONLINE_WITH_OTHER_APP': 'ONLINE_WITH_OTHER_APP'
   }},
 
   /**
@@ -122,7 +125,7 @@ fdom.apis.set('social', {
     ret: {
       'userId': 'string',     // userId of myself on this network
       'clientId': 'string',   // clientId of my client on this network
-      'status': 'number',     // One of the constants defined in 'STATUS'
+      'status': 'string',     // One of the constants defined in 'STATUS'
       'timestamp': 'number'   // Timestamp of last received change to <client_state>
     }
   },
@@ -202,13 +205,13 @@ fdom.apis.set('social', {
     'from': {               // message source (fits <client_state>)
       'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
       'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-      'status': 'number',   // Status of the client. See the 'STATUS' constants
+      'status': 'string',   // Status of the client. See the 'STATUS' constants
       'timestamp': 'number' // Timestamp of last received change to <client_state>
     },
     'to': {                 // message destination (fits <client_state>)
       'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
       'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-      'status': 'number',   // Status of the client. See the 'STATUS' constants
+      'status': 'string',   // Status of the client. See the 'STATUS' constants
       'timestamp': 'number' // Timestamp of last received change to <client_state>
     },
     'message': 'string'     // message contents
@@ -241,7 +244,7 @@ fdom.apis.set('social', {
     //REQUIRED
     'userId': 'string',   // Unique ID of user (e.g. alice@gmail.com)
     'clientId': 'string', // Unique ID of client (e.g. alice@gmail.com/Android-23nadsv32f)
-    'status': 'number',   // Status of the client. See the 'STATUS' constants
+    'status': 'string',   // Status of the client. See the 'STATUS' constants
     'timestamp': 'number' // Timestamp of last received change to <client_state>
     //OPTIONAL
     //None

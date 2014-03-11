@@ -7,7 +7,8 @@ describe("unit: social.ws.json", function () {
 
     freedom = {
       social: mockIface([], [
-        ['STATUS', fdom.apis.get("social").definition.STATUS.value]
+        ['STATUS', fdom.apis.get("social").definition.STATUS.value],
+        ['ERRCODE', fdom.apis.get("social").definition.ERRCODE.value]
       ])
     };
 
@@ -29,7 +30,7 @@ describe("unit: social.ws.json", function () {
     return {
       userId: id,
       clientId: id,
-      status: freedom.social().STATUS[status],
+      status: status,
       timestamp: jasmine.any(Number)
     };
   }
@@ -78,7 +79,7 @@ describe("unit: social.ws.json", function () {
     provider.logout(d);
     expect(d).toHaveBeenCalled();
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", jasmine.objectContaining({
-      status: freedom.social().STATUS["OFFLINE"]
+      status: "OFFLINE"
     }));
     expect(ws.close).toHaveBeenCalled();
   });
