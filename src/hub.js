@@ -37,11 +37,16 @@ fdom.Hub.prototype.onMessage = function(source, message) {
   }
 
   if(!this.apps[destination.app]) {
-    fdom.debug.warn("Message dropped to deregistered destination " + destination.app);
+    fdom.debug.warn("Message dropped to destination " + destination.app);
     return;
   }
 
   if (!message.quiet) {
+    var type = message.type;
+    if (message.type === 'message' && message.message &&
+        message.message.type) {
+      type = message.message.type;
+    }
     fdom.debug.log(this.apps[destination.source].toString() +
         " -" + message.type + "-> " +
         this.apps[destination.app].toString() + "." + destination.flow);
@@ -119,7 +124,7 @@ fdom.Hub.prototype.deregister = function(app) {
  * @method install
  * @param {Port} source The source of the route.
  * @param {Port} destination The destination of the route.
- * @param {String} flow The flow on which the destination will receive routed messages.
+ * @param {String} flow The flow where the destination will receive messages.
  * @return {String} A routing source identifier for sending messages.
  */
 fdom.Hub.prototype.install = function(source, destination, flow) {
@@ -128,7 +133,7 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
     return;
   }
   if (!destination) {
-    fdom.debug.warn("Unwilling to generate a flow to nowhere from " + source.id);
+    fdom.debug.warn("Unwilling to generate blackhole flow from " + source.id);
     return;
   }
 
