@@ -39,7 +39,7 @@ Resource.prototype.get = function(manifest, url) {
     } else {
       this.resolve(manifest, url).then(function(key, resolve, address) {
         this.files[key] = address;
-        fdom.debug.log('Resolved ' + key + ' to ' + address);
+        //fdom.debug.log('Resolved ' + key + ' to ' + address);
         resolve(address);
       }.bind(this, key, resolve), reject);
     }
