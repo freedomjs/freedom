@@ -144,6 +144,10 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     //from = undefined;
     //throw "Trying to conform a function";
     return undefined;
+  } else if (typeof(from) === 'undefined') {
+    return undefined;
+  } else if (from === null) {
+    return null;
   }
   switch(template) {
   case 'string':

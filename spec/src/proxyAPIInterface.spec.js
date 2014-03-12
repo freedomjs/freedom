@@ -212,6 +212,19 @@ describe("fdom.proxy.conform", function() {
     expect(fdom.proxy.conform("object", function() {},[], false)).not.toBeDefined();
   });
 
+  it("conforms nulls", function() {
+    expect(fdom.proxy.conform({"key": "string"}, {"key": null}, [], false)).
+      toEqual({"key": null});
+    expect(fdom.proxy.conform("object", null, [], false)).toEqual(null);
+    expect(fdom.proxy.conform({"key": "string"}, {"key": undefined}, [], false)).
+      toEqual({});
+    expect(fdom.proxy.conform(["string", "string", "string", "string"], 
+                              [null, undefined, null, 0], [], false)).
+      toEqual([null, undefined, null, "0"]);
+    expect(fdom.proxy.conform("object", undefined, [], false)).toEqual(undefined);
+  
+  });
+
   it("conforms binary arguments", function() {
     // TODO: test Blob support (API is nonstandard between Node and Browsers)
     /*
