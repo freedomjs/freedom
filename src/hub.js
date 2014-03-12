@@ -49,7 +49,7 @@ fdom.Hub.prototype.onMessage = function(source, message) {
     } else if (message.type === 'method' && message.message &&
         message.message.type === 'method') {
       type = 'return.' + message.message.name;
-    if (message.type === 'message' && message.message &&
+    } else if (message.type === 'message' && message.message &&
         message.message.type === 'event') {
       type = 'event.' + message.message.name;
     }
