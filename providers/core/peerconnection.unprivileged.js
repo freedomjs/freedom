@@ -120,8 +120,7 @@ SimpleDataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
 
 // Handle a message send on the signalling channel to this peer.
 SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
-  //console.log(this.peerName + ": " + "handleSignalMessage: \n" +
-      messageText);
+  //console.log(this.peerName + ": " + "handleSignalMessage: \n" + messageText);
   var json = JSON.parse(messageText);
   this.runWhenReady(function () {
     // TODO: If we are offering and they are also offerring at the same time,
@@ -272,8 +271,7 @@ SimpleDataPeer.prototype.onIceCallback = function (event) {
 };
 
 SimpleDataPeer.prototype.onSignalingStateChange = function () {
-  //console.log(this.peerName + ": " + "_onSignalingStateChange: ",
-      this._pc.signalingState);
+  //console.log(this.peerName + ": " + "_onSignalingStateChange: ", this._pc.signalingState);
   if (this.pc.signalingState === "stable") {
     this.pcState = SimpleDataPeerState.CONNECTED;
   }
