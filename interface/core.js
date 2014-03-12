@@ -197,7 +197,9 @@ fdom.apis.set('core.peerconnection', {
   // Returns the number of bytes that have queued using "send", but not
   // yet sent out. Currently just exposes:
   // http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-bufferedAmount
-  "getBufferedAmount": {type: "method", value: ["string"]},
+  "getBufferedAmount": {type: "method",
+                        value: ["string"],
+                        ret: "number"},
 
   // Close the peer connection.
   'close': {type: "method", value: []},
