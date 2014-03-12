@@ -31,39 +31,93 @@ fdom.apis.set("core.storage", {
   'clear': {type: "method", value: []}
 });
 
-fdom.apis.set("core.socket", {
-  'create': {type: "method", value: ["string", "object"], ret: {
-    socketId: "number"
+// A TCP Socket.
+fdom.apis.set("core.tcpsocket", {
+  // Sockets may be constructed bound to a pre-existing id, as in the case of
+  // interacting with a socket accpeted by a server.  If no Id is specified, a
+  // new socket will be created, which can be either connect'ed or listen'ed.
+  'constructor': {
+    value: ["number"]
+  },
+
+  // Get info about a socket.  Tells you whether the socket is active and
+  // available host information.
+  'getInfo': {
+    type: "method",
+    value: [],
+    ret: {
+      "connected": "boolean",
+      "localAddress": "string",
+      "localPort": "number",
+      "peerAddress": "string",
+      "peerPort": "number"
+    }
+  },
+
+  // Close a socket. Will Fail if the socket is not connected or already
+  // closed.
+  'close': {
+    type: "method",
+    value: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
+
+  // Receive notification that the socket has disconnected.
+  'onDisconnect': {type: "event", value: {
+    "errcode": "string",
+    "message": "string"
   }},
+  
+  // Connect to a host and port.
+  // Fails with an error if connection fails.
   'connect': {
     type: "method",
-    value: ["number", "string", "number"],
-    ret: "number"
+    value: ["string", "number"],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
-  'onData': {type: "event", value: {"socketId": "number", "data": "buffer"}},
-  'write': {type: "method", value: ["number", "buffer"], ret: "number"},
-  'disconnect': {type: "method", value: ["number"]},
-  'destroy': {type: "method", value: ["number"]},
+  
+  // Write buffer data to a socket.
+  // Fails with an error if write fails.
+  'write': {
+    type: "method",
+    value: ["buffer"],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
+
+  // Receive data on a connected socket.
+  'onData': {
+    type: "event",
+    value: {"data": "buffer"}
+  },
+
+  // Listen as a server at a specified host and port.
+  // After calling listen the client should listen for 'onConnection' events.
+  // Fails with an error if errors occur while binding or listening.
   'listen': {
     type: "method",
-    value: ["number", "string", "number"],
-    ret: "number"
+    value: ["string", "number"],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
+
+  // Receive a connection.
+  // The socket parameter may be used to construct a new socket.
+  // Host and port information provide information about the remote peer.
   'onConnection': {type: "event", value: {
-    'serverSocketId': "number",
-    'clientSocketId': "number"
-  }},
-  'onDisconnect': {type: "event", value: {
-    "socketId": "number",
-    "error": "string"
-  }},
-  'getInfo': {type: "method", value: ["number"], ret: {
-    "type": "string",
-    "connected": "boolean",
-    "peerAddress": "string",
-    "peerPort": "number",
-    "localAddress": "string",
-    "localPort": "number"
+    "socket": "number",
+    "host": "string",
+    "port": "number"
   }}
 });
 
