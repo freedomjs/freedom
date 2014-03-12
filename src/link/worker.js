@@ -12,7 +12,10 @@ fdom.link = fdom.link || {};
  * @uses handleEvents
  * @constructor
  */
-fdom.link.Worker = function() {
+fdom.link.Worker = function(id) {
+  if (id) {
+    this.manifest = id.substr(id.lastIndexOf('/') + 1);
+  }
   fdom.Link.call(this);
 };
 
@@ -75,7 +78,7 @@ fdom.link.Worker.prototype.setupWorker = function() {
     worker = new Worker(this.config.source);
   } else {
     blob = new window.Blob([this.config.src], {type: 'text/javascript'});
-    worker = new Worker(window.URL.createObjectURL(blob));
+    worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.manifest);
   }
   worker.addEventListener('error', function(err) {
     fdom.debug.error(err, this.toString());
