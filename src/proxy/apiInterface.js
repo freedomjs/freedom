@@ -144,7 +144,7 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     //from = undefined;
     //throw "Trying to conform a function";
     return undefined;
-  } else if (typeof(from) === 'undefined') {
+  } else if (typeof(from) === 'undefined' || template === undefined) {
     return undefined;
   } else if (from === null) {
     return null;
@@ -216,8 +216,7 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     });
     return val;
   }
-  fdom.debug.log('Conform ignoring value for template:' + template);
-  fdom.debug.log(from);
+  fdom.debug.warn('Unknown template type: ' + template);
 };
 
 /**
