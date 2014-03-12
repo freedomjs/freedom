@@ -194,7 +194,11 @@ fdom.port.Module.prototype.stop = function() {
  * @return {String} The description of this Port.
  */
 fdom.port.Module.prototype.toString = function() {
-  return "[Module " + this.manifestId + "]";
+  var manifest = this.manifestId;
+  if (manifest.indexOf('/') > -1) {
+    manifest = manifest.substr(manifest.lastIndexOf('/') + 1);
+  }
+  return "[Module " + manifest + "]";
 };
 
 /**
@@ -207,8 +211,6 @@ fdom.port.Module.prototype.toString = function() {
  */
 fdom.port.Module.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
-    fdom.debug.log('Module saw new channel binding: ' + name +
-        'registered as ' + message.channel);
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
     return;
