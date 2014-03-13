@@ -1,6 +1,6 @@
 freedom.js
 =======
-[![Build Status](https://travis-ci.org/UWNetworksLab/freedom.png?branch=master)](https://travis-ci.org/UWNetworksLab/freedom)
+[![Build Status](https://travis-ci.org/freedomjs/freedom.png?branch=master)](https://travis-ci.org/freedomjs/freedom)
 [![Coverage Status](https://coveralls.io/repos/UWNetworksLab/freedom/badge.png?branch=master)](https://coveralls.io/r/UWNetworksLab/freedom?branch=master)
 
 freedom.js is a runtime for distributed web applications
@@ -13,7 +13,7 @@ The freedom.js library gives you the benefits of distribution without the headac
 Use freedom.js
 ---------
 
-If you want to drop freedom.js into your website, grab the copy [here](https://homes.cs.washington.edu/~wrs/freedom.js).
+If you want to drop freedom.js into your website, grab the copy [here](http://freedomjs.org/release/v0.4/freedom.latest.js).
 
 If you want to use freedom.js in a privileged extension, look at our packages for [chrome](https://github.com/freedomjs/freedom-runtime-chrome) and firefox (soon).
 
@@ -22,12 +22,12 @@ If you want to use freedom.js in a node.js application, look at our [node runtim
 If you want to include freedom.js in your build process, run ```npm install freedom```.
 
 More documentation for building freedom.js, and including it in your project is
-on our github [wiki](https://github.com/UWNetworksLab/freedom/wiki).
+on our github [wiki](https://github.com/freedomjs/freedom/wiki).
 
 See freedom.js
 -------
 
-[Demos](https://homes.cs.washington.edu/~wrs/demo/) show many of the common freedom.js patterns.
+[Demos](http://freedomjs.org/demo/) show many of the common freedom.js patterns.
 
 To run the demonstrations locally, first [build freedom.js](#build-freedomjs).  freedom.js will not work when included as a ```file://``` URL (since reading from other file protocol URLs is disallowed). Instead, we recommend running ```python -m SimpleHTTPServer``` to access your page via a local HTTP URL.
 
@@ -47,4 +47,4 @@ We welcome contributions and pull requests! A set of current issues are maintain
 
 Pull requests are automatically reviewed by travis to verify code quality and unit tests. You can predict that a pull request will fail if running ```grunt test``` locally fails.
 
-Internal documentation for the library is [automatically generated](https://homes.cs.washington.edu/~wrs/tools/doc) and provides a reasonable starting point for understanding the internals of freedom.js.
+Internal documentation for the library is [automatically generated](http://freedomjs.org/docs/master/doc/) and provides a reasonable starting point for understanding the internals of freedom.js.

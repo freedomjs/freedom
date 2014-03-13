@@ -1,8 +1,11 @@
 {
   "name": "freedom",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "homepage": "http://freedomjs.com",
-  "repository": {"type": "git", "url": "git://github.com/UWNetworksLab/freedom.git"},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/freedomjs/freedom.git"
+  },
   "authors": [
     "Will Scott <willscott@gmail.com> (https://wills.co.tt)",
     "Raymond Cheng <ryscheng@cs.washington.edu>"
