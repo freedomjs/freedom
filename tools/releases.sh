@@ -1,6 +1,6 @@
 #!/bin/bash
 # Get The locations that the current checked-out version lives.
-FREEDOM="https://github.com/UWNetworksLab/freedom/commit"
+FREEDOM="https://github.com/freedomjs/freedom/commit"
 COMMIT=$(git rev-parse HEAD)
 BRANCH=$(git name-rev --name-only HEAD | cut -d "/" -f3)
 TAG=$(git describe --exact-match --tags HEAD 2>/dev/null)
