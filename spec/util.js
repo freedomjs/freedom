@@ -122,7 +122,8 @@ function setupResolvers() {
   fdom.resources = new Resource();
   fdom.resources.addResolver(function(manifest, url, resolve) {
     if (url.indexOf('relative://') === 0) {
-      var dirname = manifest.substr(0, manifest.lastIndexOf('/'));
+      var loc = location.protocol + "//" + location.host + location.pathname;
+      var dirname = loc.substr(0, loc.lastIndexOf('/'));
       resolve(dirname + '/' + url.substr(11));
       return true;
     }
@@ -164,6 +165,20 @@ function setupModule(manifest_url) {
     inject: dir + "node_modules/es5-shim/es5-shim.js",
     src: freedom_src
   });
+}
+
+function providerFor(module, api) {
+  var manifest = {
+    name: 'providers',
+    app: {script: 'relative://spec/helper/providers.js'},
+    dependencies: {undertest: {url: 'relative://' + module, api: api}}
+  };
+  var freedom = setupModule('manifest://' + JSON.stringify(manifest));
+  var provider = new ProviderHelper(freedom);
+  provider.create = function(name) {
+    this.freedom.emit("create", {name: name, provider: 'undertest'});
+  };
+  return provider;
 }
 
 function ProviderHelper(inFreedom) {
