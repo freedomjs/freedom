@@ -165,5 +165,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
  
 };
 
-describe("integration-single: social.loopback.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "loopback/social.loopback.json"));
-describe("integration-single: social.ws.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "websocket-server/social.ws.json"));
+if (typeof TEMPLATE === 'undefined') {
+  describe("integration-single: social.loopback.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "loopback/social.loopback.json"));
+  describe("integration-single: social.ws.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "websocket-server/social.ws.json"));
+}

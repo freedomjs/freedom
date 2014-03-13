@@ -136,4 +136,6 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
  
 };
 
-describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "websocket-server/social.ws.json"));
+if (typeof TEMPLATE === 'undefined') {
+  describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "websocket-server/social.ws.json"));
+}
