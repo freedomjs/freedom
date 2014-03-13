@@ -1,11 +1,10 @@
 var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
-  var freedom, helper;
+  var helper;
   var ERRCODE = fdom.apis.get("social").definition.ERRCODE.value;
 
   beforeEach(function(done) {
-    freedom = setupModule("relative://spec/helper/providers.json");
-    helper = new ProviderHelper(freedom);
-    helper.create("s", provider_name);
+    helper = providerFor('/providers/social/' + provider_name, 'social');
+    helper.create("s");
     done();
   });
   
@@ -166,5 +165,5 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
  
 };
 
-describe("integration-single: social.loopback.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "social.loopback"));
-describe("integration-single: social.ws.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "social.ws"));
+describe("integration-single: social.loopback.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "loopback/social.loopback.json"));
+describe("integration-single: social.ws.json", SOCIAL_SINGLE_INTEGRATION_SPEC.bind(this, "websocket-server/social.ws.json"));

@@ -1,11 +1,10 @@
 var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
-  var freedom, helper;
+  var helper;
 
   beforeEach(function(done) {
-    freedom = setupModule("relative://spec/helper/providers.json");
-    helper = new ProviderHelper(freedom);
-    helper.create("SocialA", provider_name);
-    helper.create("SocialB", provider_name);
+    helper = providerFor('/providers/social/' + provider_name, 'social');
+    helper.create("SocialA");
+    helper.create("SocialB");
     done();
   });
   
@@ -137,4 +136,4 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
  
 };
 
-describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "social.ws"));
+describe("integration-double: social.ws.json", SOCIAL_DOUBLE_INTEGRATION_SPEC.bind(this, "websocket-server/social.ws.json"));

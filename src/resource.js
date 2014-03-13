@@ -12,7 +12,7 @@ if (typeof fdom === 'undefined') {
  */
 var Resource = function() {
   this.files = {};
-  this.resolvers = [this.httpResolver];
+  this.resolvers = [this.httpResolver, this.nullResolver];
   this.contentRetreivers = {
     'http': this.xhrRetriever,
     'https': this.xhrRetriever,
@@ -163,6 +163,27 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
     }
   }
 
+  return false;
+};
+
+/**
+ * Resolve URLs which are self-describing.
+ * @method nullResolver
+ * @private
+ * @param {String} manifest The Manifest URL.
+ * @param {String} url The URL to resolve.
+ * @param {Function} resolve The promise to complete.
+ * @param {Function} reject The promise to reject.
+ * @returns {Boolean} True if the URL could be resolved.
+ */
+Resource.prototype.nullResolver = function(manifest, url, resolve, reject) {
+  var protocols = ["manifest", "data;base64"], i;
+  for (i = 0; i < protocols.length; i += 1) {
+    if (url.indexOf(protocols[i] + "://") === 0) {
+      resolve(url);
+      return true;
+    }
+  }
   return false;
 };
 
