@@ -1,7 +1,7 @@
 freedom.js
 =======
 [![Build Status](https://travis-ci.org/freedomjs/freedom.png?branch=master)](https://travis-ci.org/freedomjs/freedom)
-[![Coverage Status](https://coveralls.io/repos/UWNetworksLab/freedom/badge.png?branch=master)](https://coveralls.io/r/UWNetworksLab/freedom?branch=master)
+[![Coverage Status](https://coveralls.io/repos/freedomjs/freedom/badge.png?branch=master)](https://coveralls.io/r/freedomjs/freedom?branch=master)
 
 freedom.js is a runtime for distributed web applications
 

@@ -132,7 +132,8 @@ module.exports = function(grunt) {
     },
     uglify: {
       options: {
-        mangle: { except: ['global'] }
+        mangle: { except: ['global'] },
+        preserveComments: 'some'
       },
       freedom: {
         files: {
