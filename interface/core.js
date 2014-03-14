@@ -261,3 +261,59 @@ fdom.apis.set('core.peerconnection', {
   'onClose': {type: "event", value: {}}
 });
 
+fdom.apis.set("core.websocket", {
+  'constructor': {value: 
+                  // URL to connect through
+                  ["string",
+                   // Protocols
+                   ["array", "string"]]},
+  'open': {type: "method",
+              value: [],
+              err: {
+                "errcode": "string",
+                "message": "string"
+              }},
+  // Send the data to the other side of this connection. Only one of
+  // the entries in the dictionary that is passed will be sent.
+  'send': {type: "method",
+           value: [{
+             "text": "string",
+             "binary": "blob",
+             "buffer": "buffer"
+           }],
+           err:{
+             "errcode": "string",
+             "message": "string"
+           }},
+  'getReadyState': {type: "method", 
+               value: [],
+               // 0 -> CONNECTING
+               // 1 -> OPEN
+               // 2 -> CLOSING
+               // 3 -> CLOSED
+               ret: "number"
+              },
+  'close': {type: "method",
+            value: []},
+  'onMessage': { type: 'event',
+                 // The data will be stored in one of the keys,
+                 // corresponding with the type received
+                 value: [{
+                   "text": "string",
+                   "binary": "blob",
+                   "buffer": "buffer"
+                 }]
+               },
+  'onOpen': { type: 'event',
+              value: []
+            },
+  'onError': { type: 'event',
+               value: [{
+                 "errcode": "string",
+                 "message": "string"
+               }]
+             },
+  'onClose': { type: 'event',
+               value: []
+             }
+});
