@@ -84,7 +84,9 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
  * @method getInterface
  */
 fdom.port.Proxy.prototype.getInterface = function() {
-  var Iface = this.getInterfaceConstructor();
+  var Iface = this.getInterfaceConstructor(),
+      args = Array.prototype.slice.call(arguments, 0);
+  Iface = Iface.bind.apply(Iface, [Iface].concat(args));
   return new Iface();
 };
 
@@ -95,7 +97,8 @@ fdom.port.Proxy.prototype.getInterface = function() {
  */
 fdom.port.Proxy.prototype.getProxyInterface = function() {
   var func = function(p) {
-    return p.getInterface();
+    var args = Array.prototype.slice.call(arguments, 1);
+    return p.getInterface(args);
   }.bind({}, this);
 
   func.close = function(iface) {
