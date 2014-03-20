@@ -23,7 +23,6 @@
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-yuidoc": "~0.5.0",
     "grunt-contrib-uglify": "~0.3.2",
-    "es5-shim": "~2.3.0",
     "grunt-template-jasmine-istanbul": "~0.3.0",
     "grunt-coveralls": "~0.3.0",
     "grunt-saucelabs": "~5.0.0",
