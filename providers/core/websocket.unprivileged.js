@@ -1,8 +1,7 @@
-/*globals freedom:true, fdom, WebSocket, DEBUG*/
+/*globals freedom:true, fdom, WebSocket, DEBUG, console*/
 
-function WS(url, protocols, dispatchEvent, testWebSocket) {
+function WS(app, dispatchEvent, url, protocols, testWebSocket) {
   "use strict";
-
   var WSImplementation;
   // Sub in a mock WebSocket implementation for unit testing.
   if (testWebSocket) {
@@ -13,7 +12,7 @@ function WS(url, protocols, dispatchEvent, testWebSocket) {
 
   this.dispatchEvent = dispatchEvent;
   try {
-    if (protocols) {
+    if (protocols && protocols.length > 0) {
       this.websocket = new WSImplementation(url, protocols);
     } else {
       this.websocket = new WSImplementation(url);

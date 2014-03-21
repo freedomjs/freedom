@@ -6,5 +6,8 @@
   },
   "provides": [
     "social"
+  ],
+  "permissions": [
+    "core.websocket"
   ]
 }

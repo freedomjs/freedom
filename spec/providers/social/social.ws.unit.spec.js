@@ -1,4 +1,4 @@
-describe("unit: social.ws.json", function () {
+xdescribe("unit: social.ws.json", function () {
   var provider, de, ws;
 
   beforeEach(function() {

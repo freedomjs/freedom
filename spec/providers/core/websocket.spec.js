@@ -69,7 +69,9 @@ describe("core.websocket unprivileged", function() {
   beforeEach(function() {
     eventManager = new EventManager();
     var dispatchEvent = eventManager.dispatchEvent.bind(eventManager);
-    websocket = new WS(WS_URL, undefined, dispatchEvent, MockWebSocket);
+    websocket = new WS(undefined,dispatchEvent,
+                       WS_URL, undefined,
+                       MockWebSocket);
     spyOn(MockWebSocket.currentInstance, "send").and.callThrough();
     spyOn(MockWebSocket.currentInstance, "close").and.callThrough();
   });
@@ -82,7 +84,6 @@ describe("core.websocket unprivileged", function() {
   });
 
   it("fires onopen", function(done) {
-    console.info("fires onopen");
     function onOpen() {
       done();
     }
