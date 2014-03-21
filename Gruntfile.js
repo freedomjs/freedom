@@ -46,8 +46,8 @@ var WEBSERVER_PROCESS = null;
 
 module.exports = function(grunt) {
   var saucekey = null;
-  if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
-    saucekey = process.env.SAUCE_ACCESS_KEY;
+  if (typeof process.env.SAUCEKEY!== "undefined") {
+    saucekey = process.env.SAUCEKEY;
   }
   var jasmineSpecs = {};
   var jasmineUnitTasks = [];
@@ -94,7 +94,7 @@ module.exports = function(grunt) {
     'saucelabs-jasmine': {
       all: {
         options: {
-          username: 'daemonf',
+          username: 'freedomjs',
           key: saucekey,
           urls: ['http://localhost:8000/_SpecRunner.html'],
           browsers: [

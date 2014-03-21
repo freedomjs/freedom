@@ -11,10 +11,13 @@ cp freedom.js tools/freedomjs/release/$BRANCH/freedom.latest.js
 cp freedom.min.js tools/freedomjs/release/$BRANCH/freedom.latest.min.js
 
 mkdir -p tools/freedomjs/docs/$BRANCH
+rm -rf tools/freedomjs/docs/$BRANCH/*
 cp -r tools/doc tools/freedomjs/docs/$BRANCH
 
 mkdir -p tools/freedomjs/demo/$BRANCH
+rm -rf tools/freedomjs/demo/$BRANCH/demo
 cp -r demo tools/freedomjs/demo/$BRANCH/demo
+rm -rf tools/freedomjs/demo/$BRANCH/providers
 cp -r providers tools/freedomjs/demo/$BRANCH/providers
 cp freedom.js tools/freedomjs/demo/$BRANCH/freedom.js
 
