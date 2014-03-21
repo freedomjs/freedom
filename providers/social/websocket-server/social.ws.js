@@ -234,7 +234,7 @@ WSSocialProvider.prototype.changeRoster = function(id, stat) {
  **/
 WSSocialProvider.prototype.onMessage = function(finishLogin, msg) {
   var i;
-  msg = JSON.parse(msg.data);
+  msg = JSON.parse(msg.text);
 
   // If state information from the server
   // Store my own ID and all known users at the time

@@ -309,11 +309,11 @@ fdom.apis.set("core.websocket", {
     type: 'event',
     // The data will be stored in one of the keys,
     // corresponding with the type received
-    value: [{
+    value: {
       "text": "string",
       "binary": "blob",
       "buffer": "buffer"
-    }]
+    }
   },
   'onOpen': {
     type: 'event',
