@@ -65,12 +65,12 @@ window.onload = function() {
   
   // On new messages, append it to our message log
   window.freedom.on('recv-err', function(data) {
-    document.getElementById('uid').innerText = "Error: "+data.message;
+    document.getElementById('uid').textContent = "Error: "+data.message;
   });
 
   // Display our own userId when we get it
   window.freedom.on('recv-uid', function(data) {
-    document.getElementById('uid').innerText = "Logged in as: "+data;
+    document.getElementById('uid').textContent = "Logged in as: " + data;
   });
 
   // Display the current status of our connection to the Social provider
