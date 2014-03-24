@@ -5,6 +5,9 @@
  * freedom
  *  - Lint, compile, and unit test freedom.js
  *  - (default Grunt task) 
+ * demo
+ *  - In addition to the freedom task,
+ *    start a web server where demos live at http://localhost:8000
  * test
  *  - In addition to the freedom task,
  *    run all phantomjs-compatible tests
@@ -200,16 +203,31 @@ module.exports = function(grunt) {
       }
     },
     connect: {
-      server: {
+      once: {
         options: {
           port: 8000,
           keepalive: false
         }
       },
-      serverpersist: {
+      keepalive: {
         options: {
           port: 8000,
           keepalive: true
+        }
+      },
+      debug: {
+        options: {
+          port: 8000,
+          keepalive: true,
+          open: "http://localhost:8000/_SpecRunner.html"
+        }
+      },
+      demo: {
+        options: {
+          port: 8000,
+          keepalive: true,
+          base: ["./","demo/"],
+          open: "http://localhost:8000/"
         }
       }
     },
@@ -280,12 +298,16 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('debug', [
     'jasmine:all:build',
-    'connect:serverpersist',
+    'connect:debug',
+  ]);
+  grunt.registerTask('demo', [
+    'freedom',
+    'connect:demo',
   ]);
   grunt.registerTask('saucelabs', [
     'gitinfo',
     'jasmine:all:build',
-    'connect:server',
+    'connect:once',
     'saucelabs-jasmine',
   ]);
   grunt.registerTask('default', ['freedom']);
