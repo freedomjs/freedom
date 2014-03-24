@@ -26,7 +26,8 @@
     "grunt-template-jasmine-istanbul": "~0.3.0",
     "grunt-coveralls": "~0.3.0",
     "grunt-saucelabs": "~5.0.0",
-    "istanbul": "~0.2.4"
+    "istanbul": "~0.2.4",
+    "grunt-contrib-connect": "~0.7.1"
   },
   "scripts": {
     "test": "grunt freedom coverage --verbose",

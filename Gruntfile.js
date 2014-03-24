@@ -1,3 +1,19 @@
+/**
+ * Gruntfile for freedom.js
+ *
+ * Here are the common tasks used:
+ * freedom
+ *  - Lint, compile, and unit test freedom.js
+ *  - (default Grunt task) 
+ * test
+ *  - In addition to the freedom task,
+ *    run all phantomjs-compatible tests
+ * saucelabs
+ *  - Run all tests on saucelabs.com
+ * chromeTestRunner
+ *  - Run all tests in a local Chrome app
+ **/
+
 var FILES = {
   preamble: [
     'src/util/preamble.js',
@@ -38,56 +54,69 @@ var FILES = {
   specintegration: [
     'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
-    //'spec/providers/transport/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js',
+  ],
+  specintegrationphantom: [
+    'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/storage/**/*.integration.spec.js',
   ],
   specall: ['spec/**/*.spec.js']
 };
 var WEBSERVER_PROCESS = null;
 
 module.exports = function(grunt) {
-  var saucekey = null;
-  if (typeof process.env.SAUCEKEY!== "undefined") {
-    saucekey = process.env.SAUCEKEY;
-  }
   var jasmineSpecs = {};
   var jasmineUnitTasks = [];
   var jasmineIntegrationTasks = [];
   var jasmineCoverageTasks = [];
-  
-  FILES.specunit.forEach(function(spec) {
-    var sname = spec + 'Spec';
-    jasmineUnitTasks.push('jasmine:' + sname);
-    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
-    jasmineSpecs[sname] = {
+
+  /**
+   * Helper functions
+   **/
+  function generatePhantomTask(spec) {
+    return {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         keepRunner: false 
       }
     };
-    jasmineSpecs[sname + 'Coverage'] = {
+  }
+
+  function generateCoverageTask(spec) {
+    return {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         template: require('grunt-template-jasmine-istanbul'),
         templateOptions: {
-          coverage: 'tools/coverage' + jasmineUnitTasks.length + '.json',
+          coverage: 'tools/coverage' + jasmineCoverageTasks.length + '.json',
           report: []
         }
       }
-    }
+    };
+  }
+  
+  /**
+   * Setup Jasmine tests
+   **/
+  FILES.specunit.forEach(function(spec) {
+    var sname = spec + 'Spec';
+    jasmineUnitTasks.push('jasmine:' + sname);
+    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
+    jasmineSpecs[sname] = generatePhantomTask(spec);
+    jasmineSpecs[sname + 'Coverage'] = generateCoverageTask(spec);
   });
-  FILES.specintegration.forEach(function(spec) {
+  FILES.specintegrationphantom.forEach(function(spec) {
     var sname = spec + "Spec";
     jasmineIntegrationTasks.push("jasmine:"+sname);
-    jasmineSpecs[sname] = {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        keepRunner: false
-      }
-    };
+    jasmineSpecs[sname] = generatePhantomTask(spec);
   });
+  jasmineSpecs["all"] = generatePhantomTask(FILES.specall[0]);
+
+  /**
+   * GRUNT CONFIG
+   **/
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     jasmine: jasmineSpecs,
@@ -95,7 +124,7 @@ module.exports = function(grunt) {
       all: {
         options: {
           username: 'freedomjs',
-          key: saucekey,
+          key: process.env.SAUCEKEY,
           urls: ['http://localhost:8000/_SpecRunner.html'],
           browsers: [
             {
@@ -169,6 +198,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-saucelabs');
+  grunt.loadNpmTasks('grunt-contrib-connect');
   
   // Write lcov coverage
   grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
