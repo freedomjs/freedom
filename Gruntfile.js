@@ -8,6 +8,9 @@
  * test
  *  - In addition to the freedom task,
  *    run all phantomjs-compatible tests
+ * debug
+ *  - Host a local web server
+ *    Run all tests by going to http://localhost:8000/_SpecRunner.html
  * saucelabs
  *  - Run all tests on saucelabs.com
  * chromeTestRunner
@@ -192,8 +195,13 @@ module.exports = function(grunt) {
           port: 8000,
           keepalive: false
         }
+      },
+      serverpersist: {
+        options: {
+          port: 8000,
+          keepalive: true
+        }
       }
-
     }
   });
 
@@ -256,6 +264,10 @@ module.exports = function(grunt) {
     'jasmineCoverageTasks',
     'istanbulCollect',
     'coveralls:report'
+  ]);
+  grunt.registerTask('debug', [
+    'jasmine:all:build',
+    'connect:serverpersist',
   ]);
   grunt.registerTask('saucelabs', [
     'jasmine:all:build',

@@ -1,4 +1,4 @@
-describe("transport.webrtc.json", function() {
+xdescribe("integration: transport.webrtc.json", function() {
   var TIMEOUT = 3000;
   var freedom, helper;
 

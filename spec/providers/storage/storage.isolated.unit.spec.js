@@ -1,6 +1,6 @@
 describe("unit: storage.isolated.json", function () {
   var provider;
-  beforeEach(function() {
+  beforeEach(function(done) {
     // Comment for log messages.
     spyOn(console, "log");
 
@@ -13,7 +13,7 @@ describe("unit: storage.isolated.json", function () {
         ['remove', undefined]
       ])
     };
-    provider = new IsolatedStorageProvider();
+    provider = new IsolatedStorageProvider(null, done);
   });
 
   it("returns owned keys", function(done) {

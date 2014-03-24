@@ -9,7 +9,7 @@
  **/
 'use strict';
 
-function IsolatedStorageProvider() {
+function IsolatedStorageProvider(dispatchEvent, done) {
   var i;
   this.core = freedom.core();
   this.store = freedom['core.storage']();
@@ -21,6 +21,10 @@ function IsolatedStorageProvider() {
       this.magic += val[i] + ";";
     }
     this.flushQueue();
+    // For jasmine unit tests
+    if (typeof done !== "undefined") {
+      done();
+    }
   }.bind(this));
 }
 
