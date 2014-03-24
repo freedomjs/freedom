@@ -62,7 +62,6 @@ var FILES = {
   ],
   specall: ['spec/**/*.spec.js']
 };
-var WEBSERVER_PROCESS = null;
 
 module.exports = function(grunt) {
   var jasmineSpecs = {};
@@ -186,6 +185,15 @@ module.exports = function(grunt) {
       report: {
         src: 'tools/lcov.info'
       }
+    },
+    connect: {
+      server: {
+        options: {
+          port: 8000,
+          keepalive: false
+        }
+      }
+
     }
   });
 
@@ -226,24 +234,6 @@ module.exports = function(grunt) {
     });
   });
 
-  grunt.registerTask('spawn-web-server', "Spawn a python webserver to serve the root dir", function(){
-    WEBSERVER_PROCESS = grunt.util.spawn({
-      cmd: 'python',
-      args: ['-m', 'SimpleHTTPServer'],
-    }, function done(error, result, code) {
-      grunt.log.ok('Failed to execute shell script:'+
-        "\n\t"+error+
-        "\n\tResult: "+result+
-        "\n\tCode: "+code);
-    });
-  });
-
-  grunt.registerTask('kill-web-server', "Kill the web server", function(){
-    if(WEBSERVER_PROCESS != null){
-      WEBSERVER_PROCESS.kill();
-    }
-  });
-
   // Default tasks.
   grunt.registerTask('jasmineUnitTasks', jasmineUnitTasks);
   grunt.registerTask('jasmineIntegrationTasks', jasmineIntegrationTasks);
@@ -268,10 +258,9 @@ module.exports = function(grunt) {
     'coveralls:report'
   ]);
   grunt.registerTask('saucelabs', [
-    'jasmineUnitTasks',
-    'spawn-web-server',
+    'jasmine:all:build',
+    'connect:server',
     'saucelabs-jasmine',
-    'kill-web-server',
   ]);
   grunt.registerTask('default', ['freedom']);
 };
