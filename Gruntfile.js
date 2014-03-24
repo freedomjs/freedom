@@ -128,11 +128,21 @@ module.exports = function(grunt) {
           username: 'freedomjs',
           key: process.env.SAUCEKEY,
           urls: ['http://localhost:8000/_SpecRunner.html'],
+          testname: 'freedom.js',
+          tags: [
+            '<%= gitinfo.local.branch.current.name %>',
+            '<%= gitinfo.local.branch.current.shortSHA %>',
+            '<%= gitinfo.local.branch.current.currentUser %>',
+            '<%= gitinfo.local.branch.current.lastCommitAuthor %>',
+            '<%= gitinfo.local.branch.current.lastCommitTime %>',
+          ],
           browsers: [
             {
               browserName: 'chrome',
+              version: '33',
             }
           ]
+
         } 
       }
     },
@@ -202,6 +212,8 @@ module.exports = function(grunt) {
           keepalive: true
         }
       }
+    },
+    gitinfo: {
     }
   });
 
@@ -215,6 +227,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-saucelabs');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-gitinfo');
   
   // Write lcov coverage
   grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
@@ -270,6 +283,7 @@ module.exports = function(grunt) {
     'connect:serverpersist',
   ]);
   grunt.registerTask('saucelabs', [
+    'gitinfo',
     'jasmine:all:build',
     'connect:server',
     'saucelabs-jasmine',

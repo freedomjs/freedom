@@ -25,9 +25,10 @@
     "grunt-contrib-uglify": "~0.3.2",
     "grunt-template-jasmine-istanbul": "~0.3.0",
     "grunt-coveralls": "~0.3.0",
-    "grunt-saucelabs": "~5.0.0",
+    "grunt-saucelabs": "~5.1.0",
     "istanbul": "~0.2.4",
-    "grunt-contrib-connect": "~0.7.1"
+    "grunt-contrib-connect": "~0.7.1",
+    "grunt-gitinfo": "~0.1.4"
   },
   "scripts": {
     "test": "grunt freedom coverage --verbose",
