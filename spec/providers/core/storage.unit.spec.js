@@ -3,7 +3,9 @@ describe("core.storage unprivileged", function() {
   var TIMEOUT = 1000;
   
   beforeEach(function(done) {
-    if (typeof chrome !== "undefined") {
+    if (typeof chrome !== "undefined" && 
+        typeof chrome.storage !== "undefined" &&
+        typeof chrome.storage.local !== "undefined") {
       chrome.storage.local.clear();
       provider = new Storage_chromeStorageLocal({});
     } else {

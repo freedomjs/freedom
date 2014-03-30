@@ -20,7 +20,7 @@ describe("Core Provider Integration", function() {
     freedom = fdom.setup(global, undefined, {
       manifest: "relative://spec/helper/channel.json",
       portType: 'Frame',
-      inject: dir + "node_modules/es5-shim/es5-shim.js",
+      inject: dir + "node_modules/grunt-contrib-jasmine/node_modules/es5-shim/es5-shim.js",
       src: freedom_src
     });
   });

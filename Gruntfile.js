@@ -1,3 +1,25 @@
+/**
+ * Gruntfile for freedom.js
+ *
+ * Here are the common tasks used:
+ * freedom
+ *  - Lint, compile, and unit test freedom.js
+ *  - (default Grunt task) 
+ * demo
+ *  - In addition to the freedom task,
+ *    start a web server where demos live at http://localhost:8000
+ * test
+ *  - In addition to the freedom task,
+ *    run all phantomjs-compatible tests
+ * debug
+ *  - Host a local web server
+ *    Run all tests by going to http://localhost:8000/_SpecRunner.html
+ * saucelabs
+ *  - Run all tests on saucelabs.com
+ * chromeTestRunner
+ *  - Run all tests in a local Chrome app
+ **/
+
 var FILES = {
   preamble: [
     'src/util/preamble.js',
@@ -38,70 +60,92 @@ var FILES = {
   specintegration: [
     'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
-    //'spec/providers/transport/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js',
+  ],
+  specintegrationphantom: [
+    'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/storage/**/*.integration.spec.js',
   ],
   specall: ['spec/**/*.spec.js']
 };
-var WEBSERVER_PROCESS = null;
 
 module.exports = function(grunt) {
-  var saucekey = null;
-  if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
-    saucekey = process.env.SAUCE_ACCESS_KEY;
-  }
   var jasmineSpecs = {};
   var jasmineUnitTasks = [];
   var jasmineIntegrationTasks = [];
   var jasmineCoverageTasks = [];
-  
-  FILES.specunit.forEach(function(spec) {
-    var sname = spec + 'Spec';
-    jasmineUnitTasks.push('jasmine:' + sname);
-    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
-    jasmineSpecs[sname] = {
+
+  /**
+   * Helper functions
+   **/
+  function generatePhantomTask(spec) {
+    return {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         keepRunner: false 
       }
     };
-    jasmineSpecs[sname + 'Coverage'] = {
+  }
+
+  function generateCoverageTask(spec) {
+    return {
       src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
       options: {
         specs: spec,
         template: require('grunt-template-jasmine-istanbul'),
         templateOptions: {
-          coverage: 'tools/coverage' + jasmineUnitTasks.length + '.json',
+          coverage: 'tools/coverage' + jasmineCoverageTasks.length + '.json',
           report: []
         }
       }
-    }
+    };
+  }
+  
+  /**
+   * Setup Jasmine tests
+   **/
+  FILES.specunit.forEach(function(spec) {
+    var sname = spec + 'Spec';
+    jasmineUnitTasks.push('jasmine:' + sname);
+    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
+    jasmineSpecs[sname] = generatePhantomTask(spec);
+    jasmineSpecs[sname + 'Coverage'] = generateCoverageTask(spec);
   });
-  FILES.specintegration.forEach(function(spec) {
+  FILES.specintegrationphantom.forEach(function(spec) {
     var sname = spec + "Spec";
     jasmineIntegrationTasks.push("jasmine:"+sname);
-    jasmineSpecs[sname] = {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        keepRunner: false
-      }
-    };
+    jasmineSpecs[sname] = generatePhantomTask(spec);
   });
+  jasmineSpecs["all"] = generatePhantomTask(FILES.specall[0]);
+
+  /**
+   * GRUNT CONFIG
+   **/
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     jasmine: jasmineSpecs,
     'saucelabs-jasmine': {
       all: {
         options: {
-          username: 'daemonf',
-          key: saucekey,
+          username: 'freedomjs',
+          key: process.env.SAUCEKEY,
           urls: ['http://localhost:8000/_SpecRunner.html'],
+          testname: 'freedom.js',
+          tags: [
+            '<%= gitinfo.local.branch.current.name %>',
+            '<%= gitinfo.local.branch.current.shortSHA %>',
+            '<%= gitinfo.local.branch.current.currentUser %>',
+            '<%= gitinfo.local.branch.current.lastCommitAuthor %>',
+            '<%= gitinfo.local.branch.current.lastCommitTime %>',
+          ],
           browsers: [
             {
               browserName: 'chrome',
+              version: '33',
             }
           ]
+
         } 
       }
     },
@@ -157,6 +201,37 @@ module.exports = function(grunt) {
       report: {
         src: 'tools/lcov.info'
       }
+    },
+    connect: {
+      once: {
+        options: {
+          port: 8000,
+          keepalive: false
+        }
+      },
+      keepalive: {
+        options: {
+          port: 8000,
+          keepalive: true
+        }
+      },
+      debug: {
+        options: {
+          port: 8000,
+          keepalive: true,
+          open: "http://localhost:8000/_SpecRunner.html"
+        }
+      },
+      demo: {
+        options: {
+          port: 8000,
+          keepalive: true,
+          base: ["./","demo/"],
+          open: "http://localhost:8000/"
+        }
+      }
+    },
+    gitinfo: {
     }
   });
 
@@ -169,6 +244,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-saucelabs');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-gitinfo');
   
   // Write lcov coverage
   grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
@@ -196,24 +273,6 @@ module.exports = function(grunt) {
     });
   });
 
-  grunt.registerTask('spawn-web-server', "Spawn a python webserver to serve the root dir", function(){
-    WEBSERVER_PROCESS = grunt.util.spawn({
-      cmd: 'python',
-      args: ['-m', 'SimpleHTTPServer'],
-    }, function done(error, result, code) {
-      grunt.log.ok('Failed to execute shell script:'+
-        "\n\t"+error+
-        "\n\tResult: "+result+
-        "\n\tCode: "+code);
-    });
-  });
-
-  grunt.registerTask('kill-web-server', "Kill the web server", function(){
-    if(WEBSERVER_PROCESS != null){
-      WEBSERVER_PROCESS.kill();
-    }
-  });
-
   // Default tasks.
   grunt.registerTask('jasmineUnitTasks', jasmineUnitTasks);
   grunt.registerTask('jasmineIntegrationTasks', jasmineIntegrationTasks);
@@ -237,11 +296,19 @@ module.exports = function(grunt) {
     'istanbulCollect',
     'coveralls:report'
   ]);
+  grunt.registerTask('debug', [
+    'jasmine:all:build',
+    'connect:debug',
+  ]);
+  grunt.registerTask('demo', [
+    'freedom',
+    'connect:demo',
+  ]);
   grunt.registerTask('saucelabs', [
-    'jasmineUnitTasks',
-    'spawn-web-server',
+    'gitinfo',
+    'jasmine:all:build',
+    'connect:once',
     'saucelabs-jasmine',
-    'kill-web-server',
   ]);
   grunt.registerTask('default', ['freedom']);
 };
