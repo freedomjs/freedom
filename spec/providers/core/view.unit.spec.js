@@ -4,10 +4,12 @@ describe("core.view", function() {
   beforeEach(function() {
     app = {
       config: {
-        views: {},
         global: window
       },
       manifestId: 'myApp',
+      manifest: {
+        views: {}
+      }
     };
     provider = new View_unprivileged(app);
  
@@ -22,7 +24,7 @@ describe("core.view", function() {
   });
 
   it("Places objects and cleans up.", function() {
-    app.config.views['myview'] = true;
+    app.manifest.views['myview'] = true;
 
     var cb = jasmine.createSpy('cb');
     provider.open('myview', {'code': ''}, cb);
@@ -36,7 +38,7 @@ describe("core.view", function() {
 
   // TODO: Understand phantom security model better.
   it("Roundtrips messages", function(done) {
-    app.config.views['myview'] = true;
+    app.manifest.views['myview'] = true;
 
     provider.dispatchEvent = jasmine.createSpy('de');
     provider.dispatchEvent.and.callFake(function() {
