@@ -158,7 +158,7 @@ module.exports = function(grunt) {
       },
       afterconcat: ['freedom.js'],
       providers: FILES.srcprovider,
-      demo: ['demo/**/*.js'],
+      demo: ['demo/**/*.js', '!demo/**/third-party/**'],
       options: {
         '-W069': true
       }

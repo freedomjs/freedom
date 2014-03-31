@@ -109,17 +109,17 @@ var User = function (name) {
 User.prototype.layout = function () {
   var idx = uqueue.indexOf(this);
   var num = uqueue.length;
-  var x, y, z;
+  var x, xStep, y, z;
   if (idx < 6) { // front row
-    var xStep = window.innerWidth / (1 + Math.min(6, num));
+    xStep = window.innerWidth / (1 + Math.min(6, num));
     x = xStep * (1 + idx);
     y = 150;
     z = 3;
     this.el.scaleX(1);
     this.el.scaleY(1);
   } else {
-    var xStep = window.innerWidth / (num - 5);
-    x = xStep * (idx - 5)
+    xStep = window.innerWidth / (num - 5);
+    x = xStep * (idx - 5);
     y = 50;
     z = 2;
     this.el.scaleX(0.5);
