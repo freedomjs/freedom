@@ -11,6 +11,14 @@ var colors = [
     '#040f21', '#0e2240',
     '#0d142a', '#051c24'
 ];
+var brights = [
+    '#0000ff', '#0033ff',
+    '#00ff00', '#00cc33',
+    '#3434ff', '#2098ff',
+    '#21e831', '#0df088',
+    '#00ff14', '#baff00',
+    '#6cff00', '#63cb2c',
+];
 
 var container;
 var stage;
@@ -115,6 +123,29 @@ var User = function (name) {
     this.phase = 'entered';
     this.layout().update();
   }.bind(this), 0);
+  this.color = Math.floor(Math.random() * brights.length / 2);
+  this.interval = setInterval(this.animate.bind(this), 3000);
+  this.animate();
+};
+
+User.prototype.animate = function() {
+  if (this.a == 1) {
+    this.a = 2;
+    this.el.css('background-color', brights[2 * this.color]);
+    this.el.css('background-size', '13px 13px, 29px 29px, 37px 37px, 53px 53px');
+    //this.el.css('background-image', 'linear-gradient(0, rgba(0,0,0,.1) 50%, transparent 50%),' +
+    //            'linear-gradient(0, rgba(255,255,255,.15) 50%, transparent 50%),' +
+    //            'linear-gradient(0, transparent 50%, rgba(0,0,0,.2) 50%),' +
+    //            'linear-gradient(0, transparent 50%, rgba(255,255,255,.04) 50%)');
+  } else {
+    this.a = 1;
+    this.el.css('background-color', brights[2 * this.color + 1]);
+    this.el.css('background-size', '20px 20px, 19px 19px, 47px 47px, 40px 40px');
+    //this.el.css('background-image', 'linear-gradient(0, rgba(255,255,255,.1) 50%, transparent 50%),' +
+    //            'linear-gradient(0, rgba(255,255,255,.05) 50%, transparent 50%),' +
+    //            'linear-gradient(0, transparent 50%, rgba(255,255,255,.05) 50%),' +
+    //            'linear-gradient(0, transparent 50%, rgba(255,255,255,.14) 50%)');
+  }
 };
 
 User.prototype.layout = function () {
@@ -148,6 +179,7 @@ User.prototype.layout = function () {
 
 User.prototype.exit = function () {
   stage.removeChild(this.el);
+  clearInterval(this.interval);
   delete nodes[this.name];
   var idx = uqueue.indexOf(this);
   uqueue.splice(idx, 1);
