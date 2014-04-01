@@ -139,7 +139,10 @@ User.prototype.layout = function () {
     this.el.scaleX(0.5);
     this.el.scaleY(0.5);
   }
-  this.el.position(x, y, z);
+  var r = 90 * (x / window.innerWidth) - 45;
+  var s = Math.pow(x / window.innerWidth - 0.5, 2) * 150;
+  console.warn(s);
+  this.el.position(x, y + s, z).rotationY(r);
   return this.el;
 };
 
