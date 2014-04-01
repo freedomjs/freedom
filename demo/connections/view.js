@@ -1,15 +1,15 @@
 var base = 'http://www.freedomjs.org/?user=';
 var colors = [
-  '#041022', '#111d2f',
-  '#05080d', '#031419',
-  '#070524', '#091321',
-  '#163038', '#0f093e',
-  '#051010', '#041124',
-  '#171929', '#0c1d36',
-  '#011722', '#061233',
-  '#050d1a', '#0e2b2e',
-  '#040f21', '#0e2240',
-  '#0d142a', '#051c24'
+    '#041022', '#111d2f',
+    '#05080d', '#031419',
+    '#070524', '#091321',
+    '#163038', '#0f093e',
+    '#051010', '#041124',
+    '#171929', '#0c1d36',
+    '#011722', '#061233',
+    '#050d1a', '#0e2b2e',
+    '#040f21', '#0e2240',
+    '#0d142a', '#051c24'
 ];
 
 var container;
@@ -27,7 +27,7 @@ window.addEventListener('message', function (msg) {
     document.body.className = 'online';
     setupStage();
   } else if (msg.data.event === 'status') {
-    document.body.className = 'loaded';
+    document.body.className = 'okay';
     container.innerHTML = '<div class="striped">' +
       (msg.data.online || 'Connecting') + '</div>';
   } else if (msg.data.event === 'user') {
@@ -91,22 +91,36 @@ var updateUsers = function (users) {
   }
   for (var i in nodes) {
     if (nodes.hasOwnProperty(i)) {
-      nodes[i].layout();
+      nodes[i].layout().update();
     }
   }
 };
 
 var User = function (name) {
   this.name = name;
-  this.image = qr.toDataURL(base + name);
+  this.phase = 'entered';
+  this.image = qr.toDataURL({
+    value: base + name,
+    background: 'rgba(255,0,0,0)'
+  });
   this.el = Sprite3D.create('.node');
-  this.el.css('background-image', 'url(' + this.image + ')');
-  this.layout();
+  var mask = Sprite3D.create('.mask');
+  mask.css('background-image', 'url(' + this.image + ')');
+  this.el.appendChild(mask);
+  this.layout().scaleX(0).scaleY(0).update();
   stage.appendChild(this.el);
   uqueue.push(this);
+  this.phase = 'entry';
+  setTimeout(function() {
+    this.phase = 'entered';
+    this.layout().update();
+  }.bind(this), 0);
 };
 
 User.prototype.layout = function () {
+  if (this.phase !== 'entered') {
+    return this.el;
+  }
   var idx = uqueue.indexOf(this);
   var num = uqueue.length;
   var x, xStep, y, z;
@@ -125,7 +139,8 @@ User.prototype.layout = function () {
     this.el.scaleX(0.5);
     this.el.scaleY(0.5);
   }
-  this.el.position(x, y, z).update();
+  this.el.position(x, y, z);
+  return this.el;
 };
 
 User.prototype.exit = function () {
