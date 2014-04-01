@@ -45,6 +45,10 @@ window.addEventListener('message', function (msg) {
   }
 }, false);
 
+window.addEventListener('resize', function() {
+  updateUsers(nodes);
+}, false);
+
 var setupStage = function () {
   container.innerHTML = '';
   var cb = typeof stage === 'function' ? stage : function() {};
@@ -155,16 +159,18 @@ User.prototype.layout = function () {
   var idx = uqueue.indexOf(this);
   var num = uqueue.length;
   var x, xStep, y, z;
-  if (idx < 6) { // front row
-    xStep = window.innerWidth / (1 + Math.min(6, num));
+  var frontRow = window.innerWidth > 1024 ? 6 : window.innerWidth > 640 ? 4 : 3;
+  
+  if (idx < frontRow) { // front row
+    xStep = window.innerWidth / (1 + Math.min(frontRow, num));
     x = xStep * (1 + idx);
     y = 150;
     z = 3;
     this.el.scaleX(1);
     this.el.scaleY(1);
   } else {
-    xStep = window.innerWidth / (num - 5);
-    x = xStep * (idx - 5);
+    xStep = window.innerWidth / (num + 1 - frontRow);
+    x = xStep * (idx + 1 - frontRow);
     y = 50;
     z = 2;
     this.el.scaleX(0.5);
@@ -172,8 +178,7 @@ User.prototype.layout = function () {
   }
   var r = 90 * (x / window.innerWidth) - 45;
   var s = Math.pow(x / window.innerWidth - 0.5, 2) * 150;
-  console.warn(s);
-  this.el.position(x, y + s, z).rotationY(r);
+  this.el.position(x - 75, y + s, z).rotationY(r);
   return this.el;
 };
 

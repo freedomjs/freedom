@@ -321,19 +321,19 @@ fdom.apis.set("core.websocket", {
   },
   'onError': {
     type: 'event',
-    value: [{
+    value: {
       "errcode": "string",
       "message": "string"
-    }]
+    }
   },
   'onClose': {
     type: 'event',
     // Values given by WebSockets spec:
     // http://www.w3.org/TR/websockets/#closeevent
-    value: [{
+    value: {
       "code": "number",
       "reason": "string",
       "wasClean": "boolean"
-    }]
+    }
   }
 });

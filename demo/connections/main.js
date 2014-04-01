@@ -4,7 +4,7 @@
  * currently connected peers, and observed interactions.
  **/
 
-var social = freedom.socialprovider();
+var social;
 var view = freedom['core.view']();
 var users = {};    //Keep track of the roster
 var myClientState = null;
@@ -12,26 +12,26 @@ var myClientState = null;
 /**
  * Relay messages from the social network to the view.
  */
-social.on('onMessage', function(data) {
+function onMsg(data) {
   view.postMessage({
     event: 'message',
     message: data
   });
-});
+}
 
 /**
  * On user profile changes, let's keep track of them
  **/
-social.on('onUserProfile', function(data) {
+function onProfile(data) {
   //Just save it for now
   users[data.userId] = data;
   sendUsers();
-});
+}
 
 /**
  * On newly online or offline clients, let's update the roster
  **/
-social.on('onClientState', function(data) {
+function onState(data) {
   if (data.status == social.STATUS["OFFLINE"]) {
     if (users.hasOwnProperty(data.userId)) {
       delete users[data.userId];
@@ -47,8 +47,12 @@ social.on('onClientState', function(data) {
       event: 'status',
       online: data.status == social.STATUS["ONLINE"]
     });
+    if (data.status != social.STATUS["ONLINE"]) {
+      console.error('got status ' + data.status + ' from social');
+      doLogin();
+    }
   }
-});
+}
 
 view.on('message', function(msg) {
 });
@@ -61,24 +65,36 @@ function sendUsers() {
 }
 
 /** LOGIN AT START **/
-social.login({
-  agent: 'connections',
-  version: '0.1',
-  url: '',
-  interactive: true,
-  rememberLogin: false
-}).then(function(ret) {
-  myClientState = ret;
-  view.postMessage({
-    event: 'status',
-    online: ret.status == social.STATUS["ONLINE"]
+var doLogin = function() {
+  var s = freedom.socialprovider();
+  if (social) {
+    freedom.socialprovider.close(social);
+  }
+  social = s;
+
+  social.on('onMessage', onMsg);
+  social.on('onUserProfile', onProfile);
+  social.on('onClientState', onState);
+  social.login({
+    agent: 'connections',
+    version: '0.1',
+    url: '',
+    interactive: true,
+    rememberLogin: false
+  }).then(function(ret) {
+    myClientState = ret;
+    view.postMessage({
+      event: 'status',
+      online: ret.status == social.STATUS["ONLINE"]
+    });
+  }, function(err) {
+    view.postMessage({
+      event: 'status',
+      online: err
+    });
   });
-}, function(err) {
-  view.postMessage({
-    event: 'status',
-    online: err
-  });
-});
+};
+doLogin();
 
 /** SHOW VIEW AT START **/
 view.open('connections', {file: 'view.html'}).then(function() {
