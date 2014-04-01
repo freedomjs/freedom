@@ -144,10 +144,11 @@ function setupResolvers() {
 }
 
 function cleanupIframes() {
-  var frames = document.getElementsByTagName('iframe'),
-      i;
-  for (i = 0; i < frames.length; i += 1) {
-    frames[i].parentNode.removeChild(frames[i]);
+  var frames = document.getElementsByTagName('iframe');
+  // frames is a live HTMLCollection, so it is modified each time an
+  // element is removed.
+  while (frames.length > 0) {
+    frames[0].parentNode.removeChild(frames[0]);
   }
 }
 
