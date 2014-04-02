@@ -18,8 +18,7 @@
       "view.html",
       "view.css",
       "view.js",
-      "third-party/qr/qr.js",
-      "third-party/Sprite3D/Sprite3D.js"
+      "third-party/qr/qr.js"
     ]
   }
 }

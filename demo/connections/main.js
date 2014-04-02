@@ -56,6 +56,7 @@ function onState(data) {
 }
 
 view.on('message', function(msg) {
+  console.warn('main got msg ' + msg);
 });
 
 function sendUsers() {
