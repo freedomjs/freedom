@@ -113,7 +113,7 @@ var updateUsers = function (users) {
 var reset = function() {
   for (var node in nodes) {
     if (nodes.hasOwnProperty(node)) {
-      delete nodes[node].exit(true);
+      nodes[node].exit(true);
     }
   }
   nodes = {};
