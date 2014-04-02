@@ -14,6 +14,11 @@
       "debug": true
     }
   </script>
+  <script type="text/javascript">
+    freedom.on("height", function(h) {
+      document.getElementById("connections").style.height = h + 'px';
+    });
+  </script>
 </head>
 <body>
   <header id='logo'>freedom.js</header>

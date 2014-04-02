@@ -47,6 +47,7 @@ function onState(data) {
       event: 'status',
       online: data.status == social.STATUS["ONLINE"]
     });
+    freedom.emit('height', data.status == social.STATUS["ONLINE"] ? 360 : 85);
     if (data.status != social.STATUS["ONLINE"]) {
       console.error('got status ' + data.status + ' from social');
       doLogin();
@@ -87,11 +88,13 @@ var doLogin = function() {
       event: 'status',
       online: ret.status == social.STATUS["ONLINE"]
     });
+    freedom.emit('height', ret.status == social.STATUS["ONLINE"] ? 360 : 85);
   }, function(err) {
     view.postMessage({
       event: 'status',
       online: err
     });
+    freedom.emit('height', 85);
   });
 };
 doLogin();

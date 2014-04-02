@@ -33,11 +33,13 @@ window.addEventListener('load', function () {
 window.addEventListener('message', function (msg) {
   if (msg.data.event === 'status' && msg.data.online === true) {
     document.body.className = 'online';
+    reset();
     setupStage();
   } else if (msg.data.event === 'status') {
     document.body.className = 'okay';
     container.innerHTML = '<div class="striped">' +
       (msg.data.online || 'Connecting') + '</div>';
+    reset();
   } else if (msg.data.event === 'user') {
     updateUsers(msg.data.users);
   } else {
@@ -57,7 +59,7 @@ var setupStage = function () {
   // Background.
   var panels = [];
   for (var i = 0; i < 20; i++) {
-    var sprite = Sprite3D.create(".panel").x(i * 70);
+    var sprite = Sprite3D.create(".panel").x(i * 70).z(0);
     panels.push(sprite);
     stage.appendChild(sprite);
     sprite.update();
@@ -108,6 +110,15 @@ var updateUsers = function (users) {
   }
 };
 
+var reset = function() {
+  for (var node in nodes) {
+    if (nodes.hasOwnProperty(node)) {
+      delete nodes[node].exit(true);
+    }
+  }
+  nodes = {};
+};
+
 var User = function (name) {
   this.name = name;
   this.phase = 'entered';
@@ -117,7 +128,7 @@ var User = function (name) {
   });
   this.el = Sprite3D.create('.node');
   var mask = Sprite3D.create('.mask');
-  mask.css('background-image', 'url(' + this.image + ')');
+  mask.css('backgroundImage', 'url(' + this.image + ')').z(300);
   this.el.appendChild(mask);
   this.layout().scaleX(0).scaleY(0).update();
   stage.appendChild(this.el);
@@ -135,20 +146,12 @@ var User = function (name) {
 User.prototype.animate = function() {
   if (this.a == 1) {
     this.a = 2;
-    this.el.css('background-color', brights[2 * this.color]);
-    this.el.css('background-size', '13px 13px, 29px 29px, 37px 37px, 53px 53px');
-    //this.el.css('background-image', 'linear-gradient(0, rgba(0,0,0,.1) 50%, transparent 50%),' +
-    //            'linear-gradient(0, rgba(255,255,255,.15) 50%, transparent 50%),' +
-    //            'linear-gradient(0, transparent 50%, rgba(0,0,0,.2) 50%),' +
-    //            'linear-gradient(0, transparent 50%, rgba(255,255,255,.04) 50%)');
+    this.el.css('backgroundColor', brights[2 * this.color]);
+    this.el.css('backgroundSize', '13px 13px, 29px 29px, 37px 37px, 53px 53px');
   } else {
     this.a = 1;
-    this.el.css('background-color', brights[2 * this.color + 1]);
-    this.el.css('background-size', '20px 20px, 19px 19px, 47px 47px, 40px 40px');
-    //this.el.css('background-image', 'linear-gradient(0, rgba(255,255,255,.1) 50%, transparent 50%),' +
-    //            'linear-gradient(0, rgba(255,255,255,.05) 50%, transparent 50%),' +
-    //            'linear-gradient(0, transparent 50%, rgba(255,255,255,.05) 50%),' +
-    //            'linear-gradient(0, transparent 50%, rgba(255,255,255,.14) 50%)');
+    this.el.css('backgroundColor', brights[2 * this.color + 1]);
+    this.el.css('backgroundSize', '20px 20px, 19px 19px, 47px 47px, 40px 40px');
   }
 };
 
@@ -165,14 +168,14 @@ User.prototype.layout = function () {
     xStep = window.innerWidth / (1 + Math.min(frontRow, num));
     x = xStep * (1 + idx);
     y = 150;
-    z = 3;
+    z = 300;
     this.el.scaleX(1);
     this.el.scaleY(1);
   } else {
     xStep = window.innerWidth / (num + 1 - frontRow);
     x = xStep * (idx + 1 - frontRow);
     y = 50;
-    z = 2;
+    z = 200;
     this.el.scaleX(0.5);
     this.el.scaleY(0.5);
   }
@@ -182,10 +185,12 @@ User.prototype.layout = function () {
   return this.el;
 };
 
-User.prototype.exit = function () {
-  stage.removeChild(this.el);
+User.prototype.exit = function (killed) {
   clearInterval(this.interval);
-  delete nodes[this.name];
+  if (!killed) {
+    stage.removeChild(this.el);
+    delete nodes[this.name];
+  }
   var idx = uqueue.indexOf(this);
   uqueue.splice(idx, 1);
 };
