@@ -3,34 +3,51 @@ freedom.js
 [![Build Status](https://travis-ci.org/freedomjs/freedom.png?branch=master)](https://travis-ci.org/freedomjs/freedom)
 [![Coverage Status](https://coveralls.io/repos/freedomjs/freedom/badge.png?branch=master)](https://coveralls.io/r/freedomjs/freedom?branch=master)
 
-freedom.js is a runtime for distributed web applications
+freedom.js is a framework for building peer-to-peer (P2P) web apps. 
+freedom.js makes it easy to quickly create social interactive applications that 
+instantly work in modern web browsers, Chrome packaged apps, Firefox extensions 
+(coming soon), node.js, and native mobile apps (coming soon). Because freedom.js
+apps are just JavaScript, they can be distributed as packages on an app store or
+hosted on static web servers. We're bringing peer-to-peer back, baby.
 
-Building distributed systems is hard! Debugging machines out of your control
-or in states you don't fully understand is miserable. Trust us.
-
-The freedom.js library gives you the benefits of distribution without the headaches. freedom.js comes with a tested set of implementations for storage, communication, and navigating the social graph. The library exposes an architecture allowing you to build, think about, and debug your application from the perspective of a single user.
+freedom.js comes with a tested set of implementations for storage, 
+network communication, and navigating the social graph. 
+The library exposes an architecture allowing you to build, think about, 
+and debug your application from the perspective of a single user.
 
 Use freedom.js
 ---------
 
-If you want to drop freedom.js into your website, grab the copy [here](http://freedomjs.org/release/v0.4/freedom.latest.js).
+If you want a built version of freedom.js into your website, grab a copy from our CDN:
 
-If you want to use freedom.js in a privileged extension, look at our packages for [chrome](https://github.com/freedomjs/freedom-runtime-chrome) and firefox (soon).
+Websites: 
+* [freedom.latest.js](http://freedomjs.org/release/master/freedom.latest.js) (unstable)
+* [freedom.v0.4.4.js](http://freedomjs.org/release/master/freedom.v0.4.4.js) (stable)
 
-If you want to use freedom.js in a node.js application, look at our [node runtime](https://github.com/freedomjs/freedom-runtime-node).
+Chrome Apps:
+* [freedom-for-chrome.latest.js](http://freedomjs.org/release/freedom-chrome/freedom.latest.js) (unstable)
 
-If you want to include freedom.js in your build process, run ```npm install freedom```.
+freedom and freedom-for-chrome also exist as npm packages
+    ```npm install freedom```
+    ```npm install freedom-for-chrome```
+
+To track progress of freedom.js for other platforms, check out these other repositories:
+* [freedom-for-chrome](https://github.com/freedomjs/freedom-for-chrome) - Chrome Packaged Apps
+* [freedom-for-firefox](https://github.com/freedomjs/freedom-for-firefox) - Firefox extensions
+* [freedom-for-node](https://github.com/freedomjs/freedom-for-node) - Node.js apps
+* [freedom-for-cordova](https://github.com/freedomjs/freedom-for-cordova) - Apache Cordova for mobile
 
 More documentation for building freedom.js, and including it in your project is
-on our github [wiki](https://github.com/freedomjs/freedom/wiki).
+on our GitHub [wiki](https://github.com/freedomjs/freedom/wiki).
 
 See freedom.js
 -------
 
 [Demos](http://freedomjs.org/demo/) show many of the common freedom.js patterns.
 
-To run the demonstrations locally, first [build freedom.js](#build-freedomjs).  freedom.js will not work when included as a ```file://``` URL (since reading from other file protocol URLs is disallowed). Instead, we recommend running ```python -m SimpleHTTPServer``` to access your page via a local HTTP URL.
+To run the demonstrations locally, run ```grunt demo```.
 
+NOTE: freedom.js will not work when included as a ```file://``` URL (since reading from other file protocol URLs is disallowed). 
 freedom.js is being developed against current versions of Chrome and Firefox.
 
 Build freedom.js
@@ -39,6 +56,12 @@ Build freedom.js
 To create your own freedom.js, run [```grunt```](http://gruntjs.com) in the main repository.  This will compile, lint, unit test, and optionally compress the code base. freedom.js can also be included in your project as an NPM dependency:
 
     npm install freedom --save
+
+Other helpful grunt commands:
+* ```grunt freedom``` - Build freedom.js
+* ```grunt demo``` - Build and run demos
+* ```grunt test``` - Run the subset of tests that are compatible with phantomjs
+* ```grunt debug``` - Build all tests and launch a webserver. freedom.js unit and integration tests can then be run by navigating to http://localhost:8000/_SpecRunner.html
 
 Help freedom.js
 ---------
