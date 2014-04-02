@@ -19,20 +19,23 @@ Use freedom.js
 ---------
 
 If you want a built version of freedom.js into your website, grab a copy from our CDN:
+
 Websites: 
-[freedom.latest.js](http://freedomjs.org/release/master/freedom.latest.js) (unstable)
-[freedom.v0.4.4.js](http://freedomjs.org/release/master/freedom.v0.4.4.js) (stable)
+* [freedom.latest.js](http://freedomjs.org/release/master/freedom.latest.js) (unstable)
+* [freedom.v0.4.4.js](http://freedomjs.org/release/master/freedom.v0.4.4.js) (stable)
+
 Chrome Apps:
-[freedom-for-chrome.latest.js](http://freedomjs.org/release/freedom-chrome/freedom.latest.js) (unstable)
+* [freedom-for-chrome.latest.js](http://freedomjs.org/release/freedom-chrome/freedom.latest.js) (unstable)
+
 freedom and freedom-for-chrome also exist as npm packages
-```npm install freedom```
-```npm install freedom-for-chrome```
+    ```npm install freedom```
+    ```npm install freedom-for-chrome```
 
 To track progress of freedom.js for other platforms, check out these other repositories:
-[freedom-for-chrome](https://github.com/freedomjs/freedom-for-chrome) - Chrome Packaged Apps
-[freedom-for-firefox](https://github.com/freedomjs/freedom-for-firefox) - Firefox extensions
-[freedom-for-node](https://github.com/freedomjs/freedom-for-node) - Node.js apps
-[freedom-for-cordova](https://github.com/freedomjs/freedom-for-cordova) - Apache Cordova for mobile
+* [freedom-for-chrome](https://github.com/freedomjs/freedom-for-chrome) - Chrome Packaged Apps
+* [freedom-for-firefox](https://github.com/freedomjs/freedom-for-firefox) - Firefox extensions
+* [freedom-for-node](https://github.com/freedomjs/freedom-for-node) - Node.js apps
+* [freedom-for-cordova](https://github.com/freedomjs/freedom-for-cordova) - Apache Cordova for mobile
 
 More documentation for building freedom.js, and including it in your project is
 on our GitHub [wiki](https://github.com/freedomjs/freedom/wiki).
@@ -43,6 +46,7 @@ See freedom.js
 [Demos](http://freedomjs.org/demo/) show many of the common freedom.js patterns.
 
 To run the demonstrations locally, run ```grunt demo```.
+
 NOTE: freedom.js will not work when included as a ```file://``` URL (since reading from other file protocol URLs is disallowed). 
 freedom.js is being developed against current versions of Chrome and Firefox.
 
