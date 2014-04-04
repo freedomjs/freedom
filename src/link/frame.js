@@ -119,7 +119,7 @@ fdom.link.Frame.prototype.makeFrame = function(src, inject) {
   // TODO(willscott): add sandboxing protection.
 
   // TODO(willscott): survive name mangling.
-  src = src.replace("'portType': 'Worker'", "'portType': 'Frame'");
+  src = src.replace('portType: "Worker"', 'portType: "Frame"');
   if (inject) {
     extra = '<script src="' + inject + '" onerror="' +
       'throw new Error(\'Injection of ' + inject +' Failed!\');' +

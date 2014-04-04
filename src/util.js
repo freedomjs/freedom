@@ -252,7 +252,8 @@ fdom.util.handleEvents = function(obj) {
  * @for util
  * @static
  */
-fdom.util.isAppContext=function() {
+/*!@preserve StartAppContextDeclaration*/
+fdom.util.isAppContext = function() {
   return (typeof document === 'undefined');
 };
 
@@ -264,18 +265,17 @@ fdom.util.isAppContext=function() {
  * @static
  */
 fdom.util.forceAppContext = function(src) {
-  var declaration = fdom.util.isAppContext.name + "=function()",
-      definition = " { return true; }",
-      idx = src.indexOf(declaration),
+  var definition = "function () { return true; }",
+      idx = src.indexOf('StartAppContextDeclaration'),
+      funcidx = src.indexOf('function', idx),
       source,
       blob;
-  if (idx === -1) {
-    fdom.debug.warn('Unable to force App Context, source is in unexpected condition.');
+  if (idx === -1 || funcidx === -1) {
+    fdom.debug.error('Unable to force App Context, source is in unexpected condition.');
     return;
   }
-  source = src.substr(0, idx + declaration.length) + definition +
-      '|| function()' +
-      src.substr(idx + declaration.length);
+  source = src.substr(0, funcidx) +  definition + ' || ' +
+      src.substr(funcidx);
   blob = fdom.util.getBlob(source, 'text/javascript');
   return fdom.util.getURL(blob);
 };

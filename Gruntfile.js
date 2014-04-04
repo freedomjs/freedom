@@ -6,8 +6,8 @@
  *  - Lint, compile, and unit test freedom.js
  *  - (default Grunt task) 
  * demo
- *  - In addition to the freedom task,
- *    start a web server where demos live at http://localhost:8000
+ *  - Build freedom.js, and start a web server for seeing demos at
+ *    http://localhost:8000/demo
  * test
  *  - In addition to the freedom task,
  *    run all phantomjs-compatible tests
@@ -21,14 +21,12 @@
  **/
 
 var FILES = {
-  preamble: [
-    'src/util/preamble.js',
+  lib: [
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
     'src/util/jshinthelper.js',
   ],
-  postamble: ['src/util/postamble.js'],
   src: [
     'src/*.js', 
     'src/link/*.js',
@@ -156,37 +154,41 @@ module.exports = function(grunt) {
           jshintrc: true
         }
       },
-      afterconcat: ['freedom.js'],
       providers: FILES.srcprovider,
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],
       options: {
         '-W069': true
       }
     },
-    concat: {
-      dist: {
-        options: {
-          process: function(src) {
-            return src.replace(/\/\*jslint/g,'/*');
-          }
-        },
-        src: FILES.preamble.concat(FILES.src).concat(FILES.postamble),
-        dest: 'freedom.js'
-      }
-    },
     uglify: {
-      options: {
-        mangle: { except: ['global'] },
-        preserveComments: 'some',
-        sourceMap: true
-      },
       freedom: {
         files: {
+          'freedom.js': FILES.lib.concat(FILES.src)
+        },
+        options: {
+          sourceMap: true,
+          mangle: false,
+          beautify: true,
+          preserveComments: function(node, comment) {
+            return comment.value.indexOf('jslint') !== 0;
+          },
+          banner: require('fs').readFileSync('src/util/preamble.js', 'utf8'),
+          footer: require('fs').readFileSync('src/util/postamble.js', 'utf8')
+        }
+      },
+      min: {
+        files: {
           'freedom.min.js': ['freedom.js']
+        },
+        options: {
+          mangle: { except: ['global'] },
+          preserveComments: 'some',
+          sourceMap: true,
+          sourceMapIn: 'freedom.map'
         }
       }
     },
-    clean: ['freedom.js', 'freedom.min.js'],
+    clean: ['freedom.js', 'freedom.map', 'freedom.min.js', 'freedom.min.map'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -228,7 +230,7 @@ module.exports = function(grunt) {
           port: 8000,
           keepalive: true,
           base: ["./","demo/"],
-          open: "http://localhost:8000/"
+          open: "http://localhost:8000/demo/"
         }
       }
     },
@@ -239,7 +241,6 @@ module.exports = function(grunt) {
   // Load tasks.
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -279,20 +280,16 @@ module.exports = function(grunt) {
   grunt.registerTask('jasmineIntegrationTasks', jasmineIntegrationTasks);
   grunt.registerTask('jasmineCoverageTasks', jasmineCoverageTasks);
   grunt.registerTask('freedom', [
-    'jshint:beforeconcat',
-    'concat',
-    'jasmineUnitTasks',
-    'jshint:afterconcat',
-    'jshint:providers',
-    'jshint:demo',
-    'uglify'
+    'jshint',
+    'uglify',
+    'jasmineUnitTasks'
   ]);
   grunt.registerTask('test', [
     'freedom',
     'jasmineIntegrationTasks'
   ]);
   grunt.registerTask('coverage', [
-    'concat',
+    'uglify:freedom',
     'jasmineCoverageTasks',
     'istanbulCollect',
     'coveralls:report'
@@ -302,7 +299,7 @@ module.exports = function(grunt) {
     'connect:debug',
   ]);
   grunt.registerTask('demo', [
-    'freedom',
+    'uglify',
     'connect:demo',
   ]);
   grunt.registerTask('saucelabs', [

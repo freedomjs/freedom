@@ -151,4 +151,7 @@ fdom.port.Debug.prototype.warn = function() {
  */
 fdom.port.Debug.prototype.error = function() {
   this.format('error', undefined, arguments);
+  if (this.console) {
+    this.console.error.apply(this.console, arguments);
+  }
 };

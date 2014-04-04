@@ -176,9 +176,9 @@ describe("util", function() {
 
   describe("AppContext", function() {
     it("Warns when source has been mangled", function() {
-      spyOn(fdom.debug, "warn");
+      spyOn(fdom.debug, "error");
       var resp = fdom.util.forceAppContext("");
-      expect(fdom.debug.warn).toHaveBeenCalled();
+      expect(fdom.debug.error).toHaveBeenCalled();
       expect(resp).toBeUndefined();
     });
   });
