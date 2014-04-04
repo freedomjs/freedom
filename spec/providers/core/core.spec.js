@@ -4,6 +4,7 @@ describe("Core Provider Integration", function() {
   var freedom;
   beforeEach(function() {
     freedom_src = getFreedomSource();
+    fdom.debug = new fdom.port.Debug();
     
     var global = {
       console: {
@@ -66,6 +67,7 @@ describe("Core Provider Channels", function() {
   var manager, hub, global, source, core;
   beforeEach(function(done) {
     global = {freedom: {}, document: document};
+    fdom.debug = new fdom.port.Debug();
     hub = new fdom.Hub();
     manager = new fdom.port.Manager(hub);
     hub.emit('config', {
