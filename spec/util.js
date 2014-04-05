@@ -33,9 +33,15 @@ var createTestPort = function(id) {
 var mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
-    iface[p[0]] = function(r) {
-      return Promise.resolve(r);
-    }.bind({}, p[1]);
+    if (p[1] && p[1].then) {
+      iface[p[0]] = function(r) {
+        return r;
+      }.bind({}, p[1]);
+    } else {
+      iface[p[0]] = function(r) {
+        return Promise.resolve(r);
+      }.bind({}, p[1]);
+    }
     spyOn(iface, p[0]).and.callThrough();
   });
   if (consts) {
