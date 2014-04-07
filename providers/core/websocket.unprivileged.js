@@ -1,18 +1,20 @@
-/*globals freedom:true, fdom, WebSocket, DEBUG, console*/
+/*globals freedom:true, fdom, WebSocket, console*/
 /*jslint sloppy:true*/
 
-function WS(app, dispatchEvent, url, protocols, testWebSocket) {
-  var WSImplementation;
-  // Sub in a mock WebSocket implementation for unit testing.
-  if (testWebSocket) {
-    WSImplementation = testWebSocket;
-  } else {
-    WSImplementation = WebSocket;
-  }
+/**
+ * A WebSocket core provider.
+ * @param {port.Module} module The Module requesting this provider
+ * @param {Function} dispatchEvent Function to dispatch events.
+ * @param {String} url The Remote URL to connect with.
+ * @param {String[]} protocols SubProtocols to open.
+ * @param {WebSocket?} socket An alternative socket class to use.
+ */
+var WS = function (module, dispatchEvent, url, protocols, socket) {
+  var WSImplementation = socket || WebSocket;
 
   this.dispatchEvent = dispatchEvent;
   try {
-    if (protocols && protocols.length > 0) {
+    if (protocols) {
       this.websocket = new WSImplementation(url, protocols);
     } else {
       this.websocket = new WSImplementation(url);
@@ -33,7 +35,7 @@ function WS(app, dispatchEvent, url, protocols, testWebSocket) {
   this.websocket.onclose = this.onClose.bind(this);
   this.websocket.onmessage = this.onMessage.bind(this);
   this.websocket.onerror = this.onError.bind(this);
-}
+};
 
 WS.prototype.send = function(data, continuation) {
   var toSend = data.text || data.binary || data.buffer;
@@ -100,11 +102,7 @@ WS.prototype.onOpen = function(event) {
 };
 
 WS.prototype.onMessage = function(event) {
-  var data = {
-    text: undefined,
-    binary: undefined,
-    buffer: undefined
-  };
+  var data = {};
   if (event.data instanceof ArrayBuffer) {
     data.buffer = data;
   } else if (event.data instanceof Blob) {

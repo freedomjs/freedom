@@ -145,4 +145,12 @@ describe("core.websocket unprivileged", function() {
     
     eventManager.listenFor("onOpen", onOpen);
   });
+  
+  it("receives messages", function(done) {
+    eventManager.listenFor('onMessage', function(m) {
+      expect(m).toEqual({text: 'mytext'});
+      done();
+    });
+    MockWebSocket.currentInstance.onmessage({data: 'mytext'});
+  });
 });
