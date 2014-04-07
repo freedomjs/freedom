@@ -122,6 +122,25 @@ Resource.prototype.addRetriever = function(proto, retriever) {
 };
 
 /**
+ * Determine if a URL is an absolute URL of a given Scheme.
+ * @method hasScheme
+ * @static
+ * @private
+ * @param {String[]} protocols Whitelisted protocols
+ * @param {String} URL the URL to match.
+ * @returns {Boolean} If the URL is an absolute example of one of the schemes.
+ */
+Resource.hasScheme = function(protocols, url) {
+  var i;
+  for (i = 0; i < protocols.length; i += 1) {
+    if (url.indexOf(protocols[i] + "://") === 0) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Resolve URLs which can be accessed using standard HTTP requests.
  * @method httpResolver
  * @private
@@ -133,36 +152,29 @@ Resource.prototype.addRetriever = function(proto, retriever) {
  */
 Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
   var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
-      dirname,
-      i, protocolIdx, pathIdx,
-      path, base;
-  for (i = 0; i < protocols.length; i += 1) {
-    if (url.indexOf(protocols[i] + "://") === 0) {
-      resolve(url);
-      return true;
-    }
+      dirname, protocolIdx, pathIdx, path, base;
+  if (Resource.hasScheme(protocols, url)) {
+    resolve(url);
+    return true;
   }
   
   if (!manifest) {
     return false;
   }
-  for (i = 0; i < protocols.length; i += 1) {
-    if (manifest.indexOf(protocols[i] + "://") === 0 &&
-       url.indexOf("://") === -1) {
-      dirname = manifest.substr(0, manifest.lastIndexOf("/"));
-      protocolIdx = dirname.indexOf("://");
-      pathIdx = protocolIdx + 3 + dirname.substr(protocolIdx + 3).indexOf("/");
-      path = dirname.substr(pathIdx);
-      base = dirname.substr(0, pathIdx);
-      if (url.indexOf("/") === 0) {
-        resolve(base + url);
-      } else {
-        resolve(base + path + "/" + url);
-      }
-      return true;
+  if (Resource.hasScheme(protocols, manifest) &&
+      url.indexOf("://") === -1) {
+    dirname = manifest.substr(0, manifest.lastIndexOf("/"));
+    protocolIdx = dirname.indexOf("://");
+    pathIdx = protocolIdx + 3 + dirname.substr(protocolIdx + 3).indexOf("/");
+    path = dirname.substr(pathIdx);
+    base = dirname.substr(0, pathIdx);
+    if (url.indexOf("/") === 0) {
+      resolve(base + url);
+    } else {
+      resolve(base + path + "/" + url);
     }
+    return true;
   }
-
   return false;
 };
 
@@ -177,12 +189,10 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.nullResolver = function(manifest, url, resolve, reject) {
-  var protocols = ["manifest", "data;base64"], i;
-  for (i = 0; i < protocols.length; i += 1) {
-    if (url.indexOf(protocols[i] + "://") === 0) {
-      resolve(url);
-      return true;
-    }
+  var protocols = ["manifest", "data;base64"];
+  if (Resource.hasScheme(protocols, url)) {
+    resolve(url);
+    return true;
   }
   return false;
 };
