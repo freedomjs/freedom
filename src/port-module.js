@@ -366,6 +366,7 @@ fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
     this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
   }
   // Decide if/what other properties should be exported.
+  // Keep in sync with ModuleInternal.updateEnv
   var metadata = {
     name: manifest.name,
     icon: manifest.icon,
