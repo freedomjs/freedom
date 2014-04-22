@@ -1,3 +1,5 @@
+function MockRTCIceCandidate() {
+}
 function MockRTCPeerConnection(configuration, constraints) {
   MockRTCPeerConnection.mostRecent = this;
   this.configuration = configuration;
@@ -85,7 +87,8 @@ describe("providers/core/peerconnection", function() {
     peerconnection = new PeerConnection(portApp,
                                         undefined,
                                         MockRTCPeerConnection,
-                                        MockRTCSessionDescription);
+                                        MockRTCSessionDescription,
+                                        MockRTCIceCandidate);
     peerconnection.dispatchEvent = function(event, data) {
       dispatchedEvents[event] = data;
     };
