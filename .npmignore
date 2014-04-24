@@ -1,0 +1,18 @@
+### Auto-generated
+tools/doc
+tools/coverage*.json
+tools/lcov.info
+lcov.info
+node_modules
+
+### Scrap
+.*.swp
+providers/social/websocket-server/server/tornado
+_SpecRunner.html
+sauce_connect.log*
+.grunt/
+
+### Chrome Test Runner temp files
+tools/chromeTestRunner/temp
+/manifest.json
+/window.html
