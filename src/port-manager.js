@@ -159,6 +159,10 @@ fdom.port.Manager.prototype.setup = function(port) {
   this.reverseFlowMap[flow] = reverse;
   this.reverseFlowMap[reverse] = flow;
 
+  if (port.lineage) {
+    this.emit('moduleAdd', port.lineage);
+  }
+  
   this.hub.onMessage(flow, {
     type: 'setup',
     channel: reverse,
@@ -177,6 +181,10 @@ fdom.port.Manager.prototype.destroy = function(port) {
   if (!port.id) {
     fdom.debug.warn("Unable to tear down unidentified port");
     return false;
+  }
+
+  if (port.lineage) {
+    this.emit('moduleRemove', port.lineage);
   }
 
   // Remove the port.

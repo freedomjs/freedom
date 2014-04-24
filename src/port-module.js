@@ -13,12 +13,12 @@ fdom.port = fdom.port || {};
  * @param {String[]} creator The lineage of creation for this module.
  * @constructor
  */
-fdom.port.Module = function(manifestURL, creator) {
+fdom.port.Module = function(manifestURL, manifest, creator) {
   this.config = {};
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
+  this.manifest = manifest;
   this.lineage = [this.manifestId].concat(creator);
-  this.loadManifest();
   this.externalPortMap = {};
   this.internalPortMap = {};
   this.started = false;
@@ -134,7 +134,7 @@ fdom.port.Module.prototype.start = function() {
   if (this.started || this.port) {
     return false;
   }
-  if (this.manifest && this.controlChannel) {
+  if (this.controlChannel) {
     this.loadLinks();
     this.port = new fdom.link[this.config.portType](this.manifestId);
     // Listen to all port messages.
@@ -279,28 +279,6 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
 };
 
 /**
- * Load the module description from its manifest.
- * @method loadManifest
- * @private
- */
-fdom.port.Module.prototype.loadManifest = function() {
-  fdom.resources.getContents(this.manifestId).then(function(data) {
-    var resp = {};
-    try {
-      resp = JSON.parse(data);
-    } catch(err) {
-      fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
-      return;
-    }
-    this.manifest = resp;
-    this.emit('manifest', this.manifest);
-    this.start();
-  }.bind(this), function(err) {
-    fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
-  }.bind(this));
-};
-
-/**
  * Request the external routes used by this module.
  * @method loadLinks
  * @private
@@ -333,15 +311,15 @@ fdom.port.Module.prototype.loadLinks = function() {
         channels.push(name);
       }
       fdom.resources.get(this.manifestId, desc.url).then(function (url) {
-        var dep = new fdom.port.Module(url, this.lineage);
-        dep.once('manifest', this.updateEnv.bind(this, name));
-
-        this.emit(this.controlChannel, {
-          type: 'Link to ' + name,
-          request: 'link',
-          name: name,
-          to: dep
-        });
+        this.config.policy.get(this.lineage, url).then(function(dep) {
+          this.emit(this.controlChannel, {
+            type: 'Link to ' + name,
+            request: 'link',
+            name: name,
+            to: dep
+          });
+        }.bind(this));
+        fdom.resources.getContents(url).then(this.updateEnv.bind(this, name));
       }.bind(this));
     }.bind(this));
   }

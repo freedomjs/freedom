@@ -94,9 +94,11 @@ var createProxyFor = function(app, api) {
   
   var link = location.protocol + "//" + location.host + location.pathname;
   fdom.resources.get(link, site_cfg.manifest).then(function(url) {
-    var app = new fdom.port.Module(url, []);
-    manager.setup(app);
-    manager.createLink(proxy, 'default', app);
+    fdom.resources.getContents(url).then(function(manifest) {
+      var app = new fdom.port.Module(url, manifest, []);
+      manager.setup(app);
+      manager.createLink(proxy, 'default', app);
+    });
   });
   hub.emit('config', site_cfg);
 

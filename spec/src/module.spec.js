@@ -1,7 +1,7 @@
 describe("fdom.port.Module", function() {
   var module, link, port;
   beforeEach(function(done) {
-    module = new fdom.port.Module("manifest://{}", []);
+    module = new fdom.port.Module("manifest://{}", {}, []);
     port = createTestPort('messager');
     module.on('control', port.onMessage.bind(port, 'control'));
     module.on('extport', port.onMessage.bind(port, 'extport'));
