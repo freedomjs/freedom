@@ -1,4 +1,4 @@
-/*globals fdom:true, XMLHttpRequest, Promise, console */
+/*globals fdom:true, XMLHttpRequest, Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -156,9 +156,7 @@ fdom.Policy.prototype.isRunning = function(runtime, id, from, fullMatch) {
  * @returns {Promise} Promise for the json contents of the manifest.
  */
 fdom.Policy.prototype.loadManifest = function(manifest) {
-  console.warn('loading ' + manifest);
   return fdom.resources.getContents(manifest).then(function(data) {
-    console.warn('manifest had ' + data);
     var resp = {};
     try {
       return JSON.parse(data);
