@@ -187,11 +187,13 @@ WebRTCTransportProvider.prototype.onData = function(msg) {
   // console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
   if (msg.buffer) {
     this._handleData(msg.channelLabel, msg.buffer);
+  } else if (msg.binary) {
+    var fileReader = new FileReaderSync();
+    var asArrayBuffer = fileReader.readAsArrayBuffer(msg.binary);
+    this._handleData(msg.channelLabel, asArrayBuffer);
   } else if (msg.text) {
     console.error("Strings not supported.");
-  } else if (msg.blob) {
-    console.error("Blob is not supported.");
-  } else {
+  }  else {
     console.error('message called without a valid data field');
   }
 };

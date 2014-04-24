@@ -22,6 +22,7 @@ function RTCDataChannel(label, dict) {
 
   this.label = label;
   this.bufferedAmount = 0;
+  this.readyState = "connecting";
   this._closed = false;
   setTimeout(function() {
     if (typeof this.onopen === 'function') {
@@ -118,6 +119,7 @@ describe("providers/core/peerconnection", function() {
   it("Fires onOpenDataChannel for peer created data channels.", function(done) {
     var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel = new RTCDataChannel("onOpenDC", {});
+    dataChannel.readyState = "open";
     var event = {channel: dataChannel};
     
     rtcpc.listeners.datachannel(event);

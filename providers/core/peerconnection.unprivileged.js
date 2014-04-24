@@ -14,7 +14,6 @@ var SimpleDataPeerState = {
 };
 
 function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
-  console.log("Construct SimpleDataPeer");
   var constraints,
       config,
       i;
@@ -101,18 +100,14 @@ SimpleDataPeer.prototype.runWhenReady = function (func) {
 };
 
 SimpleDataPeer.prototype.send = function (channelId, message, continuation) {
-  console.log("send " + message + " on channel " + channelId);
   this.channels[channelId].send(message);
   continuation();
 };
 
 SimpleDataPeer.prototype.openDataChannel = function (channelId, continuation) {
-  console.log("open data channel queue");
   this.runWhenReady(function doOpenDataChannel() {
-    console.log("open data channel run");
     var dataChannel = this.pc.createDataChannel(channelId, {});
     dataChannel.onopen = function () {
-      console.log("onopen fires");
       this.addDataChannel(channelId, dataChannel);
       continuation();
     }.bind(this);
@@ -121,11 +116,17 @@ SimpleDataPeer.prototype.openDataChannel = function (channelId, continuation) {
       console.error(err);
       continuation(undefined, err);
     };
+    // Firefox does not fire "negotiationneeded", so we need to
+    // negotate here if we are not connected.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=840728
+    if (typeof mozRTCPeerConnection !== "undefined" &&
+        this.pcState === SimpleDataPeerState.DISCONNECTED) {
+      this.negotiateConnection();
+    }
   }.bind(this));
 };
 
 SimpleDataPeer.prototype.closeChannel = function (channelId) {
-  console.log("close data channel");
   if (this.channels[channelId] !== undefined) {
     this.channels[channelId].close();
     delete this.channels[channelId];
@@ -147,7 +148,7 @@ SimpleDataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
 
 // Handle a message send on the signalling channel to this peer.
 SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
-  console.log(this.peerName + ": " + "handleSignalMessage: \n" + messageText);
+  // console.log(this.peerName + ": " + "handleSignalMessage: \n" + messageText);
   var json = JSON.parse(messageText);
   this.runWhenReady(function () {
     // TODO: If we are offering and they are also offerring at the same time,
@@ -162,7 +163,8 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
         function () {
           //console.log(this.peerName + ": setRemoteDescription succeeded");
           if (this.pc.remoteDescription.type === "offer") {
-            this.pc.createAnswer(this.onDescription.bind(this));
+            this.pc.createAnswer(this.onDescription.bind(this),
+                                 console.error);
           }
         }.bind(this),
         // Failure
@@ -185,7 +187,6 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
 
 // Connect to the peer by the signalling channel.
 SimpleDataPeer.prototype.negotiateConnection = function () {
-  console.log("negotiateConnection");
   this.pcState = SimpleDataPeerState.CONNECTING;
   this.runWhenReady(function () {
     this.pc.createOffer(
@@ -200,7 +201,6 @@ SimpleDataPeer.prototype.negotiateConnection = function () {
 };
 
 SimpleDataPeer.prototype.close = function () {
-  console.log("close");
   if (this.pc.signalingState !== "closed") {
     this.pc.close();
   }
@@ -208,7 +208,6 @@ SimpleDataPeer.prototype.close = function () {
 };
 
 SimpleDataPeer.prototype.addDataChannel = function (channelId, channel) {
-  console.log("add data channel");
   var callbacks = this.dataChannelCallbacks;
   this.channels[channelId] = channel;
 
@@ -227,9 +226,7 @@ SimpleDataPeer.prototype.addDataChannel = function (channelId, channel) {
 // When we get our description, we set it to be our local description and
 // send it to the peer.
 SimpleDataPeer.prototype.onDescription = function (description) {
-  console.log("onDescription queue");
   this.runWhenReady(function () {
-    console.log("onDescription run");
     if (this.sendSignalMessage) {
       this.pc.setLocalDescription(
         description,
@@ -251,7 +248,7 @@ SimpleDataPeer.prototype.onDescription = function (description) {
 };
 
 SimpleDataPeer.prototype.onNegotiationNeeded = function (e) {
-  console.log(this.peerName + ": " + "_onNegotiationNeeded", this._pc, e);
+  //console.log(this.peerName + ": " + "onNegotiationNeeded", this._pc, e);
   if (this.pcState !== SimpleDataPeerState.DISCONNECTED) {
     // Negotiation messages are falsely requested for new data channels.
     //   https://code.google.com/p/webrtc/issues/detail?id=2431
@@ -293,7 +290,7 @@ SimpleDataPeer.prototype.onNegotiationNeeded = function (e) {
 SimpleDataPeer.prototype.onIceCallback = function (event) {
   if (event.candidate) {
     // Send IceCandidate to peer.
-    console.log(this.peerName + ": " + "ice callback with candidate", event);
+    // console.log(this.peerName + ": " + "ice callback with candidate", event);
     if (this.sendSignalMessage) {
       this.sendSignalMessage(JSON.stringify({'candidate': event.candidate}));
     } else {
@@ -303,21 +300,25 @@ SimpleDataPeer.prototype.onIceCallback = function (event) {
 };
 
 SimpleDataPeer.prototype.onSignalingStateChange = function () {
-  console.log(this.peerName + ": " + "_onSignalingStateChange: ", this._pc.signalingState);
+  // console.log(this.peerName + ": " + "_onSignalingStateChange: ", this._pc.signalingState);
   if (this.pc.signalingState === "stable") {
     this.pcState = SimpleDataPeerState.CONNECTED;
   }
 };
 
 SimpleDataPeer.prototype.onDataChannel = function (event) {
-  console.log("onDataChannel");
   this.addDataChannel(event.channel.label, event.channel);
   // RTCDataChannels created by a RTCDataChannelEvent have an initial
   // state of open, so the onopen event for the channel will not
   // fire. We need to fire the onOpenDataChannel event here
   // http://www.w3.org/TR/webrtc/#idl-def-RTCDataChannelState
-  this.dataChannelCallbacks.onOpenFn(event.channel,
-                                      {label: event.channel.label});
+
+  // Firefox channels do not have an initial state of "open"
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1000478
+  if (event.channel.readyState === "open") {
+    this.dataChannelCallbacks.onOpenFn(event.channel,
+                                       {label: event.channel.label});
+  }
 };
 
 // _signallingChannel is a channel for emitting events back to the freedom Hub.
@@ -389,6 +390,11 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
         self.dispatchEvent('onReceived', {
           'channelLabel': info.label,
           'buffer': event.data
+        });
+      } else if (event.data instanceof Blob) {
+        self.dispatchEvent('onReceived', {
+          'channelLabel': info.label,
+          'binary': event.data
         });
       } else if (typeof (event.data) === 'string') {
         self.dispatchEvent('onReceived', {
