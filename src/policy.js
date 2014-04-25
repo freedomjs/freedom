@@ -55,15 +55,14 @@ fdom.Policy.prototype.defaultConstraints = {
 fdom.Policy.prototype.get = function(lineage, id) {
   return this.loadManifest(id).then(function(manifest) {
     var constraints = this.overlay(this.defaultConstraints, manifest.constraints),
-        runtime = this.findDestination(lineage, id, constraints);
+        runtime = this.findDestination(lineage, id, constraints),
+        portId;
     if (runtime.local) {
-      if(constraints.isolation !== 'always' &&
-         this.isRunning(runtime, id, lineage,
-                        constraints.isolation !== 'never')) {
-        return {
-          id: this.isRunning(runtime, id, lineage,
-                             constraints.isolation !== 'never')
-        };
+      portId = this.isRunning(runtime, id, lineage,
+                             constraints.isolation !== 'never');
+      if(constraints.isolation !== 'always' && portId) {
+        fdom.debug.log('Reused port ' + portId);
+        return runtime.manager.getPort(portId);
       } else {
         return new fdom.port.Module(id, manifest, lineage);
       }
@@ -181,18 +180,23 @@ fdom.Policy.prototype.add = function(port, policy) {
   this.runtimes.push(runtime);
   this.policies.push(this.overlay(this.defaultPolicy, policy));
 
-  port.on('moduleAdd', function(runtime, mod) {
-    runtime.modules.push(mod);
+  port.on('moduleAdd', function(runtime, info) {
+    var lineage = info.lineage;
+    lineage[0] = info.id;
+    runtime.modules.push(lineage);
   }.bind(this, runtime));
-  port.on('moduleRemove', function(runtime, mod) {
-    var i, modFingerprint = mod.toString();
+  port.on('moduleRemove', function(runtime, info) {
+    var lineage = info.lineage, i, modFingerprint;
+    lineage[0] = info.id;
+    modFingerprint = lineage.toString();
+
     for (i = 0; i < runtime.modules.length; i += 1) {
       if (runtime.modules[i].toString() === modFingerprint) {
         runtime.modules.splice(i, 1);
         return;
       }
     }
-    fdom.debug.warn('Unknown module to remove: ', mod[0]);
+    fdom.debug.warn('Unknown module to remove: ', info.id);
   }.bind(this, runtime));
 };
 

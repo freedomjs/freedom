@@ -135,4 +135,8 @@ describe("fdom.Port.Manager", function() {
     expect(fdom.debug.warn).toHaveBeenCalled();
     expect(port.gotMessage('control', {type: 'core'})).toEqual(false);
   });
+
+  it("Retreives Ports by ID", function() {
+    expect(manager.getPort(port.id)).toEqual(port);
+  });
 });

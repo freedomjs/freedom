@@ -59,7 +59,7 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
       return;
     } else if (message.type === 'close') {
       // Closing channel.
-      if (message.channel === 'default' || message.channel === 'control') {
+      if (message.channel === 'control') {
         this.stop();
       }
       this.deregisterFlow(message.channel, false);
@@ -67,14 +67,27 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
       this.port.onMessage(flow, message);
     }
   } else {
-    if (this.externalPortMap[flow] === false && message.channel) {
+    if ((this.externalPortMap[flow] === false || 
+        !this.externalPortMap[flow])&& message.channel) {
       //console.log('handling channel announcement for ' + flow);
       this.externalPortMap[flow] = message.channel;
       if (this.internalPortMap[flow] === undefined) {
         this.internalPortMap[flow] = false;
-      }
-      if (this.manifest.provides && flow === 'default') {
-        this.externalPortMap[this.manifest.provides[0]] = message.channel;
+
+        // New incoming connection attempts should get routed to modInternal.
+        if (this.manifest.provides && this.modInternal) {
+          this.port.onMessage(this.modInternal, {
+            type: 'Connection',
+            channel: flow
+          });
+        } else if (this.manifest.provides) {
+          this.once('modInternal', function(flow) {
+            this.port.onMessage(this.modInternal,{
+              type: 'Connection',
+              channel: flow
+            });
+          }.bind(this, flow));
+        }
       }
       return;
     } else if (!this.started) {
@@ -82,6 +95,9 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
     } else {
       if (this.internalPortMap[flow] === false) {
         this.once('internalChannelReady', this.onMessage.bind(this, flow, message));
+      } else if (!this.internalPortMap[flow]) {
+        fdom.debug.error('Unexpected message from ' + flow);
+        return;
       } else {
         this.port.onMessage(this.internalPortMap[flow], message);
       }
@@ -297,7 +313,7 @@ fdom.port.Module.prototype.loadLinks = function() {
         fdom.apis.getCore(name, this).then(finishLink.bind(this, dep));
 
         this.emit(this.controlChannel, {
-          type: 'Link to ' + name,
+          type: 'Core Link to ' + name,
           request: 'link',
           name: name,
           to: dep
@@ -316,6 +332,7 @@ fdom.port.Module.prototype.loadLinks = function() {
             type: 'Link to ' + name,
             request: 'link',
             name: name,
+            overrideDest: name + '.' + this.id,
             to: dep
           });
         }.bind(this));

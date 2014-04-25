@@ -4,6 +4,11 @@ describe('fdom.Policy', function() {
   beforeEach(function() {
     manager = {};
     fdom.util.handleEvents(manager);
+    manager.getPort = function(id) {
+      return {
+        id: id
+      };
+    }
     policy = new fdom.Policy(manager, {});
   });
   
@@ -15,7 +20,7 @@ describe('fdom.Policy', function() {
     };
     var manifestURL = "manifest://" + JSON.stringify(manifest);
     policy.get([], manifestURL).then(function(mod) {
-      manager.emit('moduleAdd', [mod.id]);
+      manager.emit('moduleAdd', {lineage:[mod.id], id:mod.id});
       policy.get([], manifestURL).then(function(mod2) {
         expect(mod2.id).toEqual(mod.id);
         done();
@@ -28,11 +33,11 @@ describe('fdom.Policy', function() {
   });
   
   it('Detects if a module is running in a runtime', function() {
-    manager.emit('moduleAdd', ['test','a','b','c']);
-    manager.emit('moduleAdd', ['test2','a','d1','e2']);
+    manager.emit('moduleAdd', {lineage:['test','a','b','c'], id:'test1'});
+    manager.emit('moduleAdd', {lineage:['test','a','d1','e2'], id:'test2'});
 
-    expect(policy.isRunning(policy.runtimes[0], 'test', [], false)).toEqual('test');
-    expect(policy.isRunning(policy.runtimes[0], 'test', ['a','b','c'], true)).toEqual('test');
+    expect(policy.isRunning(policy.runtimes[0], 'test', [], false)).toEqual('test1');
+    expect(policy.isRunning(policy.runtimes[0], 'test', ['a','b','c'], true)).toEqual('test1');
     expect(policy.isRunning(policy.runtimes[0], 'test', ['a','b','e'], true)).toEqual(false);
     expect(policy.isRunning(policy.runtimes[0], 'test', ['a','d','e'], true)).toEqual('test2');
   });
@@ -48,9 +53,9 @@ describe('fdom.Policy', function() {
     var port2 = {};
     fdom.util.handleEvents(port2);
     policy.add(port2, {});
-    port2.emit('moduleAdd', ['test']);
+    port2.emit('moduleAdd', {lineage:['test'], id:'test'});
     expect(policy.isRunning(policy.runtimes[1], 'test', [], false)).toEqual('test');
-    port2.emit('moduleRemove', ['test']);
+    port2.emit('moduleRemove', {lineage:['test'], id:'test'});
     expect(policy.isRunning(policy.runtimes[1], 'test', [], false)).toEqual(false);
   });
 

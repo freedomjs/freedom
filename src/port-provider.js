@@ -19,6 +19,7 @@ fdom.port.Provider = function(def) {
   
   this.definition = def;
   this.mode = fdom.port.Provider.mode.synchronous;
+  this.channels = {};
   this.iface = null;
   this.providerCls = null;
   this.providerInstances = {};
@@ -44,8 +45,8 @@ fdom.port.Provider.mode = {
  */
 fdom.port.Provider.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
-    this.emitChannel = message.channel;
-    this.emit(this.emitChannel, {
+    this.channels[message.name] = message.channel;
+    this.emit(message.channel, {
       type: 'channel announcement',
       channel: message.reverse
     });
@@ -57,23 +58,31 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       delete this.controlChannel;
     }
     this.close();
-  } else if (source === 'default') {
-    if (!this.emitChannel && message.channel) {
-      this.emitChannel = message.channel;
+  } else {
+    if (!this.channels[source] && message.channel) {
+      this.channels[source] = message.channel;
       this.emit('start');
       return;
+    } else if(!this.channels[source]) {
+      fdom.debug.warn('Message from unconfigured source: ' + source);
+      return;
     }
+
     if (message.type === 'close' && message.to) {
-      delete this.providerInstances[message.to];
-    } else if (message.to && this.providerInstances[message.to]) {
+      delete this.providerInstances[source][message.to];
+    } else if (message.to && this.providerInstances[source] &&
+               this.providerInstances[source][message.to]) {
       message.message.to = message.to;
-      this.providerInstances[message.to](message.message);
+      this.providerInstances[source][message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
       var args = fdom.proxy.portableToMessage(
           this.definition.constructor ? this.definition.constructor.value : [],
           message.message);
-      this.providerInstances[message.to] = this.getProvider(message.to, args);
+      if (!this.providerInstances[source]) {
+        this.providerInstances[source] = {};
+      }
+      this.providerInstances[source][message.to] = this.getProvider(source, message.to, args);
     } else {
       fdom.debug.warn(this.toString() + ' dropping message ' +
           JSON.stringify(message));
@@ -197,11 +206,12 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
 /**
  * Get a new instance of the registered provider.
  * @method getProvider
+ * @param {String} source The port this instance is interactign with.
  * @param {String} identifier the messagable address for this provider.
  * @param {Array} args Constructor arguments for the provider.
  * @return {Function} A function to send messages to the provider.
  */
-fdom.port.Provider.prototype.getProvider = function(identifier, args) {
+fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
   if (!this.providerCls) {
     fdom.debug.warn('Cannot instantiate provider, since it is not provided');
     return null;
@@ -218,10 +228,10 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
     }
   });
 
-  dispatchEvent = function(ev, id, name, value) {
+  dispatchEvent = function(src, ev, id, name, value) {
     if (ev[name]) {
       var streams = fdom.proxy.messageToPortable(ev[name].value, value);
-      this.emit(this.emitChannel, {
+      this.emit(this.channels[src], {
         type: 'message',
         to: id,
         message: {
@@ -232,14 +242,14 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
         }
       });
     }
-  }.bind(this, events, identifier);
+  }.bind(this, source, events, identifier);
 
   // this is all to say: new providerCls(dispatchEvent, args[0], args[1],...)
   BoundClass = this.providerCls.bind.apply(this.providerCls,
       [this.providerCls, dispatchEvent].concat(args || []));
   instance = new BoundClass();
 
-  return function(port, msg) {
+  return function(port, src, msg) {
     if (msg.action === 'method') {
       if (typeof this[msg.type] !== 'function') {
         fdom.debug.warn("Provider does not implement " + msg.type + "()!");
@@ -247,9 +257,9 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
       }
       var prop = port.definition[msg.type],
           args = fdom.proxy.portableToMessage(prop.value, msg),
-          ret = function(msg, prop, resolve, reject) {
+          ret = function(src, msg, prop, resolve, reject) {
             var streams = fdom.proxy.messageToPortable(prop.ret, resolve);
-            this.emit(this.emitChannel, {
+            this.emit(this.channels[src], {
               type: 'method',
               to: msg.to,
               message: {
@@ -262,7 +272,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
                 error: reject
               }
             });
-          }.bind(port, msg, prop);
+          }.bind(port, src, msg, prop);
       if (!Array.isArray(args)) {
         args = [args];
       }
@@ -278,7 +288,7 @@ fdom.port.Provider.prototype.getProvider = function(identifier, args) {
         this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
       }
     }
-  }.bind(instance, this);
+  }.bind(instance, this, source);
 };
 
 /**
