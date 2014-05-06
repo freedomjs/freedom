@@ -204,10 +204,17 @@ function ProviderHelper(inFreedom) {
   this.freedom.on("initChannel", this.onInitChannel.bind(this));
   this.freedom.on("inFromChannel", this.onInFromChannel.bind(this));
 }
-ProviderHelper.prototype.create = function(name, provider) {
-  this.freedom.emit("create", {name: name,
-                         provider: provider});
+
+ProviderHelper.prototype.createProvider = function(name, provider,
+                                                   constructorArguments) {
+  this.freedom.emit('create', {
+    name: name,
+    provider: provider,
+    constructorArguments: constructorArguments
+  });
 };
+
+ProviderHelper.prototype.create = ProviderHelper.prototype.createProvider;
 
 ProviderHelper.prototype.call = function(provider, method, args, cb, errcb) {
   this.callId += 1;
@@ -221,12 +228,14 @@ ProviderHelper.prototype.call = function(provider, method, args, cb, errcb) {
   });
   return this.callId;
 };
+
 ProviderHelper.prototype.ret = function(obj) {
   if (this.callbacks[obj.id]) {
     this.callbacks[obj.id](obj.data);
     delete this.callbacks[obj.id];
   }
 };
+
 ProviderHelper.prototype.err = function(obj) {
   if (this.errcallbacks[obj.id]) {
     this.errcallbacks[obj.id](obj.data);
@@ -272,12 +281,7 @@ ProviderHelper.prototype.removeListeners = function(provider, event) {
   }
 };
 
-ProviderHelper.prototype.createProvider = function(name, provider) {
-  this.freedom.emit('create', {
-    name: name,
-    provider: provider
-  });
-};
+
 
 ProviderHelper.prototype.createChannel = function(cb) {
   this.unboundChanCallbacks.push(cb);
