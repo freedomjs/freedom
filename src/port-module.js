@@ -67,7 +67,7 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
       this.port.onMessage(flow, message);
     }
   } else {
-    if ((this.externalPortMap[flow] === false || 
+    if ((this.externalPortMap[flow] === false ||
         !this.externalPortMap[flow])&& message.channel) {
       //console.log('handling channel announcement for ' + flow);
       this.externalPortMap[flow] = message.channel;
