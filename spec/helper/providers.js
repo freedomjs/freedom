@@ -10,7 +10,8 @@ freedom.on("create", function(action) {
   var name = action.name;
   var provider = action.provider;
   var constructorArguments = action.constructorArguments || [];
-  providers[name] = freedom[provider].apply(freedom, constructorArguments);
+  providers[name] = freedom[provider].apply(freedom[provider],
+                                            constructorArguments);
   listeningFor[action.name] = {};
 });
 
