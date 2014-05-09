@@ -8,16 +8,12 @@
  * demo
  *  - Build freedom.js, and start a web server for seeing demos at
  *    http://localhost:8000/demo
- * test
- *  - In addition to the freedom task,
- *    run all phantomjs-compatible tests
  * debug
  *  - Host a local web server
- *    Run all tests by going to http://localhost:8000/_SpecRunner.html
+ *    Karma watches for file changes and reports bugs on
+ *    Chrome and Firefox
  * saucelabs
  *  - Run all tests on saucelabs.com
- * chromeTestRunner
- *  - Run all tests in a local Chrome app
  **/
 
 var FILES = {
@@ -34,89 +30,43 @@ var FILES = {
     'interface/*.js', 
     'providers/core/*.js',
   ],
-  jasminehelper: [
+  srcJasmineHelper: [
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
+    'spec/bind-polyfill.js',
     'spec/util.js',
   ],
-  srcprovider: [
+  specUnit: [
+    'spec/src/{a,b,c,d,e}*.spec.js',
+    'spec/src/{f,g}*.spec.js',
+    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
+    'spec/providers/core/**/*.spec.js', 
+  ],
+  specProviderIntegration: [
+    'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/storage/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js',
+  ],
+  srcProvider: [
     'providers/social/websocket-server/*.js',
     'providers/social/loopback/*.js',
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specunit: [
-    'spec/src/{a,b,c,d,e}*.spec.js',
-    'spec/src/{f,g}*.spec.js',
-    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
-    'spec/providers/core/**/*.spec.js', 
+  specProviderUnit: [
     'spec/providers/social/**/*.unit.spec.js', 
     'spec/providers/storage/**/*.unit.spec.js',
     'spec/providers/transport/**/*.unit.spec.js',
   ],
-  specintegration: [
-    'spec/providers/social/**/*.integration.spec.js',
-    'spec/providers/storage/**/*.integration.spec.js',
-    'spec/providers/transport/**/*.integration.spec.js',
+  karmaExclude: [
+    'node_modules/es6-promise/dist/promise-*amd.js',
+    'node_modules/es6-promise/dist/promise-*min.js',
   ],
-  specintegrationphantom: [
-    'spec/providers/social/**/*.integration.spec.js',
-    'spec/providers/storage/**/*.integration.spec.js',
-  ],
-  specall: ['spec/**/*.spec.js']
+  specAll: ['spec/**/*.spec.js']
 };
 
 module.exports = function(grunt) {
-  var jasmineSpecs = {};
-  var jasmineUnitTasks = [];
-  var jasmineIntegrationTasks = [];
-  var jasmineCoverageTasks = [];
-
-  /**
-   * Helper functions
-   **/
-  function generatePhantomTask(spec) {
-    return {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        keepRunner: false 
-      }
-    };
-  }
-
-  function generateCoverageTask(spec) {
-    return {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        template: require('grunt-template-jasmine-istanbul'),
-        templateOptions: {
-          coverage: 'tools/coverage' + jasmineCoverageTasks.length + '.json',
-          report: []
-        }
-      }
-    };
-  }
-  
-  /**
-   * Setup Jasmine tests
-   **/
-  FILES.specunit.forEach(function(spec) {
-    var sname = spec + 'Spec';
-    jasmineUnitTasks.push('jasmine:' + sname);
-    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
-    jasmineSpecs[sname] = generatePhantomTask(spec);
-    jasmineSpecs[sname + 'Coverage'] = generateCoverageTask(spec);
-  });
-  FILES.specintegrationphantom.forEach(function(spec) {
-    var sname = spec + "Spec";
-    jasmineIntegrationTasks.push("jasmine:"+sname);
-    jasmineSpecs[sname] = generatePhantomTask(spec);
-  });
-  jasmineSpecs["all"] = generatePhantomTask(FILES.specall[0]);
-
   /**
    * GRUNT CONFIG
    **/
@@ -145,7 +95,15 @@ module.exports = function(grunt) {
         autoWatch: false
       }
     },
-    jasmine: jasmineSpecs,
+    jasmine: {
+      all: {
+        src: FILES.src.concat(FILES.srcProvider).concat(FILES.srcJasmineHelper),
+        options: {
+          specs: FILES.specAll[0],
+          keepRunner: false 
+        }
+      }
+    },
     'saucelabs-jasmine': {
       all: {
         options: {
@@ -177,7 +135,7 @@ module.exports = function(grunt) {
           jshintrc: true
         }
       },
-      providers: FILES.srcprovider,
+      providers: FILES.srcProvider,
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],
       options: {
         '-W069': true
@@ -225,11 +183,11 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'tools/lcov.info'
+        src: 'tools/coverage/**/*lcov.info'
       }
     },
     connect: {
-      once: {
+      default: {
         options: {
           port: 8000,
           keepalive: false
@@ -239,13 +197,6 @@ module.exports = function(grunt) {
         options: {
           port: 8000,
           keepalive: true
-        }
-      },
-      debug: {
-        options: {
-          port: 8000,
-          keepalive: true,
-          open: "http://localhost:8000/_SpecRunner.html"
         }
       },
       demo: {
@@ -273,54 +224,21 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
   
-  // Write lcov coverage
-  grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
-    var istanbul = require('istanbul');
-    var collector = new istanbul.Collector();
-    var reporter = istanbul.Report.create('lcovonly', {
-      dir: 'tools'
-    });
-    grunt.file.expand('tools/coverage*.json').forEach(function (file) {
-      collector.add(grunt.file.readJSON(file));
-    });
-    reporter.writeReport(collector, true);
-  });
-
-  // Custom Task for Chrome Test Runner
-  grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
-    grunt.util.spawn({
-      cmd: 'bash',
-      args: ['tools/chromeTestRunner.sh'].concat(grunt.file.expand(FILES.specall)),
-    }, function done(error, result, code) {
-      grunt.log.ok('Failed to execute shell script:'+
-        "\n\t"+error+
-        "\n\tResult: "+result+
-        "\n\tCode: "+code);
-    });
-  });
-
   // Default tasks.
-  grunt.registerTask('jasmineUnitTasks', jasmineUnitTasks);
-  grunt.registerTask('jasmineIntegrationTasks', jasmineIntegrationTasks);
-  grunt.registerTask('jasmineCoverageTasks', jasmineCoverageTasks);
   grunt.registerTask('freedom', [
     'jshint',
     'uglify',
-    'jasmineUnitTasks'
-  ]);
-  grunt.registerTask('test', [
-    'freedom',
-    'jasmineIntegrationTasks'
+    'connect:default',
+    'karma:phantom'
   ]);
   grunt.registerTask('coverage', [
-    'uglify:freedom',
-    'jasmineCoverageTasks',
-    'istanbulCollect',
+    'connect:default',
+    'karma:phantom',
     'coveralls:report'
   ]);
   grunt.registerTask('debug', [
-    'jasmine:all:build',
-    'connect:debug',
+    'connect:default',
+    'karma:watch'
   ]);
   grunt.registerTask('demo', [
     'uglify',
@@ -329,7 +247,7 @@ module.exports = function(grunt) {
   grunt.registerTask('saucelabs', [
     'gitinfo',
     'jasmine:all:build',
-    'connect:once',
+    'connect:default',
     'saucelabs-jasmine',
   ]);
   grunt.registerTask('default', ['freedom']);

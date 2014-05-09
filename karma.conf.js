@@ -1,5 +1,15 @@
 // Karma configuration
 // Generated on Fri May 09 2014 12:32:28 GMT-0700 (PDT)
+var FILES = require('./Gruntfile').FILES
+
+function bangFilter(elt) {
+  if (elt.length > 0) { //Filter strings that start with '!'
+    return elt.charAt(0) !== '!';
+  } else { //Filter empty strings
+    return false;
+  }
+
+}
 
 module.exports = function(config) {
   config.set({
@@ -14,42 +24,29 @@ module.exports = function(config) {
 
 
     // list of files / patterns to load in the browser
-    files: [
-      //Source files
-      'src/*.js',
-      'src/link/*.js',
-      'src/proxy/*.js',
-      'interface/*.js',
-      'providers/core/*.js',
-      //Helper files
-      'node_modules/es6-promise/dist/promise-*.js',
-      'spec/bind-polyfill.js',
-      'spec/util.js',
-      //Spec files
-      'spec/src/*.spec.js',
-      'spec/providers/core/**/*.spec.js'
-    ],
-
+    files: FILES.src.concat(FILES.srcJasmineHelper).concat(FILES.specUnit).filter(bangFilter),
 
     // list of files to exclude
-    exclude: [
-      'node_modules/es6-promise/dist/promise-*amd.js',
-      'node_modules/es6-promise/dist/promise-*min.js'
-    ],
-
+    exclude: FILES.karmaExclude,
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-    
-    },
-
+    preprocessors: FILES.src.reduce(function(prev, curr, i, arr) {
+      prev[curr] = 'coverage';
+      return prev;
+    }, {}),
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
 
+    // Coverage report options
+    coverageReporter: {
+      type: 'lcovonly',
+      dir: 'tools/coverage/',
+      file: 'lcov.info'
+    },
 
     // web server port
     port: 9876,

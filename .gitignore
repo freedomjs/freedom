@@ -6,6 +6,7 @@
 
 ### Auto-generated
 tools/doc
+tools/coverage/
 tools/coverage*.json
 tools/lcov.info
 lcov.info
