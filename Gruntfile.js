@@ -231,11 +231,6 @@ module.exports = function(grunt) {
     'connect:default',
     'karma:phantom'
   ]);
-  grunt.registerTask('coverage', [
-    'connect:default',
-    'karma:phantom',
-    'coveralls:report'
-  ]);
   grunt.registerTask('debug', [
     'connect:default',
     'karma:watch'

@@ -38,7 +38,7 @@
     "karma-coverage": "~0.2.1"
   },
   "scripts": {
-    "test": "grunt freedom coverage --verbose",
+    "test": "grunt freedom coveralls:report --verbose",
     "prepublish": "grunt freedom"
   }
 }
