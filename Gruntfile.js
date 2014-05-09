@@ -122,6 +122,29 @@ module.exports = function(grunt) {
    **/
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    karma: {
+      options: {
+        configFile: 'karma.conf.js',
+        browsers: ['Chrome', 'Firefox'],
+        // NOTE: need to run 'connect:keepalive' to serve files
+        proxies:  {
+          '/': 'http://localhost:8000/',
+        },
+      },
+      single: {
+        singleRun: true,
+        autoWatch: false,
+      },
+      watch: {
+        singleRun: false,
+        autoWatch: true,
+      },
+      phantom: {
+        browsers: ['PhantomJS'],
+        singleRun: true,
+        autoWatch: false
+      }
+    },
     jasmine: jasmineSpecs,
     'saucelabs-jasmine': {
       all: {
@@ -248,6 +271,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-saucelabs');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-gitinfo');
+  grunt.loadNpmTasks('grunt-karma');
   
   // Write lcov coverage
   grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
