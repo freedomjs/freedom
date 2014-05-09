@@ -39,6 +39,6 @@
   },
   "scripts": {
     "test": "grunt freedom coverage --verbose",
-    "prepublish": "grunt test"
+    "prepublish": "grunt freedom"
   }
 }
