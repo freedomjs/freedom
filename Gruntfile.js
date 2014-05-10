@@ -38,7 +38,7 @@ var FILES = {
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
-    'spec/bind-polyfill.js',
+    'node_modules/es5-shim/es5-shim.js',
     'spec/util.js',
   ],
   specUnit: [
@@ -131,15 +131,6 @@ module.exports = function(grunt) {
         customLaunchers: CUSTOM_LAUNCHER
       }
     },
-    jasmine: {
-      all: {
-        src: FILES.src.concat(FILES.srcProvider).concat(FILES.srcJasmineHelper),
-        options: {
-          specs: FILES.specAll[0],
-          keepRunner: false 
-        }
-      }
-    },
     jshint: {
       beforeconcat: {
         files: { src: FILES.src },
@@ -224,7 +215,6 @@ module.exports = function(grunt) {
   });
 
   // Load tasks.
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
