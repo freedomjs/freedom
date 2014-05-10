@@ -18,7 +18,7 @@ describe("freedom", function() {
     freedom = fdom.setup(global, undefined, {
       manifest: "relative://spec/helper/manifest.json",
       portType: 'Frame',
-      inject: dir + "node_modules/grunt-contrib-jasmine/node_modules/es5-shim/es5-shim.js",
+      inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src
     });
   });
@@ -54,7 +54,7 @@ describe("freedom", function() {
 
     freedom = fdom.setup(global, undefined, {
       portType: 'Frame',
-      inject: dir + "node_modules/grunt-contrib-jasmine/node_modules/es5-shim/es5-shim.js",
+      inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src,
       stayLocal: true
     });
@@ -79,7 +79,7 @@ describe("freedom", function() {
 
     freedom = fdom.setup(global, undefined, {
       portType: 'Frame',
-      inject: dir + "node_modules/grunt-contrib-jasmine/node_modules/es5-shim/es5-shim.js",
+      inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src,
       advertise: true
     });
