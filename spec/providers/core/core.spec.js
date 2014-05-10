@@ -65,6 +65,7 @@ describe("Core Provider Integration", function() {
 
 describe("Core Provider Channels", function() {
   var manager, hub, global, source, core;
+  
   beforeEach(function(done) {
     global = {freedom: {}, document: document};
     fdom.debug = new fdom.port.Debug();
@@ -82,10 +83,10 @@ describe("Core Provider Channels", function() {
       request: 'core'
     });
     
-    setTimeout(function() {
-      core = source.gotMessage('control', {type: 'core'}).core;
+    source.gotMessageAsync('control', {type: 'core'}, function(response) {
+      core = response.core;
       done();
-    }, 0);
+    });
   });
 
   it('Links Custom Channels', function() {

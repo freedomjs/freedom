@@ -33,7 +33,11 @@ describe("fdom.proxy.APIInterface", function() {
     });
 
     var spy = jasmine.createSpy('ret');
-    promise.then(spy);
+    promise.then(function(response) {
+      spy();
+      expect(response).toEqual('boo!');;
+      done();
+    });
     expect(spy).not.toHaveBeenCalled();
 
     reg('message', {
@@ -42,37 +46,34 @@ describe("fdom.proxy.APIInterface", function() {
       text: 'boo!',
       binary: []
     });
-    setTimeout(function() {
-      expect(spy).toHaveBeenCalledWith('boo!');
-      done();
-    }, 0);
   });
 
   it("Delivers constructor arguments.", function(done) {
     var iface = {
       'constructor': {value: ['string']}
-    },
-      onMsg = function(obj, r) {
+    };
+    var onMsg = function(obj, r) {
         reg = r;
-      },
-      apimaker = fdom.proxy.ApiInterface.bind({}, iface, onMsg, emit);
-    var api = new apimaker('my param');
-
-    setTimeout(function() {
-      expect(emit).toHaveBeenCalledWith({
+      };
+    var callback = function(msg) {
+      expect(msg).toEqual({
         'type': 'construct',
         'text': ['my param'],
         'binary': []
       });
       done();
-    }, 0);
-
+    };
+    var apimaker = fdom.proxy.ApiInterface.bind({}, iface, onMsg, callback);
+    var api = new apimaker('my param');
   });
 
   it("Rejects methods on failure.", function(done) {
     var promise = api.test('hi'),
         spy = jasmine.createSpy('fail');
-    promise.catch(spy);
+    promise.catch(function (err) {
+      expect(err).toEqual('Error Occured');
+      done();
+    });
     
     reg('message', {
       type: 'method',
@@ -80,10 +81,6 @@ describe("fdom.proxy.APIInterface", function() {
       text: 'errval',
       error: 'Error Occured'
     });
-    setTimeout(function() {
-      expect(spy).toHaveBeenCalledWith('Error Occured');
-      done();
-    }, 0);
   });
 
   it("delivers events", function() {

@@ -2,9 +2,23 @@ var createTestPort = function(id) {
   var port = {
     id: id,
     messages: [],
+    gotMessageCalls: [],
+    checkGotMessage: function() {
+      var len = this.gotMessageCalls.length;
+      for (var i=0; i<len; i++) {
+        var call = this.gotMessageCalls.shift();
+        var result = this.gotMessage(call.from, call.match);
+        if (result !== false) {
+          call.callback(result);
+        } else {
+          this.gotMessageCalls.push(call);
+        }
+      }
+    },
     onMessage: function(from, msg) {
       this.messages.push([from, msg]);
       this.emit('onMessage', msg);
+      this.checkGotMessage();
     },
     gotMessage: function(from, match) {
       var okay;
@@ -22,7 +36,16 @@ var createTestPort = function(id) {
         }
       }
       return false;
+    },
+    gotMessageAsync: function(from, match, callback) {
+      this.gotMessageCalls.push({
+        from: from,
+        match: match,
+        callback: callback
+      });
+      this.checkGotMessage();
     }
+    
   };
 
   fdom.util.handleEvents(port);

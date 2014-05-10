@@ -9,12 +9,11 @@ describe("fdom.resources", function() {
   it("should resolve URLs", function(done) {
     var promise = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
-    var spy = jasmine.createSpy('resolver');
-    promise.then(spy);
-    setTimeout(function() {
-      expect(spy).toHaveBeenCalledWith('http://localhost/folder/file.js');
+    var callback = function(response) {
+      expect(response).toEqual('http://localhost/folder/file.js');
       done();
-    }, 0);
+    };
+    promise.then(callback);
   });
 
   it("should cache resolved URLs", function(done) {
@@ -30,13 +29,12 @@ describe("fdom.resources", function() {
   });
 
   it("should fetch URLs", function(done) {
-    var promise, response;
+    var promise;
     promise = resources.getContents('manifest://{"name":"test"}');
-    promise.then(function(data) {response = data;});
-    setTimeout(function() {
+    promise.then(function(response) {
       expect(JSON.parse(response).name).toEqual("test");
       done();
-    }, 0);
+    });
   });
   
   it("should warn on degenerate URLs", function(done) {
