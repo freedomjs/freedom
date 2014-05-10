@@ -40,18 +40,11 @@ describe("fdom.resources", function() {
   it("should warn on degenerate URLs", function(done) {
     var promise = resources.getContents();
     var spy = jasmine.createSpy('r');
-    promise.then(function() {}, spy);
-    setTimeout(function() {
-      expect(spy).toHaveBeenCalled();
-
-      promise = resources.resolve('test');
-      promise.then(function() {}, spy);
-    
-      setTimeout(function() {
-        expect(spy.calls.count()).toEqual(2);
+    promise.then(function() {}, function() {
+      resources.resolve('test').then(function(){}, function() {
         done();
-      }, 0);
-    }, 0);
+      });
+    });
   });
 
   it("should handle custom resolvers", function(done) {
