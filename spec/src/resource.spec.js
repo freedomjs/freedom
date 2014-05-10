@@ -58,18 +58,13 @@ describe("fdom.resources", function() {
     };
     resources.addResolver(resolver);
 
-    var promise = resources.get('test://manifest', 'myurl');
-    var r1, r2;
-    promise.then(function(url) {r1 = url;});
-
-    promise = resources.get('otherprot://manifest', 'myurl');
-    promise.then(function(url) {r2 = url;});
-
-    setTimeout(function() {
-      expect(r1).toEqual('resolved://myurl');
-      expect(r2).toEqual(undefined);
-      done();
-    }, 0);
+    resources.get('test://manifest', 'myurl').then(function(url) {
+      expect(url).toEqual('resolved://myurl');
+      resources.get('otherprot://manifest', 'myurl').then(function(url2) {
+        expect(url2).toEqual(undefined);
+      });
+      setTimeout(done,0);
+    });
   });
 
   it("should handle custom retrievers", function(done) {
@@ -79,18 +74,12 @@ describe("fdom.resources", function() {
     };
     resources.addRetriever('test', retriever);
 
-    var r1, r2;
-    var promise = resources.getContents('test://url');
-    promise.then(function(data) {r1 = data;});
-
-    promise = resources.getContents('unknown://url');
-    promise.then(function() {r2 = 'success';}, function() {r2 = 'failed';});
-
-    setTimeout(function() {
-      expect(r1).toEqual('Custom content!');
-      expect(r2).toEqual('failed');
-      done();
-    }, 0);
+    resources.getContents('test://url').then(function(data) {
+      expect(data).toEqual('Custom content!');
+      resources.getContents('unknown://url').then(function(){}, function(){
+        done();
+      });
+    });
   });
 
   it("should not allow replacing retrievers", function() {
