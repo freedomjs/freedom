@@ -5,15 +5,19 @@
  * freedom
  *  - Lint, compile, and unit test freedom.js
  *  - (default Grunt task) 
+ *  - Unit tests only run on PhantomJS
  * demo
  *  - Build freedom.js, and start a web server for seeing demos at
  *    http://localhost:8000/demo
  * debug
  *  - Host a local web server
- *    Karma watches for file changes and reports bugs on
+ *  - Karma watches for file changes and reports unit test failures on
  *    Chrome and Firefox
- * saucelabs
+ * ci
+ *  - Do everything that Travis CI should do
+ *  - Lint, compile, and unit test freedom.js on phantom.js
  *  - Run all tests on saucelabs.com
+ *  - Report coverage to coveralls.io
  **/
 
 var FILES = {
@@ -66,6 +70,19 @@ var FILES = {
   specAll: ['spec/**/*.spec.js']
 };
 
+var CUSTOM_LAUNCHER = {
+  sauce_chrome: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    version: '34'
+  },
+  sauce_firefox: {
+    base: 'SauceLabs',
+    browserName: 'firefox',
+    version: '29'
+  },
+};
+
 module.exports = function(grunt) {
   /**
    * GRUNT CONFIG
@@ -93,6 +110,24 @@ module.exports = function(grunt) {
         browsers: ['PhantomJS'],
         singleRun: true,
         autoWatch: false
+      },
+      saucelabs: {
+        browsers: ['sauce_chrome'],//, 'sauce_firefox'],
+        singleRun: true,
+        autoWatch: false,
+        sauceLabs: {
+          testName: 'freedom.js',
+          username: 'freedomjs',
+          accessKey: process.env.SAUCEKEY,
+          tags: [
+            '<%= gitinfo.local.branch.current.name %>',
+            '<%= gitinfo.local.branch.current.shortSHA %>',
+            '<%= gitinfo.local.branch.current.currentUser %>',
+            '<%= gitinfo.local.branch.current.lastCommitAuthor %>',
+            '<%= gitinfo.local.branch.current.lastCommitTime %>',
+          ],
+        },
+        customLaunchers: CUSTOM_LAUNCHER
       }
     },
     jasmine: {
@@ -102,30 +137,6 @@ module.exports = function(grunt) {
           specs: FILES.specAll[0],
           keepRunner: false 
         }
-      }
-    },
-    'saucelabs-jasmine': {
-      all: {
-        options: {
-          username: 'freedomjs',
-          key: process.env.SAUCEKEY,
-          urls: ['http://localhost:8000/_SpecRunner.html'],
-          testname: 'freedom.js',
-          tags: [
-            '<%= gitinfo.local.branch.current.name %>',
-            '<%= gitinfo.local.branch.current.shortSHA %>',
-            '<%= gitinfo.local.branch.current.currentUser %>',
-            '<%= gitinfo.local.branch.current.lastCommitAuthor %>',
-            '<%= gitinfo.local.branch.current.lastCommitTime %>',
-          ],
-          browsers: [
-            {
-              browserName: 'chrome',
-              version: '33',
-            }
-          ]
-
-        } 
       }
     },
     jshint: {
@@ -183,7 +194,7 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'tools/coverage/**/*lcov.info'
+        src: 'tools/coverage/PhantomJS**/*lcov.info'
       }
     },
     connect: {
@@ -208,8 +219,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    gitinfo: {
-    }
+    gitinfo: {}
   });
 
   // Load tasks.
@@ -219,7 +229,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
-  grunt.loadNpmTasks('grunt-saucelabs');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
@@ -239,13 +248,17 @@ module.exports = function(grunt) {
     'uglify',
     'connect:demo',
   ]);
-  grunt.registerTask('saucelabs', [
+  grunt.registerTask('ci', [
+    'jshint',
+    'uglify',
     'gitinfo',
-    'jasmine:all:build',
     'connect:default',
-    'saucelabs-jasmine',
+    'karma:phantom',
+    //'karma:saucelabs',
+    'coveralls:report'
   ]);
   grunt.registerTask('default', ['freedom']);
 };
 
 module.exports.FILES = FILES;
+module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;
