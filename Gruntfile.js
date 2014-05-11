@@ -246,7 +246,7 @@ module.exports = function(grunt) {
     'gitinfo',
     'connect:default',
     'karma:phantom',
-    //'karma:saucelabs',
+    'karma:saucelabs',
     'coveralls:report'
   ]);
   grunt.registerTask('default', ['freedom']);
