@@ -251,24 +251,19 @@ module.exports = function(grunt) {
 
   if (process.env.TRAVIS_JOB_NUMBER) {
     var jobParts = process.env.TRAVIS_JOB_NUMBER.split('.');
-    console.log("!!!!!!!!");
-    console.log(jobParts);
     //When run from Travis from jobs *.1
     if (jobParts.length > 1 && jobParts[1] == '1') {
-      console.log("!!!!!!!!");
       grunt.registerTask('ci', [
         'freedom',
         'karma:saucelabs',
         'coveralls:report'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
-      console.log("@@@@@");
       grunt.registerTask('ci', [
         'freedom'
       ]);
     }
   } else {  //When run from command-line
-    console.log("########");
     grunt.registerTask('ci', [
       'freedom',
       'karma:saucelabs',
