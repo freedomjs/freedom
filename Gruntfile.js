@@ -116,6 +116,7 @@ module.exports = function(grunt) {
         browsers: ['sauce_chrome'],//, 'sauce_firefox'],
         singleRun: true,
         autoWatch: false,
+        reporters: ['dots', 'saucelabs'],
         sauceLabs: {
           testName: 'freedom.js',
           username: 'freedomjs',
@@ -229,6 +230,7 @@ module.exports = function(grunt) {
   grunt.registerTask('freedom', [
     'jshint',
     'uglify',
+    'gitinfo',
     'connect:default',
     'karma:phantom'
   ]);
@@ -240,12 +242,29 @@ module.exports = function(grunt) {
     'uglify',
     'connect:demo',
   ]);
+  if (process.env.TRAVIS_JOB_NUMBER) {
+    var jobParts = process.env.TRAVIS_JOB_NUMBER;
+    //When run from Travis from jobs *.1
+    if (jobParts.length > 1 && jobParts[1] == '1') {
+      grunt.registerTask('ci', [
+        'freedom',
+        'karma:saucelabs',
+        'coveralls:report'
+      ]);
+    } else {  //When run from Travis from jobs *.2, *.3, etc.
+      grunt.registerTask('ci', [
+        'freedom'
+      ]);
+    }
+  } else {  //When run from command-line
+    grunt.registerTask('ci', [
+      'freedom',
+      'karma:saucelabs',
+    ]);
+  }
+
   grunt.registerTask('ci', [
-    'jshint',
-    'uglify',
-    'gitinfo',
-    'connect:default',
-    'karma:phantom',
+    'freedom',
     'karma:saucelabs',
     'coveralls:report'
   ]);
