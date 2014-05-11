@@ -248,9 +248,9 @@ module.exports = function(grunt) {
     'uglify',
     'connect:demo',
   ]);
-  console.log(process.env.TRAVIS_JOB_NUMBER);
+
   if (process.env.TRAVIS_JOB_NUMBER) {
-    var jobParts = process.env.TRAVIS_JOB_NUMBER;
+    var jobParts = process.env.TRAVIS_JOB_NUMBER.split('.');
     console.log("!!!!!!!!");
     console.log(jobParts);
     //When run from Travis from jobs *.1
@@ -275,11 +275,6 @@ module.exports = function(grunt) {
     ]);
   }
 
-  grunt.registerTask('ci', [
-    'freedom',
-    'karma:saucelabs',
-    'coveralls:report'
-  ]);
   grunt.registerTask('default', ['freedom']);
 };
 

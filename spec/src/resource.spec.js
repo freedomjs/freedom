@@ -18,14 +18,17 @@ describe("fdom.resources", function() {
 
   it("should cache resolved URLs", function(done) {
     spyOn(resources, 'resolve').and.callThrough();
-    var deferred = resources.get("http://localhost/folder/manifest.json",
+    var promise = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
-    setTimeout(function() {
-      deferred = resources.get("http://localhost/folder/manifest.json",
-                               "file.js");
-      expect(resources.resolve.calls.count()).toEqual(1);
-      done();
-    }, 0);
+    var callback = function() {
+      promise = resources.get("http://localhost/folder/manifest.json",
+                              "file.js");
+      promise.then(function() {
+        expect(resources.resolve.calls.count()).toEqual(1);
+        done();
+      });
+    };
+    promise.then(callback);
   });
 
   it("should fetch URLs", function(done) {
