@@ -71,15 +71,16 @@ var FILES = {
 };
 
 var CUSTOM_LAUNCHER = {
-  sauce_chrome_b: {
-    base: 'SauceLabs',
-    browserName: 'chrome',
-    version: 'b'
-  },
   sauce_chrome_34: {
     base: 'SauceLabs',
     browserName: 'chrome',
     version: '34',
+    platform: 'OS X 10.9'
+  },
+  sauce_chrome_33: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    version: '33',
     platform: 'Windows 7'
   },
   sauce_firefox: {
@@ -118,7 +119,7 @@ module.exports = function(grunt) {
         autoWatch: false
       },
       saucelabs: {
-        browsers: ['sauce_chrome_b', 'sauce_chrome_34'],//, 'sauce_firefox'],
+        browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
         singleRun: true,
         autoWatch: false,
         reporters: ['dots', 'saucelabs'],
@@ -247,26 +248,27 @@ module.exports = function(grunt) {
     'uglify',
     'connect:demo',
   ]);
-  console.log("!!!!!!!");
-  console.log(process.env.TRAVIS_BUILD_ID);
-  console.log(process.env.TRAVIS_BUILD_NUMBER);
-  console.log(process.env.TRAVIS_JOB_ID);
   console.log(process.env.TRAVIS_JOB_NUMBER);
   if (process.env.TRAVIS_JOB_NUMBER) {
     var jobParts = process.env.TRAVIS_JOB_NUMBER;
+    console.log("!!!!!!!!");
+    console.log(jobParts);
     //When run from Travis from jobs *.1
     if (jobParts.length > 1 && jobParts[1] == '1') {
+      console.log("!!!!!!!!");
       grunt.registerTask('ci', [
         'freedom',
         'karma:saucelabs',
         'coveralls:report'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
+      console.log("@@@@@");
       grunt.registerTask('ci', [
         'freedom'
       ]);
     }
   } else {  //When run from command-line
+    console.log("########");
     grunt.registerTask('ci', [
       'freedom',
       'karma:saucelabs',
