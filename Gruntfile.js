@@ -120,6 +120,7 @@ module.exports = function(grunt) {
           testName: 'freedom.js',
           username: 'freedomjs',
           accessKey: process.env.SAUCEKEY,
+          build: process.env.TRAVIS_BUILD_NUMBER,
           tags: [
             '<%= gitinfo.local.branch.current.name %>',
             '<%= gitinfo.local.branch.current.shortSHA %>',
