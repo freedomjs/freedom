@@ -25,7 +25,7 @@ fdom.link.Direct = function() {
  * @private
  */
 fdom.link.Direct.prototype.start = function() {
-  if (this.config.appContext) {
+  if (this.config.moduleContext) {
     this.config.global.directLink.other = this;
     this.other = this.config.global.directLink;
     this.other.emit('started');
@@ -35,7 +35,7 @@ fdom.link.Direct.prototype.start = function() {
     // Keep fdom.debug connected to parent hub.
     var debug = fdom.debug,
         child = fdom.setup(this.config.global, undefined, {
-      isApp: true,
+      isModule: true,
       portType: 'Direct'
     });
     fdom.debug = debug;

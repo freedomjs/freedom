@@ -100,7 +100,7 @@ var createProxyFor = function(app, api) {
       site_cfg = {
         'debug': true,
         'portType': 'Direct',
-        'appContext': false,
+        'moduleContext': false,
         'manifest': app,
         'resources': fdom.resources,
         'global': global
