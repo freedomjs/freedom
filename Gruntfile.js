@@ -25,32 +25,32 @@ var FILES = {
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
-    'src/util/jshinthelper.js',
+    'src/util/jshinthelper.js'
   ],
   src: [
-    'src/*.js', 
+    'src/*.js',
     'src/link/*.js',
-    'src/proxy/*.js', 
-    'interface/*.js', 
-    'providers/core/*.js',
+    'src/proxy/*.js',
+    'interface/*.js',
+    'providers/core/*.js'
   ],
   srcJasmineHelper: [
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
     'node_modules/es5-shim/es5-shim.js',
-    'spec/util.js',
+    'spec/util.js'
   ],
   specUnit: [
     'spec/src/{a,b,c,d,e}*.spec.js',
     'spec/src/{f,g}*.spec.js',
     'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
-    'spec/providers/core/**/*.spec.js', 
+    'spec/providers/core/**/*.spec.js'
   ],
   specProviderIntegration: [
     'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
-    'spec/providers/transport/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js'
   ],
   srcProvider: [
     'providers/social/websocket-server/*.js',
@@ -59,13 +59,13 @@ var FILES = {
     'providers/transport/**/*.js'
   ],
   specProviderUnit: [
-    'spec/providers/social/**/*.unit.spec.js', 
+    'spec/providers/social/**/*.unit.spec.js',
     'spec/providers/storage/**/*.unit.spec.js',
-    'spec/providers/transport/**/*.unit.spec.js',
+    'spec/providers/transport/**/*.unit.spec.js'
   ],
   karmaExclude: [
     'node_modules/es6-promise/dist/promise-*amd.js',
-    'node_modules/es6-promise/dist/promise-*min.js',
+    'node_modules/es6-promise/dist/promise-*min.js'
   ],
   specAll: ['spec/**/*.spec.js'],
   freedom: [
@@ -90,10 +90,10 @@ var CUSTOM_LAUNCHER = {
     base: 'SauceLabs',
     browserName: 'firefox',
     version: '29'
-  },
+  }
 };
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   /**
    * GRUNT CONFIG
    **/
