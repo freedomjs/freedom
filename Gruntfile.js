@@ -67,7 +67,10 @@ var FILES = {
     'node_modules/es6-promise/dist/promise-*amd.js',
     'node_modules/es6-promise/dist/promise-*min.js',
   ],
-  specAll: ['spec/**/*.spec.js']
+  specAll: ['spec/**/*.spec.js'],
+  freedom: [
+    'freedom.js'
+  ]
 };
 
 var CUSTOM_LAUNCHER = {
@@ -273,5 +276,6 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['freedom']);
 };
 
+module.exports.baseName = __dirname;
 module.exports.FILES = FILES;
 module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;
