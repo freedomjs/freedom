@@ -210,11 +210,7 @@ fdom.port.Module.prototype.stop = function() {
  * @return {String} The description of this Port.
  */
 fdom.port.Module.prototype.toString = function() {
-  var manifest = this.manifestId;
-  if (manifest.indexOf('/') > -1) {
-    manifest = manifest.substr(manifest.lastIndexOf('/') + 1);
-  }
-  return "[Module " + manifest + "]";
+  return "[Module " + this.manifest.name +"]";
 };
 
 /**
