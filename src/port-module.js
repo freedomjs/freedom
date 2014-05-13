@@ -13,12 +13,12 @@ fdom.port = fdom.port || {};
  * @param {String[]} creator The lineage of creation for this module.
  * @constructor
  */
-fdom.port.Module = function(manifestURL, creator) {
+fdom.port.Module = function(manifestURL, manifest, creator) {
   this.config = {};
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
+  this.manifest = manifest;
   this.lineage = [this.manifestId].concat(creator);
-  this.loadManifest();
   this.externalPortMap = {};
   this.internalPortMap = {};
   this.started = false;
@@ -59,7 +59,7 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
       return;
     } else if (message.type === 'close') {
       // Closing channel.
-      if (message.channel === 'default' || message.channel === 'control') {
+      if (message.channel === 'control') {
         this.stop();
       }
       this.deregisterFlow(message.channel, false);
@@ -67,14 +67,27 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
       this.port.onMessage(flow, message);
     }
   } else {
-    if (this.externalPortMap[flow] === false && message.channel) {
+    if ((this.externalPortMap[flow] === false ||
+        !this.externalPortMap[flow])&& message.channel) {
       //console.log('handling channel announcement for ' + flow);
       this.externalPortMap[flow] = message.channel;
       if (this.internalPortMap[flow] === undefined) {
         this.internalPortMap[flow] = false;
-      }
-      if (this.manifest.provides && flow === 'default') {
-        this.externalPortMap[this.manifest.provides[0]] = message.channel;
+
+        // New incoming connection attempts should get routed to modInternal.
+        if (this.manifest.provides && this.modInternal) {
+          this.port.onMessage(this.modInternal, {
+            type: 'Connection',
+            channel: flow
+          });
+        } else if (this.manifest.provides) {
+          this.once('modInternal', function(flow) {
+            this.port.onMessage(this.modInternal,{
+              type: 'Connection',
+              channel: flow
+            });
+          }.bind(this, flow));
+        }
       }
       return;
     } else if (!this.started) {
@@ -82,6 +95,9 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
     } else {
       if (this.internalPortMap[flow] === false) {
         this.once('internalChannelReady', this.onMessage.bind(this, flow, message));
+      } else if (!this.internalPortMap[flow]) {
+        fdom.debug.error('Unexpected message from ' + flow);
+        return;
       } else {
         this.port.onMessage(this.internalPortMap[flow], message);
       }
@@ -134,7 +150,7 @@ fdom.port.Module.prototype.start = function() {
   if (this.started || this.port) {
     return false;
   }
-  if (this.manifest && this.controlChannel) {
+  if (this.controlChannel) {
     this.loadLinks();
     this.port = new fdom.link[this.config.portType](this.manifestId);
     // Listen to all port messages.
@@ -194,11 +210,7 @@ fdom.port.Module.prototype.stop = function() {
  * @return {String} The description of this Port.
  */
 fdom.port.Module.prototype.toString = function() {
-  var manifest = this.manifestId;
-  if (manifest.indexOf('/') > -1) {
-    manifest = manifest.substr(manifest.lastIndexOf('/') + 1);
-  }
-  return "[Module " + manifest + "]";
+  return "[Module " + this.manifest.name +"]";
 };
 
 /**
@@ -279,28 +291,6 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
 };
 
 /**
- * Load the module description from its manifest.
- * @method loadManifest
- * @private
- */
-fdom.port.Module.prototype.loadManifest = function() {
-  fdom.resources.getContents(this.manifestId).then(function(data) {
-    var resp = {};
-    try {
-      resp = JSON.parse(data);
-    } catch(err) {
-      fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
-      return;
-    }
-    this.manifest = resp;
-    this.emit('manifest', this.manifest);
-    this.start();
-  }.bind(this), function(err) {
-    fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
-  }.bind(this));
-};
-
-/**
  * Request the external routes used by this module.
  * @method loadLinks
  * @private
@@ -319,7 +309,7 @@ fdom.port.Module.prototype.loadLinks = function() {
         fdom.apis.getCore(name, this).then(finishLink.bind(this, dep));
 
         this.emit(this.controlChannel, {
-          type: 'Link to ' + name,
+          type: 'Core Link to ' + name,
           request: 'link',
           name: name,
           to: dep
@@ -333,15 +323,16 @@ fdom.port.Module.prototype.loadLinks = function() {
         channels.push(name);
       }
       fdom.resources.get(this.manifestId, desc.url).then(function (url) {
-        var dep = new fdom.port.Module(url, this.lineage);
-        dep.once('manifest', this.updateEnv.bind(this, name));
-
-        this.emit(this.controlChannel, {
-          type: 'Link to ' + name,
-          request: 'link',
-          name: name,
-          to: dep
-        });
+        this.config.policy.get(this.lineage, url).then(function(dep) {
+          this.emit(this.controlChannel, {
+            type: 'Link to ' + name,
+            request: 'link',
+            name: name,
+            overrideDest: name + '.' + this.id,
+            to: dep
+          });
+        }.bind(this));
+        fdom.resources.getContents(url).then(this.updateEnv.bind(this, name));
       }.bind(this));
     }.bind(this));
   }
@@ -366,6 +357,7 @@ fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
     this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
   }
   // Decide if/what other properties should be exported.
+  // Keep in sync with ModuleInternal.updateEnv
   var metadata = {
     name: manifest.name,
     icon: manifest.icon,

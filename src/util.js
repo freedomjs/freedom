@@ -247,35 +247,35 @@ fdom.util.handleEvents = function(obj) {
 
 /**
  * When run without a window, or specifically requested.
- * Note: Declaration can be redefined in forceAppContext below.
- * @method isAppContext
+ * Note: Declaration can be redefined in forceModuleContext below.
+ * @method isModuleContext
  * @for util
  * @static
  */
-fdom.util.isAppContext=function() {
+/*!@preserve StartModuleContextDeclaration*/
+fdom.util.isModuleContext = function() {
   return (typeof document === 'undefined');
 };
 
 /**
- * Provide a version of src where the 'isAppContext' function will return true.
- * Used for creating app contexts which may not be able to determine that they
- * need to start up as applications by themselves.
- * @method forceAppContext
+ * Provide a version of src where the 'isModuleContext' function will return
+ * true. Used for creating module contexts which may not be able to determine
+ * that they need to start up in that mode by themselves.
+ * @method forceModuleContext
  * @static
  */
-fdom.util.forceAppContext = function(src) {
-  var declaration = fdom.util.isAppContext.name + "=function()",
-      definition = " { return true; }",
-      idx = src.indexOf(declaration),
+fdom.util.forceModuleContext = function(src) {
+  var definition = "function () { return true; }",
+      idx = src.indexOf('StartModuleContextDeclaration'),
+      funcidx = src.indexOf('function', idx),
       source,
       blob;
-  if (idx === -1) {
-    fdom.debug.warn('Unable to force App Context, source is in unexpected condition.');
+  if (idx === -1 || funcidx === -1) {
+    fdom.debug.error('Unable to force mode, source is in unexpected condition.');
     return;
   }
-  source = src.substr(0, idx + declaration.length) + definition +
-      '|| function()' +
-      src.substr(idx + declaration.length);
+  source = src.substr(0, funcidx) +  definition + ' || ' +
+      src.substr(funcidx);
   blob = fdom.util.getBlob(source, 'text/javascript');
   return fdom.util.getURL(blob);
 };

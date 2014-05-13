@@ -1,16 +1,18 @@
-function RTCPeerConnection(configuration, constraints) {
-  RTCPeerConnection.mostRecent = this;
+function MockRTCIceCandidate() {
+}
+function MockRTCPeerConnection(configuration, constraints) {
+  MockRTCPeerConnection.mostRecent = this;
   this.configuration = configuration;
   this.constraints = constraints;
   this.listeners = {};
 }
 
-RTCPeerConnection.prototype.addEventListener = function(event, func) {
+MockRTCPeerConnection.prototype.addEventListener = function(event, func) {
   // We only allow registering one listener for simplicity
   this.listeners[event] = func;
 };
 
-RTCPeerConnection.prototype.createDataChannel = function(label, dict) {
+MockRTCPeerConnection.prototype.createDataChannel = function(label, dict) {
   var dataChannel = new RTCDataChannel(label, dict);
   return dataChannel;
 };
@@ -20,6 +22,7 @@ function RTCDataChannel(label, dict) {
 
   this.label = label;
   this.bufferedAmount = 0;
+  this.readyState = "connecting";
   this._closed = false;
   setTimeout(function() {
     if (typeof this.onopen === 'function') {
@@ -36,7 +39,7 @@ RTCDataChannel.prototype.close = function() {
 };
 
 
-function RTCSessionDescription(descriptionInitDict) {
+function MockRTCSessionDescription(descriptionInitDict) {
   this.descriptionInitDict = descriptionInitDict;
   this.sdp = descriptionInitDict.sdp;
   this.type = descriptionInitDict.type;
@@ -82,7 +85,11 @@ describe("providers/core/peerconnection", function() {
       emit: function() {
       }
     };
-    peerconnection = new PeerConnection(portApp);
+    peerconnection = new PeerConnection(portApp,
+                                        undefined,
+                                        MockRTCPeerConnection,
+                                        MockRTCSessionDescription,
+                                        MockRTCIceCandidate);
     peerconnection.dispatchEvent = function(event, data) {
       dispatchedEvents[event] = data;
     };
@@ -95,7 +102,7 @@ describe("providers/core/peerconnection", function() {
   });
 
   it("Opens data channel", function(done) {
-    var rtcpc = RTCPeerConnection.mostRecent;
+    var rtcpc = MockRTCPeerConnection.mostRecent;
     spyOn(rtcpc, "createDataChannel").and.callThrough();
     peerconnection.openDataChannel("openDC", openDataChannelContinuation);
 
@@ -110,8 +117,9 @@ describe("providers/core/peerconnection", function() {
   });
 
   it("Fires onOpenDataChannel for peer created data channels.", function(done) {
-    var rtcpc = RTCPeerConnection.mostRecent;
+    var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel = new RTCDataChannel("onOpenDC", {});
+    dataChannel.readyState = "open";
     var event = {channel: dataChannel};
     
     rtcpc.listeners.datachannel(event);
@@ -120,7 +128,7 @@ describe("providers/core/peerconnection", function() {
   });
 
   it("Closes data channel", function(done) {
-    var rtcpc = RTCPeerConnection.mostRecent;
+    var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel;
     peerconnection.openDataChannel("closeDC", openDataChannelContinuation);
 
@@ -137,7 +145,7 @@ describe("providers/core/peerconnection", function() {
   });
 
   it("Fires onClose when closed", function(done) {
-    var rtcpc = RTCPeerConnection.mostRecent;
+    var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel;
     peerconnection.openDataChannel("oncloseDC", openDataChannelContinuation);
     function openDataChannelContinuation() {
@@ -151,7 +159,7 @@ describe("providers/core/peerconnection", function() {
   });
 
   it("Sends message", function(done) {
-    var rtcpc = RTCPeerConnection.mostRecent;
+    var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel;
     var sendInfo = {channelLabel: "sendDC",
                    text: "Hello World"};
@@ -170,7 +178,7 @@ describe("providers/core/peerconnection", function() {
   });
 
   it("Receives messages", function(done) {
-    var rtcpc = RTCPeerConnection.mostRecent;
+    var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel;
 
     peerconnection.openDataChannel("receiveDC", openDataChannelContinuation);

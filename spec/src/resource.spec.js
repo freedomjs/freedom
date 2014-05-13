@@ -9,51 +9,45 @@ describe("fdom.resources", function() {
   it("should resolve URLs", function(done) {
     var promise = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
-    var spy = jasmine.createSpy('resolver');
-    promise.then(spy);
-    setTimeout(function() {
-      expect(spy).toHaveBeenCalledWith('http://localhost/folder/file.js');
+    var callback = function(response) {
+      expect(response).toEqual('http://localhost/folder/file.js');
       done();
-    }, 0);
+    };
+    promise.then(callback);
   });
 
   it("should cache resolved URLs", function(done) {
     spyOn(resources, 'resolve').and.callThrough();
-    var deferred = resources.get("http://localhost/folder/manifest.json",
+    var promise = resources.get("http://localhost/folder/manifest.json",
                                  "file.js");
-    setTimeout(function() {
-      deferred = resources.get("http://localhost/folder/manifest.json",
-                               "file.js");
-      expect(resources.resolve.calls.count()).toEqual(1);
-      done();
-    }, 0);
+    var callback = function() {
+      promise = resources.get("http://localhost/folder/manifest.json",
+                              "file.js");
+      promise.then(function() {
+        expect(resources.resolve.calls.count()).toEqual(1);
+        done();
+      });
+    };
+    promise.then(callback);
   });
 
   it("should fetch URLs", function(done) {
-    var promise, response;
+    var promise;
     promise = resources.getContents('manifest://{"name":"test"}');
-    promise.then(function(data) {response = data;});
-    setTimeout(function() {
+    promise.then(function(response) {
       expect(JSON.parse(response).name).toEqual("test");
       done();
-    }, 0);
+    });
   });
   
   it("should warn on degenerate URLs", function(done) {
     var promise = resources.getContents();
     var spy = jasmine.createSpy('r');
-    promise.then(function() {}, spy);
-    setTimeout(function() {
-      expect(spy).toHaveBeenCalled();
-
-      promise = resources.resolve('test');
-      promise.then(function() {}, spy);
-    
-      setTimeout(function() {
-        expect(spy.calls.count()).toEqual(2);
+    promise.then(function() {}, function() {
+      resources.resolve('test').then(function(){}, function() {
         done();
-      }, 0);
-    }, 0);
+      });
+    });
   });
 
   it("should handle custom resolvers", function(done) {
@@ -67,18 +61,13 @@ describe("fdom.resources", function() {
     };
     resources.addResolver(resolver);
 
-    var promise = resources.get('test://manifest', 'myurl');
-    var r1, r2;
-    promise.then(function(url) {r1 = url;});
-
-    promise = resources.get('otherprot://manifest', 'myurl');
-    promise.then(function(url) {r2 = url;});
-
-    setTimeout(function() {
-      expect(r1).toEqual('resolved://myurl');
-      expect(r2).toEqual(undefined);
-      done();
-    }, 0);
+    resources.get('test://manifest', 'myurl').then(function(url) {
+      expect(url).toEqual('resolved://myurl');
+      resources.get('otherprot://manifest', 'myurl').then(function(url2) {
+        expect(url2).toEqual(undefined);
+      });
+      setTimeout(done,0);
+    });
   });
 
   it("should handle custom retrievers", function(done) {
@@ -88,18 +77,12 @@ describe("fdom.resources", function() {
     };
     resources.addRetriever('test', retriever);
 
-    var r1, r2;
-    var promise = resources.getContents('test://url');
-    promise.then(function(data) {r1 = data;});
-
-    promise = resources.getContents('unknown://url');
-    promise.then(function() {r2 = 'success';}, function() {r2 = 'failed';});
-
-    setTimeout(function() {
-      expect(r1).toEqual('Custom content!');
-      expect(r2).toEqual('failed');
-      done();
-    }, 0);
+    resources.getContents('test://url').then(function(data) {
+      expect(data).toEqual('Custom content!');
+      resources.getContents('unknown://url').then(function(){}, function(){
+        done();
+      });
+    });
   });
 
   it("should not allow replacing retrievers", function() {

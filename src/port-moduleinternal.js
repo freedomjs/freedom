@@ -21,6 +21,7 @@ fdom.port.ModuleInternal = function(manager) {
   this.id = 'ModuleInternal-' + Math.random();
   this.pendingPorts = 0;
   this.requests = {};
+  this.defaultProvider = null;
 
   fdom.util.handleEvents(this);
 };
@@ -50,6 +51,7 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
 
     var objects = this.mapProxies(message.manifest);
 
+    this.updateEnv(message.manifest);
     this.once('start', this.loadScripts.bind(this, message.id,
         message.manifest.app.script));
     this.loadLinks(objects);
@@ -58,6 +60,12 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
     delete this.requests[message.id];
   } else if (flow === 'default' && message.type === 'manifest') {
     this.updateManifest(message.name, message.manifest);
+  } else if (flow === 'default' && message.type === 'Connection') {
+    // Multiple connections can be made to the default provider.
+    if (this.defaultProvider) {
+      this.manager.createLink(this.defaultProvider, message.channel,
+                              this.port, message.channel);
+    }
   }
 };
 
@@ -68,6 +76,26 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
  */
 fdom.port.ModuleInternal.prototype.toString = function() {
   return "[Module Environment Helper]";
+};
+
+/**
+ * Attach the manifest of the active module to the externally visible namespace.
+ * @method updateEnv
+ * @param {Object} manifest The manifest of the module.
+ * @private
+ */
+fdom.port.ModuleInternal.prototype.updateEnv = function(manifest) {
+  // Decide if/what other properties should be exported.
+  // Keep in sync with Module.updateEnv
+  var exp = this.config.global.freedom, metadata = {
+    name: manifest.name,
+    icon: manifest.icon,
+    description: manifest.description
+  };
+
+  if (exp) {
+    exp.manifest = metadata;
+  }
 };
 
 /**
@@ -112,6 +140,9 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
       api = items[i].def.name;
       if (items[i].provides) {
         proxy = new fdom.port.Provider(items[i].def.definition);
+        if (!this.defaultProvider) {
+          this.defaultProvider = proxy;
+        }
       } else {
         proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({},
             items[i].def.definition));

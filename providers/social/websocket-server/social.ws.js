@@ -20,7 +20,7 @@
 function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
 
-  this.websocket = webSocket || WebSocket;
+  this.websocket = freedom["core.websocket"] || webSocket;
   if (typeof DEBUG !== 'undefined' && DEBUG) {
     this.WS_URL = 'ws://p2pbr.com:8082/route/';
   } else {
@@ -47,6 +47,8 @@ function WSSocialProvider(dispatchEvent, webSocket) {
  * @return {Object} status - Same schema as 'onStatus' events
  **/
 WSSocialProvider.prototype.login = function(loginOpts, continuation) {
+  // Wrap the continuation so that it will only be called once by
+  // onmessage in the case of success.
   var finishLogin = {
     continuation: continuation,
     finish: function(msg, err) {
@@ -61,18 +63,18 @@ WSSocialProvider.prototype.login = function(loginOpts, continuation) {
     finishLogin.finish(undefined, this.err("LOGIN_ALREADYONLINE"));
     return;
   }
-  this.conn = new this.websocket(this.WS_URL + loginOpts.agent);
+  this.conn = this.websocket(this.WS_URL + loginOpts.agent);
   // Save the continuation until we get a status message for
   // successful login.
-  this.conn.onmessage = this.onMessage.bind(this, finishLogin);
-  this.conn.onerror = function (cont, error) {
+  this.conn.on("onMessage", this.onMessage.bind(this, finishLogin));
+  this.conn.on("onError", function (cont, error) {
     this.conn = null;
     cont.finish(undefined, this.err('ERR_CONNECTION'));
-  }.bind(this, finishLogin);
-  this.conn.onclose = function (cont, msg) {
+  }.bind(this, finishLogin));
+  this.conn.on("onClose", function (cont, msg) {
     this.conn = null;
     this.changeRoster(this.id, false);
-  }.bind(this, finishLogin);
+  }.bind(this, finishLogin));
 
 };
 
@@ -141,7 +143,7 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
     return;
   }
 
-  this.conn.send(JSON.stringify({to: to, msg: msg}));
+  this.conn.send({text: JSON.stringify({to: to, msg: msg})});
   continuation();
 };
 
@@ -159,11 +161,11 @@ WSSocialProvider.prototype.logout = function(continuation) {
     continuation(undefined, this.err("OFFLINE"));
     return;
   }
-  this.conn.onclose = function(continuation) {
+  this.conn.on("onClose", function(continuation) {
     this.conn = null;
     this.changeRoster(this.id, false);
     continuation();
-  }.bind(this, continuation);
+  }.bind(this, continuation));
   this.conn.close();
 };
 
@@ -232,7 +234,7 @@ WSSocialProvider.prototype.changeRoster = function(id, stat) {
  **/
 WSSocialProvider.prototype.onMessage = function(finishLogin, msg) {
   var i;
-  msg = JSON.parse(msg.data);
+  msg = JSON.parse(msg.text);
 
   // If state information from the server
   // Store my own ID and all known users at the time

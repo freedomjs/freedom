@@ -116,6 +116,8 @@ fdom.port.Debug.prototype.print = function(message) {
     if (typeof process !== 'undefined' && message.source) {
       arr.unshift('\x1B[39m');
       arr.unshift('\x1B[31m' + message.source);
+    } else if (this.console.__mozillaConsole__ && message.source) {
+      arr.unshift(message.source.toUpperCase());
     } else if (message.source) {
       arr.unshift('color: red');
       arr.unshift('%c ' + message.source);
@@ -149,4 +151,7 @@ fdom.port.Debug.prototype.warn = function() {
  */
 fdom.port.Debug.prototype.error = function() {
   this.format('error', undefined, arguments);
+  if (this.console) {
+    this.console.error.apply(this.console, arguments);
+  }
 };

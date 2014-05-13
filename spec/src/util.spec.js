@@ -174,11 +174,11 @@ describe("util", function() {
     })
   });
 
-  describe("AppContext", function() {
+  describe("ModuleContext", function() {
     it("Warns when source has been mangled", function() {
-      spyOn(fdom.debug, "warn");
-      var resp = fdom.util.forceAppContext("");
-      expect(fdom.debug.warn).toHaveBeenCalled();
+      spyOn(fdom.debug, "error");
+      var resp = fdom.util.forceModuleContext("");
+      expect(fdom.debug.error).toHaveBeenCalled();
       expect(resp).toBeUndefined();
     });
   });

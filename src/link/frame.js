@@ -22,7 +22,7 @@ fdom.link.Frame = function() {
  * @private
  */
 fdom.link.Frame.prototype.start = function() {
-  if (this.config.appContext) {
+  if (this.config.moduleContext) {
     this.config.global.DEBUG = true;
     this.setupListener();
     this.src = 'in';
@@ -119,14 +119,14 @@ fdom.link.Frame.prototype.makeFrame = function(src, inject) {
   // TODO(willscott): add sandboxing protection.
 
   // TODO(willscott): survive name mangling.
-  src = src.replace("'portType': 'Worker'", "'portType': 'Frame'");
+  src = src.replace('portType: "Worker"', 'portType: "Frame"');
   if (inject) {
     extra = '<script src="' + inject + '" onerror="' +
       'throw new Error(\'Injection of ' + inject +' Failed!\');' +
       '"></script>';
   }
   loader = '<html>' + extra + '<script src="' +
-      fdom.util.forceAppContext(src) + '"></script></html>';
+      fdom.util.forceModuleContext(src) + '"></script></html>';
   blob = fdom.util.getBlob(loader, 'text/html');
   frame.src = fdom.util.getURL(blob);
 

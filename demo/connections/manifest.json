@@ -1,0 +1,24 @@
+{
+  "name": "Connections",
+  "description": "Connections Sample freedom.js application",
+  "app": {
+    "script": "main.js"
+  },
+  "dependencies": {
+    "socialprovider": {
+      "url": "../../providers/social/websocket-server/social.ws.json",
+      "api": "social"
+    }
+  },
+  "permissions": [
+    "core.view"
+  ],
+  "views": {
+    "connections": [
+      "view.html",
+      "view.css",
+      "view.js",
+      "third-party/qr/qr.js"
+    ]
+  }
+}

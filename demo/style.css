@@ -75,3 +75,11 @@ button {
 button:active {
   background: #eee;
 }
+
+.lastChild > * {
+  display: none;
+}
+
+.lastChild > *:last-child {
+  display:block;
+}

@@ -141,7 +141,7 @@ var Stats = {
   update: function(val) {
     var elt = document.getElementById(val.key);
     while (elt.hasChildNodes()) {
-      elt.removeChild(lastChild);
+      elt.removeChild(elt.lastChild);
     }
     elt.appendChild(document.createElement('p').appendChild(document.createTextNode('Downloads in Progress: ' + val.inprogress)));
     elt.appendChild(document.createElement('br'));
@@ -188,6 +188,7 @@ window.onload = function() {
     Modal.open();
     Modal.displayMessage("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
     Modal.displayUrl(displayUrl);
+
     Stats.initialize(val.key, val.name, displayUrl);
   });
 

@@ -9,7 +9,7 @@
  **/
 'use strict';
 
-function IsolatedStorageProvider() {
+function IsolatedStorageProvider(dispatchEvent) {
   var i;
   this.core = freedom.core();
   this.store = freedom['core.storage']();

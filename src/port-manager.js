@@ -131,6 +131,16 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
 };
 
 /**
+ * Get the port messages will be routed to given its id.
+ * @method getPort
+ * @param {String} portId The ID of the port.
+ * @returns {fdom.Port} The port with that ID.
+ */
+fdom.port.Manager.prototype.getPort = function(portId) {
+  return this.hub.getDestination(this.controlFlows[portId]);
+};
+
+/**
  * Set up a port with the hub.
  * @method setup
  * @param {Port} port The port to register.
@@ -159,6 +169,10 @@ fdom.port.Manager.prototype.setup = function(port) {
   this.reverseFlowMap[flow] = reverse;
   this.reverseFlowMap[reverse] = flow;
 
+  if (port.lineage) {
+    this.emit('moduleAdd', {id: port.id, lineage: port.lineage});
+  }
+  
   this.hub.onMessage(flow, {
     type: 'setup',
     channel: reverse,
@@ -177,6 +191,10 @@ fdom.port.Manager.prototype.destroy = function(port) {
   if (!port.id) {
     fdom.debug.warn("Unable to tear down unidentified port");
     return false;
+  }
+
+  if (port.lineage) {
+    this.emit('moduleRemove', {id: port.id, lineage: port.lineage});
   }
 
   // Remove the port.

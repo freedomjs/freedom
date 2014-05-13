@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>Connections ~ freedom.js Demos</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <link href='../style.css' rel='stylesheet' type='text/css' />
+
+  <!-- Load FreeDOM and point it to the root module -->
+  <script type="text/javascript"
+      src="../../freedom.js"
+      data-manifest="manifest.json">
+    {
+      "stayLocal": true,
+      "debug": true
+    }
+  </script>
+  <script type="text/javascript">
+    freedom.on("height", function(h) {
+      document.getElementById("connections").style.height = h + 'px';
+    });
+  </script>
+</head>
+<body>
+  <header id='logo'>freedom.js</header>
+  <header><span id='triangle'>&#9654;</span> Demos</header>
+  <header><span id='triangle'>&#9654;</span> Connections</header>
+  <section id="connections" class="lastChild">
+    <span>freedom.js is loading.</span>
+  </section>
+</body>
+</html>
+

@@ -16,7 +16,7 @@ describe("freedom", function() {
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
     freedom = fdom.setup(global, undefined, {
-      'isApp': true
+      'isModule': true
     });
   });
   

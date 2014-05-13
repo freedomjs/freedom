@@ -2,9 +2,23 @@ var createTestPort = function(id) {
   var port = {
     id: id,
     messages: [],
+    gotMessageCalls: [],
+    checkGotMessage: function() {
+      var len = this.gotMessageCalls.length;
+      for (var i=0; i<len; i++) {
+        var call = this.gotMessageCalls.shift();
+        var result = this.gotMessage(call.from, call.match);
+        if (result !== false) {
+          call.callback(result);
+        } else {
+          this.gotMessageCalls.push(call);
+        }
+      }
+    },
     onMessage: function(from, msg) {
       this.messages.push([from, msg]);
       this.emit('onMessage', msg);
+      this.checkGotMessage();
     },
     gotMessage: function(from, match) {
       var okay;
@@ -22,7 +36,16 @@ var createTestPort = function(id) {
         }
       }
       return false;
+    },
+    gotMessageAsync: function(from, match, callback) {
+      this.gotMessageCalls.push({
+        from: from,
+        match: match,
+        callback: callback
+      });
+      this.checkGotMessage();
     }
+    
   };
 
   fdom.util.handleEvents(port);
@@ -33,9 +56,15 @@ var createTestPort = function(id) {
 var mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
-    iface[p[0]] = function(r) {
-      return Promise.resolve(r);
-    }.bind({}, p[1]);
+    if (p[1] && p[1].then) {
+      iface[p[0]] = function(r) {
+        return r;
+      }.bind({}, p[1]);
+    } else {
+      iface[p[0]] = function(r) {
+        return Promise.resolve(r);
+      }.bind({}, p[1]);
+    }
     spyOn(iface, p[0]).and.callThrough();
   });
   if (consts) {
@@ -71,7 +100,7 @@ var createProxyFor = function(app, api) {
       site_cfg = {
         'debug': true,
         'portType': 'Direct',
-        'appContext': false,
+        'moduleContext': false,
         'manifest': app,
         'resources': fdom.resources,
         'global': global
@@ -88,9 +117,11 @@ var createProxyFor = function(app, api) {
   
   var link = location.protocol + "//" + location.host + location.pathname;
   fdom.resources.get(link, site_cfg.manifest).then(function(url) {
-    var app = new fdom.port.Module(url, []);
-    manager.setup(app);
-    manager.createLink(proxy, 'default', app);
+    fdom.resources.getContents(url).then(function(manifest) {
+      var app = new fdom.port.Module(url, manifest, []);
+      manager.setup(app);
+      manager.createLink(proxy, 'default', app);
+    });
   });
   hub.emit('config', site_cfg);
 
@@ -122,7 +153,8 @@ function setupResolvers() {
   fdom.resources = new Resource();
   fdom.resources.addResolver(function(manifest, url, resolve) {
     if (url.indexOf('relative://') === 0) {
-      var dirname = manifest.substr(0, manifest.lastIndexOf('/'));
+      var loc = location.protocol + "//" + location.host + location.pathname;
+      var dirname = loc.substr(0, loc.lastIndexOf('/'));
       resolve(dirname + '/' + url.substr(11));
       return true;
     }
@@ -143,10 +175,11 @@ function setupResolvers() {
 }
 
 function cleanupIframes() {
-  var frames = document.getElementsByTagName('iframe'),
-      i;
-  for (i = 0; i < frames.length; i += 1) {
-    frames[i].parentNode.removeChild(frames[i]);
+  var frames = document.getElementsByTagName('iframe');
+  // frames is a live HTMLCollection, so it is modified each time an
+  // element is removed.
+  while (frames.length > 0) {
+    frames[0].parentNode.removeChild(frames[0]);
   }
 }
 
@@ -166,6 +199,20 @@ function setupModule(manifest_url) {
   });
 }
 
+function providerFor(module, api) {
+  var manifest = {
+    name: 'providers',
+    app: {script: 'relative://spec/helper/providers.js'},
+    dependencies: {undertest: {url: 'relative://' + module, api: api}}
+  };
+  var freedom = setupModule('manifest://' + JSON.stringify(manifest));
+  var provider = new ProviderHelper(freedom);
+  provider.create = function(name) {
+    this.freedom.emit("create", {name: name, provider: 'undertest'});
+  };
+  return provider;
+}
+
 function ProviderHelper(inFreedom) {
   this.callId = 0;
   this.callbacks = {};
@@ -180,10 +227,17 @@ function ProviderHelper(inFreedom) {
   this.freedom.on("initChannel", this.onInitChannel.bind(this));
   this.freedom.on("inFromChannel", this.onInFromChannel.bind(this));
 }
-ProviderHelper.prototype.create = function(name, provider) {
-  this.freedom.emit("create", {name: name,
-                         provider: provider});
+
+ProviderHelper.prototype.createProvider = function(name, provider,
+                                                   constructorArguments) {
+  this.freedom.emit('create', {
+    name: name,
+    provider: provider,
+    constructorArguments: constructorArguments
+  });
 };
+
+ProviderHelper.prototype.create = ProviderHelper.prototype.createProvider;
 
 ProviderHelper.prototype.call = function(provider, method, args, cb, errcb) {
   this.callId += 1;
@@ -197,12 +251,14 @@ ProviderHelper.prototype.call = function(provider, method, args, cb, errcb) {
   });
   return this.callId;
 };
+
 ProviderHelper.prototype.ret = function(obj) {
   if (this.callbacks[obj.id]) {
     this.callbacks[obj.id](obj.data);
     delete this.callbacks[obj.id];
   }
 };
+
 ProviderHelper.prototype.err = function(obj) {
   if (this.errcallbacks[obj.id]) {
     this.errcallbacks[obj.id](obj.data);
@@ -248,12 +304,7 @@ ProviderHelper.prototype.removeListeners = function(provider, event) {
   }
 };
 
-ProviderHelper.prototype.createProvider = function(name, provider) {
-  this.freedom.emit('create', {
-    name: name,
-    provider: provider
-  });
-};
+
 
 ProviderHelper.prototype.createChannel = function(cb) {
   this.unboundChanCallbacks.push(cb);

@@ -7,7 +7,11 @@ var channels = {};
 //  provider: name in manifest
 // }
 freedom.on("create", function(action) {
-  providers[action.name] = freedom[action.provider]();
+  var name = action.name;
+  var provider = action.provider;
+  var constructorArguments = action.constructorArguments || [];
+  providers[name] = freedom[provider].apply(freedom[provider],
+                                            constructorArguments);
   listeningFor[action.name] = {};
 });
 

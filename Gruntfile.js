@@ -1,108 +1,145 @@
+/**
+ * Gruntfile for freedom.js
+ *
+ * Here are the common tasks used:
+ * freedom
+ *  - Lint, compile, and unit test freedom.js
+ *  - (default Grunt task) 
+ *  - Unit tests only run on PhantomJS
+ * demo
+ *  - Build freedom.js, and start a web server for seeing demos at
+ *    http://localhost:8000/demo
+ * debug
+ *  - Host a local web server
+ *  - Karma watches for file changes and reports unit test failures on
+ *    Chrome and Firefox
+ * ci
+ *  - Do everything that Travis CI should do
+ *  - Lint, compile, and unit test freedom.js on phantom.js
+ *  - Run all tests on saucelabs.com
+ *  - Report coverage to coveralls.io
+ **/
+
 var FILES = {
-  preamble: [
-    'src/util/preamble.js',
+  lib: [
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
-    'src/util/jshinthelper.js',
+    'src/util/jshinthelper.js'
   ],
-  postamble: ['src/util/postamble.js'],
   src: [
-    'src/*.js', 
+    'src/*.js',
     'src/link/*.js',
-    'src/proxy/*.js', 
-    'interface/*.js', 
-    'providers/core/*.js',
+    'src/proxy/*.js',
+    'interface/*.js',
+    'providers/core/*.js'
   ],
-  jasminehelper: [
+  srcJasmineHelper: [
     'node_modules/es6-promise/dist/promise-*.js',
     '!node_modules/es6-promise/dist/promise-*amd.js',
     '!node_modules/es6-promise/dist/promise-*min.js',
-    'spec/util.js',
+    'node_modules/es5-shim/es5-shim.js',
+    'spec/util.js'
   ],
-  srcprovider: [
+  specUnit: [
+    'spec/src/{a,b,c,d,e}*.spec.js',
+    'spec/src/{f,g}*.spec.js',
+    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
+    'spec/providers/core/**/*.spec.js'
+  ],
+  specProviderIntegration: [
+    'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/storage/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js'
+  ],
+  srcProvider: [
     'providers/social/websocket-server/*.js',
     'providers/social/loopback/*.js',
     'providers/storage/**/*.js',
     'providers/transport/**/*.js'
   ],
-  specunit: [
-    'spec/src/{a,b,c,d,e}*.spec.js',
-    'spec/src/{f,g}*.spec.js',
-    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
-    'spec/providers/core/**/*.spec.js', 
-    'spec/providers/social/**/*.unit.spec.js', 
+  specProviderUnit: [
+    'spec/providers/social/**/*.unit.spec.js',
     'spec/providers/storage/**/*.unit.spec.js',
-    'spec/providers/transport/**/*.unit.spec.js',
+    'spec/providers/transport/**/*.unit.spec.js'
   ],
-  specintegration: [
-    'spec/providers/social/**/*.integration.spec.js',
-    'spec/providers/storage/**/*.integration.spec.js',
-    //'spec/providers/transport/**/*.integration.spec.js',
+  karmaExclude: [
+    'node_modules/es6-promise/dist/promise-*amd.js',
+    'node_modules/es6-promise/dist/promise-*min.js'
   ],
-  specall: ['spec/**/*.spec.js']
+  specAll: ['spec/**/*.spec.js'],
+  freedom: [
+    'freedom.js'
+  ]
 };
-var WEBSERVER_PROCESS = null;
 
-module.exports = function(grunt) {
-  var saucekey = null;
-  if (typeof process.env.SAUCE_ACCESS_KEY !== "undefined") {
-    saucekey = process.env.SAUCE_ACCESS_KEY;
+var CUSTOM_LAUNCHER = {
+  sauce_chrome_34: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    version: '34',
+    platform: 'OS X 10.9'
+  },
+  sauce_chrome_33: {
+    base: 'SauceLabs',
+    browserName: 'chrome',
+    version: '33',
+    platform: 'Windows 7'
+  },
+  sauce_firefox: {
+    base: 'SauceLabs',
+    browserName: 'firefox',
+    version: '29'
   }
-  var jasmineSpecs = {};
-  var jasmineUnitTasks = [];
-  var jasmineIntegrationTasks = [];
-  var jasmineCoverageTasks = [];
-  
-  FILES.specunit.forEach(function(spec) {
-    var sname = spec + 'Spec';
-    jasmineUnitTasks.push('jasmine:' + sname);
-    jasmineCoverageTasks.push('jasmine:' + sname + 'Coverage');
-    jasmineSpecs[sname] = {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        keepRunner: false 
-      }
-    };
-    jasmineSpecs[sname + 'Coverage'] = {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        template: require('grunt-template-jasmine-istanbul'),
-        templateOptions: {
-          coverage: 'tools/coverage' + jasmineUnitTasks.length + '.json',
-          report: []
-        }
-      }
-    }
-  });
-  FILES.specintegration.forEach(function(spec) {
-    var sname = spec + "Spec";
-    jasmineIntegrationTasks.push("jasmine:"+sname);
-    jasmineSpecs[sname] = {
-      src: FILES.src.concat(FILES.srcprovider).concat(FILES.jasminehelper),
-      options: {
-        specs: spec,
-        keepRunner: false
-      }
-    };
-  });
+};
+
+module.exports = function (grunt) {
+  /**
+   * GRUNT CONFIG
+   **/
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    jasmine: jasmineSpecs,
-    'saucelabs-jasmine': {
-      all: {
-        options: {
-          username: 'daemonf',
-          key: saucekey,
-          urls: ['http://localhost:8000/_SpecRunner.html'],
-          browsers: [
-            {
-              browserName: 'chrome',
-            }
-          ]
-        } 
+    karma: {
+      options: {
+        configFile: 'karma.conf.js',
+        browsers: ['Chrome', 'Firefox'],
+        // NOTE: need to run 'connect:keepalive' to serve files
+        proxies:  {
+          '/': 'http://localhost:8000/',
+        },
+      },
+      single: {
+        singleRun: true,
+        autoWatch: false,
+      },
+      watch: {
+        singleRun: false,
+        autoWatch: true,
+      },
+      phantom: {
+        browsers: ['PhantomJS'],
+        singleRun: true,
+        autoWatch: false
+      },
+      saucelabs: {
+        browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
+        singleRun: true,
+        autoWatch: false,
+        reporters: ['dots', 'saucelabs'],
+        sauceLabs: {
+          testName: 'freedom.js',
+          username: 'freedomjs',
+          accessKey: process.env.SAUCEKEY,
+          build: process.env.TRAVIS_BUILD_NUMBER,
+          tags: [
+            '<%= gitinfo.local.branch.current.name %>',
+            '<%= gitinfo.local.branch.current.shortSHA %>',
+            '<%= gitinfo.local.branch.current.currentUser %>',
+            '<%= gitinfo.local.branch.current.lastCommitAuthor %>',
+            '<%= gitinfo.local.branch.current.lastCommitTime %>',
+          ],
+        },
+        customLaunchers: CUSTOM_LAUNCHER
       }
     },
     jshint: {
@@ -112,35 +149,41 @@ module.exports = function(grunt) {
           jshintrc: true
         }
       },
-      afterconcat: ['freedom.js'],
-      providers: FILES.srcprovider,
-      demo: ['demo/**/*.js'],
+      providers: FILES.srcProvider,
+      demo: ['demo/**/*.js', '!demo/**/third-party/**'],
       options: {
         '-W069': true
       }
     },
-    concat: {
-      dist: {
-        options: {
-          process: function(src) {
-            return src.replace(/\/\*jslint/g,'/*');
-          }
-        },
-        src: FILES.preamble.concat(FILES.src).concat(FILES.postamble),
-        dest: 'freedom.js'
-      }
-    },
     uglify: {
-      options: {
-        mangle: { except: ['global'] }
-      },
       freedom: {
         files: {
+          'freedom.js': FILES.lib.concat(FILES.src)
+        },
+        options: {
+          sourceMap: true,
+          mangle: false,
+          beautify: true,
+          preserveComments: function(node, comment) {
+            return comment.value.indexOf('jslint') !== 0;
+          },
+          banner: require('fs').readFileSync('src/util/preamble.js', 'utf8'),
+          footer: require('fs').readFileSync('src/util/postamble.js', 'utf8')
+        }
+      },
+      min: {
+        files: {
           'freedom.min.js': ['freedom.js']
+        },
+        options: {
+          mangle: { except: ['global'] },
+          preserveComments: 'some',
+          sourceMap: true,
+          sourceMapIn: 'freedom.map'
         }
       }
     },
-    clean: ['freedom.js', 'freedom.min.js'],
+    clean: ['freedom.js', 'freedom.map', 'freedom.min.js', 'freedom.min.map'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -154,95 +197,85 @@ module.exports = function(grunt) {
     },
     coveralls: {
       report: {
-        src: 'tools/lcov.info'
+        src: 'tools/coverage/PhantomJS**/*lcov.info'
       }
-    }
+    },
+    connect: {
+      default: {
+        options: {
+          port: 8000,
+          keepalive: false
+        }
+      },
+      keepalive: {
+        options: {
+          port: 8000,
+          keepalive: true
+        }
+      },
+      demo: {
+        options: {
+          port: 8000,
+          keepalive: true,
+          base: ["./","demo/"],
+          open: "http://localhost:8000/demo/"
+        }
+      }
+    },
+    gitinfo: {}
   });
 
   // Load tasks.
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
-  grunt.loadNpmTasks('grunt-saucelabs');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-gitinfo');
+  grunt.loadNpmTasks('grunt-karma');
   
-  // Write lcov coverage
-  grunt.registerTask('istanbulCollect', "Collects test coverage", function() {
-    var istanbul = require('istanbul');
-    var collector = new istanbul.Collector();
-    var reporter = istanbul.Report.create('lcovonly', {
-      dir: 'tools'
-    });
-    grunt.file.expand('tools/coverage*.json').forEach(function (file) {
-      collector.add(grunt.file.readJSON(file));
-    });
-    reporter.writeReport(collector, true);
-  });
-
-  // Custom Task for Chrome Test Runner
-  grunt.registerTask('chromeTestRunner', "Runs tests in a Chrome App", function(){
-    grunt.util.spawn({
-      cmd: 'bash',
-      args: ['tools/chromeTestRunner.sh'].concat(grunt.file.expand(FILES.specall)),
-    }, function done(error, result, code) {
-      grunt.log.ok('Failed to execute shell script:'+
-        "\n\t"+error+
-        "\n\tResult: "+result+
-        "\n\tCode: "+code);
-    });
-  });
-
-  grunt.registerTask('spawn-web-server', "Spawn a python webserver to serve the root dir", function(){
-    WEBSERVER_PROCESS = grunt.util.spawn({
-      cmd: 'python',
-      args: ['-m', 'SimpleHTTPServer'],
-    }, function done(error, result, code) {
-      grunt.log.ok('Failed to execute shell script:'+
-        "\n\t"+error+
-        "\n\tResult: "+result+
-        "\n\tCode: "+code);
-    });
-  });
-
-  grunt.registerTask('kill-web-server', "Kill the web server", function(){
-    if(WEBSERVER_PROCESS != null){
-      WEBSERVER_PROCESS.kill();
-    }
-  });
-
   // Default tasks.
-  grunt.registerTask('jasmineUnitTasks', jasmineUnitTasks);
-  grunt.registerTask('jasmineIntegrationTasks', jasmineIntegrationTasks);
-  grunt.registerTask('jasmineCoverageTasks', jasmineCoverageTasks);
   grunt.registerTask('freedom', [
-    'jshint:beforeconcat',
-    'concat',
-    'jasmineUnitTasks',
-    'jshint:afterconcat',
-    'jshint:providers',
-    'jshint:demo',
-    'uglify'
+    'jshint',
+    'uglify',
+    'gitinfo',
+    'connect:default',
+    'karma:phantom'
   ]);
-  grunt.registerTask('test', [
-    'freedom',
-    'jasmineIntegrationTasks'
+  grunt.registerTask('debug', [
+    'connect:default',
+    'karma:watch'
   ]);
-  grunt.registerTask('coverage', [
-    'concat',
-    'jasmineCoverageTasks',
-    'istanbulCollect',
-    'coveralls:report'
+  grunt.registerTask('demo', [
+    'uglify',
+    'connect:demo',
   ]);
-  grunt.registerTask('saucelabs', [
-    'jasmineUnitTasks',
-    'spawn-web-server',
-    'saucelabs-jasmine',
-    'kill-web-server',
-  ]);
+
+  if (process.env.TRAVIS_JOB_NUMBER) {
+    var jobParts = process.env.TRAVIS_JOB_NUMBER.split('.');
+    //When run from Travis from jobs *.1
+    if (jobParts.length > 1 && jobParts[1] == '1') {
+      grunt.registerTask('ci', [
+        'freedom',
+        'karma:saucelabs',
+        'coveralls:report'
+      ]);
+    } else {  //When run from Travis from jobs *.2, *.3, etc.
+      grunt.registerTask('ci', [
+        'freedom'
+      ]);
+    }
+  } else {  //When run from command-line
+    grunt.registerTask('ci', [
+      'freedom',
+      'karma:saucelabs',
+    ]);
+  }
+
   grunt.registerTask('default', ['freedom']);
 };
 
+module.exports.baseName = __dirname;
 module.exports.FILES = FILES;
+module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;

@@ -25,7 +25,7 @@ fdom.link.Worker = function(id) {
  * @private
  */
 fdom.link.Worker.prototype.start = function() {
-  if (this.config.appContext) {
+  if (this.config.moduleContext) {
     this.setupListener();
   } else {
     this.setupWorker();

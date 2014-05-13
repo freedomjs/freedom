@@ -105,8 +105,7 @@ describe("fdom.Port.Manager", function() {
     manager.onMessage('testing', {
       request: 'core'
     });
-    setTimeout(function() {
-      var response = port.gotMessage('control', {type: 'core'});
+    port.gotMessageAsync('control', {type: 'core'}, function(response) {
       expect(response).not.toEqual(false);
       var core = response.core;
 
@@ -115,11 +114,12 @@ describe("fdom.Port.Manager", function() {
       manager.onMessage('dest', {
         request: 'core'
       });
-
-      var otherResponse = otherPort.gotMessage('control', {type: 'core'});
-      expect(otherResponse.core).toEqual(core);
-      done();
-    }, 0);
+      
+      otherPort.gotMessageAsync('control', {type: 'core'}, function(otherResponse) {
+        expect(otherResponse.core).toEqual(core);
+        done();
+      });
+    });
   });
 
   it("Tears down Ports", function() {
@@ -134,5 +134,9 @@ describe("fdom.Port.Manager", function() {
     });
     expect(fdom.debug.warn).toHaveBeenCalled();
     expect(port.gotMessage('control', {type: 'core'})).toEqual(false);
+  });
+
+  it("Retreives Ports by ID", function() {
+    expect(manager.getPort(port.id)).toEqual(port);
   });
 });

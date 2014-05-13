@@ -1,4 +1,4 @@
-describe("transport.webrtc.json unit tests.", function () {
+describe("unit: transport.webrtc.json", function () {
   var transport, peerconnection, dispatchedEvents;
   var sizeToBuffer = WebRTCTransportProvider.prototype._sizeToBuffer;
   var bufferToSize = WebRTCTransportProvider.prototype._bufferToSize;

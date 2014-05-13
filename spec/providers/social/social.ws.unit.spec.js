@@ -14,10 +14,17 @@ describe("unit: social.ws.json", function () {
 
     jasmine.clock().install();
     de = jasmine.createSpy('dispatchEvent');
-    var wsprov = function() {
-      ws = this;
-      this.close = jasmine.createSpy('close').and.callFake(function() {this.onclose();});
-      this.send = jasmine.createSpy('send');
+    var wsprov = function(url, protocols) {
+      ws = {
+        url: url,
+        protocols: protocols,
+        close: jasmine.createSpy('close').and.callFake(function() {this.onClose();}),
+        send: jasmine.createSpy('send'),
+        on: jasmine.createSpy('on').and.callFake(function(event, callback) {
+          this[event] = callback;
+        })
+      };
+      return ws;
     };
     provider = new WSSocialProvider(de, wsprov);
   });
@@ -40,7 +47,7 @@ describe("unit: social.ws.json", function () {
     provider.login({}, d);
     expect(d).not.toHaveBeenCalled();
 
-    ws.onmessage({data: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':''})});
+    ws.onMessage({text: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':''})});
     
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", makeClientState("yourId", "ONLINE"));
     expect(d).toHaveBeenCalledWith(makeClientState("yourId", "ONLINE"), undefined);
@@ -49,7 +56,7 @@ describe("unit: social.ws.json", function () {
   it("can getClients", function() {
     var d = jasmine.createSpy("getRoster");
     provider.login({}, function() {});
-    ws.onmessage({data: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':['tom', 'bill']})});
+    ws.onMessage({text: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':['tom', 'bill']})});
     provider.getClients(d);
     expect(d.calls.count()).toEqual(1);
     expect(d.calls.mostRecent().args.length).toBeGreaterThan(0);
@@ -60,7 +67,7 @@ describe("unit: social.ws.json", function () {
   it("can getUsers", function() {
     var d = jasmine.createSpy("getRoster");
     provider.login({}, function() {});
-    ws.onmessage({data: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':['tom', 'bill']})});
+    ws.onMessage({text: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':['tom', 'bill']})});
     provider.getUsers(d);
     expect(d.calls.count()).toEqual(1);
     expect(d.calls.mostRecent().args.length).toBeGreaterThan(0);
@@ -87,12 +94,13 @@ describe("unit: social.ws.json", function () {
   it("echos messages", function() {
     var d = jasmine.createSpy("sendMessage");
     provider.login({}, function() {});
-    ws.onmessage({data: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':['tom', 'bill']})});
+    ws.onMessage({text: JSON.stringify({'cmd': 'state', 'id': 'yourId', 'msg':['tom', 'bill']})});
     provider.sendMessage("tom", "Hello World", d);
-    expect(ws.send).toHaveBeenCalledWith(jasmine.any(String));
+    expect(ws.send.calls.mostRecent().args[0])
+      .toEqual({text: jasmine.any(String)});
     expect(d).toHaveBeenCalled();
 
-    ws.onmessage({data: JSON.stringify({'cmd': 'message', 'from':'tom', 'msg':'hello'})});
+    ws.onMessage({text: JSON.stringify({'cmd': 'message', 'from':'tom', 'msg':'hello'})});
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onMessage", {
       from: makeClientState("tom", "ONLINE"),
       message: "hello"

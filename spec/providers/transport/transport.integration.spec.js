@@ -1,20 +1,46 @@
-describe("transport.webrtc.json", function() {
+describe("integration: transport.webrtc.json", function() {
   var TIMEOUT = 3000;
-  var freedom, helper;
+  var freedom, helper, signals;
 
   beforeEach(function() {
     freedom = setupModule("relative://spec/helper/providers.json");
     helper = new ProviderHelper(freedom);
+    signals = [];
   });
 
   afterEach(function() {
     cleanupIframes();
   });
+
+  function createTwoProviders(callback) {
+    var channels = {chanId1: undefined,
+                    chanId2: undefined};
+
+    helper.createProvider("t1", "transport.webrtc");
+    helper.createProvider("t2", "transport.webrtc");
+
+    helper.createChannel(createChannelCallback.bind(undefined, "chanId1"));
+    helper.createChannel(createChannelCallback.bind(undefined, "chanId2"));
+
+    function createChannelCallback(channelName, newChannelId) {
+      channels[channelName] = newChannelId;
+      if (channels.chanId1 && channels.chanId2) {
+        helper.setChannelCallback(channels.chanId1, function(msg) {
+          signals.push(msg);
+          helper.sendToChannel(channels.chanId2, msg);
+        });
+        helper.setChannelCallback(channels.chanId2, function(msg) {
+          signals.push(msg);
+          helper.sendToChannel(channels.chanId1, msg);
+        });
+        callback(channels.chanId1, channels.chanId2);
+      }
+    }
+  }
   
   it("generates signals", function(done) {
     var ids = {};
     var chanId = undefined;
-    var signals = [];
     helper.createProvider("t", "transport.webrtc");
     helper.createChannel(function(newChanId) {
       chanId = newChanId;
@@ -29,50 +55,91 @@ describe("transport.webrtc.json", function() {
     });
   });
 
-  it("sends data", function(done) {
+  it("sends a small amount of data.", function(done) {
     var testString = "Hi";
     var ids = {};
-    var signals = [];
-    var chanId1 = undefined;
-    var chanId2 = undefined;
-    var doSend;
-    
-    helper.createProvider("t1", "transport.webrtc");
-    helper.createProvider("t2", "transport.webrtc");
-    helper.createChannel(function(newChanId) {
-      chanId1 = newChanId;
-      if (chanId2) {
-        doSend()
-      }
-    });
-    helper.createChannel(function(newChanId) {
-      chanId2 = newChanId;
-      if (chanId1) {
-        doSend();
-      }
-    });
-
-    doSend = function() {
+    function doSend (chanId1, chanId2) {
       helper.on("t2", "onData", function(result) {
         var resultStr = helper.ab2str(result.data);
         expect(signals.length).toBeGreaterThan(0);
         expect(result.data instanceof ArrayBuffer).toBe(true);
         expect(result.tag).toEqual("tag");
+        expect(resultStr).toEqual(testString);
         done();
       });
 
-      helper.setChannelCallback(chanId1, function(msg) {
-        signals.push(msg);
-        helper.sendToChannel(chanId2, msg);
-      });
-      helper.setChannelCallback(chanId2, function(msg) {
-        signals.push(msg);
-        helper.sendToChannel(chanId1, msg);
-      });
       var sendData = helper.str2ab(testString);
       ids[0] = helper.call("t1", "setup", ["t1", chanId1]);
       ids[1] = helper.call("t2", "setup", ["t2", chanId2]);
       ids[2] = helper.call("t1", "send", ["tag", sendData]);
     };
+
+    createTwoProviders(doSend);
   });
+
+  it("chunks data", function(done) {
+    var testString = "1234567890ABC";
+    var ids = {};
+
+    for (var i = 0; i < 8; i++) {
+      testString += testString + testString;
+    }
+    // This assumes testString.length is greater than the chunk
+    // size. If you change the chunk size, modify this test.
+
+    function doSend (chanId1, chanId2) {
+      helper.on("t2", "onData", function(result) {
+        var resultStr = helper.ab2str(result.data);
+        expect(signals.length).toBeGreaterThan(0);
+        expect(result.data instanceof ArrayBuffer).toBe(true);
+        expect(result.tag).toEqual("tag");
+        expect(resultStr).toEqual(testString);
+        done();
+      });
+
+      var sendData = helper.str2ab(testString);
+      ids[0] = helper.call("t1", "setup", ["t1", chanId1]);
+      ids[1] = helper.call("t2", "setup", ["t2", chanId2]);
+      ids[2] = helper.call("t1", "send", ["tag", sendData]);
+    };
+
+    createTwoProviders(doSend);
+  });
+
+  it("sends through multiple tags", function(done){
+    var ids = {};
+    var toSend = {"tag1": "This is tag 1",
+                  "tag2": "This is tag 2",
+                  "tag3": "This is tag 3"};
+    var tags = Object.keys(toSend).sort();
+
+    function doSend (chanId1, chanId2) {
+      var onDataCount = 0;
+      var tagsRecievedOn = [];
+      helper.on("t2", "onData", function(result) {
+        onDataCount += 1;
+        var resultStr = helper.ab2str(result.data);
+        expect(signals.length).toBeGreaterThan(0);
+        expect(result.data instanceof ArrayBuffer).toBe(true);
+        expect(resultStr).toEqual(toSend[result.tag]);
+        tagsRecievedOn.push(result.tag);
+        if (onDataCount === tags.length) {
+          tagsRecievedOn.sort();
+          expect(tagsRecievedOn).toEqual(tags);
+          done();
+        }
+      });
+
+      var id = 0;
+      ids[id++] = helper.call("t1", "setup", ["t1", chanId1]);
+      ids[id++] = helper.call("t2", "setup", ["t2", chanId2]);
+      for (var tag in toSend) {
+        ids[id++] = helper.call("t1", "send", [tag,
+                                               helper.str2ab(toSend[tag])]);
+      }
+    };
+
+    createTwoProviders(doSend);
+  });
+
 });

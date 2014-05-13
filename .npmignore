@@ -1,12 +1,5 @@
-### Built files
-/freedom.js
-/freedom.map
-/freedom.min.js
-/freedom.min.map
-
 ### Auto-generated
 tools/doc
-tools/coverage/
 tools/coverage*.json
 tools/lcov.info
 lcov.info

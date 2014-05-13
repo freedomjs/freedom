@@ -38,6 +38,21 @@ describe("fdom.Port.Proxy", function() {
     port.onMessage('default', {type:'message', message:{type:'message', message: 'thing'}});
     expect(spy).toHaveBeenCalledWith('thing');
   });
+  
+  it("sends constructor arguments to appropraite interface", function() {
+    var arg = undefined;
+    var myInterface = function(onMsg, emit, x) {
+      arg = x;
+    };
+    // setup.
+    port = new fdom.port.Proxy(myInterface);
+
+    port.onMessage('default', {
+      channel: 'message'
+    });
+    var iface = port.getInterface('arg1');
+    expect(arg).toEqual('arg1');
+  });
 
   it("closes the interface when asked", function() {
     // setup.
