@@ -27,11 +27,13 @@ var FILES = {
     '!node_modules/es6-promise/dist/promise-*min.js',
     'src/util/jshinthelper.js'
   ],
-  src: [
+  srcCore: [
     'src/*.js',
     'src/link/*.js',
     'src/proxy/*.js',
-    'interface/*.js',
+    'interface/*.js'
+  ],
+  srcPlatform: [
     'providers/core/*.js'
   ],
   srcJasmineHelper: [
@@ -72,6 +74,7 @@ var FILES = {
     'freedom.js'
   ]
 };
+FILES.src = FILES.srcCore.concat(FILES.srcPlatform);
 
 var CUSTOM_LAUNCHER = {
   sauce_chrome_34: {
