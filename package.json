@@ -16,9 +16,11 @@
     "url": "https://github.com/freedomjs/freedom"
   },
   "main": "Gruntfile.js",
+  "dependencies": {
+    "es6-promise": "^1.0.0"
+  },
   "devDependencies": {
     "es5-shim": "^3.1.1",
-    "es6-promise": "^1.0.0",
     "grunt": "~0.4.3",
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-connect": "~0.7.1",
