@@ -27,6 +27,13 @@ var FILES = {
     '!node_modules/es6-promise/dist/promise-*min.js',
     'src/util/jshinthelper.js'
   ],
+  srcJasmineHelper: [
+    'node_modules/es6-promise/dist/promise-*.js',
+    '!node_modules/es6-promise/dist/promise-*amd.js',
+    '!node_modules/es6-promise/dist/promise-*min.js',
+    'node_modules/es5-shim/es5-shim.js',
+    'spec/util.js'
+  ],
   srcCore: [
     'src/*.js',
     'src/link/*.js',
@@ -36,24 +43,21 @@ var FILES = {
   srcPlatform: [
     'providers/core/*.js'
   ],
-  srcJasmineHelper: [
-    'node_modules/es6-promise/dist/promise-*.js',
-    '!node_modules/es6-promise/dist/promise-*amd.js',
-    '!node_modules/es6-promise/dist/promise-*min.js',
-    'node_modules/es5-shim/es5-shim.js',
-    'spec/util.js'
-  ],
-  specUnit: [
+  specCoreUnit: [
     'spec/src/{a,b,c,d,e}*.spec.js',
     'spec/src/{f,g}*.spec.js',
-    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js',
+    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js'
+  ],
+  specPlatformUnit: [
     'spec/providers/core/**/*.spec.js'
   ],
+  //Integration tests
   specProviderIntegration: [
     'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
     'spec/providers/transport/**/*.integration.spec.js'
   ],
+  //Soon to be moved
   srcProvider: [
     'providers/social/websocket-server/*.js',
     'providers/social/loopback/*.js',
@@ -65,6 +69,7 @@ var FILES = {
     'spec/providers/storage/**/*.unit.spec.js',
     'spec/providers/transport/**/*.unit.spec.js'
   ],
+  //Other
   karmaExclude: [
     'node_modules/es6-promise/dist/promise-*amd.js',
     'node_modules/es6-promise/dist/promise-*min.js'
@@ -74,7 +79,6 @@ var FILES = {
     'freedom.js'
   ]
 };
-FILES.src = FILES.srcCore.concat(FILES.srcPlatform);
 
 var CUSTOM_LAUNCHER = {
   sauce_chrome_34: {
@@ -147,7 +151,7 @@ module.exports = function (grunt) {
     },
     jshint: {
       beforeconcat: {
-        files: { src: FILES.src },
+        files: { src: FILES.srcCore.concat(FILES.srcPlatform) },
         options: {
           jshintrc: true
         }
@@ -161,7 +165,7 @@ module.exports = function (grunt) {
     uglify: {
       freedom: {
         files: {
-          'freedom.js': FILES.lib.concat(FILES.src)
+          'freedom.js': FILES.lib.concat(FILES.srcCore).concat(FILES.srcPlatform)
         },
         options: {
           sourceMap: true,

@@ -22,7 +22,12 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
 
     // list of files / patterns to load in the browser
-    files: FILES.src.concat(FILES.srcJasmineHelper).concat(FILES.specUnit).filter(bangFilter),
+    files: FILES.srcCore
+      .concat(FILES.srcPlatform)
+      .concat(FILES.srcJasmineHelper)
+      .concat(FILES.specCoreUnit)
+      .concat(FILES.specPlatformUnit)
+      .filter(bangFilter),
 
     // list of files to exclude
     exclude: FILES.karmaExclude,
@@ -55,7 +60,7 @@ module.exports = function(config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: FILES.src.reduce(function(prev, curr, i, arr) {
+    preprocessors: FILES.srcCore.concat(FILES.srcPlatform).reduce(function(prev, curr, i, arr) {
       prev[curr] = 'coverage';
       return prev;
     }, {}),
