@@ -9,10 +9,13 @@
  * demo
  *  - Build freedom.js, and start a web server for seeing demos at
  *    http://localhost:8000/demo
+ * test
+ *  - Build freedom.js, and run all unit tests on 
+ *    Chrome, Firefox, and PhantomJS
  * debug
- *  - Host a local web server
- *  - Karma watches for file changes and reports unit test failures on
- *    Chrome and Firefox
+ *  - Same as test, except keeps the browsers open 
+ *    and reruns tests on watched file changes.
+ *  - Used to debug unit tests
  * ci
  *  - Do everything that Travis CI should do
  *  - Lint, compile, and unit test freedom.js on phantom.js
@@ -109,25 +112,12 @@ module.exports = function (grunt) {
     karma: {
       options: {
         configFile: 'karma.conf.js',
-        browsers: ['Chrome', 'Firefox'],
         // NOTE: need to run 'connect:keepalive' to serve files
-        proxies:  {
-          '/': 'http://localhost:8000/',
-        },
+        proxies:  {'/': 'http://localhost:8000/'},
       },
-      single: {
-        singleRun: true,
-        autoWatch: false,
-      },
-      watch: {
-        singleRun: false,
-        autoWatch: true,
-      },
-      phantom: {
-        browsers: ['PhantomJS'],
-        singleRun: true,
-        autoWatch: false
-      },
+      single: { singleRun: true, autoWatch: false },
+      watch: { singleRun: false, autoWatch: true },
+      phantom: { browsers: ['PhantomJS'], singleRun: true, autoWatch: false },
       saucelabs: {
         browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
         singleRun: true,
@@ -250,8 +240,12 @@ module.exports = function (grunt) {
     'connect:default',
     'karma:phantom'
   ]);
+  grunt.registerTask('test', [
+    'freedom',
+    'karma:single'
+  ]);
   grunt.registerTask('debug', [
-    'connect:default',
+    'freedom',
     'karma:watch'
   ]);
   grunt.registerTask('demo', [
