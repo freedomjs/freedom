@@ -2,9 +2,10 @@
  * Gruntfile for freedom.js
  *
  * Here are the common tasks used:
- * freedom
- *  - Lint, compile, and unit test freedom.js
+ * build
+ *  - Lint and compile freedom.js
  *  - (default Grunt task) 
+ *  - This must be run before ANY karma task (because of connect:default)
  *  - Unit tests only run on PhantomJS
  * demo
  *  - Build freedom.js, and start a web server for seeing demos at
@@ -233,19 +234,18 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   
   // Default tasks.
-  grunt.registerTask('freedom', [
+  grunt.registerTask('build', [
     'jshint',
     'uglify',
     'gitinfo',
-    'connect:default',
-    'karma:phantom'
+    'connect:default'
   ]);
   grunt.registerTask('test', [
-    'freedom',
+    'build',
     'karma:single'
   ]);
   grunt.registerTask('debug', [
-    'freedom',
+    'build',
     'karma:watch'
   ]);
   grunt.registerTask('demo', [
@@ -258,23 +258,26 @@ module.exports = function (grunt) {
     //When run from Travis from jobs *.1
     if (jobParts.length > 1 && jobParts[1] == '1') {
       grunt.registerTask('ci', [
-        'freedom',
+        'build',
+        'karma:phantomjs',
         'karma:saucelabs',
         'coveralls:report'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
-        'freedom'
+        'build',
+        'karma:phantomjs'
       ]);
     }
   } else {  //When run from command-line
     grunt.registerTask('ci', [
-      'freedom',
+      'build',
+      'karma:phantomjs',
       'karma:saucelabs',
     ]);
   }
 
-  grunt.registerTask('default', ['freedom']);
+  grunt.registerTask('default', ['build', 'karma:phantom']);
 };
 
 module.exports.baseName = __dirname;
