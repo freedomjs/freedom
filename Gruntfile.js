@@ -259,20 +259,20 @@ module.exports = function (grunt) {
     if (jobParts.length > 1 && jobParts[1] == '1') {
       grunt.registerTask('ci', [
         'build',
-        'karma:phantomjs',
+        'karma:phantom',
         'karma:saucelabs',
         'coveralls:report'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
         'build',
-        'karma:phantomjs'
+        'karma:phantom'
       ]);
     }
   } else {  //When run from command-line
     grunt.registerTask('ci', [
       'build',
-      'karma:phantomjs',
+      'karma:phantom',
       'karma:saucelabs',
     ]);
   }
