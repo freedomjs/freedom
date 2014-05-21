@@ -13,12 +13,13 @@ if (typeof fdom === 'undefined') {
 var Resource = function() {
   this.files = {};
   this.resolvers = [this.httpResolver, this.nullResolver];
-  this.contentRetreivers = {
+  this.contentRetrievers = {
     'http': this.xhrRetriever,
     'https': this.xhrRetriever,
     'chrome-extension': this.xhrRetriever,
     'resource': this.xhrRetriever,
     'chrome': this.xhrRetriever,
+    'file': this.xhrRetriever,
     'manifest': this.manifestRetriever
   };
 };
@@ -59,10 +60,10 @@ Resource.prototype.getContents = function(url) {
       fdom.debug.warn("Asked to get contents of undefined URL.");
       return reject();
     }
-    for (prop in this.contentRetreivers) {
-      if (this.contentRetreivers.hasOwnProperty(prop)) {
+    for (prop in this.contentRetrievers) {
+      if (this.contentRetrievers.hasOwnProperty(prop)) {
         if (url.indexOf(prop + "://") === 0) {
-          return this.contentRetreivers[prop](url, resolve, reject);
+          return this.contentRetrievers[prop](url, resolve, reject);
         }
       }
     }
@@ -88,7 +89,18 @@ Resource.prototype.resolve = function(manifest, url) {
     fdom.util.eachReverse(this.resolvers, function(resolver) {
       promises.push(new Promise(resolver.bind({}, manifest, url)));
     }.bind(this));
-    Promise.race(promises).then(resolve, reject);
+    //TODO this would be much cleaner if Promise.any existed
+    Promise.all(promises).then(function(values) {
+      console.log(values);
+      for (var i=0; i<values.length; i++) {
+        if (typeof values[i] !== 'undefined' &&
+            values[i] !== false) {
+          resolve(values[i]);
+          return;
+        }
+      }
+      reject('No resolvers to handle this url: '+JSON.stringify([manifest, url]));
+    });
   }.bind(this));
 };
 
@@ -114,11 +126,11 @@ Resource.prototype.addResolver = function(resolver) {
  * @param {Function} retriever The retriever to add.
  */
 Resource.prototype.addRetriever = function(proto, retriever) {
-  if (this.contentRetreivers[proto]) {
+  if (this.contentRetrievers[proto]) {
     fdom.debug.warn("Unwilling to override file retrieval for " + proto);
     return;
   }
-  this.contentRetreivers[proto] = retriever;
+  this.contentRetrievers[proto] = retriever;
 };
 
 /**
@@ -151,7 +163,7 @@ Resource.hasScheme = function(protocols, url) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
-  var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
+  var protocols = ["http", "https", "chrome", "chrome-extension", "resource", "file"],
       dirname, protocolIdx, pathIdx, path, base;
   if (Resource.hasScheme(protocols, url)) {
     resolve(url);
@@ -159,6 +171,7 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
   }
   
   if (!manifest) {
+    resolve(false);
     return false;
   }
   if (Resource.hasScheme(protocols, manifest) &&
@@ -175,6 +188,7 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
     }
     return true;
   }
+  resolve(false);
   return false;
 };
 
@@ -194,6 +208,7 @@ Resource.prototype.nullResolver = function(manifest, url, resolve, reject) {
     resolve(url);
     return true;
   }
+  resolve(false);
   return false;
 };
 

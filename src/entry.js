@@ -88,6 +88,8 @@ fdom.setup = function (global, freedom_src, config) {
     fdom.resources.get(site_cfg.location, site_cfg.manifest).then(function (root_mod) {
       site_cfg.policy.get([], root_mod)
           .then(manager.createLink.bind(manager, external, 'default'));
+    }, function (err) {
+      fdom.debug.error('Failed to retrieve manifest: ' + err);
     });
   }
   hub.emit('config', site_cfg);

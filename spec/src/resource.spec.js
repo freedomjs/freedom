@@ -122,6 +122,6 @@ describe('fdom.resources.httpResolver', function() {
 
   it("should not resolve URLs without manifest", function() {
     resources.httpResolver(undefined, 'test.html', r, f);
-    expect(spy).not.toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith(false);
   });
 });

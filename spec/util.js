@@ -158,6 +158,7 @@ function setupResolvers() {
       resolve(dirname + '/' + url.substr(11));
       return true;
     }
+    resolve(false);
     return false;
   });
   fdom.resources.addResolver(function(manifest, url, resolve) {
@@ -169,6 +170,7 @@ function setupResolvers() {
       });
       return true;
     }
+    resolve(false);
     return false;
   });
   fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);

@@ -95,7 +95,7 @@ describe("fdom.Port.Manager", function() {
       service: 'testing',
       args: ['retriever', 'resolver']
     });
-    expect(fdom.resources.contentRetreivers['testing']).toEqual('resolver');
+    expect(fdom.resources.contentRetrievers['testing']).toEqual('resolver');
 
     // Reset resources
     fdom.resources = new Resource();
