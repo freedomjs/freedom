@@ -91,7 +91,6 @@ Resource.prototype.resolve = function(manifest, url) {
     }.bind(this));
     //TODO this would be much cleaner if Promise.any existed
     Promise.all(promises).then(function(values) {
-      console.log(values);
       for (var i=0; i<values.length; i++) {
         if (typeof values[i] !== 'undefined' &&
             values[i] !== false) {
