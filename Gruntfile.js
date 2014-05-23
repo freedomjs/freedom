@@ -61,7 +61,6 @@ var FILES = {
     'spec/providers/storage/**/*.integration.spec.js',
     'spec/providers/transport/**/*.integration.spec.js'
   ],
-  //Soon to be moved
   srcProvider: [
     'providers/social/websocket-server/*.js',
     'providers/social/loopback/*.js',
@@ -104,6 +103,14 @@ var CUSTOM_LAUNCHER = {
   }
 };
 
+function bangFilter(elt) {
+  if (elt.length > 0) { //Filter strings that start with '!'
+    return elt.charAt(0) !== '!';
+  } else { //Filter empty strings
+    return false;
+  }
+}
+
 module.exports = function (grunt) {
   /**
    * GRUNT CONFIG
@@ -118,7 +125,15 @@ module.exports = function (grunt) {
       },
       single: { singleRun: true, autoWatch: false },
       watch: { singleRun: false, autoWatch: true },
-      phantom: { browsers: ['PhantomJS'], singleRun: true, autoWatch: false },
+      phantom: { 
+        exclude: [].concat(
+          FILES.karmaExclude,
+          FILES.specProviderIntegration
+        ),
+        browsers: ['PhantomJS'], 
+        singleRun: true, 
+        autoWatch: false
+      },
       saucelabs: {
         browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
         singleRun: true,
@@ -283,3 +298,4 @@ module.exports = function (grunt) {
 module.exports.baseName = __dirname;
 module.exports.FILES = FILES;
 module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;
+module.exports.bangFilter = bangFilter;
