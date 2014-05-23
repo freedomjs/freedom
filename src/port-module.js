@@ -87,6 +87,12 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
               channel: flow
             });
           }.bind(this, flow));
+        // First connection retains legacy mapping as 'default'.
+        } else if (!this.externalPortMap['default'] && message.channel) {
+          this.externalPortMap['default'] = message.channel;
+          this.once('internalChannelReady', function(flow) {
+            this.internalPortMap[flow] = this.internalPortMap['default'];
+          }.bind(this, flow));
         }
       }
       return;
