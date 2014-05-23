@@ -99,6 +99,10 @@ describe("providers/core/peerconnection", function() {
       done();
     }
     peerconnection.setup(PROXY, "setup peer", turnServers, setupCalled);
+    // Modify the SimpleDataPeer's pc object to change the state to CONNECTED,
+    // so that SimpleDataPeer.runWhenConnected callbacks will be run.
+    peerconnection.peer.pc.signalingState = 'stable';
+    peerconnection.peer.pc.listeners['signalingstatechange']();
   });
 
   it("Opens data channel", function(done) {
