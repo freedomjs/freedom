@@ -135,6 +135,10 @@ module.exports = function (grunt) {
         autoWatch: false
       },
       saucelabs: {
+        exclude: [].concat(
+          FILES.karmaExclude,
+          FILES.specProviderIntegration
+        ),
         browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
         singleRun: true,
         autoWatch: false,
