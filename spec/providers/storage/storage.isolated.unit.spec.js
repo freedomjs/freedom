@@ -22,73 +22,64 @@ describe("unit: storage.isolated.json", function () {
   it("returns owned keys", function(done) {
     finishCore(['myId']);
     promise.then(function() {
-      var d = jasmine.createSpy('keys');
-      provider.keys(d);
-      setTimeout(function() {
+      var d = function(result) {
         expect(provider.store.keys).toHaveBeenCalled();
-        expect(d).toHaveBeenCalledWith(['Test']);
+        expect(result).toEqual(['Test']);
         done();
-      }, 0);
+      };
+      provider.keys(d);
     });
   });
 
   it("gets saved items", function(done) {
     finishCore(['myId']);
-    var d = jasmine.createSpy('get');
-    provider.get('mykey', d);
-    setTimeout(function() {
-      expect(d).toHaveBeenCalledWith('value');
+    var d = function(result) {
       expect(provider.store.get).toHaveBeenCalledWith('myId;mykey');
+      expect(result).toEqual('value');
       done();
-    }, 0);
+    };
+    provider.get('mykey', d);
   });
 
   it("sets items", function(done) {
     finishCore(['myId']);
-    var d = jasmine.createSpy('set');
-    provider.set('mykey', 'myval', d);
-    setTimeout(function() {
-      expect(d).toHaveBeenCalled();
+    var d = function() {
       expect(provider.store.set).toHaveBeenCalledWith('myId;mykey', 'myval');
       done();
-    }, 0);
+    };
+    provider.set('mykey', 'myval', d);
   });
 
   it("Removes items", function(done) {
     finishCore(['myId']);
-    var d = jasmine.createSpy('remove');
-    provider.remove('mykey', d);
-    setTimeout(function() {
-      expect(d).toHaveBeenCalled();
+    var d = function() {
       expect(provider.store.remove).toHaveBeenCalledWith('myId;mykey');
       done();
-    }, 0);
+    };
+    provider.remove('mykey', d);
   });
 
   it("Clears storage", function(done) {
     finishCore(['myId']);
-    var d = jasmine.createSpy('clear');
-    provider.clear(d);
-    setTimeout(function() {
-      expect(d).toHaveBeenCalled();
+    var d = function() {
       expect(provider.store.remove).toHaveBeenCalled();
       done();
-    }, 0);
+    };
+    provider.clear(d);
   });
 
   it("Buffers until core is ready", function(done) {
-    var d = jasmine.createSpy('buffer');
-    provider.keys(d);
-    provider.set('mykey', 'myval', d);
-    provider.get('mykey', d);
+    var cb = jasmine.createSpy('buffer');
+    var d = function() {
+      done();
+    };
+    provider.keys(cb);
+    provider.set('mykey', 'myval', cb);
+    provider.get('mykey', cb);
     provider.remove('mykey', d);
     setTimeout(function() {
-      expect(d).not.toHaveBeenCalled();
+      expect(cb).not.toHaveBeenCalled();
       finishCore(['myId']);
-      setTimeout(function() {
-        expect(d).toHaveBeenCalled();
-        done();
-      }, 0);
     }, 0);
   });
 });
