@@ -90,14 +90,14 @@ Resource.prototype.resolve = function(manifest, url) {
     }.bind(this));
     //TODO this would be much cleaner if Promise.any existed
     Promise.all(promises).then(function(values) {
-      for (var i=0; i<values.length; i++) {
-        if (typeof values[i] !== 'undefined' &&
-            values[i] !== false) {
+      var i;
+      for (i = 0; i < values.length; i += 1) {
+        if (typeof values[i] !== 'undefined' && values[i] !== false) {
           resolve(values[i]);
           return;
         }
       }
-      reject('No resolvers to handle this url: '+JSON.stringify([manifest, url]));
+      reject('No resolvers to handle url: ' + JSON.stringify([manifest, url]));
     });
   }.bind(this));
 };
@@ -152,39 +152,41 @@ Resource.hasScheme = function(protocols, url) {
 
 /**
  * Remove './' and '../' from a URL
- * Note: Added because Chrome Apps for Mobile (cca) doesn't understand
- *  how to XHR when this is in the URL
+ * Required because Chrome Apps for Mobile (cca) doesn't understand
+ * XHR paths with these relative components in the URL.
  * @method removeRelativePath
  * @param {String} url The URL to modify
  * @returns {String} url without './' and '../'
  **/
 Resource.removeRelativePath = function(url) {
-  var idx = url.indexOf('://')+3;
-  //Remove all instances of /./
-  url = url.replace(/\/\.\//g, '/');
+  var idx = url.indexOf("://") + 3,
+      stack, toRemove,
+      result;
+  // Remove all instances of /./
+  url = url.replace(/\/\.\//g, "/");
   //Weird bug where in cca, manifest starts with 'chrome:////'
   //This forces there to only be 2 slashes
-  while (url.charAt(idx) === '/') {
-    url = url.slice(0, idx) + url.slice(idx+1, url.length);
+  while (url.charAt(idx) === "/") {
+    url = url.slice(0, idx) + url.slice(idx + 1, url.length);
   }
 
-  //Goto next /
-  idx = url.indexOf('/', idx);
-  //Removing ../
-  var stack = url.substr(idx+1).split('/');
-  while (stack.indexOf('..') !== -1) {
-    var toRemove = stack.indexOf('..');
+  // Advance to next /
+  idx = url.indexOf("/", idx);
+  // Removing ../
+  stack = url.substr(idx + 1).split("/");
+  while (stack.indexOf("..") !== -1) {
+    toRemove = stack.indexOf("..");
     if (toRemove === 0) {
       stack.shift();
     } else {
-      stack.splice((toRemove-1), 2);
+      stack.splice((toRemove - 1), 2);
     }
   }
   
   //Rebuild string
-  var result = url.substr(0,idx);
-  for (var i=0; i<stack.length; i++) {
-    result += '/' + stack[i];
+  result = url.substr(0, idx);
+  for (idx = 0; idx < stack.length; idx += 1) {
+    result += "/" + stack[idx];
   }
   return result;
 };
@@ -201,8 +203,8 @@ Resource.removeRelativePath = function(url) {
  */
 Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
   var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
-      dirname, protocolIdx, pathIdx, path, base;
-  var result;
+      dirname, protocolIdx, pathIdx, path, base, result;
+
   if (Resource.hasScheme(protocols, url)) {
     resolve(Resource.removeRelativePath(url));
     return true;
@@ -222,7 +224,7 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
     if (url.indexOf("/") === 0) {
       resolve(Resource.removeRelativePath(base + url));
     } else {
-      resolve(Resource.removeRelativePath(base + path + '/' + url));
+      resolve(Resource.removeRelativePath(base + path + "/" + url));
     }
     return true;
   }
@@ -267,7 +269,7 @@ Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
     JSON.parse(data);
     resolve(data);
   } catch(e) {
-    console.warn("Invalid manifest URL referenced:" + manifest);
+    fdom.debug.warn("Invalid manifest URL referenced:" + manifest);
     reject();
   }
 };
@@ -282,15 +284,15 @@ Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
  */
 Resource.prototype.xhrRetriever = function(url, resolve, reject) {
   var ref = new XMLHttpRequest();
-  ref.addEventListener('readystatechange', function(resolve, reject) {
+  ref.addEventListener("readystatechange", function(resolve, reject) {
     if (ref.readyState === 4 && ref.responseText) {
       resolve(ref.responseText);
     } else if (ref.readyState === 4) {
-      console.warn("Failed to load file " + url + ": " + ref.status);
+      fdom.debug.warn("Failed to load file " + url + ": " + ref.status);
       reject(ref.status);
     }
   }.bind({}, resolve, reject), false);
-  ref.overrideMimeType('application/json');
+  ref.overrideMimeType("application/json");
   ref.open("GET", url, true);
   ref.send();
 };

@@ -41,7 +41,10 @@ describe("Core Provider Integration", function() {
       freedom.on('message', cb);
       freedom.on('message', function() {
         expect(cb).toHaveBeenCalledWith('sending message to 0');
-        done();
+        if (cb.calls.count() == 3) {
+          expect(cb).toHaveBeenCalledWith('channel 0 replies Message to chan 0');
+          done();
+        }
       });
       freedom.emit('message', 0);
     });

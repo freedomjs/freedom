@@ -116,8 +116,10 @@ fdom.port.Debug.prototype.print = function(message) {
     if (typeof process !== 'undefined' && message.source) {
       arr.unshift('\x1B[39m');
       arr.unshift('\x1B[31m' + message.source);
+    /*jslint nomen: true*/
     } else if (this.console.__mozillaConsole__ && message.source) {
       arr.unshift(message.source.toUpperCase());
+    /*jslint nomen: false*/
     } else if (message.source) {
       arr.unshift('color: red');
       arr.unshift('%c ' + message.source);
