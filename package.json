@@ -35,7 +35,9 @@
     "karma-firefox-launcher": "~0.1.3",
     "karma-phantomjs-launcher": "~0.1.4",
     "karma-coverage": "~0.2.1",
-    "karma-sauce-launcher": "~0.2.8"
+    "karma-sauce-launcher": "~0.2.8",
+    "karma-unicorn-reporter": "^0.1.4",
+    "karma-story-reporter": "^0.2.2"
   },
   "scripts": {
     "test": "grunt ci --verbose",
