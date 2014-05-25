@@ -32,14 +32,19 @@ describe("freedom", function() {
   });
 
   it("creates modules", function(done) {
-    var cb = jasmine.createSpy('cb');
-    var called = false;
-    freedom.on('output', cb);
-    freedom.on('output', function() {
-      expect(cb).toHaveBeenCalledWith('roundtrip');
+    freedom.on('output', function(value) {
+      expect(value).toEqual('roundtrip');
       done();
     });
     freedom.emit('input', 'roundtrip');
+  });
+
+  it("Creates child modules", function(done) {
+    freedom.on('child-output', function(value) {
+      expect(value).toEqual('child-roundtrip');
+      done();
+    });
+    freedom.emit('child-input', 'child-roundtrip');
   });
 
   it("Can be configured in a self-contained way", function() {

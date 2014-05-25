@@ -3,5 +3,8 @@
   "description": "Minimal Freedom module",
   "app": {
     "script": "app.js"
+  },
+  "dependencies": {
+      "child": { "url": "child.json" }
   }
 }
