@@ -19,7 +19,6 @@ var Resource = function() {
     'chrome-extension': this.xhrRetriever,
     'resource': this.xhrRetriever,
     'chrome': this.xhrRetriever,
-    'file': this.xhrRetriever,
     'manifest': this.manifestRetriever
   };
 };
@@ -152,6 +151,45 @@ Resource.hasScheme = function(protocols, url) {
 };
 
 /**
+ * Remove './' and '../' from a URL
+ * Note: Added because Chrome Apps for Mobile (cca) doesn't understand
+ *  how to XHR when this is in the URL
+ * @method removeRelativePath
+ * @param {String} url The URL to modify
+ * @returns {String} url without './' and '../'
+ **/
+Resource.removeRelativePath = function(url) {
+  var idx = url.indexOf('://')+3;
+  //Remove all instances of /./
+  url = url.replace(/\/\.\//g, '/');
+  //Weird bug where in cca, manifest starts with 'chrome:////'
+  //This forces there to only be 2 slashes
+  while (url.charAt(idx) === '/') {
+    url = url.slice(0, idx) + url.slice(idx+1, url.length);
+  }
+
+  //Goto next /
+  idx = url.indexOf('/', idx);
+  //Removing ../
+  var stack = url.substr(idx+1).split('/');
+  while (stack.indexOf('..') !== -1) {
+    var toRemove = stack.indexOf('..');
+    if (toRemove === 0) {
+      stack.shift();
+    } else {
+      stack.splice((toRemove-1), 2);
+    }
+  }
+  
+  //Rebuild string
+  var result = url.substr(0,idx);
+  for (var i=0; i<stack.length; i++) {
+    result += '/' + stack[i];
+  }
+  return result;
+};
+
+/**
  * Resolve URLs which can be accessed using standard HTTP requests.
  * @method httpResolver
  * @private
@@ -162,10 +200,11 @@ Resource.hasScheme = function(protocols, url) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
-  var protocols = ["http", "https", "chrome", "chrome-extension", "resource", "file"],
+  var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
       dirname, protocolIdx, pathIdx, path, base;
+  var result;
   if (Resource.hasScheme(protocols, url)) {
-    resolve(url);
+    resolve(Resource.removeRelativePath(url));
     return true;
   }
   
@@ -181,9 +220,9 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
     path = dirname.substr(pathIdx);
     base = dirname.substr(0, pathIdx);
     if (url.indexOf("/") === 0) {
-      resolve(base + url);
+      resolve(Resource.removeRelativePath(base + url));
     } else {
-      resolve(base + path + "/" + url);
+      resolve(Resource.removeRelativePath(base + path + '/' + url));
     }
     return true;
   }

@@ -124,4 +124,14 @@ describe('fdom.resources.httpResolver', function() {
     resources.httpResolver(undefined, 'test.html', r, f);
     expect(spy).toHaveBeenCalledWith(false);
   });
+
+  it("should remove relative paths", function() {
+    var result = Resource.removeRelativePath('http:////www.example.com/./../test1/test2/../test3/')
+    expect(result).toEqual('http://www.example.com/test1/test3/');
+  });
+
+  it("should resolve paths with relative paths", function() {
+    resources.httpResolver('http://www.example.com/path/manifest.json', '../../test.html', r, f);
+    expect(spy).toHaveBeenCalledWith('http://www.example.com/test.html');
+  });
 });
