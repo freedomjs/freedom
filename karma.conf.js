@@ -31,6 +31,7 @@ module.exports = function(config) {
     
     // web server port
     port: 9876,
+    proxies:  {'/': 'http://localhost:8000/'},
 
     // enable / disable colors in the output (reporters and logs)
     colors: true,
@@ -48,7 +49,7 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true,
+    singleRun: false,
     
     // test results reporter to use
     // possible values: 'dots', 'progress'
