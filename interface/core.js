@@ -128,8 +128,7 @@ fdom.apis.set("core.tcpsocket", {
 fdom.apis.set('core.udpsocket', {
   // Creates a socket, binds it to an interface and port and listens for
   // messages, dispatching each message as on onData event.
-  // Returns an integer, with zero meaning success and any other value
-  // being implementation-dependant.
+  // Returns on success, or fails with an error on failure.
   'bind': {
     type: 'method',
     value: [
@@ -138,7 +137,11 @@ fdom.apis.set('core.udpsocket', {
       // Port on which to bind.
       'number'
     ],
-    ret: 'number'
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
 
   // Retrieves the state of the socket.
@@ -164,7 +167,11 @@ fdom.apis.set('core.udpsocket', {
       // Destination port.
       'number'
     ],
-    ret: 'number'
+    ret: 'number',
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
 
   // Releases all resources associated with this socket.
@@ -264,11 +271,12 @@ fdom.apis.set('core.peerconnection', {
 fdom.apis.set("core.websocket", {
   // Constructs new websocket. Errors in construction are passed on
   // through the onError event.
-  'constructor': {value:
+  'constructor': {value: [
     // URL to connect through
-    ["string",
+    "string",
     // Protocols
-    ["array", "string"]]},
+    ["array", "string"]
+  ]},
   // Send the data to the other side of this connection. Only one of
   // the entries in the dictionary that is passed will be sent.
   'send': {
