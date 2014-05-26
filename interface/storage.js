@@ -38,7 +38,15 @@ fdom.apis.set("storage", {
    * @method keys
    * @return an array with all keys in the store 
    **/
-  'keys': {type: "method", value: [], ret: ["array", "string"]},
+  'keys': {
+    type: "method",
+    value: [],
+    ret: ["array", "string"],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
 
   /**
    * Fetch a value for a key
@@ -48,7 +56,15 @@ fdom.apis.set("storage", {
    * @param {String} key - key to fetch
    * @return {String} Returns a string with the value, null if doesn't exist
    **/
-  'get': {type: "method", value: ["string"], ret: "string"},
+  'get': {
+    type: "method",
+    value: ["string"],
+    ret: "string",
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
 
   /**
    * Sets a value to a key
@@ -59,7 +75,15 @@ fdom.apis.set("storage", {
    * @param {String} value - value
    * @return {String} previous value of key if there was one.
    **/
-  'set': {type: "method", value: ["string", "string"], ret: "string"},
+  'set': {
+    type: "method",
+    value: ["string", "string"],
+    ret: "string",
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
   
   /**
    * Removes a single key
@@ -69,7 +93,15 @@ fdom.apis.set("storage", {
    * @param {String} key - key to remove
    * @return {String} previous value of key if there was one.
    **/
-  'remove': {type: "method", value: ["string"], ret: "string"},
+  'remove': {
+    type: "method",
+    value: ["string"],
+    ret: "string",
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
   
   /**
    * Removes all data from storage
@@ -78,6 +110,14 @@ fdom.apis.set("storage", {
    * @method clear
    * @return nothing
    **/
-  'clear': {type: "method", value: []}
+  'clear': {
+    type: "method",
+    value: [],
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  }
 
 });
