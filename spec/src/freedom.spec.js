@@ -46,6 +46,19 @@ describe("freedom", function() {
     });
     freedom.emit('child-input', 'child-roundtrip');
   });
+  
+  it("Handles manifest-defined APIs", function(done) {
+    freedom.on('log', function(value) {
+      var log = JSON.parse(value);
+      expect(log[0][1]).toEqual('log Msg');
+      expect(log[1][1]).toEqual('another Log');
+      expect(log[1][0] - log[0][0]).toBeGreaterThan(-1);
+      done();
+    });
+    freedom.emit('do-log', 'log Msg');
+    freedom.emit('do-log', 'another Log');
+    freedom.emit('get-log');
+  });
 
   it("Can be configured in a self-contained way", function() {
     var script = document.createElement("script");

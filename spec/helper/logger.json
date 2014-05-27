@@ -1,0 +1,24 @@
+{
+  "name": "Logger",
+  "description": "Freedom Logger with custom API",
+  "app": {
+    "script": "logger.js"
+  },
+  "provides": [
+    "log"
+  ],
+  "api": {
+    "log": {
+      "log": {
+        "type": "method",
+        "value": ["string"],
+        "ret": []
+      },
+      "getLog": {
+        "type": "method",
+        "value": [],
+        "ret": "string"
+      }
+    }
+  }
+}

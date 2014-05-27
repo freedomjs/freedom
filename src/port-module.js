@@ -361,13 +361,25 @@ fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
   }
   if (!this.modInternal) {
     this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
+    return;
   }
+  
+  var data, metadata;
+
+  try {
+    data = JSON.parse(manifest);
+  } catch(e) {
+    fdom.debug.error("Could not parse environmental manifest: " + e);
+    return;
+  }
+
   // Decide if/what other properties should be exported.
   // Keep in sync with ModuleInternal.updateEnv
-  var metadata = {
-    name: manifest.name,
-    icon: manifest.icon,
-    description: manifest.description
+  metadata = {
+    name: data.name,
+    icon: data.icon,
+    description: data.description,
+    api: data.api
   };
   
   this.port.onMessage(this.modInternal, {

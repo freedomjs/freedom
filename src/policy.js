@@ -160,7 +160,7 @@ fdom.Policy.prototype.loadManifest = function(manifest) {
     try {
       return JSON.parse(data);
     } catch(err) {
-      fdom.debug.warn("Failed to load " + this.manifestId + ": " + err);
+      fdom.debug.warn("Failed to load " + manifest + ": " + err);
       return {};
     }
   });
