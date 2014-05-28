@@ -43,14 +43,18 @@ WebRTCTransportProvider.stun_servers = [
   "stun:stun4.l.google.com:19302"
 ];
 
-// The argument |channelId| is a freedom communication channel id to use
-// to open a peer connection. 
-WebRTCTransportProvider.prototype.setup = function(name, channelId, continuation) {
-  // console.log("TransportProvider.setup." + name);
+// The argument |signallingChannelId| is a freedom communication channel id to
+// use to open a peer connection. 
+WebRTCTransportProvider.prototype.setup = function(name, signallingChannelId,
+                                                   continuation) {
   this.name = name;
-  var promise = this.pc.setup(channelId, name, WebRTCTransportProvider.stun_servers);
+  var promise = this.pc.setup(signallingChannelId, name,
+                              WebRTCTransportProvider.stun_servers, false);
   this._setup = true;
-  promise.then(continuation);
+  promise.then(continuation).catch(function() {
+    console.error('Error setting up peerconnection');
+    continuation(undefined, 'Error setting up peerconnection');
+  });
 };
 
 WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {

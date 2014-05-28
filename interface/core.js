@@ -213,7 +213,10 @@ fdom.apis.set('core.peerconnection', {
       // The list of STUN servers to use.
       // The format of a single entry is stun:HOST:PORT, where HOST
       // and PORT are a stun server hostname and port, respectively.
-      ["array", "string"]
+      ["array", "string"],
+      // Whether to immediately initiate a connection before fulfilling return
+      // promise.
+      "boolean"
     ]
   },
 

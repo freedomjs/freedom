@@ -94,11 +94,12 @@ describe("unit: transport.webrtc.json", function () {
       dispatchedEvents[event] = data;
     };
 
-    transport.setup("unit-tests", undefined, postSetup);
+    transport.setup("unit-tests", undefined, false, postSetup);
     function postSetup() {
       expect(peerconnection.setup).toHaveBeenCalledWith(undefined,
                                                        "unit-tests",
-                                                        WebRTCTransportProvider.stun_servers);
+                                                        WebRTCTransportProvider.stun_servers,
+                                                        false);
       done();
     }
   });
