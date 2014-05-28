@@ -98,7 +98,8 @@ describe("unit: transport.webrtc.json", function () {
     function postSetup() {
       expect(peerconnection.setup).toHaveBeenCalledWith(undefined,
                                                        "unit-tests",
-                                                        WebRTCTransportProvider.stun_servers);
+                                                        WebRTCTransportProvider.stun_servers,
+                                                        false);
       done();
     }
   });

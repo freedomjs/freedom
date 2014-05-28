@@ -76,6 +76,8 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   this.pc.addEventListener("datachannel",
                             this.onDataChannel.bind(this));
   this.pc.addEventListener("signalingstatechange", function () {
+    // TODO: come up with a better way to detect connection.  We start out
+    // as "stable" even before we are connected.
     if (this.pc.signalingState === "stable") {
       this.pcState = SimpleDataPeerState.CONNECTED;
       this.onConnectedQueue.map(function(callback) { callback(); });
@@ -239,7 +241,8 @@ SimpleDataPeer.prototype.onDescription = function (description) {
 };
 
 SimpleDataPeer.prototype.onNegotiationNeeded = function (e) {
-  //console.log(this.peerName + ": " + "onNegotiationNeeded", this._pc, e);
+  //console.log(this.peerName + ": " + "onNegotiationNeeded",
+  //            JSON.stringify(this._pc), e);
   if (this.pcState !== SimpleDataPeerState.DISCONNECTED) {
     // Negotiation messages are falsely requested for new data channels.
     //   https://code.google.com/p/webrtc/issues/detail?id=2431
@@ -272,6 +275,8 @@ SimpleDataPeer.prototype.onNegotiationNeeded = function (e) {
       this.pc.setLocalDescription(this.pc.localDescription,
                                    logSuccess("setLocalDescription"),
                                    logFail("setLocalDescription"));
+    } else {
+      console.error(this.peerName + ', onNegotiationNeeded failed');
     }
     return;
   }
@@ -359,8 +364,8 @@ function PeerConnection(portModule, dispatchEvent,
 //   debug: boolean           // should we add extra
 // }
 PeerConnection.prototype.setup = function (signallingChannelId, peerName,
-                                            stunServers, continuation) {
-
+                                           stunServers, initiateConnection,
+                                           continuation) {
   this.peerName = peerName;
   var mocks = {RTCPeerConnection: this.RTCPeerConnection,
                RTCSessionDescription: this.RTCSessionDescription,
@@ -415,9 +420,24 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
     this.signallingChannel.on('message',
         this.peer.handleSignalMessage.bind(this.peer));
     this.signallingChannel.emit('ready');
-    this.peer.runWhenConnected(continuation);
+    if (!initiateConnection) {
+      this.peer.runWhenConnected(continuation);
+    }
   }.bind(this));
 
+  if (initiateConnection) {
+    // Setup a connection right away, then invoke continuation.
+    console.log(this.peerName + ' initiating connection');
+    var channelId = 'hello' + Math.random().toString();
+    var openDataChannelContinuation = function(success, error) {
+      if (error) {
+        continuation(undefined, error);
+      } else {
+        this.closeDataChannel(channelId, continuation);
+      }
+    }.bind(this);
+    this.openDataChannel(channelId, openDataChannelContinuation);
+  }
 };
 
 // TODO: delay continuation until the open callback from _peer is called.

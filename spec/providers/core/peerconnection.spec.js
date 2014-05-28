@@ -98,7 +98,9 @@ describe("providers/core/peerconnection", function() {
       expect(emitted).toContain({eventName: "ready", eventData: undefined});
       done();
     }
-    peerconnection.setup(PROXY, "setup peer", turnServers, setupCalled);
+
+    peerconnection.setup(PROXY, "setup peer", turnServers, false,
+                         setupCalled);
     // Modify the SimpleDataPeer's pc object to change the state to CONNECTED,
     // so that SimpleDataPeer.runWhenConnected callbacks will be run.
     peerconnection.peer.pc.signalingState = 'stable';
