@@ -13,13 +13,19 @@ fdom.apis.set("transport", {
    * by the transport provider to send/receive signalling messages
    * to the other side of the P2P connection for setup.
    *
-   * @constructor
+   * @method setup
    * @param {String} name - give this connection a name for logging
    * @param {Proxy} channel - signalling channel
    * @return nothing.
    **/
-  'constructor': {
-    value: ["string", "proxy"]
+  'setup': {
+    type: "method",
+    value: ["string", "proxy"],
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
 
   /**
