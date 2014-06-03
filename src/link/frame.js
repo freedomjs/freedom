@@ -125,7 +125,8 @@ fdom.link.Frame.prototype.makeFrame = function(src, inject) {
       'throw new Error(\'Injection of ' + inject +' Failed!\');' +
       '"></script>';
   }
-  loader = '<html>' + extra + '<script src="' +
+  loader = '<html><meta http-equiv="Content-type" content="text/html;' +
+      'charset=UTF-8">' + extra + '<script src="' +
       fdom.util.forceModuleContext(src) + '"></script></html>';
   blob = fdom.util.getBlob(loader, 'text/html');
   frame.src = fdom.util.getURL(blob);

@@ -144,11 +144,15 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     //from = undefined;
     //throw "Trying to conform a function";
     return undefined;
-  } else if (typeof(from) === 'undefined' || template === undefined) {
+  } else if (typeof(from) === 'undefined') {
     return undefined;
   } else if (from === null) {
     return null;
+  } else if (template === undefined) {
+    fdom.debug.error("Message discarded for not matching declared type!");
+    return undefined;
   }
+
   switch(template) {
   case 'string':
     return String('') + from;

@@ -54,7 +54,7 @@ fdom.setup = function (global, freedom_src, config) {
     fdom.util.advertise(config ? config.advertise : undefined);
     
     // Configure against data-manifest.
-    if (typeof document !== 'undefined') {
+    if (typeof global.document !== 'undefined') {
       fdom.util.eachReverse(fdom.util.scripts(global), function (script) {
         var manifest = script.getAttribute('data-manifest'),
           source = script.src;

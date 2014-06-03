@@ -37,7 +37,7 @@ describe("fdom.apis", function() {
     });
   });
 
-  it("allows late registration of core providers", function() {
+  it("allows late registration of core providers", function(done) {
     var provider = function(arg) { this.arg = arg };
 
     api.set('customCore', provider);
