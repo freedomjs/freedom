@@ -7,7 +7,12 @@
  * An instance of a social provider encapsulates a single user logging into
  * a single network.
  *
- * The semantics of some properties are defined by the specific provider, eg
+ * This API distinguishes between a "user" and a "client". A client is a
+ * user's point of access to the social provider. Thus, a user that has
+ * multiple connections to a provider (e.g., on multiple devices or in multiple
+ * browsers) has multiple clients.
+ *
+ * The semantics of some properties are defined by the specific provider, e.g.:
  * - Edges in the social network (who is on your roster)
  * - Reliable message passing (or unreliable)
  * - In-order message delivery (or out of order)
@@ -15,7 +20,7 @@
  *    connecting from the same device
  *
  * A <client_state>, used in this API, is defined as:
- * - Information related to a specific device or client of a user
+ * - Information related to a specific client of a user
  * - Use cases: 
  *   - Returned on changes for friends or my instance in 'onClientState'
  *   - Returned in a global list from 'getClients'
@@ -99,7 +104,7 @@ fdom.apis.set('social', {
       'url': 'string',           // URL of application
       'interactive': 'boolean',  // Allow user interaction from provider.
                                  // If not set, interpreted as true.
-      'rememberLogin': 'boolean' // Cache login credentials, if not set,
+      'rememberLogin': 'boolean' // Cache login credentials. If not set,
                                  // interpreted as true.
     }],
     ret: {                       // <client_state>, defined above.
@@ -124,7 +129,8 @@ fdom.apis.set('social', {
 
   /**
    * Get <client_state>s that have been observed.
-   * The providers <client_state> may be in this list
+   * The provider implementation may act as a client, in which case its
+   * <client_state> will be in this list.
    * getClients may not represent an entire roster, since it may not be
    * enumerable.
    * 
@@ -148,7 +154,8 @@ fdom.apis.set('social', {
 
   /**
    * Get <user_profile>s that have been observed.
-   * The providers <user_profile> may be in this list
+   * The provider implementation may act as a client, in which case its
+   * <user_profile> will be in this list.
    * getUsers may not represent an entire roster, since it may not be
    * enumerable.
    *
@@ -191,7 +198,7 @@ fdom.apis.set('social', {
   },
 
   /**
-   * Logout of the network
+   * Log out of the network.
    * 
    * @method logout
    * @return nothing
@@ -240,4 +247,3 @@ fdom.apis.set('social', {
     'timestamp': 'number'
   }}
 });
-
