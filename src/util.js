@@ -1,5 +1,5 @@
 /*globals fdom:true, crypto, freedomcfg, WebKitBlobBuilder, Blob, URL */
-/*globals webkitURL, Uint8Array, firefoxExtension */
+/*globals webkitURL, Uint8Array */
 /*jslint indent:2,white:true,browser:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -321,12 +321,13 @@ fdom.util.getURL = function(blob) {
  */
 fdom.util.advertise = function(force) {
   // TODO: Determine a better mechanism than this whitelisting.
-  if (((typeof location !== 'undefined' &&
-        location.protocol === 'chrome-extension:') ||
-       (typeof firefoxExtension !== 'undefined' && firefoxExtension) ||
-       force) &&
-      typeof freedomcfg !== "undefined") {
-    freedomcfg(fdom.apis.register.bind(fdom.apis));
+  if (typeof location !== 'undefined') {
+    if ((location.protocol === 'chrome-extension:' ||
+        location.protocol === 'chrome:' ||
+        location.protocol === 'resource:' || force) &&
+        typeof freedomcfg !== "undefined") {
+      freedomcfg(fdom.apis.register.bind(fdom.apis));
+    }
   } else if (force && typeof freedomcfg !== "undefined") {
     freedomcfg(fdom.apis.register.bind(fdom.apis));
   }
