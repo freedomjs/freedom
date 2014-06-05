@@ -78,6 +78,9 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   this.pc.addEventListener("signalingstatechange", function () {
     // TODO: come up with a better way to detect connection.  We start out
     // as "stable" even before we are connected.
+    // TODO: this is not fired for connections closed by the other side.
+    // This will be fixed in m37, at that point we should dispatch an onClose
+    // event here for freedom.transport to pick up.
     if (this.pc.signalingState === "stable") {
       this.pcState = SimpleDataPeerState.CONNECTED;
       this.onConnectedQueue.map(function(callback) { callback(); });
