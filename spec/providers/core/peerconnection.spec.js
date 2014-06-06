@@ -17,6 +17,10 @@ MockRTCPeerConnection.prototype.createDataChannel = function(label, dict) {
   return dataChannel;
 };
 
+MockRTCPeerConnection.prototype.close = function() {
+  this.signalingState = 'closed';
+};
+
 function RTCDataChannel(label, dict) {
   RTCDataChannel.mostRecent = this;
 
@@ -91,7 +95,10 @@ describe("providers/core/peerconnection", function() {
                                         MockRTCSessionDescription,
                                         MockRTCIceCandidate);
     peerconnection.dispatchEvent = function(event, data) {
-      dispatchedEvents[event] = data;
+      if (dispatchedEvents[event] === undefined) {
+        dispatchedEvents[event] = [];
+      }
+      dispatchedEvents[event].push(data);
     };
 
     function setupCalled() {
@@ -129,7 +136,7 @@ describe("providers/core/peerconnection", function() {
     var event = {channel: dataChannel};
     
     rtcpc.listeners.datachannel(event);
-    expect(dispatchedEvents.onOpenDataChannel).toEqual("onOpenDC");
+    expect(dispatchedEvents.onOpenDataChannel[0]).toEqual("onOpenDC");
     done();
   });
 
@@ -159,7 +166,7 @@ describe("providers/core/peerconnection", function() {
       expect(dataChannel.onclose).toEqual(jasmine.any(Function));
       dataChannel.onclose();
       
-      expect(dispatchedEvents.onCloseDataChannel).toBeDefined();
+      expect(dispatchedEvents.onCloseDataChannel[0]).toBeDefined();
       done();
     }
   });
@@ -193,7 +200,7 @@ describe("providers/core/peerconnection", function() {
       expect(dataChannel.onmessage).toEqual(jasmine.any(Function));
       dataChannel.onmessage({data: "Hello World"});
 
-      var message = dispatchedEvents.onReceived;
+      var message = dispatchedEvents.onReceived[0];
       expect(message).toBeDefined();
       expect(message.channelLabel).toEqual("receiveDC");
       expect(message.text).toEqual("Hello World");
@@ -224,6 +231,17 @@ describe("providers/core/peerconnection", function() {
     function checkBufferedAmount(expected, valueReturned) {
       expect(valueReturned).toEqual(expected);
     }
+  });
+
+  it("Only fires onClose once", function(done) {
+    expect(dispatchedEvents.onClose).not.toBeDefined();
+    peerconnection.close(function() {
+      expect(dispatchedEvents.onClose.length).toEqual(1);
+    });
+    peerconnection.close(function() {
+      expect(dispatchedEvents.onClose.length).toEqual(1);
+      done();
+    });
   });
 
 });

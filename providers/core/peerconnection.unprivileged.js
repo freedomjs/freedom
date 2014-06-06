@@ -482,8 +482,8 @@ PeerConnection.prototype.close = function (continuation) {
     return;
   }
   this.peer.close();
-  continuation();
   this.dispatchEvent("onClose");
+  continuation();
 };
 
 fdom.apis.register('core.peerconnection', PeerConnection);
