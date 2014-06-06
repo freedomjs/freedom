@@ -198,8 +198,12 @@ SimpleDataPeer.prototype.negotiateConnection = function () {
   );
 };
 
+SimpleDataPeer.prototype.isClosed = function () {
+  return !this.pc || this.pc.signalingState === "closed";
+};
+
 SimpleDataPeer.prototype.close = function () {
-  if (this.pc.signalingState !== "closed") {
+  if (!this.isClosed()) {
     this.pc.close();
   }
   //console.log(this.peerName + ": " + "Closed peer connection.");
@@ -472,9 +476,14 @@ PeerConnection.prototype.getBufferedAmount = function (channelId, continuation) 
 };
 
 PeerConnection.prototype.close = function (continuation) {
+  if (this.peer.isClosed()) {
+    // Peer already closed, run continuation without dispatching event.
+    continuation();
+    return;
+  }
   this.peer.close();
-  continuation();
   this.dispatchEvent("onClose");
+  continuation();
 };
 
 fdom.apis.register('core.peerconnection', PeerConnection);
