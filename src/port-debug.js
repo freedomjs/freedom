@@ -99,7 +99,7 @@ fdom.port.Debug.prototype.print = function(message) {
       }
     }
   }
-  if (!debug) {
+  if (!debug && message.severity !== 'error') {
     return;
   }
   if (typeof this.console !== 'undefined' && this.console !== this) {
