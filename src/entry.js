@@ -95,7 +95,7 @@ fdom.setup = function (global, freedom_src, config) {
   hub.emit('config', site_cfg);
 
   // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined') {
+  if (typeof global.console === 'undefined' || site_cfg.relayConsole) {
     global.console = fdom.debug;
   }
   
