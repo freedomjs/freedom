@@ -3,21 +3,12 @@
 
 fdom.apis.set("core.oauth", {
   /**
-   * Get an oAuth access token from a remote service on behalf of
-   * the active user.
-   *
-   * @method getAuthToken
-   * @param {String} url - The URL for the authentication flow
-   * @return {String} The access token
+   * An oAuth event has occured
+   * @return {String} The URL received by the oAuth provider.
    **/
-  'getAuthToken': {
-    'type': 'method',
-    'args': ['string'],
-    'ret': 'string',
-    'err': {
-      'errcode': 'string',
-      'message': 'string'
-    }
+  'oAuthEvent': {
+    'type': 'event',
+    'value': 'string'
   },
 
   /**
@@ -29,7 +20,7 @@ fdom.apis.set("core.oauth", {
    */
   'getRedirectURI': {
     'type': 'method',
-    'args': [],
+    'value': [],
     'ret': ['string'],
     'err': {
       'errcode': 'string',
