@@ -77,7 +77,8 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
       var args = fdom.proxy.portableToMessage(
-          this.definition.constructor ? this.definition.constructor.value : [],
+          (this.definition.constructor && this.definition.constructor.value) ?
+              this.definition.constructor.value : [],
           message.message);
       if (!this.providerInstances[source]) {
         this.providerInstances[source] = {};

@@ -1,4 +1,4 @@
-/*globals fdom:true */
+/*globals fdom:true,console */
 /*jslint indent:2, white:true, sloppy:true, browser:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -86,7 +86,9 @@ fdom.port.Proxy.prototype.onMessage = function(source, message) {
 fdom.port.Proxy.prototype.getInterface = function() {
   var Iface = this.getInterfaceConstructor(),
       args = Array.prototype.slice.call(arguments, 0);
-  Iface = Iface.bind.apply(Iface, [Iface].concat(args));
+  if (args.length) {
+    Iface = Iface.bind.apply(Iface, [Iface].concat(args));
+  }
   return new Iface();
 };
 
@@ -98,7 +100,11 @@ fdom.port.Proxy.prototype.getInterface = function() {
 fdom.port.Proxy.prototype.getProxyInterface = function() {
   var func = function(p) {
     var args = Array.prototype.slice.call(arguments, 1);
-    return p.getInterface(args);
+    if (args.length > 0) {
+      return p.getInterface(args);
+    } else {
+      return p.getInterface();
+    }
   }.bind({}, this);
 
   func.close = function(iface) {
