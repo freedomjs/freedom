@@ -78,6 +78,9 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   this.pc.addEventListener("signalingstatechange", function () {
     // TODO: come up with a better way to detect connection.  We start out
     // as "stable" even before we are connected.
+    // TODO: this is not fired for connections closed by the other side.
+    // This will be fixed in m37, at that point we should dispatch an onClose
+    // event here for freedom.transport to pick up.
     if (this.pc.signalingState === "stable") {
       this.pcState = SimpleDataPeerState.CONNECTED;
       this.onConnectedQueue.map(function(callback) { callback(); });
@@ -195,8 +198,12 @@ SimpleDataPeer.prototype.negotiateConnection = function () {
   );
 };
 
+SimpleDataPeer.prototype.isClosed = function () {
+  return !this.pc || this.pc.signalingState === "closed";
+};
+
 SimpleDataPeer.prototype.close = function () {
-  if (this.pc.signalingState !== "closed") {
+  if (!this.isClosed()) {
     this.pc.close();
   }
   //console.log(this.peerName + ": " + "Closed peer connection.");
@@ -469,9 +476,14 @@ PeerConnection.prototype.getBufferedAmount = function (channelId, continuation) 
 };
 
 PeerConnection.prototype.close = function (continuation) {
+  if (this.peer.isClosed()) {
+    // Peer already closed, run continuation without dispatching event.
+    continuation();
+    return;
+  }
   this.peer.close();
-  continuation();
   this.dispatchEvent("onClose");
+  continuation();
 };
 
 fdom.apis.register('core.peerconnection', PeerConnection);
