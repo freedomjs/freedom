@@ -1,20 +1,23 @@
 /*globals freedom,importScripts */
 /*jslint indent:2, white:true, sloppy:true, browser:true */
 
+// Note: relays matching 'oauth-relay.html' can be cloned from
+// https://github.com/willscott/freedom-oauth-relay
 var registeredRedirectURIs = [
-  "http://localhost:8000/demo/aboutme/"
+  "http://localhost:8000/demo/aboutme/",
+  "https://willscott.github.io/freedom-oauth-relay/oauth-relay.html"
 ];
 
 var oauth = freedom['core.oauth']();
-var redirectURI = null;
 
-var buildURL = function (xsrf) {
-  return "https://accounts.google.com/o/oauth2/auth?" +
+var buildURL = function (obj) {
+  var url = "https://accounts.google.com/o/oauth2/auth?" +
       "client_id=513137528418-i52cg29ug3qjiqta1ttcvrguhrjjq2so.apps.googleusercontent.com&" +
       "response_type=token&" +
       "scope=" + encodeURIComponent("https://www.googleapis.com/auth/userinfo.profile") + "&" +
-      "redirect_uri=" + encodeURIComponent(redirectURI) + "&" +
-      "state=" + encodeURIComponent(xsrf);
+      "redirect_uri=" + encodeURIComponent(obj.redirect) + "&" +
+      "state=" + encodeURIComponent(obj.state);
+  freedom.emit("oAuth", url);
 };
 
 oauth.on('oAuthEvent', function (url) {
@@ -40,27 +43,17 @@ oauth.on('oAuthEvent', function (url) {
                 "access_token=" + params.access_token);
 });
 
-oauth.getRedirectURI().then(function (uris) {
-  var i, j;
-  for (i = 0; i < uris.length; i += 1) {
-    for (j = 0; j < registeredRedirectURIs.length; j += 1) {
-      if (uris[i].indexOf(registeredRedirectURIs[j]) > -1) {
-        redirectURI = registeredRedirectURIs[j];
-        freedom.emit('oAuth', buildURL(uris[i]));
-        return;
-      }
-    }
-  }
-  freedom.emit('profile', {
-    name: 'Unknown',
-    details: 'oAuth unsupported!'
-  });
-});
-
-
+// onProfile is called by the script included by importScripts above.
 var onProfile = function(resp) {
   if (resp.name) {
     resp.details = "Speaks: " + resp.locale + ", Gender: " + resp.gender;
   }
   freedom.emit('profile', resp);
 };
+
+oauth.initiateOAuth(registeredRedirectURIs).then(buildURL).catch(function (msg) {
+  freedom.emit('profile', {
+    name: 'oAuth Error',
+    details: msg
+  });
+});

@@ -45,7 +45,8 @@ var FILES = {
     'interface/*.js'
   ],
   srcPlatform: [
-    'providers/core/*.js'
+    'providers/core/*.js',
+    'providers/oauth/*.js'
   ],
   specCoreUnit: [
     'spec/src/{a,b,c,d,e}*.spec.js',

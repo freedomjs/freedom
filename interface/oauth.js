@@ -12,16 +12,21 @@ fdom.apis.set("core.oauth", {
   },
 
   /**
-   * Get supported URL prefixes that will signal the completion of oAuth.
-   * Supported URLs are platform dependant.
+   * Express interest in initiating an oAuth flow.
    *
-   * @method getRedirectURI
-   * @return {String[]} URL prefixes recognized as oAuth completion.
+   * @method initiateOAuth
+   * @param {String[]} Valid oAuth redirect URLs for your application.
+   * @returns {{redirect:String, state:String}} A chosen redirect URI, and
+   *     state which will be monitored for oAuth redirection, if one is
+   *     available.
    */
-  'getRedirectURI': {
+  'initiateOAuth': {
     'type': 'method',
-    'value': [],
-    'ret': ['string'],
+    'value': [['array', 'string']],
+    'ret': {
+      'redirect': 'string',
+      'state': 'string'
+    },
     'err': {
       'errcode': 'string',
       'message': 'string'
