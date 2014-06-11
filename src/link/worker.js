@@ -73,7 +73,7 @@ fdom.link.Worker.prototype.setupListener = function() {
  * @method setupWorker
  */
 fdom.link.Worker.prototype.setupWorker = function() {
-  var worker, blob;
+  var worker, blob, self = this;
   if (typeof (window.Blob) !== typeof (Function)) {
     worker = new Worker(this.config.source);
   } else {
@@ -81,7 +81,7 @@ fdom.link.Worker.prototype.setupWorker = function() {
     worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.id);
   }
   worker.addEventListener('error', function(err) {
-    fdom.debug.error(err, this.toString());
+    fdom.debug.error(self.toString(), err.message);
   }, true);
   worker.addEventListener('message', function(worker, msg) {
     if (!this.obj) {
