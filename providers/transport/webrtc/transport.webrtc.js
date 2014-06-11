@@ -66,7 +66,7 @@ WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
   if(!this._setup) {
     continuation(undefined, {
       "errcode": "NOTREADY",
-      "message", "send called before setup"
+      "message": "send called before setup"
     });
     throw new Error("send called before setup in WebRTCTransportProvider");
   }
