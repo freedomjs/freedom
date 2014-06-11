@@ -13,10 +13,10 @@ fdom.link = fdom.link || {};
  * @constructor
  */
 fdom.link.Worker = function(id) {
-  if (id) {
-    this.manifest = id.substr(id.lastIndexOf('/') + 1);
-  }
   fdom.Link.call(this);
+  if (id) {
+    this.id = id;
+  }
 };
 
 /**
@@ -47,7 +47,7 @@ fdom.link.Worker.prototype.stop = function() {
  * @return {String} the description of this port.
  */
 fdom.link.Worker.prototype.toString = function() {
-  return "[Worker" + this.id + "]";
+  return "[Worker " + this.id + "]";
 };
 
 /**
@@ -78,7 +78,7 @@ fdom.link.Worker.prototype.setupWorker = function() {
     worker = new Worker(this.config.source);
   } else {
     blob = new window.Blob([this.config.src], {type: 'text/javascript'});
-    worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.manifest);
+    worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.id);
   }
   worker.addEventListener('error', function(err) {
     fdom.debug.error(err, this.toString());
