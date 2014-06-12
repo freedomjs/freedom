@@ -38,7 +38,8 @@ describe("unit: social.ws.json", function () {
       userId: id,
       clientId: id,
       status: status,
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     };
   }
   
@@ -75,7 +76,7 @@ describe("unit: social.ws.json", function () {
     expect(d.calls.mostRecent().args[0]["bill"]).toEqual({
       userId: "bill",
       name: "bill",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
   });
 

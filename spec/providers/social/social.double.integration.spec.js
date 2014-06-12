@@ -20,14 +20,15 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
       userId: userId,
       clientId: clientId,
       status: status,
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     };
   }
 
   function makeUserProfile(userId) {
     return jasmine.objectContaining({
       userId: userId,
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
   }
 
