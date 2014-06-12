@@ -24,20 +24,22 @@
  *  - Report coverage to coveralls.io
  **/
 
+var promisePath = require.resolve('es6-promise');
+var promisePrefix = promisePath.substr(0, promisePath.indexOf('es6-promise'));
+var promiseSelector = [
+  promisePrefix + '/es6-promise/dist/promise-*.js',
+  '!' + promisePrefix + '/es6-promise/dist/promise-*amd.js',
+  '!' + promisePrefix + '/es6-promise/dist/promise-*min.js'
+];
+
 var FILES = {
-  lib: [
-    'node_modules/es6-promise/dist/promise-*.js',
-    '!node_modules/es6-promise/dist/promise-*amd.js',
-    '!node_modules/es6-promise/dist/promise-*min.js',
+  lib: promiseSelector.concat([
     'src/util/jshinthelper.js'
-  ],
-  srcJasmineHelper: [
-    'node_modules/es6-promise/dist/promise-*.js',
-    '!node_modules/es6-promise/dist/promise-*amd.js',
-    '!node_modules/es6-promise/dist/promise-*min.js',
-    'node_modules/es5-shim/es5-shim.js',
+  ]),
+  srcJasmineHelper: promiseSelector.concat([
+    require.resolve('es5-shim'),
     'spec/util.js'
-  ],
+  ]),
   srcCore: [
     'src/*.js',
     'src/link/*.js',
@@ -73,11 +75,6 @@ var FILES = {
     'spec/providers/storage/**/*.unit.spec.js',
     'spec/providers/transport/**/*.unit.spec.js'
   ],
-  //Other
-  karmaExclude: [
-    'node_modules/es6-promise/dist/promise-*amd.js',
-    'node_modules/es6-promise/dist/promise-*min.js'
-  ],
   specAll: ['spec/**/*.spec.js'],
   freedom: [
     'freedom.js'
@@ -104,12 +101,16 @@ var CUSTOM_LAUNCHER = {
   }
 };
 
-function bangFilter(elt) {
-  if (elt.length > 0) { //Filter strings that start with '!'
-    return elt.charAt(0) !== '!';
-  } else { //Filter empty strings
-    return false;
-  }
+function unGlob(arr) {
+  var include = [], exclude = [];
+  arr.filter(function(el) {
+    if (el.length > 0 && el.charAt(0) !== '!') {
+      include.push(el);
+    } else if (el.length > 0) {
+      exclude.push(el.substr(1));
+    }
+  });
+  return {include: include, exclude: exclude};
 }
 
 module.exports = function (grunt) {
@@ -127,8 +128,7 @@ module.exports = function (grunt) {
       single: { singleRun: true, autoWatch: false },
       watch: { singleRun: false, autoWatch: true },
       phantom: { 
-        exclude: [].concat(
-          FILES.karmaExclude,
+        exclude: unGlob(FILES.srcJasmineHelper).exclude.concat(
           FILES.specProviderIntegration
         ),
         browsers: ['PhantomJS'], 
@@ -136,8 +136,7 @@ module.exports = function (grunt) {
         autoWatch: false
       },
       saucelabs: {
-        exclude: [].concat(
-          FILES.karmaExclude,
+        exclude: unGlob(FILES.srcJasmineHelper).exclude.concat(
           FILES.specProviderIntegration
         ),
         browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
@@ -303,4 +302,4 @@ module.exports = function (grunt) {
 module.exports.baseName = __dirname;
 module.exports.FILES = FILES;
 module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;
-module.exports.bangFilter = bangFilter;
+module.exports.unGlob = unGlob;
