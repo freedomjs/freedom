@@ -24,7 +24,8 @@ describe("unit: social.loopback.json", function () {
       userId: "Test User",
       clientId: "Test User.0",
       status: "ONLINE",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     };
     provider.login({}, d);
     expect(d).toHaveBeenCalled();
@@ -35,17 +36,18 @@ describe("unit: social.loopback.json", function () {
       userId: "Other User",
       clientId: "Other User.0",
       status: "ONLINE",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     });
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onUserProfile", {
       userId: "Test User",
       name: "Test User",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onUserProfile", {
       userId: "Other User",
       name: "Other User",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
   });
 
@@ -60,14 +62,16 @@ describe("unit: social.loopback.json", function () {
       userId: "Test User",
       clientId: "Test User.0",
       status: "ONLINE",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     });
     expect(d.calls.mostRecent().args[0]["Other User.0"]).toBeDefined();
     expect(d.calls.mostRecent().args[0]["Other User.0"]).toEqual({
       userId: "Other User",
       clientId: "Other User.0",
       status: "ONLINE",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     });
   });
 
@@ -81,13 +85,13 @@ describe("unit: social.loopback.json", function () {
     expect(d.calls.mostRecent().args[0]["Test User"]).toEqual({
       userId: "Test User",
       name: "Test User",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
     expect(d.calls.mostRecent().args[0]["Other User"]).toBeDefined();
     expect(d.calls.mostRecent().args[0]["Other User"]).toEqual({
       userId: "Other User",
       name: "Other User",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
   });
 
@@ -101,13 +105,15 @@ describe("unit: social.loopback.json", function () {
       userId: "Test User",
       clientId: "Test User.0",
       status: "OFFLINE",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     });
     expect(provider.dispatchEvent).toHaveBeenCalledWith("onClientState", {
       userId: "Other User",
       clientId: "Other User.0",
       status: "OFFLINE",
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     });
   
   });
@@ -123,7 +129,8 @@ describe("unit: social.loopback.json", function () {
         userId: "Other User",
         clientId: "Other User.0",
         status: "ONLINE",
-        timestamp: jasmine.any(Number)
+        lastUpdated: jasmine.any(Number),
+        lastSeen: jasmine.any(Number)
       },
       message: "Hello World"
     });

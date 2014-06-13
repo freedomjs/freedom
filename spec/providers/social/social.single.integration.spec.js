@@ -19,7 +19,8 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
       userId: jasmine.any(String),
       clientId: jasmine.any(String),
       status: status,
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     };
   }
 
@@ -75,7 +76,7 @@ var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_name) {
       expect(keys).toContain(myClientState.userId);
       expect(ret[myClientState.userId]).toEqual(jasmine.objectContaining({
         userId: myClientState.userId,
-        timestamp: jasmine.any(Number)
+        lastUpdated: jasmine.any(Number)
       }));
       ids[2] = helper.call("s", "logout", [], function(ret) {
         done();

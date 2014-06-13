@@ -47,7 +47,7 @@ LoopbackSocialProvider.prototype.makeUserEntry = function(userId) {
   return {
     userId: userId,
     name: userId,
-    timestamp: this.time
+    lastUpdated: this.time
   };
 };
 
@@ -59,13 +59,15 @@ LoopbackSocialProvider.prototype.fillClients = function() {
       'userId': this.userId,
       'clientId': this.clientId,
       'status': "ONLINE",
-      'timestamp': this.time
+      'lastUpdated': this.time,
+      'lastSeen': this.time
     },
     "Other User.0": {
       'userId': "Other User",
       'clientId': "Other User.0", 
       'status': "ONLINE",
-      'timestamp': this.time
+      'lastUpdated': this.time,
+      'lastSeen': this.time
     }
   };
 
@@ -78,7 +80,8 @@ LoopbackSocialProvider.prototype.fillClients = function() {
           userId: userId,
           clientId: clientId,
           status: STATUSES[i],
-          timestamp: this.time
+          lastUpdated: this.time,
+          lastSeen: this.time
         };
       }
     }
