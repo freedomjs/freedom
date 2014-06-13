@@ -47,8 +47,7 @@ var FILES = {
     'interface/*.js'
   ],
   srcPlatform: [
-    'providers/core/*.js',
-    'providers/oauth/*.js'
+    'providers/core/*.js'
   ],
   specCoreUnit: [
     'spec/src/{a,b,c,d,e}*.spec.js',
@@ -65,6 +64,7 @@ var FILES = {
     'spec/providers/transport/**/*.integration.spec.js'
   ],
   srcProvider: [
+    'providers/oauth/*.js',
     'providers/social/websocket-server/*.js',
     'providers/social/loopback/*.js',
     'providers/storage/**/*.js',
@@ -299,7 +299,6 @@ module.exports = function (grunt) {
   grunt.registerTask('default', ['build', 'karma:phantom']);
 };
 
-module.exports.baseName = __dirname;
 module.exports.FILES = FILES;
 module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;
 module.exports.unGlob = unGlob;
