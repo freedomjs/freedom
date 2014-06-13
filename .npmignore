@@ -14,5 +14,3 @@ sauce_connect.log*
 
 ### Chrome Test Runner temp files
 tools/chromeTestRunner/temp
-/manifest.json
-/window.html

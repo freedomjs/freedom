@@ -4,4 +4,4 @@
   })();
 
 })(this);
-//# sourceMappingURL=freedom.map
+//# sourceMappingURL=freedom.map.js
