@@ -258,6 +258,9 @@ fdom.apis.set('core.peerconnection', {
                         value: ["string"],
                         ret: "number"},
 
+  // Returns local SDP headers from createOffer.
+  'getInfo': {type: 'method', value: [], ret: 'string'},
+
   // Close the peer connection.
   'close': {type: "method", value: []},
   // The peer connection has been closed.
