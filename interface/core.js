@@ -54,6 +54,35 @@ fdom.apis.set('core.tcpsocket', {
     }
   },
 
+  /** 
+   * error codes and default messages that may be returned on failures.
+   */
+  'ERRCODE': {type: 'constant', value: {
+    /** GENERAL **/
+    'SUCCESS': 'Success!',
+    // Unknown
+    'UNKNOWN': 'Unknown error',
+    
+    // Socket is already connected
+    'ALREADY_CONNECTED': 'Socket already connected',
+    // Invalid Argument, client error
+    'INVALID_ARGUMENT': 'Invalid argument',
+    // Connection timed out.
+    'TIMED_OUT': 'Timed out',
+    // Operation cannot complete because socket is not connected.
+    'NOT_CONNECTED': 'Socket not connected',
+    // Socket reset because of change in network state.
+    'NETWORK_CHANGED': 'Network changed',
+    // Connection closed
+    'CONNECTION_CLOSED': 'Connection closed gracefully',
+    // Connection Reset
+    'CONNECTION_RESET': 'Connection reset',
+    // Connection Refused
+    'CONNECTION_REFUSED': 'Connection refused',
+    // Generic Failure
+    'CONNECTION_FAILED': 'Connection failed'
+  }},
+  
   // Close a socket. Will Fail if the socket is not connected or already
   // closed.
   'close': {
@@ -126,10 +155,28 @@ fdom.apis.set('core.tcpsocket', {
 // events will start to flow. Note that bind() should only be called
 // once per instance.
 fdom.apis.set('core.udpsocket', {
+  /** 
+   * error codes and default messages that may be returned on failures.
+   */
+  'ERRCODE': {type: 'constant', value: {
+    /** GENERAL **/
+    'SUCCESS': 'Success!',
+    // Unknown
+    'UNKNOWN': 'Unknown error',
+    
+    // Socket is already bound
+    'ALREADY_BOUND': 'Socket already bound',
+    // Invalid Argument, client error
+    'INVALID_ARGUMENT': 'Invalid argument',
+    // Socket reset because of change in network state.
+    'NETWORK_CHANGED': 'Network changed',
+    // Failure to send data
+    'SNED_FAILED': 'Send failed'
+  }},
+
   // Creates a socket, binds it to an interface and port and listens for
   // messages, dispatching each message as on onData event.
-  // Returns an integer, with zero meaning success and any other value
-  // being implementation-dependant.
+  // Returns on success, or fails with an error on failure.
   'bind': {
     type: 'method',
     value: [
@@ -138,7 +185,11 @@ fdom.apis.set('core.udpsocket', {
       // Port on which to bind.
       'number'
     ],
-    ret: 'number'
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
 
   // Retrieves the state of the socket.
@@ -164,7 +215,11 @@ fdom.apis.set('core.udpsocket', {
       // Destination port.
       'number'
     ],
-    ret: 'number'
+    ret: 'number',
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
   },
 
   // Releases all resources associated with this socket.
@@ -284,11 +339,12 @@ fdom.apis.set('core.peerconnection', {
 fdom.apis.set('core.websocket', {
   // Constructs new websocket. Errors in construction are passed on
   // through the onError event.
-  'constructor': {value:
+  'constructor': {value: [
     // URL to connect through
-    ['string',
+    'string',
     // Protocols
-    ['array', 'string']]},
+    ['array', 'string']
+  ]},
   // Send the data to the other side of this connection. Only one of
   // the entries in the dictionary that is passed will be sent.
   'send': {

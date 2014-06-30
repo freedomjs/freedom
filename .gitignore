@@ -1,8 +1,8 @@
 ### Built files
 /freedom.js
-/freedom.map
+/freedom.js.map
 /freedom.min.js
-/freedom.min.map
+/freedom.min.js.map
 
 ### Auto-generated
 tools/doc
@@ -21,5 +21,3 @@ sauce_connect.log*
 
 ### Chrome Test Runner temp files
 tools/chromeTestRunner/temp
-/manifest.json
-/window.html

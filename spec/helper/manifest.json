@@ -5,6 +5,10 @@
     "script": "app.js"
   },
   "dependencies": {
-      "child": { "url": "child.json" }
+      "child": { "url": "child.json" },
+      "log": {
+        "url": "logger.json",
+        "api": "log"
+      }
   }
 }

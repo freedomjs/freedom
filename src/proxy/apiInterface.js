@@ -26,7 +26,8 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
                 template: prop.ret
               };
             }),
-            streams = fdom.proxy.messageToPortable(prop.value, arguments);
+            streams = fdom.proxy.messageToPortable(prop.value,
+                Array.prototype.slice.call(arguments, 0));
         reqId += 1;
         emit({
           action: 'method',
@@ -87,7 +88,7 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
   }.bind(this));
 
   args = fdom.proxy.messageToPortable(
-      def.constructor ? def.constructor.value : [],
+      (def.constructor && def.constructor.value) ? def.constructor.value : [],
       Array.prototype.slice.call(args, 3));
 
   emit({
@@ -144,11 +145,15 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     //from = undefined;
     //throw "Trying to conform a function";
     return undefined;
-  } else if (typeof(from) === 'undefined' || template === undefined) {
+  } else if (typeof(from) === 'undefined') {
     return undefined;
   } else if (from === null) {
     return null;
+  } else if (template === undefined) {
+    fdom.debug.error("Message discarded for not matching declared type!", from);
+    return undefined;
   }
+
   switch(template) {
   case 'string':
     return String('') + from;

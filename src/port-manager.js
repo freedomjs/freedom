@@ -78,9 +78,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   }
 
   if (message.request === 'debug') {
-    if (this.config.debug) {
-      fdom.debug.print(message);
-    }
+    fdom.debug.print(message);
     return;
   }
 

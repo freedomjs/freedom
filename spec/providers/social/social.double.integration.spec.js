@@ -20,14 +20,15 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
       userId: userId,
       clientId: clientId,
       status: status,
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number),
+      lastSeen: jasmine.any(Number)
     };
   }
 
   function makeUserProfile(userId) {
     return jasmine.objectContaining({
       userId: userId,
-      timestamp: jasmine.any(Number)
+      lastUpdated: jasmine.any(Number)
     });
   }
 
@@ -72,7 +73,8 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_name) {
 
     helper.on("SocialA", "onClientState", function(info) {
       receivedClientState.push(info);
-      if (receivedClientState.length >= 2 && clientStateB !== null && !ranExpectations) {
+      if (receivedClientState.length >= 2 && clientStateB !== null && !ranExpectations &&
+         info.userId === clientStateB.userId) {
         ranExpectations = true;
         expect(receivedUserProfiles).toContain(makeUserProfile(clientStateB.userId));
         expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));

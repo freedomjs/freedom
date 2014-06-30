@@ -20,7 +20,7 @@ describe("fdom.proxy.APIInterface", function() {
 
     expect(emit).toHaveBeenCalledWith({
       'type': 'construct',
-      'text': undefined,
+      'text': [],
       'binary': []
     });
     var promise = api.test('hi');

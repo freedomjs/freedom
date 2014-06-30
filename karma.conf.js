@@ -1,7 +1,14 @@
-// Karma configuration
-// Generated on Fri May 09 2014 12:32:28 GMT-0700 (PDT)
 var FILES = require('./Gruntfile').FILES;
-var bangFilter = require('./Gruntfile').bangFilter;
+var karmaFiles = require('./Gruntfile').unGlob([].concat(
+    FILES.srcCore,
+    FILES.srcPlatform,
+    FILES.srcJasmineHelper,
+    FILES.specCoreUnit,
+    FILES.specPlatformUnit,
+    FILES.srcProvider,
+    FILES.specProviderUnit,
+    FILES.specProviderIntegration
+  ));
 
 module.exports = function(config) {
   config.set({
@@ -15,19 +22,10 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     // Testing Providers for now
-    files: [].concat(
-      FILES.srcCore,
-      FILES.srcPlatform,
-      FILES.srcJasmineHelper,
-      FILES.specCoreUnit,
-      FILES.specPlatformUnit,
-      FILES.srcProvider,
-      FILES.specProviderUnit,
-      FILES.specProviderIntegration
-    ).filter(bangFilter),
+    files: karmaFiles.include,
 
     // list of files to exclude
-    exclude: FILES.karmaExclude,
+    exclude: karmaFiles.exclude,
     
     // web server port
     port: 9876,

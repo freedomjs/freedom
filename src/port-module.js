@@ -158,7 +158,7 @@ fdom.port.Module.prototype.start = function() {
   }
   if (this.controlChannel) {
     this.loadLinks();
-    this.port = new fdom.link[this.config.portType](this.manifestId);
+    this.port = new fdom.link[this.config.portType](this.manifest.name);
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
     // Tell the local port to ask us for help.
@@ -303,8 +303,9 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
  */
 fdom.port.Module.prototype.loadLinks = function() {
   var i, channels = ['default'], name, dep,
-      finishLink = function(dep, provider) {
-        dep.getInterface().provideAsynchronous(provider);
+      finishLink = function(dep, name, provider) {
+        var style = fdom.apis.getInterfaceStyle(name);
+        dep.getInterface()[style](provider);
       };
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
@@ -312,7 +313,7 @@ fdom.port.Module.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
         dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-        fdom.apis.getCore(name, this).then(finishLink.bind(this, dep));
+        fdom.apis.getCore(name, this).then(finishLink.bind(this, dep, name));
 
         this.emit(this.controlChannel, {
           type: 'Core Link to ' + name,
@@ -361,13 +362,25 @@ fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
   }
   if (!this.modInternal) {
     this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
+    return;
   }
+  
+  var data, metadata;
+
+  try {
+    data = JSON.parse(manifest);
+  } catch(e) {
+    fdom.debug.error("Could not parse environmental manifest: " + e);
+    return;
+  }
+
   // Decide if/what other properties should be exported.
   // Keep in sync with ModuleInternal.updateEnv
-  var metadata = {
-    name: manifest.name,
-    icon: manifest.icon,
-    description: manifest.description
+  metadata = {
+    name: data.name,
+    icon: data.icon,
+    description: data.description,
+    api: data.api
   };
   
   this.port.onMessage(this.modInternal, {

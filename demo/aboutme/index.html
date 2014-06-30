@@ -6,21 +6,32 @@
   <script type="text/javascript"
       src="../../freedom.js"
       data-manifest="manifest.json">
-    {"views":{"login":"loginContainer"}}
   </script>
   <script type="text/javascript">
-  window.onload = function() {
-    window.freedom.on('profile', function(data) {
-      document.getElementById("profilepic").src = data.imageUrl;
+  freedom.on('profile', function(data) {
+    document.getElementById("profilepic").src = data.picture;
+    if (data.link) {
+      var link = document.createElement('a');
+      link.href = data.link;
+      link.innerText = data.name;
+      document.getElementById("name").appendChild(link);
+    } else {
       document.getElementById("name").appendChild(
           document.createTextNode(data.name));
-      document.getElementById("email").appendChild(
-          document.createTextNode(data.email));
-      document.getElementById("details").appendChild(
-          document.createTextNode(JSON.stringify(data)));
-      document.body.className = "loaded";
-    });
-  }
+    }
+    if (data.details) {
+      document.getElementById("subtitle").appendChild(
+          document.createTextNode(data.details));
+    }
+    document.getElementById("details").appendChild(
+        document.createTextNode(JSON.stringify(data)));
+    document.body.className = "loaded";
+  });
+  freedom.on('oAuth', function(url) {
+    document.getElementById('loginContainer').onclick = function() {
+      window.open(url);
+    };
+  });
   </script>
   <style type="text/css">
   #loginContainer {
@@ -42,16 +53,23 @@
     vertical-align: top;
     font-family: helvetica;
   }
+  #profilepic {
+    max-width: 200px
+  }
+  #details {
+    word-break: break-word;
+  }
   </style>
 </head>
 <body>
   <div id="loginContainer">
+    Sign in with Google
   </div>
   <div id="profile">
     <img id="profilepic" />
     <div id="header">
       <h1 id="name"></h1>
-      <h2 id="email"></h2>
+      <h2 id="subtitle"></h2>
     </div>
     <pre id="details"></pre>
   </div>

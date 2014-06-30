@@ -5,7 +5,7 @@ if (typeof fdom === 'undefined') {
 }
 
 /**
- * The API registry for FreeDOM.  Used to look up requested APIs,
+ * The API registry for freedom.js.  Used to look up requested APIs,
  * and provides a bridge for core APIs to act like normal APIs.
  * @Class API
  * @constructor
@@ -47,16 +47,22 @@ Api.prototype.set = function(name, definition) {
  * @method register
  * @param {String} name the API name.
  * @param {Function} constructor the function to create a provider for the API.
+ * @param {String?} style The style the provider is written in. Valid styles
+ *   are documented in fdom.port.Provider.prototype.getInterface. Defaults to
+ *   provideAsynchronous
  */
-Api.prototype.register = function(name, constructor) {
+Api.prototype.register = function(name, constructor, style) {
   var i;
 
-  this.providers[name] = constructor;
+  this.providers[name] = {
+    constructor: constructor,
+    style: style || 'provideAsynchronous'
+  };
 
   if (this.waiters[name]) {
     for (i = 0; i < this.waiters[name].length; i += 1) {
-      this.waiters[name][i][0](constructor.bind({},
-          this.waiters[name][i][2]));
+      this.waiters[name][i].resolve(constructor.bind({},
+          this.waiters[name][i].from));
     }
     delete this.waiters[name];
   }
@@ -74,18 +80,40 @@ Api.prototype.getCore = function(name, from) {
   return new Promise(function(resolve, reject) {
     if (this.apis[name]) {
       if (this.providers[name]) {
-        resolve(this.providers[name].bind({}, from));
+        resolve(this.providers[name].constructor.bind({}, from));
       } else {
         if (!this.waiters[name]) {
           this.waiters[name] = [];
         }
-        this.waiters[name].push([resolve, reject, from]);
+        this.waiters[name].push({
+          resolve: resolve,
+          reject: reject,
+          from: from
+        });
       }
     } else {
       fdom.debug.warn('Api.getCore asked for unknown core: ' + name);
       reject(null);
     }
   }.bind(this));
+};
+
+/**
+ * Get the style in which a core API is written.
+ * This method is guaranteed to know the style of a provider returned from
+ * a previous getCore call, and so does not use promises.
+ * @method getInterfaceStyle
+ * @param {String} name The name of the provider.
+ * @returns {String} The coding style, as used by
+ *   fdom.port.Provider.prototype.getInterface.
+ */
+Api.prototype.getInterfaceStyle = function(name) {
+  if (this.providers[name]) {
+    return this.providers[name].style;
+  } else {
+    fdom.debug.warn('Api.getInterfaceStyle for unknown provider: ' + name);
+    return undefined;
+  }
 };
 
 /**

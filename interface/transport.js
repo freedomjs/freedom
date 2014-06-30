@@ -14,11 +14,19 @@ fdom.apis.set("transport", {
    * to the other side of the P2P connection for setup.
    *
    * @method setup
-   * @param {string} name - give this connection a name for logging
-   * @param {proxy} channel - signalling channel
+   * @param {String} name - give this connection a name for logging
+   * @param {Proxy} channel - signalling channel
    * @return nothing.
    **/
-  'setup': {type: "method", value: ["string", "proxy"]},
+  'setup': {
+    type: "method",
+    value: ["string", "proxy"],
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
 
   /**
    * Send binary data to the peer
@@ -31,7 +39,15 @@ fdom.apis.set("transport", {
    * @param {buffer} data
    * @return nothing
    **/
-  'send': {type: "method", value: ["string", "buffer"]},
+  'send': {
+    type: "method",
+    value: ["string", "buffer"],
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
 
   /**
    * Close the connection. Any data queued for sending, or in the
@@ -42,18 +58,32 @@ fdom.apis.set("transport", {
    * @method close
    * @return nothing
    **/
-  'close': {type: "method", value: []},
+  'close': {
+    type: "method",
+    value: [],
+    ret: [],
+    err: {
+      "errcode": "string",
+      "message": "string"
+    }
+  },
 
   /**
    * Event on incoming data (ArrayBuffer)
    **/
-  'onData': {type: "event", value: {
-    "tag": "string",
-    "data": "buffer"
-  }},
+  'onData': {
+    type: "event",
+    value: {
+      "tag": "string",
+      "data": "buffer"
+    }
+  },
 
   /**
    * Event on successful closing of the connection
    **/
-  'onClose': {type: "event", value: []}
+  'onClose': {
+    type: "event",
+    value: []
+  }
 });

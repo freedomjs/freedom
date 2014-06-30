@@ -51,15 +51,23 @@ WebRTCTransportProvider.prototype.setup = function(name, signallingChannelId,
   var promise = this.pc.setup(signallingChannelId, name,
                               WebRTCTransportProvider.stun_servers, false);
   this._setup = true;
-  promise.then(continuation).catch(function() {
+  promise.then(continuation).catch(function(err) {
     console.error('Error setting up peerconnection');
-    continuation(undefined, 'Error setting up peerconnection');
+    
+    continuation(undefined, {
+      "errcode": "FAILED",
+      "message": 'Error setting up peerconnection'
+    });
   });
 };
 
 WebRTCTransportProvider.prototype.send = function(tag, data, continuation) {
   // console.log("TransportProvider.send." + this.name);
   if(!this._setup) {
+    continuation(undefined, {
+      "errcode": "NOTREADY",
+      "message": "send called before setup"
+    });
     throw new Error("send called before setup in WebRTCTransportProvider");
   }
   if (this._tags.indexOf(tag) >= 0) {
@@ -215,7 +223,7 @@ WebRTCTransportProvider.prototype._handleData = function(tag, buffer) {
     this._chunks[tag] = currentTag;
     var size = this._bufferToSize(buffer.slice(0, 8));
     if (size > this._maxMessageSize) {
-      console.warn("Incomming message is larger than maximum message size, this may also ");
+      console.warn("Incomming message is larger than maximum message size");
     }
     currentTag.totalByteCount = size;
     currentTag.buffers.push(buffer.slice(8));

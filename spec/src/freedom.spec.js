@@ -46,6 +46,19 @@ describe("freedom", function() {
     });
     freedom.emit('child-input', 'child-roundtrip');
   });
+  
+  it("Handles manifest-defined APIs", function(done) {
+    freedom.on('log', function(value) {
+      var log = JSON.parse(value);
+      expect(log[0][1]).toEqual('log Msg');
+      expect(log[1][1]).toEqual('another Log');
+      expect(log[1][0] - log[0][0]).toBeGreaterThan(-1);
+      done();
+    });
+    freedom.emit('do-log', 'log Msg');
+    freedom.emit('do-log', 'another Log');
+    freedom.emit('get-log');
+  });
 
   it("Can be configured in a self-contained way", function() {
     var script = document.createElement("script");
@@ -70,13 +83,15 @@ describe("freedom", function() {
   });
 
   it("Requires Valid JSON", function() {
+    var root = document.createElement('div');
     var script = document.createElement("script");
     script.setAttribute('data-manifest', "relative://spec/helper/manifest.json");
-    script.innerText = "var x = 2; //this is not json";
-    document.body.appendChild(script);
+    var contents = document.createTextNode("var x = 2; //this is not json");
+    script.appendChild(contents);
+    root.appendChild(script);
 
     var global = {
-      document: document
+      document: root
     };
     freedomcfg = function() {
       spyOn(fdom.debug, 'warn');
@@ -91,6 +106,6 @@ describe("freedom", function() {
 
     expect(fdom.debug.warn).toHaveBeenCalled();
 
-    document.body.removeChild(script);
+    root.removeChild(script);
   });
 });

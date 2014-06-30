@@ -1,20 +1,22 @@
 /*globals fdom, document */
 /*jslint indent:2,sloppy:true */
 /**
- * A FreeDOM view is provided as a core service for displaying some UI.
- * Implementation is currently designed as a sandboxed iFrame that the
- * browser treats as a 'null' origin, whose sendMessage channel is
- * given to the provider.
+ * A freedom.js view is the interface for user interaction.
+ * A view exists as an iFrame, which is shown to the user in some way.
+ * communication between the view and the freedom.js module is performed
+ * through the HTML5 postMessage mechanism, which this provider translates
+ * to freedom.js message events.
  * @Class View_unprivileged
  * @constructor
  * @private
- * @param {App} app The application creating this provider.
+ * @param {port.Module} caller The module creating this provider.
+ * @param {Function} dispatchEvent Function to call to emit events.
  */
-var View_unprivileged = function (app, dispatchEvent) {
+var View_unprivileged = function (caller, dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
   this.host = null;
   this.win = null;
-  this.app = app;
+  this.module = caller;
   fdom.util.handleEvents(this);
 };
 
@@ -33,7 +35,7 @@ View_unprivileged.prototype.open = function (name, what, continuation) {
   this.host.style.display = "relative";
 
   var container = document.body,
-    config = this.app.manifest.views,
+    config = this.module.manifest.views,
     root,
     frame;
   if (config && config[name] && document.getElementById(name)) {
@@ -49,17 +51,21 @@ View_unprivileged.prototype.open = function (name, what, continuation) {
   frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts allow-forms");
   if (what.file) {
-    fdom.resources.get(this.app.manifestId, what.file).then(function (fname) {
-      this.finishOpen(root, frame, fname, continuation);
-    }.bind(this));
+    fdom.resources.get(this.module.manifestId, what.file).then(
+      function (fname) {
+        this.finishOpen(root, frame, fname, continuation);
+      }.bind(this)
+    );
   } else if (what.code) {
-    this.finishOpen(root, frame, "data:text/html;charset=utf-8," + what.code, continuation);
+    this.finishOpen(root, frame, "data:text/html;charset=utf-8," + what.code,
+                    continuation);
   } else {
     continuation(false);
   }
 };
 
-View_unprivileged.prototype.finishOpen = function (root, frame, src, continuation) {
+View_unprivileged.prototype.finishOpen = function (root, frame, src,
+    continuation) {
   frame.src = src;
   frame.style.width = "100%";
   frame.style.height = "100%";
@@ -67,7 +73,8 @@ View_unprivileged.prototype.finishOpen = function (root, frame, src, continuatio
   frame.style.background = "transparent";
   root.appendChild(frame);
 
-  this.app.config.global.addEventListener('message', this.onMessage.bind(this), true);
+  this.module.config.global.addEventListener('message',
+      this.onMessage.bind(this), true);
 
   this.win = frame;
   continuation({});
@@ -88,7 +95,8 @@ View_unprivileged.prototype.close = function (continuation) {
     this.host = null;
   }
   if (this.win) {
-    this.app.config.global.removeEventListener('message', this.onMessage.bind(this), true);
+    this.module.config.global.removeEventListener('message',
+        this.onMessage.bind(this), true);
     this.win = null;
   }
   continuation();

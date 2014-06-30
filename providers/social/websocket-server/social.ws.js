@@ -189,7 +189,8 @@ WSSocialProvider.prototype.changeRoster = function(id, stat) {
   var newStatus, result = {
     userId: id,
     clientId: id,
-    timestamp: (new Date()).getTime()
+    lastUpdated: (this.clients.hasOwnProperty(id)) ? this.clients[id].lastUpdated: (new Date()).getTime(),
+    lastSeen: (new Date()).getTime()
   };
   if (stat) {
     newStatus = "ONLINE";
@@ -208,7 +209,7 @@ WSSocialProvider.prototype.changeRoster = function(id, stat) {
       this.users[id] = {
         userId: id,
         name: id,
-        timestamp: (new Date()).getTime()
+        lastUpdated: (new Date()).getTime()
       };
       this.dispatchEvent('onUserProfile', this.users[id]);
     }

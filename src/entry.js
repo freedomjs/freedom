@@ -54,7 +54,7 @@ fdom.setup = function (global, freedom_src, config) {
     fdom.util.advertise(config ? config.advertise : undefined);
     
     // Configure against data-manifest.
-    if (typeof document !== 'undefined') {
+    if (typeof global.document !== 'undefined') {
       fdom.util.eachReverse(fdom.util.scripts(global), function (script) {
         var manifest = script.getAttribute('data-manifest'),
           source = script.src;
@@ -95,7 +95,7 @@ fdom.setup = function (global, freedom_src, config) {
   hub.emit('config', site_cfg);
 
   // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined') {
+  if (typeof global.console === 'undefined' || site_cfg.relayConsole) {
     global.console = fdom.debug;
   }
   
