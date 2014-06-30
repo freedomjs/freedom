@@ -23,7 +23,7 @@ If you want a built version of freedom.js into your website, grab a copy from ou
 
 Websites: 
 * [freedom.latest.js](http://freedomjs.org/release/master/freedom.latest.js) (unstable)
-* [freedom.v0.4.4.js](http://freedomjs.org/release/master/freedom.v0.4.4.js) (stable)
+* [freedom.v0.5.0.js](http://freedomjs.org/release/v0.5/freedom.v0.5.0.js) (stable)
 
 Chrome Apps:
 * [freedom-for-chrome.latest.js](http://freedomjs.org/release/freedom-chrome/freedom.latest.js) (unstable)
@@ -59,9 +59,9 @@ To create your own freedom.js, run [```grunt```](http://gruntjs.com) in the main
     npm install freedom --save
 
 Other helpful grunt commands:
-* ```grunt freedom``` - Build freedom.js
+* ```grunt freedom``` - Build freedom.js and run phantomjs unit tests
 * ```grunt demo``` - Build and run demos
-* ```grunt test``` - Run the subset of tests that are compatible with phantomjs
+* ```grunt test``` - Run unit tests in Chrome and Firefox
 * ```grunt debug``` - Build all tests and launch a webserver. freedom.js unit and integration tests can then be run by navigating to http://localhost:8000/_SpecRunner.html
 
 Help freedom.js
