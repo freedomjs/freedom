@@ -262,11 +262,15 @@ fdom.apis.set('core.peerconnection', {
   'getInfo': {type: 'method', value: [], ret: 'string'},
 
   'createOffer': {type: 'method', value: [{
-    // Optional TODO: take a MediaConstraints object.
+      // Optional :RTCOfferOptions object.
+      offerToReceiveVideo: 'number',
+      offerToReceiveAudio: 'number',
+      voiceActivityDetection: 'boolean',
+      iceRestart: 'boolean'
     }],
-    // Fulfills with a :RTCSessionDescription
     ret: {
-      'type': 'string', // 'offer', 'answer', or 'pranswer'
+      // Fulfills with a :RTCSessionDescription
+      'type': 'string',  // Should always be 'offer'.
       'sdp': 'string'
     }
   },
