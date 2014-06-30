@@ -196,11 +196,11 @@ module.exports = function (grunt) {
           mangle: { except: ['global'] },
           preserveComments: 'some',
           sourceMap: true,
-          sourceMapIn: 'freedom.js.map'
+          sourceMapIn: 'freedom.map'
         }
       }
     },
-    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map'],
+    clean: ['freedom.js', 'freedom.map', 'freedom.min.js', 'freedom.min.map'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
