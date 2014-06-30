@@ -5,7 +5,7 @@ if (typeof fdom === 'undefined') {
 }
 
 /**
- * The API registry for FreeDOM.  Used to look up requested APIs,
+ * The API registry for freedom.js.  Used to look up requested APIs,
  * and provides a bridge for core APIs to act like normal APIs.
  * @Class API
  * @constructor
@@ -55,8 +55,8 @@ Api.prototype.register = function(name, constructor) {
 
   if (this.waiters[name]) {
     for (i = 0; i < this.waiters[name].length; i += 1) {
-      this.waiters[name][i][0](constructor.bind({},
-          this.waiters[name][i][2]));
+      this.waiters[name][i].resolve(constructor.bind({},
+          this.waiters[name][i].from));
     }
     delete this.waiters[name];
   }
@@ -79,7 +79,11 @@ Api.prototype.getCore = function(name, from) {
         if (!this.waiters[name]) {
           this.waiters[name] = [];
         }
-        this.waiters[name].push([resolve, reject, from]);
+        this.waiters[name].push({
+          resolve: resolve,
+          reject: reject,
+          from: from
+        });
       }
     } else {
       fdom.debug.warn('Api.getCore asked for unknown core: ' + name);
