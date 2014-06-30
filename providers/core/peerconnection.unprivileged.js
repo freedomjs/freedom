@@ -94,6 +94,12 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   // need someone to manage "datachannel" event.
 }
 
+SimpleDataPeer.prototype.createOffer = function (constaints, continuation) {
+  this.pc.createOffer(continuation, function() {
+    console.error('core.peerconnection createOffer failed.');
+  }, constaints);
+};
+
 SimpleDataPeer.prototype.runWhenConnected = function (func) {
   if (this.pcState === SimpleDataPeerState.CONNECTED) {
     func();
@@ -445,6 +451,10 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
     }.bind(this);
     this.openDataChannel(channelId, openDataChannelContinuation);
   }
+};
+
+PeerConnection.prototype.createOffer = function (constraints, continuation) {
+  this.peer.createOffer(constraints, continuation);
 };
 
 // TODO: delay continuation until the open callback from _peer is called.

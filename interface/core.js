@@ -70,7 +70,7 @@ fdom.apis.set('core.tcpsocket', {
     'errcode': 'string',
     'message': 'string'
   }},
-  
+
   // Connect to a host and port.
   // Fails with an error if connection fails.
   'connect': {
@@ -81,7 +81,7 @@ fdom.apis.set('core.tcpsocket', {
       'message': 'string'
     }
   },
-  
+
   // Write buffer data to a socket.
   // Fails with an error if write fails.
   'write': {
@@ -260,6 +260,20 @@ fdom.apis.set('core.peerconnection', {
 
   // Returns local SDP headers from createOffer.
   'getInfo': {type: 'method', value: [], ret: 'string'},
+
+  'createOffer': {type: 'method', value: [{
+      // Optional :RTCOfferOptions object.
+      offerToReceiveVideo: 'number',
+      offerToReceiveAudio: 'number',
+      voiceActivityDetection: 'boolean',
+      iceRestart: 'boolean'
+    }],
+    ret: {
+      // Fulfills with a :RTCSessionDescription
+      'type': 'string',  // Should always be 'offer'.
+      'sdp': 'string'
+    }
+  },
 
   // Close the peer connection.
   'close': {type: 'method', value: []},
