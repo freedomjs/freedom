@@ -1,8 +1,8 @@
 ### Built files
 /freedom.js
-/freedom.map
+/freedom.js.map
 /freedom.min.js
-/freedom.min.map
+/freedom.min.js.map
 
 ### Auto-generated
 tools/doc
