@@ -303,8 +303,9 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
  */
 fdom.port.Module.prototype.loadLinks = function() {
   var i, channels = ['default'], name, dep,
-      finishLink = function(dep, provider) {
-        dep.getInterface().provideAsynchronous(provider);
+      finishLink = function(dep, name, provider) {
+        var style = fdom.apis.getInterfaceStyle(name);
+        dep.getInterface()[style](provider);
       };
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
@@ -312,7 +313,7 @@ fdom.port.Module.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
         dep = new fdom.port.Provider(fdom.apis.get(name).definition);
-        fdom.apis.getCore(name, this).then(finishLink.bind(this, dep));
+        fdom.apis.getCore(name, this).then(finishLink.bind(this, dep, name));
 
         this.emit(this.controlChannel, {
           type: 'Core Link to ' + name,

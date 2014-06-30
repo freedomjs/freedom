@@ -36,6 +36,20 @@ describe("fdom.apis", function() {
       done();
     });
   });
+  
+  it("should register core providers in promise style", function(done) {
+    var provider = function(arg) { this.arg = arg };
+
+    api.set('customCore', provider);
+    api.register('customCore', provider, 'providePromises');
+    var channel = api.getCore('customCore', 12);
+    channel.then(function(prov) {
+      var obj = new prov();
+      expect(api.getInterfaceStyle('customCore')).toEqual('providePromises');
+      expect(obj.arg).toEqual(12);
+      done();
+    });
+  });
 
   it("allows late registration of core providers", function(done) {
     var provider = function(arg) { this.arg = arg };
