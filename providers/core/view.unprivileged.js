@@ -77,7 +77,7 @@ View_unprivileged.prototype.finishOpen = function (root, frame, src,
       this.onMessage.bind(this), true);
 
   this.win = frame;
-  continuation({});
+  continuation();
 };
 
 View_unprivileged.prototype.show = function (continuation) {
