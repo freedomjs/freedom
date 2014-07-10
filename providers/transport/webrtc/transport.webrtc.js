@@ -200,9 +200,13 @@ WebRTCTransportProvider.prototype.onData = function(msg) {
   if (msg.buffer) {
     this._handleData(msg.channelLabel, msg.buffer);
   } else if (msg.binary) {
-    var fileReader = new FileReaderSync();
-    var asArrayBuffer = fileReader.readAsArrayBuffer(msg.binary);
-    this._handleData(msg.channelLabel, asArrayBuffer);
+    var fileReader = new FileReader();
+    fileReader.onload = function(handleData, channelLabel) {
+      return function(e) {
+        handleData(channelLabel, e.target.result);
+      }
+    }(this._handleData.bind(this), msg.channelLabel);
+    fileReader.readAsArrayBuffer(msg.binary);
   } else if (msg.text) {
     console.error("Strings not supported.");
   }  else {
