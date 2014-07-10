@@ -196,7 +196,7 @@ WebRTCTransportProvider.prototype.close = function(continuation) {
 
 // Called when the peer-connection receives data, it then passes it here.
 WebRTCTransportProvider.prototype.onData = function(msg) {
-   //console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
+  //console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
   if (msg.buffer) {
     this._handleData(msg.channelLabel, msg.buffer);
   } else if (msg.binary) {
