@@ -325,27 +325,37 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
       importer = function importScripts(script, resolve) {
         this.config.global.importScripts(script);
         resolve();
-      }.bind(this),
-      urls = [],
-      outstanding = 0,
-      load = function(url) {
-        urls.push(url);
-        outstanding -= 1;
-        if (outstanding === 0) {
-          if (safe) {
-            this.emit(this.externalChannel, {
-              type: 'ready'
-            });
-            this.tryLoad(importer, urls);
-          } else {
-            this.tryLoad(importer, urls).then(function() {
-              this.emit(this.externalChannel, {
-                type: 'ready'
-              });
-            }.bind(this));
-          }
-        }
       }.bind(this);
+  var scripts_count;
+  if (typeof scripts === 'string') {
+    scripts_count = 1;
+  } else {
+    scripts_count = scripts.length;
+  }
+
+  var load = function(next) {
+    if (next === scripts_count) {
+      this.emit(this.externalChannel, {
+        type: "ready"
+      });
+      return;
+    }
+
+    var script;
+    if (typeof scripts === 'string') {
+      script = scripts;
+    } else {
+      script = scripts[next];
+    }
+
+    fdom.resources.get(from, script).then(function(url) {
+      this.tryLoad(importer, url).then(function() {
+        load(next + 1);
+      }.bind(this));
+    }.bind(this));
+  }.bind(this);
+
+
 
   if (!this.config.global.importScripts) {
     safe = false;
@@ -357,15 +367,7 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
     }.bind(this);
   }
 
-  if (typeof scripts === 'string') {
-    outstanding = 1;
-    fdom.resources.get(from, scripts).then(load);
-  } else {
-    outstanding = scripts.length;
-    for (i = 0; i < scripts.length; i += 1) {
-      fdom.resources.get(from, scripts[i]).then(load);
-    }
-  }
+  load(0);
 };
 
 /**
@@ -376,18 +378,13 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
  * @param {String[]} urls The resoved URLs to load.
  * @returns {Promise} completion of load
  */
-fdom.port.ModuleInternal.prototype.tryLoad = function(importer, urls) {
-  var i,
-      promises = [];
+fdom.port.ModuleInternal.prototype.tryLoad = function(importer, url) {
   try {
-    for (i = 0; i < urls.length; i += 1) {
-      promises.push(new Promise(importer.bind({}, urls[i])));
-    }
+     return new Promise(importer.bind({}, url));
   } catch(e) {
     fdom.debug.warn(e.stack);
-    fdom.debug.error("Error loading " + urls[i], e);
+    fdom.debug.error("Error loading " + url, e);
     fdom.debug.error("If the stack trace is not useful, see https://" +
         "github.com/UWNetworksLab/freedom/wiki/Debugging-Script-Parse-Errors");
   }
-  return Promise.all(promises);
 };
