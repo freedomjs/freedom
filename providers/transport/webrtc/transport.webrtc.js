@@ -196,13 +196,23 @@ WebRTCTransportProvider.prototype.close = function(continuation) {
 
 // Called when the peer-connection receives data, it then passes it here.
 WebRTCTransportProvider.prototype.onData = function(msg) {
-  // console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
+  //console.log("TransportProvider.prototype.message: Got Message:" + JSON.stringify(msg));
   if (msg.buffer) {
     this._handleData(msg.channelLabel, msg.buffer);
   } else if (msg.binary) {
-    var fileReader = new FileReaderSync();
-    var asArrayBuffer = fileReader.readAsArrayBuffer(msg.binary);
-    this._handleData(msg.channelLabel, asArrayBuffer);
+    if (typeof FileReaderSync === 'undefined') {
+      var fileReader = new FileReader();
+      fileReader.onload = function(handleData, channelLabel) {
+        return function(e) {
+          handleData(channelLabel, e.target.result);
+        };
+      }(this._handleData.bind(this), msg.channelLabel);
+      fileReader.readAsArrayBuffer(msg.binary);
+    } else {
+      var fileReaderSync = new FileReaderSync();
+      var arrayBuffer = fileReaderSync.readAsArrayBuffer(msg.binary);
+      this._handleData(msg.channelLabel, arrayBuffer);
+    }
   } else if (msg.text) {
     console.error("Strings not supported.");
   }  else {
