@@ -320,12 +320,14 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
  * @param {String[]} scripts The URLs of the scripts to load.
  */
 fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
-  var i = 0,
-      safe = true,
-      importer = function importScripts(script, resolve) {
+  var importer = function importScripts(script, resolve, reject) {
+    try {
         this.config.global.importScripts(script);
         resolve();
-      }.bind(this);
+    } catch(e) {
+      reject(e);
+    }
+  }.bind(this);
   var scripts_count;
   if (typeof scripts === 'string') {
     scripts_count = 1;
@@ -358,8 +360,7 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
 
 
   if (!this.config.global.importScripts) {
-    safe = false;
-    importer = function(url, resolve) {
+    importer = function(url, resolve, reject) {
       var script = this.config.global.document.createElement('script');
       script.src = url;
       script.addEventListener('load', resolve, true);
@@ -379,12 +380,10 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
  * @returns {Promise} completion of load
  */
 fdom.port.ModuleInternal.prototype.tryLoad = function(importer, url) {
-  try {
-     return new Promise(importer.bind({}, url));
-  } catch(e) {
+  return new Promise(importer.bind({}, url)).catch(function(e) {
     fdom.debug.warn(e.stack);
     fdom.debug.error("Error loading " + url, e);
     fdom.debug.error("If the stack trace is not useful, see https://" +
         "github.com/UWNetworksLab/freedom/wiki/Debugging-Script-Parse-Errors");
-  }
+  });
 };
