@@ -134,4 +134,9 @@ describe('fdom.resources.httpResolver', function() {
     resources.httpResolver('http://www.example.com/path/manifest.json', '../../test.html', r, f);
     expect(spy).toHaveBeenCalledWith('http://www.example.com/test.html');
   });
+
+  it("should remove buggy cca URLs", function() {
+    resources.httpResolver('chrome-extension:////extensionid/manifest.json', 'resource.js', r, f);
+    expect(spy).toHaveBeenCalledWith('chrome-extension://extensionid/resource.js');
+  });
 });
