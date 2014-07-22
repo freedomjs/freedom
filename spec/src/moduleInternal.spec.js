@@ -42,14 +42,39 @@ describe('fdom.port.ModuleInternal', function() {
   it('handles script loading and attachment', function(done) {
     setupResolvers();
     global.document = document;
-  
+
     callback = function() {
       expect(fileIncluded).toEqual(true);
       delete callback;
       done();
     }
-    app.loadScripts(loc, 'relative://spec/helper/beacon.js');
+    app.loadScripts(loc, ['relative://spec/helper/beacon.js', 'non_existing_file']);
   });
+
+  it('load scripts sequentially', function(done) {
+    setupResolvers();
+    global.document = document;
+
+    fileIncluded = false;
+    fileIncluded0 = false;
+
+    callback0 = function() {
+      expect(fileIncluded0).toEqual(true);
+      expect(fileIncluded).toEqual(false);
+      delete callback0;
+    };
+
+    callback = function() {
+      expect(fileIncluded0).toEqual(true);
+      expect(fileIncluded).toEqual(true);
+      delete callback;
+      done();
+    };
+
+    app.loadScripts(loc, ['relative://spec/helper/beacon0.js',
+                          'relative://spec/helper/beacon.js',
+                          'non_existing_file']);
+  })
 
   it('exposes dependency apis', function(done) {
     var source = createTestPort('test');
