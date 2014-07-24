@@ -1,7 +1,7 @@
 {
   "name": "freedom",
   "description": "Embracing a distributed web",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "homepage": "http://freedomjs.com",
   "bugs": {
     "url": "http://github.com/freedomjs/freedom/issues",
