@@ -37,7 +37,9 @@
     "karma-coverage": "~0.2.1",
     "karma-sauce-launcher": "~0.2.8",
     "karma-unicorn-reporter": "^0.1.4",
-    "karma-story-reporter": "^0.2.2"
+    "karma-story-reporter": "^0.2.2",
+    "grunt-bump": "0.0.14",
+    "grunt-npm": "0.0.2"
   },
   "scripts": {
     "test": "grunt ci --verbose",

@@ -243,7 +243,29 @@ module.exports = function (grunt) {
         }
       }
     },
-    gitinfo: {}
+    gitinfo: {},
+    bump: {
+      options: {
+        files: ['package.json'],
+        commit: true,
+        commitMessage: 'Release v%VERSION%',
+        commitFiles: ['package.json'],
+        createTag: true,
+        tagName: 'v%VERSION%',
+        tagMessage: 'Version %VERSION%',
+        push: true,
+        pushTo: 'origin'
+      }
+    },
+    'npm-publish': {
+      options: {
+        // list of tasks that are required before publishing
+        requires: ['default'],
+        // if the workspace is dirty, abort publishing (to avoid publishing local changes)
+        abortIfDirty: true,
+      }
+    }
+
   });
 
   // Load tasks.
@@ -255,6 +277,8 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-bump');
+  grunt.loadNpmTasks('grunt-npm');
   
   // Default tasks.
   grunt.registerTask('build', [
@@ -299,6 +323,17 @@ module.exports = function (grunt) {
       'karma:saucelabs',
     ]);
   }
+  
+  grunt.registerTask('release', function(arg) {
+    if (arguments.length === 0) {
+      arg = 'patch';
+    }
+    grunt.task.run([
+      'bump:'+arg,
+      'npm-publish'
+    ]);
+  });
+
 
   grunt.registerTask('default', ['build', 'karma:phantom']);
 };
