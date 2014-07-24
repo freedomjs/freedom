@@ -7,6 +7,7 @@ var karmaFiles = require('./Gruntfile').unGlob([].concat(
     FILES.specPlatformUnit,
     FILES.srcProvider,
     FILES.specProviderUnit,
+    FILES.srcProviderIntegration,
     FILES.specProviderIntegration
   ));
 

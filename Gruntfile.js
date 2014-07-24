@@ -58,6 +58,11 @@ var FILES = {
     'spec/providers/core/**/*.spec.js'
   ],
   //Integration tests
+  srcProviderIntegration: [
+    'spec/providers/social/**/*.integration.src.js',
+    'spec/providers/storage/**/*.integration.src.js',
+    'spec/providers/transport/**/*.integration.src.js'
+  ],
   specProviderIntegration: [
     'spec/providers/social/**/*.integration.spec.js',
     'spec/providers/storage/**/*.integration.spec.js',
@@ -121,9 +126,8 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
     karma: {
       options: {
+        // NOTE: need to run 'connect:default' to serve files
         configFile: 'karma.conf.js',
-        // NOTE: need to run 'connect:keepalive' to serve files
-        proxies:  {'/': 'http://localhost:8000/'},
       },
       single: { singleRun: true, autoWatch: false },
       watch: { singleRun: false, autoWatch: true },
