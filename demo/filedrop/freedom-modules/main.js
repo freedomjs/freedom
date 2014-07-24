@@ -10,7 +10,9 @@ if (!window) {
 }
 // FreeDOM APIs
 var core = freedom.core();
-var social = freedom.socialprovider();
+var socialProviders = [ freedom.socialprovider() ];
+var transportProviders = [ freedom.transport ];
+var social = new SocialTransport(socialProviders, transportProviders);
 var storage = freedom.storageprovider();
 
 // Internal State
@@ -183,11 +185,12 @@ social.login({
 }).then(function(ret) {
   myClientState = ret;
   if (ret.status == social.STATUS["ONLINE"]) {
-    console.log('social.onStatus: ONLINE!');
+    console.log('social.login: ONLINE!');
     while (fetchQueue.length > 0) {
       fetch(fetchQueue.shift());
     }
   } else {
+    console.log('social.login: ERROR!');
     freedom.emit("serve-error", "Failed logging in. Status: "+ret.status);
   }
 }, function(err) {
