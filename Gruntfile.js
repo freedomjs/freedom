@@ -260,7 +260,7 @@ module.exports = function (grunt) {
     'npm-publish': {
       options: {
         // list of tasks that are required before publishing
-        requires: ['default'],
+        requires: [],
         // if the workspace is dirty, abort publishing (to avoid publishing local changes)
         abortIfDirty: true,
       }
@@ -329,6 +329,7 @@ module.exports = function (grunt) {
       arg = 'patch';
     }
     grunt.task.run([
+      'default',
       'bump:'+arg,
       'npm-publish'
     ]);
