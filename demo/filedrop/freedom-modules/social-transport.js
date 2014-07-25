@@ -56,7 +56,7 @@ SocialTransport.prototype.sendMessage = function(to, tag, msg) {
 
   var completeSend = function(to, tag, msg) {
     return this._toArrayBuffer(msg).then(function(to, tag, toSend) {
-      return this.transports[to].send(tag, toSend);
+      return this.transports[to].send(tag, toSend); 
     }.bind(this, to, tag), function() {
       return this._createReject('MALFORMEDPARAMETERS');
     }.bind(this));
@@ -83,7 +83,7 @@ SocialTransport.prototype.logout = function() {
 SocialTransport.prototype._createTransport = function(clientId) {
   var transport = this.transportProvider();
   transport.on('onData', this._onData.bind(this, clientId));
-  transport.on('onData', this._onClose.bind(this, clientId));
+  transport.on('onClose', this._onClose.bind(this, clientId));
 
   return this.freedomCore.createChannel().then(function (transport, clientId, chan) {
     chan.channel.on('message', function(clientId, msg) {
@@ -107,7 +107,7 @@ SocialTransport.prototype._toArrayBuffer = function(val) {
     return Promise.resolve(this._str2ab(val));
   } else {
     console.error('SocialTransport._toArrayBuffer(' + val + ') has unknown type: ' + (typeof val));
-    return Promise.reject();
+    return Promise.reject("Error: SocialTransport._toArrayBuffer");
   }
 };
 SocialTransport.prototype._toString = function(val) {
@@ -117,7 +117,7 @@ SocialTransport.prototype._toString = function(val) {
     return Promise.resolve(this._ab2str(val));
   } else {
     console.error('SocialTransport._toString(' + val + ') has unknown type: ' + (typeof val));
-    return Promise.reject();
+    return Promise.reject("Error: SocialTransport._toString");
   }
 };
 SocialTransport.prototype._ab2str = function (buf) {
@@ -161,7 +161,8 @@ SocialTransport.prototype._onMessage = function(val) {
 SocialTransport.prototype._onData = function(clientId, val) {
   var ret = {
     from: this.clients[clientId],
-    message: val
+    tag: val.tag,
+    data: val.data
   };
   for (var i=0; i<this.messageListeners.length; i++) {
     this.messageListeners[i](ret);
