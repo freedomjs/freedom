@@ -38,6 +38,7 @@ social.on('onMessage', function(data) {
 social.on('onUserProfile', function(data) {
   //Just save it for now
   userList[data.userId] = data;
+  updateBuddyList();
 });
 
 /**
@@ -59,15 +60,21 @@ social.on('onClientState', function(data) {
       freedom.emit('recv-status', "offline");
     }
   }
-  // Iterate over our roster and just send over userId's where there is at least 1 client online
-  var buddylist = [];
+
+  updateBuddyList();
+});
+
+function updateBuddyList() {
+  // Iterate over our roster and send over user profiles where there is at least 1 client online
+  var buddylist = {};
   for (var k in clientList) {
-    if (clientList.hasOwnProperty(k)) {
-      buddylist.push(k);
+    var userId = clientList[k].userId;
+    if (userId in userList) {
+      buddylist[userId] = userList[userId];
     }
   }
   freedom.emit('recv-buddylist', buddylist);
-});
+}
 
 /** LOGIN AT START **/
 social.login({
