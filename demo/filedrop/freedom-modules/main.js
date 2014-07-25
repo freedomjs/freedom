@@ -15,7 +15,7 @@ var social = new SocialTransport(socialProviders, transportProviders);
 var storage = freedom.storageprovider();
 
 // Actors
-var fileServer = new FileServer();
+var fileServer = new FileServer(social);
 var fileFetcher = new FileFetcher(social);
 
 // Internal State
@@ -26,11 +26,7 @@ var clientList = {};
 console.log('File Drop root module');
 
 freedom.on('serve-data', function(data) {
-  if (myClientState.status !== social.STATUS["ONLINE"]) {
-    freedom.emit('serve-error', "Error connecting to server.");
-    return;
-  }
-  fileServer.serve(data.key, data.value, data.name);
+  fileServer.serve(myClientState, data.key, data.value, data.name);
 });
 
 freedom.on('download', function(downloadDesc) {
@@ -48,10 +44,15 @@ social.on('onClientState', function(data) {
       data.clientId == myClientState.clientId) {
     myClientState = data;
   }
+  fileFetcher.onClientState(data);
 });
 
-social.on('onMessage', function(data) {
-    
+social.on('onMessage', function(val) {
+  if (val.tag == 'f2s') {
+    fileServer.onMessage(val);
+  } else {
+    fileFetcher.onMessage(val);
+  }
 });
 
 /** LOGIN AT START **/

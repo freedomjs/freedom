@@ -1,16 +1,10 @@
 function FileFetcher(inSocial) {
   this.social = inSocial;
-  this.fetchQueue = [];
-
+  this.queuedFetch = null;
 }
 
 FileFetcher.prototype.download = function(data) {
-  if (myClientState !== null && 
-      myClientState.status == social.STATUS["ONLINE"]) {
-    fetch(data);
-  } else {
-    queuedFetch = data;
-  }
+  this.queuedFetch = data;
 };
 
 FileFetcher.prototype.tryFetch = function(data) {
@@ -20,7 +14,7 @@ FileFetcher.prototype.tryFetch = function(data) {
   
   console.log("fetch: downloading " + key + " from " + serverId);
   //Tell 'em I'm comin' for them
-  social.sendMessage(serverId, 'protocol', JSON.stringify({
+  this.social.sendMessage(serverId, 'f2s', JSON.stringify({
     cmd: 'fetch',
     data: key
   })).then(function() {
@@ -29,49 +23,45 @@ FileFetcher.prototype.tryFetch = function(data) {
   });
 };
 
-FileFetcher.prototype.onMessage = function() {
-  var msg;
-  var targetId;
-  var key;
+FileFetcher.prototype.onClientState = function(val) {
+  if (val.status == this.social.STATUS["ONLINE"] &&
+      this.queuedFetch !== null &&
+      val.clientId == this.queuedFetch.targetId) {
+    this.tryFetch(this.queuedFetch);
+    this.queuedFetch = null;
+  }
+};
 
-  if (data.tag == 'file') {
-    console.log("Received data with tag: " + data.tag);
-    social.sendMessage(data.from.clientId, 'protocol', JSON.stringify({
+FileFetcher.prototype.onMessage = function(val) {
+  if (val.tag !== 's2f') {
+    console.log("Received data with tag: " + val.tag);
+    this.social.sendMessage(val.from.clientId, 'f2s', JSON.stringify({
       cmd: 'done',
-      data: queuedFetch.key 
+      data: val.tag
     })).then(function() {
     }, function(err) {
       console.error(JSON.stringify(err));
     });
-    freedom.emit('download-data', data.data);
+    freedom.emit('download-data', val.data);
     return;
   }
 
   // Try parsing message
   try {
-    data.message = social._ab2str(data.data);
-    msg = JSON.parse(data.message);
+    val.msgStr = this.social._ab2str(val.data);
+    val.msg = JSON.parse(val.msgStr);
   } catch (e) {
-    console.log("Error parsing message: " + data);
+    console.log("Error parsing message: " + JSON.stringify(val));
     return;
   }
   
-  if (data.from.clientId && msg.cmd && msg.data && msg.cmd == 'error') {
-    console.log('social.onMessage: ' + msg.data);
-    freedom.emit('download-error', msg.data);
+  if (val.from.clientId && val.msg.cmd && val.msg.data && val.msg.cmd == 'error') {
+    console.log('social.onMessage: ' + val.msg.data);
+    freedom.emit('download-error', val.msg.data);
   } else {
-    console.log("social.onMessage: Unrecognized message: " + JSON.stringify(data));
+    console.log("social.onMessage: Unrecognized message: " + JSON.stringify(val));
   }
 
 };
 
-FileFetcher.prototype.onClientState = function(data) {
-  
-  if (data.status == social.STATUS["ONLINE"] && 
-    queuedFetch !== null && data.clientId == queuedFetch.targetId) {
-    fetch(queuedFetch);
-    //setTimeout(fetch.bind({},queuedFetch),10000);
-  }
 
-
-};
