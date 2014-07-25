@@ -4,7 +4,7 @@
 window.onload = function() {
   document.getElementById('msg-input').focus();
   // If messages are going to a specific user, store that here.
-  var activeId;
+  var activeBuddylistEntry;
   var buddylist;
 
   function clearLog() {
@@ -24,10 +24,16 @@ window.onload = function() {
     br.scrollIntoView();
   }
 
+  function makeDisplayString(buddylistEntry) {
+    return buddylistEntry.name && buddylistEntry.name != buddylistEntry.userId ?
+        buddylistEntry.name + ' (' + buddylistEntry.userId + ')' :
+        buddylistEntry.userId;
+  }
+
   function redrawBuddylist() {
-    var onClick = function(jid, child) {
-      console.log("Messages will be sent to: " + activeId);
-      activeId = jid;
+    var onClick = function(buddylistEntry, child) {
+      console.log("Messages will be sent to: " + buddylistEntry.userId);
+      activeBuddylistEntry = buddylistEntry;
       redrawBuddylist();
       document.getElementById('msg-input').focus();
     };
@@ -37,15 +43,15 @@ window.onload = function() {
     buddylistDiv.innerHTML = "<b>Buddylist</b>";
 
     // Create a new element for each buddy
-    for (var i in buddylist) {
+    for (var userId in buddylist) {
       var child = document.createElement('div');
-      if (activeId == buddylist[i]) {
-        child.innerHTML = "[" + buddylist[i] + "]";
+      if (activeBuddylistEntry == buddylist[userId]) {
+        child.innerHTML = "[" + makeDisplayString(buddylist[userId]) + "]";
       } else {
-        child.innerHTML = buddylist[i];
+        child.innerHTML = makeDisplayString(buddylist[userId]);
       }
       // If the user clicks on a buddy, change our current destination for messages
-      child.addEventListener('click', onClick.bind(this, buddylist[i], child), true);
+      child.addEventListener('click', onClick.bind(this, buddylist[userId], child), true);
       buddylistDiv.appendChild(child);
     }
 
@@ -59,7 +65,10 @@ window.onload = function() {
 
   // On new messages, append it to our message log
   window.freedom.on('recv-message', function(data) {
-    var message = data.from.userId + ": " + data.message;
+    // Show the name instead of the userId, if it's available.
+    var userId = data.from.userId;
+    var displayName = buddylist[userId].name || userId;
+    var message = displayName + ": " + data.message;
     appendLog(document.createTextNode(message));
   });
   
@@ -93,7 +102,8 @@ window.onload = function() {
       var text = input.value;
       input.value = "";
       appendLog(document.createTextNode("You: " + text));
-      window.freedom.emit('send-message', {to: activeId, message: text});
+      window.freedom.emit('send-message',
+          {to: activeBuddylistEntry.userId, message: text});
     }
   };
 };
