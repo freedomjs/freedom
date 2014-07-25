@@ -62,6 +62,8 @@ fdom.apis.set('social', {
     'UNKNOWN': 'Unknown error',
     // User is currently offline
     'OFFLINE': 'User is currently offline',
+    // Improper parameters
+    'MALFORMEDPARAMETERS': 'Parameters are malformed',
 
     /** LOGIN **/
     // Error authenticating to the server (e.g. invalid credentials)

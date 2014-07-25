@@ -18,6 +18,10 @@ var Modal = {
   displayUrl: function(val) {
     $("#dropUrl").show();
     $("#dropUrl").val(val);
+    $("#dropUrl").click(function() {
+      $(this).select();
+    });
+    $("#dropUrl").click();
   },
   displayDownload: function() {
     $("#dropDownload").show();
@@ -92,7 +96,7 @@ function startServing(files) {
 var DragNDrop = {
   within: false,
   onFile: function(e) {
-    console.log(e);
+    //console.log(e);
     e = e || window.event; // get window.event if e argument missing (in IE)   
     if (e.preventDefault) { e.preventDefault(); } // stops the browser from redirecting off to the image.
     DragNDrop.within = false;

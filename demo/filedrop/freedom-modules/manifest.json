@@ -2,7 +2,12 @@
   "name": "File Drop",
   "description": "File Transfer Utility",
   "app": {
-    "script": "main.js"
+    "script": [
+      "social-transport.js",
+      "fileserver.js",
+      "filefetcher.js",
+      "main.js"
+    ]
   },
   "dependencies": {
     "socialprovider": {

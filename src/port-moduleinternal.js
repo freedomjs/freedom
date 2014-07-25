@@ -385,6 +385,6 @@ fdom.port.ModuleInternal.prototype.tryLoad = function(importer, url) {
     fdom.debug.warn(e.stack);
     fdom.debug.error("Error loading " + url, e);
     fdom.debug.error("If the stack trace is not useful, see https://" +
-        "github.com/UWNetworksLab/freedom/wiki/Debugging-Script-Parse-Errors");
+        "github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors");
   });
 };
