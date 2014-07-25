@@ -1,5 +1,5 @@
 function SocialTransport(socialProviders, transportProviders) {
-  this.social = socialProviders[0];
+  this.social = socialProviders[0]();
   this.transportProvider = transportProviders[0];
   this.ERRCODE = this.social.ERRCODE;
   this.STATUS = this.social.STATUS;

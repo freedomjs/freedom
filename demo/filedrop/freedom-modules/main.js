@@ -9,7 +9,7 @@ if (!window) {
   window = {};
 }
 // FreeDOM APIs
-var socialProviders = [ freedom.socialprovider() ];
+var socialProviders = [ freedom.socialprovider ];
 var transportProviders = [ freedom.transport ];
 var social = new SocialTransport(socialProviders, transportProviders);
 var storage = freedom.storageprovider();
