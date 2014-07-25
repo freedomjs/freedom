@@ -19,8 +19,8 @@ var storage = freedom.storageprovider();
 var myClientState = null;
 var userList = {};
 var clientList = {};
-var files = {};       // Files served from this node
-var fetchQueue = [];  // Files on queue to be downloaded
+var files = {};         // Files served from this node
+var queuedFetch = null;  // Store most recent fetch request
 
 // PC
 var connections = {};
@@ -67,7 +67,7 @@ function setupConnection(name, targetId, key) {
   connections[targetId] = freedom.transport();
   connections[targetId].on('onData', function(message) {
     console.log("Receiving data with tag: " + message.tag);
-    social.sendMessage(targetId, JSON.stringify({
+    social.sendMessage(targetId, undefined, JSON.stringify({
       cmd: 'done',
       data: key
     }));
@@ -77,7 +77,7 @@ function setupConnection(name, targetId, key) {
     // Set up the signalling channel first, it may be needed in the
     // peerconnection setup.
     chan.channel.on('message', function(msg) {
-      social.sendMessage(targetId, JSON.stringify({
+      social.sendMessage(targetId, undefined, JSON.stringify({
         cmd: 'signal',
         data: msg
       }));
@@ -94,11 +94,15 @@ function fetch(data) {
   
   console.log("fetch: downloading " + key + " from " + serverId);
   //Tell 'em I'm comin' for them
-  social.sendMessage(serverId, JSON.stringify({
+  social.sendMessage(serverId, undefined, JSON.stringify({
     cmd: 'fetch',
     data: key
-  }));
-  setupConnection("fetcher", serverId, key);
+  })).then(function() {
+    //setupConnection("fetcher", serverId, key);
+    console.log("SETUPCONNECTION");
+  }, function(err) {
+    console.error(JSON.stringify(err));
+  });
 }
 
 freedom.on('download', function(data) {
@@ -106,7 +110,7 @@ freedom.on('download', function(data) {
       myClientState.status == social.STATUS["ONLINE"]) {
     fetch(data);
   } else {
-    fetchQueue.push(data);
+    queuedFetch = data;
   }
 });
 
@@ -120,6 +124,15 @@ social.on('onClientState', function(data) {
       data.clientId == myClientState.clientId) {
     myClientState = data;
   }
+
+  console.log('onClientState:' + JSON.stringify(data));
+
+  if (data.status == social.STATUS["ONLINE"] && 
+    queuedFetch !== null && data.clientId == queuedFetch.targetId) {
+    fetch(queuedFetch);
+    queuedFetch = null;
+  }
+
 });
 
 social.on('onMessage', function(data) {
@@ -141,13 +154,14 @@ social.on('onMessage', function(data) {
     updateStats(key, 1, 0);
 
     console.log("social.onMessage: Received request for " + key + " from " + targetId);
+    console.log("SETUPCONNECTION");
     setupConnection("server-"+targetId, targetId).then(function(){ //SEND IT
       if (files[key] && files[key].data) {
         console.log("social.onMessage: Sending " + key + " to " + targetId);
         connections[targetId].send('filedrop', files[key].data);
       } else {
         console.log("social.onMessage: I don't have key: " + key);
-        social.sendMessage(targetId, JSON.stringify({
+        social.sendMessage(targetId, undefined, JSON.stringify({
           cmd: 'error',
           data: 'File missing!'
         }));
@@ -186,9 +200,6 @@ social.login({
   myClientState = ret;
   if (ret.status == social.STATUS["ONLINE"]) {
     console.log('social.login: ONLINE!');
-    while (fetchQueue.length > 0) {
-      fetch(fetchQueue.shift());
-    }
   } else {
     console.log('social.login: ERROR!');
     freedom.emit("serve-error", "Failed logging in. Status: "+ret.status);
