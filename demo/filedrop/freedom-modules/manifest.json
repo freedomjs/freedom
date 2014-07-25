@@ -4,6 +4,8 @@
   "app": {
     "script": [
       "social-transport.js",
+      "fileserver.js",
+      "filefetcher.js",
       "main.js"
     ]
   },
