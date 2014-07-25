@@ -131,6 +131,7 @@ social.on('onClientState', function(data) {
     queuedFetch !== null && data.clientId == queuedFetch.targetId) {
     fetch(queuedFetch);
     queuedFetch = null;
+    //setTimeout(fetch.bind({},queuedFetch),10000);
   }
 
 });
@@ -142,6 +143,7 @@ social.on('onMessage', function(data) {
 
   // Try parsing message
   try {
+    data.message = social._ab2str(data.message.data);
     msg = JSON.parse(data.message);
   } catch (e) {
     console.log("Error parsing message: " + data);

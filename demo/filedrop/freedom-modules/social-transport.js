@@ -42,26 +42,35 @@ SocialTransport.prototype.sendMessage = function(to, tag, msg) {
   } else if (this.clients[to].status == this.STATUS['OFFLINE']) {
     return this._createReject('OFFLINE');
   } else if (this.clients[to].status == this.STATUS['ONLINE_WITH_OTHER_APP']) {
-    return this._toString(msg).then(function(toSend){
+    return this._toString(msg).then(function(to, toSend){
       return this.social.sendMessage(to, toSend);
-    }, function() {
+    }.bind(this, to), function() {
       return this._createReject('MALFORMEDPARAMETERS');
-    });
+    }.bind(this));
   } 
 
-  //Let's setup a freedom transport if it doesn't exist
-  if (!this.transports.hasOwnProperty(to)) {
-    this.transports[to] = this._createTransport(to);
-  }
-
+  // Default tag
   if (typeof tag == 'undefined') {
     tag = 'data';
   }
-  return this._toArrayBuffer(msg).then(function(toSend) {
-    return this.transports[to].send(tag, toSend);
-  }, function() {
-    return this._createReject('MALFORMEDPARAMETERS');
-  });
+
+  var completeSend = function(to, tag, msg) {
+    return this._toArrayBuffer(msg).then(function(to, tag, toSend) {
+      return this.transports[to].send(tag, toSend);
+    }.bind(this, to, tag), function() {
+      return this._createReject('MALFORMEDPARAMETERS');
+    }.bind(this));
+  }.bind(this, to, tag, msg);
+
+  // Let's setup a freedom transport if it doesn't exist
+  if (!this.transports.hasOwnProperty(to)) {
+    return this._createTransport(to).then(function(clientId, newTransport) {
+      this.transports[clientId] = newTransport;
+      return Promise.resolve();
+    }.bind(this, to)).then(completeSend);
+  } else {
+    return completeSend();
+  }
 };
 SocialTransport.prototype.logout = function() {
   return this.social.logout();
@@ -76,15 +85,14 @@ SocialTransport.prototype._createTransport = function(clientId) {
   transport.on('onData', this._onData.bind(this, clientId));
   transport.on('onData', this._onClose.bind(this, clientId));
 
-  this.freedomCore.createChannel().then(function (clientId, chan) {
+  return this.freedomCore.createChannel().then(function (transport, clientId, chan) {
     chan.channel.on('message', function(clientId, msg) {
       this.social.sendMessage(clientId, msg);
     }.bind(this, clientId));
     this.transportSignals[clientId] = chan.channel;
     transport.setup(clientId, chan.identifier);
-  }.bind(this, clientId));
-
-  return transport;
+    return Promise.resolve(transport);
+  }.bind(this, transport, clientId));
 };
 SocialTransport.prototype._createReject = function (err) {
   return Promise.reject({
@@ -135,10 +143,18 @@ SocialTransport.prototype._onMessage = function(val) {
   var clientId = val.from.clientId;
   var message = val.message;
   this.clients[clientId] = val.from;
+
+  var completeSignal = function(clientId, message) {
+    this.transportSignals[clientId].emit('message', message);
+  }.bind(this, clientId, message);
+
   if (!this.transportSignals.hasOwnProperty(clientId)) {
-    this.transportSignals[clientId] = this._createTransport(clientId);
+    this._createTransport(clientId).then(function(clientId, newTransport) {
+      this.transports[clientId] = newTransport;
+    }.bind(this, clientId)).then(completeSignal);
+  } else {
+    completeSignal();
   }
-  this.transportSignals[clientId].emit('message', message);
 };
 
 // Registered with transport provider
