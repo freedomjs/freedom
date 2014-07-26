@@ -11,6 +11,17 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
     helper.removeListeners("s");
     cleanupIframes();
   });
+  
+  it("sets and gets keys", function(done) {
+    var callbackOne = function(ret) {
+      helper.call("s", "get", ["key"], callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      expect(ret).toEqual("myvalue");
+      helper.call("s", "clear", [], done);
+    };
+    helper.call("s", "set", ["key", "myvalue"], callbackOne);
+  });
 
   it("set returns old value", function(done) {
     var callbackOne = function(ret) {
@@ -25,22 +36,12 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
   
   });
 
-  it("sets and gets keys", function(done) {
-    var callbackOne = function(ret) {
-      helper.call("s", "get", ["key"], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      expect(ret).toEqual("myvalue");
-      helper.call("s", "clear", [], done);
-    };
-    helper.call("s", "set", ["key", "myvalue"], callbackOne);
-  });
-
   it("removes a key", function(done) {
     var callbackOne = function(ret) {
       helper.call("s", "remove", ["key"], callbackTwo);
     };
     var callbackTwo = function(ret) {
+      expect(ret).toEqual("myvalue");
       helper.call("s", "keys", [], callbackThree);
     };
     var callbackThree = function(ret) {

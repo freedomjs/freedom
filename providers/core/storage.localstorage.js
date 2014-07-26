@@ -61,8 +61,9 @@ Storage_unprivileged.prototype.set = function (key, value, continuation) {
  * @method remove
  */
 Storage_unprivileged.prototype.remove = function (key, continuation) {
+  var ret = localStorage.getItem(key);
   localStorage.removeItem(key);
-  continuation();
+  continuation(ret);
 };
 
 /**

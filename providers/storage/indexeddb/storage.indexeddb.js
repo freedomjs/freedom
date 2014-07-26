@@ -17,7 +17,7 @@ function IndexedDBStorageProvider() {
   this.handle.version = 1;
   this.handle.open = function() {
     console.log("storage.indexeddb: opening database");
-    var req = indexedDB.open(this.dbName, this.version);
+    var req = indexedDB.open(this.dbName, this.handle.version);
     req.onupgradeneeded = function(e) {
       console.log("storage.indexeddb.onupgradedneeded");
       var db = e.target.result;
@@ -34,13 +34,13 @@ function IndexedDBStorageProvider() {
     req.onsuccess = function(e) {
       console.log("storage.indexeddb: success opening database");
       this.handle.db = e.target.result;
-      this.initializing = false;
+      this.handle.initializing = false;
       this._flushQueue();
     }.bind(this);
     req.onerror = function(e) {
       console.log("storage.indexeddb: error opening database");
       console.error(e.value);
-      this.initializing = false;
+      this.handle.initializing = false;
       this._flushQueue();
     }.bind(this);
   }.bind(this);
@@ -49,7 +49,32 @@ function IndexedDBStorageProvider() {
 }
 
 IndexedDBStorageProvider.prototype.keys = function(continuation) {
-  this.store.keys().then(continuation);
+  //this.store.keys().then(continuation);
+  if (this.handle.initializing) {
+    this._pushQueue("keys", null, null, continuation);
+    return;
+  } else if (this.handle.db === null) {
+    continuation(undefined, this._createError("OFFLINE"));
+    return;
+  }
+
+  console.log('storage.indexeddb.keys');
+  var transaction = this.handle.db.transaction([ this.storeName ] , "readonly" );
+  var store = transaction.objectStore(this.storeName);
+  var request = store.openCursor();
+  var retValue = [];
+  request.onerror = function(cont, e) {
+    cont(undefined, this._createError("UNKNOWN"));
+  }.bind(this, continuation);
+  request.onsuccess = function(cont, retValue, e) {
+    var result = e.target.result;
+    if (result === null || typeof result == 'undefined') {
+      cont(retValue);
+      return;
+    }
+    retValue.push(result.key);
+    result.continue();
+  }.bind(this, continuation, retValue);
 };
 
 IndexedDBStorageProvider.prototype.get = function(key, continuation) {
@@ -67,12 +92,10 @@ IndexedDBStorageProvider.prototype.get = function(key, continuation) {
   var store = transaction.objectStore(this.storeName);
   var request = store.get(key);
   request.onerror = function(cont, e) {
-    console.log("get error");
-    cont(null);
+    cont(undefined, this._createError("UNKNOWN"));
   }.bind(this, continuation);
   request.onsuccess = function(cont, e) {
-    console.log("get success");
-    cont(e.target.result);
+    cont(e.target.result.value);
   }.bind(this, continuation);
 };
 
@@ -89,26 +112,72 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
   console.log('storage.indexeddb.set: ' + key);
   var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
   var store = transaction.objectStore(this.storeName);
-  var request = store.put({
-    key: key,
-    value: value,
-    timestamp: new Date().getTime()
-  });
-  request.onerror = function(cont, e) {
-    cont(undefined, this._createError("UNKNOWN"));
-  }.bind(this, continuation);
-  request.onsuccess = function(cont, e) {
-    cont("asdf");
-  }.bind(this, continuation);
+  var finishPut = function(continuation, key, value, retValue) {
+    var putRequest = store.put({
+      key: key,
+      value: value,
+      timestamp: new Date().getTime()
+    });
+    putRequest.onerror = function(cont, e) {
+      cont(undefined, this._createError("UNKNOWN"));
+    }.bind(this, continuation);
+    putRequest.onsuccess = function(cont, retValue, e) {
+      cont(retValue);
+    }.bind(this, continuation, retValue);
+  }.bind(this, continuation, key, value);
+
+  var getRequest = store.get(key);
+  getRequest.onerror = function(finishPut, e) {
+    finishPut(null);
+  }.bind(this, finishPut);
+  getRequest.onsuccess = function(finishPut, e) {
+    if (typeof e.target.result == 'undefined') {
+      finishPut(null);
+    } else {
+      finishPut(e.target.result.value);
+    }
+  }.bind(this, finishPut);
+
 };
 
 IndexedDBStorageProvider.prototype.remove = function(key, continuation) {
-  this.store.remove(key).then(continuation);
+  if (this.handle.initializing) {
+    this._pushQueue("remove", key, null, continuation);
+    return;
+  } else if (this.handle.db === null) {
+    continuation(undefined, this._createError("OFFLINE"));
+    return;
+  }
+
+  console.log('storage.indexeddb.remove: ' + key);
+  var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
+  var store = transaction.objectStore(this.storeName);
+  var finishRemove = function(continuation, key, retValue) {
+    var removeRequest = store.delete(key);
+    removeRequest.onerror = function(cont, e) {
+      cont(undefined, this._createError("UNKNOWN"));
+    }.bind(this, continuation);
+    removeRequest.onsuccess = function(cont, retValue, e) {
+      cont(retValue);
+    }.bind(this, continuation, retValue);
+  }.bind(this, continuation, key);
+
+  var getRequest = store.get(key);
+  getRequest.onerror = function(finishRemove, e) {
+    finishRemove(null);
+  }.bind(this, finishRemove);
+  getRequest.onsuccess = function(finishRemove, e) {
+    if (typeof e.target.result == 'undefined') {
+      finishRemove(null);
+    } else {
+      finishRemove(e.target.result.value);
+    }
+  }.bind(this, finishRemove);
+
 };
 
 IndexedDBStorageProvider.prototype.clear = function(continuation) {
   //this.store.clear().then(continuation);
-  console.log("!!!");
   if (this.handle.initializing) {
     this._pushQueue("clear", null, null, continuation);
     return;
@@ -120,6 +189,12 @@ IndexedDBStorageProvider.prototype.clear = function(continuation) {
   var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
   var store = transaction.objectStore(this.storeName);
   var request = store.clear();
+  request.onerror = function(cont, e) {
+    cont(undefined, this._createError("UNKNOWN"));
+  }.bind(this, continuation);
+  request.onsuccess = function(cont, e) {
+    cont();
+  }.bind(this, continuation);
 };
 
 
