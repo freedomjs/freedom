@@ -12,6 +12,19 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
     cleanupIframes();
   });
 
+  it("set returns old value", function(done) {
+    var callbackOne = function(ret) {
+      expect(ret).toEqual(null);
+      helper.call("s", "set", ["key", "value2"], callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      expect(ret).toEqual("value1");
+      helper.call("s", "clear", [], done);
+    };
+    helper.call("s", "set", ["key", "value1"], callbackOne);
+  
+  });
+
   it("sets and gets keys", function(done) {
     var callbackOne = function(ret) {
       helper.call("s", "get", ["key"], callbackTwo);

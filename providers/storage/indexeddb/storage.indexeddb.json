@@ -1,0 +1,12 @@
+{
+  "name": "IndexedDB Storage",
+  "description": "Backed by indexedDB",
+  "app": {
+    "script": "storage.indexeddb.js"
+  },
+  "provides": [
+    "storage"
+  ],
+  "permissions": [
+  ]
+}

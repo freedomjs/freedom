@@ -50,8 +50,9 @@ Storage_unprivileged.prototype.get = function (key, continuation) {
  * @method set
  */
 Storage_unprivileged.prototype.set = function (key, value, continuation) {
+  var ret = localStorage.getItem(key);
   localStorage.setItem(key, value);
-  continuation();
+  continuation(ret);
 };
 
 /**

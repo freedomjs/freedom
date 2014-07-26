@@ -20,13 +20,13 @@ function IsolatedStorageProvider(dispatchEvent) {
     for (i = 0; i < val.length; i += 1) {
       this.magic += val[i] + ";";
     }
-    this.flushQueue();
+    this._flushQueue();
   }.bind(this));
 }
 
 IsolatedStorageProvider.prototype.keys = function(continuation) {
   if (this.magic === "") {
-    this.pushQueue("keys", null, null, continuation);
+    this._pushQueue("keys", null, null, continuation);
     return;
   }
 
@@ -35,8 +35,8 @@ IsolatedStorageProvider.prototype.keys = function(continuation) {
     //Check that our magic has been initialized
     //Only return keys in my partition
     for (i = 0; i < val.length; i += 1) {
-      if (this.isMyKey(val[i])) {
-        result.push(this.fromStoredKey(val[i]));
+      if (this._isMyKey(val[i])) {
+        result.push(this._fromStoredKey(val[i]));
       }
     }
     continuation(result);
@@ -45,31 +45,31 @@ IsolatedStorageProvider.prototype.keys = function(continuation) {
 
 IsolatedStorageProvider.prototype.get = function(key, continuation) {
   if (this.magic === "") {
-    this.pushQueue("get", key, null, continuation);
+    this._pushQueue("get", key, null, continuation);
     return;
   } 
   
-  var promise = this.store.get(this.toStoredKey(key));
+  var promise = this.store.get(this._toStoredKey(key));
   promise.then(continuation);
 };
 
 IsolatedStorageProvider.prototype.set = function(key, value, continuation) {
   if (this.magic === "") {
-    this.pushQueue("set", key, value, continuation);
+    this._pushQueue("set", key, value, continuation);
     return;
   }
 
-  var promise = this.store.set(this.toStoredKey(key), value);
+  var promise = this.store.set(this._toStoredKey(key), value);
   promise.then(continuation);
 };
 
 IsolatedStorageProvider.prototype.remove = function(key, continuation) {
   if (this.magic === "") {
-    this.pushQueue("remove", key, null, continuation);
+    this._pushQueue("remove", key, null, continuation);
     return;
   }
   
-  var promise = this.store.remove(this.toStoredKey(key));
+  var promise = this.store.remove(this._toStoredKey(key));
   promise.then(continuation);
 };
 
@@ -78,7 +78,7 @@ IsolatedStorageProvider.prototype.clear = function(continuation) {
   promise.then(function(keys) {
     //Only remove keys in my partition
     for (i = 0; i < keys.length; i += 1) {
-      if (this.isMyKey(keys[i])) {
+      if (this._isMyKey(keys[i])) {
         this.store.remove(keys[i]);
       }
     }
@@ -88,7 +88,7 @@ IsolatedStorageProvider.prototype.clear = function(continuation) {
 
 /** INTERNAL METHODS **/
 //Insert call into queue
-IsolatedStorageProvider.prototype.pushQueue = function(method, key, value, continuation) {
+IsolatedStorageProvider.prototype._pushQueue = function(method, key, value, continuation) {
   this.queue.push({
     cmd: method,
     key: key,
@@ -98,7 +98,7 @@ IsolatedStorageProvider.prototype.pushQueue = function(method, key, value, conti
 };
 
 //Flush commands in queue
-IsolatedStorageProvider.prototype.flushQueue = function() {
+IsolatedStorageProvider.prototype._flushQueue = function() {
   var i, elt;
   for (i = 0; i < this.queue.length; i += 1) {
     elt = this.queue[i];
@@ -110,6 +110,8 @@ IsolatedStorageProvider.prototype.flushQueue = function() {
       this.set(elt.key, elt.value, elt.cont);
     } else if (elt.cmd === "remove") {
       this.remove(elt.key, elt.cont);
+    } else if (elt.cmd === "clear") {
+      this.clear(elt.cont);
     } else {
       console.error("Isolated Storage: unrecognized command " + JSON.stringify(elt));
     }
@@ -120,18 +122,18 @@ IsolatedStorageProvider.prototype.flushQueue = function() {
 
 // From caller's key => stored key
 // e.g. 'keyA' => 'partition1+keyA'
-IsolatedStorageProvider.prototype.toStoredKey = function(key) {
+IsolatedStorageProvider.prototype._toStoredKey = function(key) {
   return (this.magic + key);
 };
 
 // From stored key => caller's key
 // e.g. 'partition1+keyA' => 'keyA'
-IsolatedStorageProvider.prototype.fromStoredKey = function(key) {
+IsolatedStorageProvider.prototype._fromStoredKey = function(key) {
   return key.substr(this.magic.length);
 };
 
 // Check if this stored key is in my partition
-IsolatedStorageProvider.prototype.isMyKey = function(storedKey) {
+IsolatedStorageProvider.prototype._isMyKey = function(storedKey) {
   return (storedKey.substr(0, this.magic.length) === this.magic);
 };
 

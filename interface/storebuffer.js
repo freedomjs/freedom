@@ -5,8 +5,10 @@
  *
  * API for Persistent Storage
  * Exposes a key-value get/put interface
+ * Currently identical to storage.js, except
+ * all values are ArrayBuffers
  **/
-fdom.apis.set("storage", {
+fdom.apis.set("storebuffer", {
   /** 
    * List of scopes that can preferred when accessing storage.
   **/
@@ -19,20 +21,6 @@ fdom.apis.set("storage", {
     'USER_LOCAL': 2,
     // Storage should be synchronized across users.
     'SHARED': 3
-  }},
-
-  /** 
-   * error codes and default messages that may be returned on failures.
-   */
-  'ERRCODE': {type: 'constant', value: {
-    /** GENERAL **/
-    'SUCCESS': 'Success!',
-    // Unknown
-    'UNKNOWN': 'Unknown error',
-    // Database not ready
-    'OFFLINE': 'Database not reachable',
-    // Improper parameters
-    'MALFORMEDPARAMETERS': 'Parameters are malformed'
   }},
 
   /**
@@ -73,7 +61,7 @@ fdom.apis.set("storage", {
   'get': {
     type: "method",
     value: ["string"],
-    ret: "string",
+    ret: "buffer",
     err: {
       "errcode": "string",
       "message": "string"
@@ -91,7 +79,7 @@ fdom.apis.set("storage", {
    **/
   'set': {
     type: "method",
-    value: ["string", "string"],
+    value: ["string", "buffer"],
     ret: "string",
     err: {
       "errcode": "string",
