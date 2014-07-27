@@ -1,8 +1,35 @@
-var STORAGE_INTEGRATION_SPEC = function(provider_url) { 
+var STORAGE_INTEGRATION_SPEC = function(provider_url, useArrayBuffer) { 
   var helper;
 
+  function beforeSet(str) {
+    if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
+      return str;
+    } else {
+      var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+      var bufView = new Uint16Array(buf);
+      for (var i=0, strLen=str.length; i<strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+      }
+      return buf;
+    }
+  }
+
+  function afterGet(val) {
+    if (val == null) {
+      return null;
+    } else if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
+      return val;
+    } else {
+      return String.fromCharCode.apply(null, new Uint16Array(val));
+    }
+  }
+
   beforeEach(function(done) {
-    helper = providerFor(provider_url, "storage")
+    if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
+      helper = providerFor(provider_url, "storage")
+    } else {
+      helper = providerFor(provider_url, "storebuffer")
+    }
     helper.create("s");
     helper.call("s", "clear", [], done);
   });
@@ -17,22 +44,23 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
       helper.call("s", "get", ["key"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(ret).toEqual("myvalue");
+      expect(afterGet(ret)).toEqual("myvalue");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key", "myvalue"], callbackOne);
+    console.log(beforeSet("myvalue"));
+    helper.call("s", "set", ["key", beforeSet("myvalue")], callbackOne);
   });
 
   it("set returns old value", function(done) {
     var callbackOne = function(ret) {
-      expect(ret).toEqual(null);
+      expect(afterGet(ret)).toEqual(null);
       helper.call("s", "set", ["key", "value2"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(ret).toEqual("value1");
+      expect(afterGet(ret)).toEqual("value1");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key", "value1"], callbackOne);
+    helper.call("s", "set", ["key", beforeSet("value1")], callbackOne);
   
   });
 
@@ -41,19 +69,19 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
       helper.call("s", "remove", ["key"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(ret).toEqual("myvalue");
+      expect(afterGet(ret)).toEqual("myvalue");
       helper.call("s", "keys", [], callbackThree);
     };
     var callbackThree = function(ret) {
       expect(ret).toEqual([]);
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key", "myvalue"], callbackOne);
+    helper.call("s", "set", ["key", beforeSet("myvalue")], callbackOne);
   });
 
   it("lists keys that have been set", function(done) {
     var callbackOne = function(ret) {
-      helper.call("s", "set", ["k2", "v2"], callbackTwo);
+      helper.call("s", "set", ["k2", beforeSet("v2")], callbackTwo);
     };
     var callbackTwo = function(ret) {
       helper.call("s", "keys", [], callbackThree);
@@ -64,7 +92,7 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
       expect(ret).toContain("k2");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["k1", "v1"], callbackOne);
+    helper.call("s", "set", ["k1", beforeSet("v1")], callbackOne);
   });
 
   it("clears the store", function(done) {
@@ -78,7 +106,7 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
       expect(ret.length).toEqual(0);
       done();
     };
-    helper.call("s", "set", ["key", "value"], callbackOne);
+    helper.call("s", "set", ["key", beforeSet("value")], callbackOne);
   });
 
   it("shares data between different instances", function(done) {
@@ -86,14 +114,14 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url) {
       helper.call("s2", "get", ["key"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(ret).toEqual("value");
+      expect(afterGet(ret)).toEqual("value");
       helper.call("s", "clear", [], callbackThree);
     };
     var callbackThree = function(ret) {
       helper.call("s2", "clear", [], done);
     };
     helper.create("s2");
-    helper.call("s", "set", ["key", "value"], callbackOne);
+    helper.call("s", "set", ["key", beforeSet("value")], callbackOne);
   });
 };
 

@@ -95,7 +95,13 @@ IndexedDBStorageProvider.prototype.get = function(key, continuation) {
     cont(undefined, this._createError("UNKNOWN"));
   }.bind(this, continuation);
   request.onsuccess = function(cont, e) {
-    cont(e.target.result.value);
+    var retValue = e.target.result.value;
+    if (retValue !== null && retValue.length) {
+      console.log("storage.indexeddb.get: return string length " + retValue.length);
+    } else if (retValue !== null && retValue.byteLength) {
+      console.log("storage.indexeddb.get: return string length " + retValue.byteLength);
+    }
+    cont(retValue);
   }.bind(this, continuation);
 };
 
@@ -110,6 +116,11 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
   }
 
   console.log('storage.indexeddb.set: ' + key);
+  if (value !== null && value.length) {
+    console.log('storage.indexeddb.set: string value length ' + value.length);
+  } else if (value !== null && value.byteLength) {
+    console.log('storage.indexeddb.set: buffer value length ' + value.byteLength);
+  }
   var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
   var store = transaction.objectStore(this.storeName);
   var finishPut = function(continuation, key, value, retValue) {
@@ -122,6 +133,11 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
       cont(undefined, this._createError("UNKNOWN"));
     }.bind(this, continuation);
     putRequest.onsuccess = function(cont, retValue, e) {
+      if (retValue !== null && retValue.length) {
+        console.log("storage.indexeddb.set: return string length " + retValue.length);
+      } else if (retValue !== null && retValue.byteLength) {
+        console.log("storage.indexeddb.set: return string length " + retValue.byteLength);
+      }
       cont(retValue);
     }.bind(this, continuation, retValue);
   }.bind(this, continuation, key, value);
@@ -158,6 +174,11 @@ IndexedDBStorageProvider.prototype.remove = function(key, continuation) {
       cont(undefined, this._createError("UNKNOWN"));
     }.bind(this, continuation);
     removeRequest.onsuccess = function(cont, retValue, e) {
+      if (retValue !== null && retValue.length) {
+        console.log("storage.indexeddb.remove: return string length " + retValue.length);
+      } else if (retValue !== null && retValue.byteLength) {
+        console.log("storage.indexeddb.remove: return string length " + retValue.byteLength);
+      }
       cont(retValue);
     }.bind(this, continuation, retValue);
   }.bind(this, continuation, key);
@@ -245,4 +266,7 @@ IndexedDBStorageProvider.prototype._flushQueue = function() {
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
   freedom.storage().provideAsynchronous(IndexedDBStorageProvider);
+}
+if (typeof freedom !== 'undefined') {
+  freedom.storebuffer().provideAsynchronous(IndexedDBStorageProvider);
 }
