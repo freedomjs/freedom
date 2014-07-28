@@ -8,7 +8,11 @@
 function IndexedDBStorageProvider() {
   this.dbName = 'freedomjs';
   this.storeName = 'freedomjs';
-  this.freedomStorage = freedom.storage();
+  if (typeof freedom.storage !== 'undefined') {
+    this.ERRCODE = freedom.storage().ERRCODE;
+  } else if (typeof freedom.storebuffer !== 'undefined') {
+    this.ERRCODE = freedom.storebuffer().ERRCODE;
+  }
   this.queue = [];
 
   this.handle = {};
@@ -44,7 +48,7 @@ function IndexedDBStorageProvider() {
       this._flushQueue();
     }.bind(this);
   }.bind(this);
-  console.log("IndexDB Storage Provider, running in worker " + self.location.href);
+  // console.log("IndexDB Storage Provider, running in worker " + self.location.href);
   this.handle.open();
 }
 
@@ -58,7 +62,7 @@ IndexedDBStorageProvider.prototype.keys = function(continuation) {
     return;
   }
 
-  console.log('storage.indexeddb.keys');
+  // console.log('storage.indexeddb.keys');
   var transaction = this.handle.db.transaction([ this.storeName ] , "readonly" );
   var store = transaction.objectStore(this.storeName);
   var request = store.openCursor();
@@ -87,7 +91,7 @@ IndexedDBStorageProvider.prototype.get = function(key, continuation) {
     return;
   }
 
-  console.log('storage.indexeddb.get: ' + key);
+  // console.log('storage.indexeddb.get: ' + key);
   var transaction = this.handle.db.transaction([ this.storeName ] , "readonly" );
   var store = transaction.objectStore(this.storeName);
   var request = store.get(key);
@@ -96,11 +100,13 @@ IndexedDBStorageProvider.prototype.get = function(key, continuation) {
   }.bind(this, continuation);
   request.onsuccess = function(cont, e) {
     var retValue = e.target.result.value;
+    /**
     if (retValue !== null && retValue.length) {
       console.log("storage.indexeddb.get: return string length " + retValue.length);
     } else if (retValue !== null && retValue.byteLength) {
       console.log("storage.indexeddb.get: return string length " + retValue.byteLength);
     }
+    **/
     cont(retValue);
   }.bind(this, continuation);
 };
@@ -115,12 +121,14 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
     return;
   }
 
+  /**
   console.log('storage.indexeddb.set: ' + key);
   if (value !== null && value.length) {
     console.log('storage.indexeddb.set: string value length ' + value.length);
   } else if (value !== null && value.byteLength) {
     console.log('storage.indexeddb.set: buffer value length ' + value.byteLength);
   }
+  **/
   var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
   var store = transaction.objectStore(this.storeName);
   var finishPut = function(continuation, key, value, retValue) {
@@ -133,11 +141,13 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
       cont(undefined, this._createError("UNKNOWN"));
     }.bind(this, continuation);
     putRequest.onsuccess = function(cont, retValue, e) {
+      /**
       if (retValue !== null && retValue.length) {
         console.log("storage.indexeddb.set: return string length " + retValue.length);
       } else if (retValue !== null && retValue.byteLength) {
         console.log("storage.indexeddb.set: return string length " + retValue.byteLength);
       }
+      **/
       cont(retValue);
     }.bind(this, continuation, retValue);
   }.bind(this, continuation, key, value);
@@ -165,7 +175,7 @@ IndexedDBStorageProvider.prototype.remove = function(key, continuation) {
     return;
   }
 
-  console.log('storage.indexeddb.remove: ' + key);
+  // console.log('storage.indexeddb.remove: ' + key);
   var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
   var store = transaction.objectStore(this.storeName);
   var finishRemove = function(continuation, key, retValue) {
@@ -174,11 +184,13 @@ IndexedDBStorageProvider.prototype.remove = function(key, continuation) {
       cont(undefined, this._createError("UNKNOWN"));
     }.bind(this, continuation);
     removeRequest.onsuccess = function(cont, retValue, e) {
+      /**
       if (retValue !== null && retValue.length) {
         console.log("storage.indexeddb.remove: return string length " + retValue.length);
       } else if (retValue !== null && retValue.byteLength) {
         console.log("storage.indexeddb.remove: return string length " + retValue.byteLength);
       }
+      **/
       cont(retValue);
     }.bind(this, continuation, retValue);
   }.bind(this, continuation, key);
@@ -206,7 +218,7 @@ IndexedDBStorageProvider.prototype.clear = function(continuation) {
     continuation(undefined, this._createError("OFFLINE"));
     return;
   }
-  console.log('storage.indexeddb.clear: clearing');
+  // console.log('storage.indexeddb.clear: clearing');
   var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
   var store = transaction.objectStore(this.storeName);
   var request = store.clear();
@@ -222,16 +234,16 @@ IndexedDBStorageProvider.prototype.clear = function(continuation) {
 /** INTERNAL METHODS **/
 // Create an error message
 IndexedDBStorageProvider.prototype._createError = function(code) {
-  console.log("Creating error: " + code);
+  // console.log("Creating error: " + code);
   return {
     errcode: code,
-    message: this.freedomStorage.ERRCODE[code]
+    message: this.ERRCODE[code]
   };
 };
 
 //Insert call into queue
 IndexedDBStorageProvider.prototype._pushQueue = function(method, key, value, continuation) {
-  //console.log("Pushing onto queue: " + method);
+  // console.log("Pushing onto queue: " + method);
   this.queue.push({
     cmd: method,
     key: key,
@@ -264,9 +276,11 @@ IndexedDBStorageProvider.prototype._flushQueue = function() {
 
 
 /** REGISTER PROVIDER **/
-if (typeof freedom !== 'undefined') {
+if (typeof freedom !== 'undefined' &&
+    typeof freedom.storage !== 'undefined') {
   freedom.storage().provideAsynchronous(IndexedDBStorageProvider);
 }
-if (typeof freedom !== 'undefined') {
+if (typeof freedom !== 'undefined' &&
+    typeof freedom.storebuffer !== 'undefined') {
   freedom.storebuffer().provideAsynchronous(IndexedDBStorageProvider);
 }

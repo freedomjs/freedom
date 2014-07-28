@@ -5,7 +5,7 @@
     "script": "storage.indexeddb.js"
   },
   "provides": [
-    "storage"
+    "storebuffer"
   ],
   "permissions": [
   ]
