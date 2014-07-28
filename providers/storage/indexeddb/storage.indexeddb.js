@@ -16,10 +16,10 @@ function IndexedDBStorageProvider() {
   this.handle.db = null;
   this.handle.version = 1;
   this.handle.open = function() {
-    console.log("storage.indexeddb: opening database");
+    // console.log("storage.indexeddb: opening database");
     var req = indexedDB.open(this.dbName, this.handle.version);
     req.onupgradeneeded = function(e) {
-      console.log("storage.indexeddb.onupgradedneeded");
+      // console.log("storage.indexeddb.onupgradedneeded");
       var db = e.target.result;
       var store;
       e.target.transaction.onerror = function(e) {
@@ -32,13 +32,13 @@ function IndexedDBStorageProvider() {
       } 
     }.bind(this);
     req.onsuccess = function(e) {
-      console.log("storage.indexeddb: success opening database");
+      // console.log("storage.indexeddb: success opening database");
       this.handle.db = e.target.result;
       this.handle.initializing = false;
       this._flushQueue();
     }.bind(this);
     req.onerror = function(e) {
-      console.log("storage.indexeddb: error opening database");
+      // console.log("storage.indexeddb: error opening database");
       console.error(e.value);
       this.handle.initializing = false;
       this._flushQueue();
@@ -231,7 +231,7 @@ IndexedDBStorageProvider.prototype._createError = function(code) {
 
 //Insert call into queue
 IndexedDBStorageProvider.prototype._pushQueue = function(method, key, value, continuation) {
-  console.log("Pushing onto queue: " + method);
+  //console.log("Pushing onto queue: " + method);
   this.queue.push({
     cmd: method,
     key: key,

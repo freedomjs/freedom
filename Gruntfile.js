@@ -130,7 +130,13 @@ module.exports = function (grunt) {
         configFile: 'karma.conf.js',
       },
       single: { singleRun: true, autoWatch: false },
-      watch: { singleRun: false, autoWatch: true },
+      watch: { 
+        singleRun: false, 
+        autoWatch: true,
+        reporters: ['progress', 'story'],
+        preprocessors: {},
+        coverageReporter: {}
+      },
       phantom: { 
         exclude: unGlob(FILES.srcJasmineHelper).exclude.concat(
           FILES.specProviderIntegration

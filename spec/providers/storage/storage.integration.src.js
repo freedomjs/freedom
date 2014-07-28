@@ -47,14 +47,13 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url, useArrayBuffer) {
       expect(afterGet(ret)).toEqual("myvalue");
       helper.call("s", "clear", [], done);
     };
-    console.log(beforeSet("myvalue"));
     helper.call("s", "set", ["key", beforeSet("myvalue")], callbackOne);
   });
 
   it("set returns old value", function(done) {
     var callbackOne = function(ret) {
       expect(afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key", "value2"], callbackTwo);
+      helper.call("s", "set", ["key", beforeSet("value2")], callbackTwo);
     };
     var callbackTwo = function(ret) {
       expect(afterGet(ret)).toEqual("value1");
