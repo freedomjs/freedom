@@ -1,0 +1,34 @@
+{
+  "name": "File Drop",
+  "description": "File Transfer Utility",
+  "app": {
+    "script": [
+      "freedom-modules/social-transport.js",
+      "freedom-modules/fileserver.js",
+      "freedom-modules/filefetcher.js",
+      "freedom-modules/main.js"
+    ],
+    "index": "index.html",
+    "static": [
+      "file.png",
+      "FileSaver.js",
+      "page.js",
+      "page.css",
+      "style.css"
+    ]
+  },
+  "dependencies": {
+    "socialprovider": {
+      "url": "../../providers/social/websocket-server/social.ws.json",
+      "api": "social"
+    },
+    "storageprovider": {
+      "url": "../../providers/storage/isolated/storage.isolated.json",
+      "api": "storage"
+    },
+    "transport": {
+      "url": "../../providers/transport/webrtc/transport.webrtc.json",
+      "api": "transport"
+    }
+  }
+}

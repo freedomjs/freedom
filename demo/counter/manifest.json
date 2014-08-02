@@ -2,6 +2,8 @@
   "name": "Counter",
   "description": "Counter Sample freedom.js application",
   "app": {
-    "script": "counter.js"
+    "script": "counter.js",
+    "index": "index.html",
+    "static": [ "style.css" ]
   }
 }

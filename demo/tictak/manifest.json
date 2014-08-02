@@ -2,11 +2,13 @@
   "name": "Tic Tak",
   "description": "Tic Tak Sample freedom.js application",
   "app": {
-    "script": "main.js"
+    "script": "main.js",
+    "index": "index.html",
+    "static": [ "style.css" ]
   },
   "dependencies": {
     "localstorage": {
-      "url": "../../providers/storage/isolated/storage.isolated.json",
+      "url": "../../providers/storage/shared/storage.shared.json",
       "api": "storage"
     }
   }
