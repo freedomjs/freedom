@@ -1,4 +1,4 @@
-/*globals freedom:true, fdom, WebSocket, console*/
+/*globals freedom:true, fdom, WebSocket, console, require*/
 /*jslint sloppy:true*/
 
 /**
@@ -10,7 +10,16 @@
  * @param {WebSocket?} socket An alternative socket class to use.
  */
 var WS = function (module, dispatchEvent, url, protocols, socket) {
-  var WSImplementation = socket || WebSocket;
+  var WSImplementation = null;
+  if (typeof socket !== 'undefined') {
+    WSImplementation = socket;
+  } else if (typeof WebSocket !== 'undefined') {
+    WSImplementation = WebSocket;
+  } else if (typeof require !== 'undefined') {
+    WSImplementation = require('ws');
+  } else {
+    console.error('Platform does not support WebSocket');
+  }
 
   this.dispatchEvent = dispatchEvent;
   try {
@@ -103,9 +112,9 @@ WS.prototype.onOpen = function(event) {
 
 WS.prototype.onMessage = function(event) {
   var data = {};
-  if (event.data instanceof ArrayBuffer) {
+  if (typeof ArrayBuffer !== 'undefined' && event.data instanceof ArrayBuffer) {
     data.buffer = data;
-  } else if (event.data instanceof Blob) {
+  } else if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
     data.binary = data;
   } else if (typeof event.data === 'string') {
     data.text = event.data;
