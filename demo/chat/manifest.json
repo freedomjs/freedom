@@ -5,7 +5,7 @@
     "script": "main.js",
     "index": "index.html",
     "static": [ 
-      "style.css",
+      "../style.css",
       "ux.js"
     ]
   },

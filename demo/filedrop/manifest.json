@@ -14,7 +14,7 @@
       "FileSaver.js",
       "page.js",
       "page.css",
-      "style.css"
+      "../style.css"
     ]
   },
   "dependencies": {

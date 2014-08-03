@@ -4,6 +4,6 @@
   "app": {
     "script": "counter.js",
     "index": "index.html",
-    "static": [ "style.css" ]
+    "static": [ "../style.css" ]
   }
 }
