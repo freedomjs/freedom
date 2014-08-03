@@ -11,6 +11,7 @@ var social = freedom.socialprovider();
 var userList = {};    //Keep track of the roster
 var clientList = {};
 var myClientState = null;
+var messages = [];
 
 /** 
  * on a 'send-message' event from the parent (the outer page)
@@ -24,11 +25,27 @@ freedom.on('send-message', function(val) {
   });
 });
 
+freedom.on('boot', function(val) {
+  if (myClientState !== null) {
+    if (myClientState.status == social.STATUS["ONLINE"]) {
+      freedom.emit('recv-uid', myClientState.clientId);
+      freedom.emit('recv-status', "online");
+    } else {
+      freedom.emit('recv-status', "offline");
+    }
+  }
+  updateBuddyList();
+  for (var i=0; i<messages.length; i++) {
+    freedom.emit('recv-message', messages[i]);
+  }
+});
+
 /**
  * on an 'onMessage' event from the Social provider
  * Just forward it to the outer page
  */
 social.on('onMessage', function(data) {
+  messages.push(data);
   freedom.emit('recv-message', data);
 });
 
@@ -75,6 +92,7 @@ function updateBuddyList() {
   }
   freedom.emit('recv-buddylist', buddylist);
 }
+
 
 /** LOGIN AT START **/
 social.login({

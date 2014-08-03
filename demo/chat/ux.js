@@ -106,4 +106,6 @@ window.onload = function() {
           {to: activeBuddylistEntry.userId, message: text});
     }
   };
+
+  freedom.emit('boot');
 };
