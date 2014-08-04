@@ -39,7 +39,7 @@ describe("fdom.Port.Proxy", function() {
     expect(spy).toHaveBeenCalledWith('thing');
   });
   
-  it("sends constructor arguments to appropraite interface", function() {
+  it("sends constructor arguments to appropriate interface", function() {
     var arg = undefined;
     var myInterface = function(onMsg, emit, x) {
       arg = x;
@@ -51,6 +51,11 @@ describe("fdom.Port.Proxy", function() {
       channel: 'message'
     });
     var iface = port.getInterface('arg1');
+    expect(arg).toEqual('arg1');
+
+    arg = undefined;
+    var proxy = port.getProxyInterface();
+    proxy('arg1');
     expect(arg).toEqual('arg1');
   });
 

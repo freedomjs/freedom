@@ -101,7 +101,7 @@ fdom.port.Proxy.prototype.getProxyInterface = function() {
   var func = function(p) {
     var args = Array.prototype.slice.call(arguments, 1);
     if (args.length > 0) {
-      return p.getInterface(args);
+      return p.getInterface.apply(p, args);
     } else {
       return p.getInterface();
     }
