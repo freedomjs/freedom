@@ -38,6 +38,33 @@ describe("fdom.Port.Provider", function() {
     expect(constructspy).toHaveBeenCalled();
   });
 
+  it("constructs interfaces with arguments in a reasonable way.", function() {
+    var definition = {
+      'constructor': {value: ['object']}
+    };
+    port = new fdom.port.Provider(definition);
+    var iface = port.getInterface();
+    expect(iface['provideSynchronous']).toBeDefined();
+
+    o = function(dispatchEvent, arg) {
+      constructspy(arg);
+    };
+    iface.provideSynchronous(o);
+    // setup.
+    port.onMessage('default', {
+      channel: 'message'
+    });
+    expect(constructspy).not.toHaveBeenCalled();
+
+    port.onMessage('default', {to: 'testInst', type:'message', message:{
+      'type': 'construct',
+      'text': [{'test':'hi'}],
+      'binary': []
+    }});
+
+    expect(constructspy).toHaveBeenCalledWith({'test':'hi'});
+  });
+
   it("allows promises to be used.", function(done) {
     var iface = port.getInterface();
     var o = function() {};

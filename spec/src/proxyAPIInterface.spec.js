@@ -67,6 +67,25 @@ describe("fdom.proxy.APIInterface", function() {
     var api = new apimaker('my param');
   });
 
+  it("Doesn't encapuslate constructor args as an array.", function(done) {
+    var iface = {
+      'constructor': {value: ['object']}
+    };
+    var onMsg = function(obj, r) {
+        reg = r;
+      };
+    var callback = function(msg) {
+      expect(msg).toEqual({
+        'type': 'construct',
+        'text': [{'test':'hi'}],
+        'binary': []
+      });
+      done();
+    };
+    var apimaker = fdom.proxy.ApiInterface.bind({}, iface, onMsg, callback);
+    var api = new apimaker({'test':'hi'});
+  });
+
   it("Rejects methods on failure.", function(done) {
     var promise = api.test('hi'),
         spy = jasmine.createSpy('fail');
