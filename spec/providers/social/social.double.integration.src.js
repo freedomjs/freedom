@@ -73,13 +73,21 @@ var SOCIAL_DOUBLE_INTEGRATION_SPEC = function(provider_url) {
 
     helper.on("SocialA", "onClientState", function(info) {
       receivedClientState.push(info);
-      if (receivedClientState.length >= 2 && clientStateB !== null && !ranExpectations &&
-         info.userId === clientStateB.userId) {
-        ranExpectations = true;
-        expect(receivedUserProfiles).toContain(makeUserProfile(clientStateB.userId));
-        expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
-        expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "OFFLINE"));
-        ids[3] = helper.call("SocialA", "logout", [], done);
+
+      if (clientStateB !== null) {
+        // Only wanna see statuses from clientB
+        receivedClientState = receivedClientState.filter(function(elt) {
+          return elt.clientId == clientStateB.clientId;
+        });
+        //Expect to see ONLINE then OFFLINE from clientB
+        if (!ranExpectations &&
+            receivedClientState.length >= 2 ) {
+          ranExpectations = true;
+          expect(receivedUserProfiles).toContain(makeUserProfile(clientStateB.userId));
+          expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
+          expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "OFFLINE"));
+          ids[3] = helper.call("SocialA", "logout", [], done);
+        }
       }
     });
 
