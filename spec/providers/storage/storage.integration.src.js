@@ -41,57 +41,57 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url, useArrayBuffer) {
   
   it("sets and gets keys", function(done) {
     var callbackOne = function(ret) {
-      helper.call("s", "get", ["key"], callbackTwo);
+      helper.call("s", "get", ["key-a"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("myvalue");
+      expect(afterGet(ret)).toEqual("value-a");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key", beforeSet("myvalue")], callbackOne);
+    helper.call("s", "set", ["key-a", beforeSet("value-a")], callbackOne);
   });
 
   it("set returns old value", function(done) {
     var callbackOne = function(ret) {
       expect(afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key", beforeSet("value2")], callbackTwo);
+      helper.call("s", "set", ["key-b", beforeSet("value2-b")], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("value1");
+      expect(afterGet(ret)).toEqual("value1-b");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key", beforeSet("value1")], callbackOne);
+    helper.call("s", "set", ["key-b", beforeSet("value1-b")], callbackOne);
   
   });
 
   it("removes a key", function(done) {
     var callbackOne = function(ret) {
-      helper.call("s", "remove", ["key"], callbackTwo);
+      helper.call("s", "remove", ["key-c"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("myvalue");
+      expect(afterGet(ret)).toEqual("myvalue-c");
       helper.call("s", "keys", [], callbackThree);
     };
     var callbackThree = function(ret) {
       expect(ret).toEqual([]);
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key", beforeSet("myvalue")], callbackOne);
+    helper.call("s", "set", ["key-c", beforeSet("myvalue-c")], callbackOne);
   });
 
   it("lists keys that have been set", function(done) {
     var callbackOne = function(ret) {
-      helper.call("s", "set", ["k2", beforeSet("v2")], callbackTwo);
+      helper.call("s", "set", ["k2-d", beforeSet("v2-d")], callbackTwo);
     };
     var callbackTwo = function(ret) {
       helper.call("s", "keys", [], callbackThree);
     };
     var callbackThree = function(ret) {
       expect(ret.length).toEqual(2);
-      expect(ret).toContain("k1");
-      expect(ret).toContain("k2");
+      expect(ret).toContain("k1-d");
+      expect(ret).toContain("k2-d");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["k1", beforeSet("v1")], callbackOne);
+    helper.call("s", "set", ["k1-d", beforeSet("v1-d")], callbackOne);
   });
 
   it("clears the store", function(done) {
@@ -105,7 +105,7 @@ var STORAGE_INTEGRATION_SPEC = function(provider_url, useArrayBuffer) {
       expect(ret.length).toEqual(0);
       done();
     };
-    helper.call("s", "set", ["key", beforeSet("value")], callbackOne);
+    helper.call("s", "set", ["key-e", beforeSet("value-e")], callbackOne);
   });
 
   //@todo - not sure if this is even desired behavior
