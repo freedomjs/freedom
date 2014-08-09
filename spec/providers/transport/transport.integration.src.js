@@ -1,4 +1,9 @@
-var TRANSPORT_INTEGRATION_SPEC = function(provider_url) { 
+var INTEGRATIONTEST;
+if (typeof INTEGRATIONTEST == 'undefined') {
+  INTEGRATIONTEST = {};
+}
+
+INTEGRATIONTEST.transport = function(provider_url) { 
   var helper, signals;
 
   beforeEach(function() {

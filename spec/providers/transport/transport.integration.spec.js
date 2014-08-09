@@ -1,1 +1,1 @@
-describe("integration: transport.webrtc.json", TRANSPORT_INTEGRATION_SPEC.bind(this, "/providers/transport/webrtc/transport.webrtc.json"));
+describe("integration: transport.webrtc.json", INTEGRATIONTEST.transport.bind(this, "/providers/transport/webrtc/transport.webrtc.json"));

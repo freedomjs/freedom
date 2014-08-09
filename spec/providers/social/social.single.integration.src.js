@@ -1,4 +1,12 @@
-var SOCIAL_SINGLE_INTEGRATION_SPEC = function(provider_url) {
+var INTEGRATIONTEST;
+if (typeof INTEGRATIONTEST == 'undefined') {
+  INTEGRATIONTEST = {};
+}
+if (typeof INTEGRATIONTEST.social == 'undefined') {
+  INTEGRATIONTEST.social = {};
+}
+
+INTEGRATIONTEST.social.single = function(provider_url) {
   var helper;
   var ERRCODE = fdom.apis.get("social").definition.ERRCODE.value;
 

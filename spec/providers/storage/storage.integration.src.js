@@ -1,4 +1,17 @@
-var STORAGE_INTEGRATION_SPEC = function(provider_url, useArrayBuffer) { 
+var INTEGRATIONTEST;
+if (typeof INTEGRATIONTEST == 'undefined') {
+  INTEGRATIONTEST = {};
+}
+
+INTEGRATIONTEST.storage = function(provider_url) {
+  INTEGRATIONTEST._storage(provider_url, false);
+};
+
+INTEGRATIONTEST.storebuffer = function(provider_url) {
+  INTEGRATIONTEST._storage(provider_url, true);
+};
+
+INTEGRATIONTEST._storage = function(provider_url, useArrayBuffer) { 
   var helper;
 
   function beforeSet(str) {
