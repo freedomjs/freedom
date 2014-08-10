@@ -7,6 +7,20 @@
  * Useful for sending large binary data between instances
  **/
 fdom.apis.set("transport", {
+  /** 
+   * error codes and default messages that may be returned on failures.
+   */
+  'ERRCODE': {type: 'constant', value: {
+    /** GENERAL **/
+    'SUCCESS': 'Success!',
+    // Unknown
+    'UNKNOWN': 'Unknown error',
+    // Database not ready
+    'OFFLINE': 'Not reachable',
+    // Improper parameters
+    'MALFORMEDPARAMETERS': 'Parameters are malformed'
+  }},
+
   /**
    * Prepare a P2P connection with initialization parameters
    * Takes in a signalling pathway (freedom.js channel), which is used
