@@ -73,7 +73,6 @@ INTEGRATIONTEST._storage = function(provider_url, useArrayBuffer) {
       helper.call("s", "clear", [], done);
     };
     helper.call("s", "set", ["key-b", beforeSet("value1-b")], callbackOne);
-  
   });
 
   it("removes a key", function(done) {
@@ -119,6 +118,30 @@ INTEGRATIONTEST._storage = function(provider_url, useArrayBuffer) {
       done();
     };
     helper.call("s", "set", ["key-e", beforeSet("value-e")], callbackOne);
+  });
+
+  it("sets work across keys", function(done) {
+    var callbackOne = function(ret) {
+      expect(afterGet(ret)).toEqual(null);
+      helper.call("s", "set", ["key2-f", beforeSet("value1-f")], callbackTwo);
+    };
+    var callbackTwo = function(ret) {
+      expect(afterGet(ret)).toEqual(null);
+      helper.call("s", "set", ["key1-f", beforeSet("value2-f")], callbackThree);
+    };
+    var callbackThree = function(ret) {
+      expect(afterGet(ret)).toEqual("value1-f");
+      helper.call("s", "set", ["key2-f", beforeSet("value1-f")], callbackFour);
+    };
+    var callbackFour = function(ret) {
+      expect(afterGet(ret)).toEqual("value1-f");
+      helper.call("s", "get", ["key1-f"], callbackFive);
+    };
+    var callbackFive = function(ret) {
+      expect(afterGet(ret)).toEqual("value2-f");
+      helper.call("s", "clear", [], done);
+    };
+    helper.call("s", "set", ["key1-f", beforeSet("value1-f")], callbackOne);
   });
 
   //@todo - not sure if this is even desired behavior
