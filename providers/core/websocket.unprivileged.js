@@ -28,6 +28,7 @@ var WS = function (module, dispatchEvent, url, protocols, socket) {
     } else {
       this.websocket = new WSImplementation(url);
     }
+    this.websocket.binaryType = 'arraybuffer';
   } catch (e) {
     var error = {};
     if (e instanceof SyntaxError) {
@@ -113,9 +114,9 @@ WS.prototype.onOpen = function(event) {
 WS.prototype.onMessage = function(event) {
   var data = {};
   if (typeof ArrayBuffer !== 'undefined' && event.data instanceof ArrayBuffer) {
-    data.buffer = data;
+    data.buffer = event.data;
   } else if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
-    data.binary = data;
+    data.binary = event.data;
   } else if (typeof event.data === 'string') {
     data.text = event.data;
   }
