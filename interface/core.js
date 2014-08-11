@@ -413,3 +413,12 @@ fdom.apis.set('core.websocket', {
     }
   }
 });
+
+fdom.apis.set('core.logger', {
+  // Log(source, message)
+  'log': {type: 'method', value: ['string', 'string']},
+  'debug': {type: 'method', value: ['string', 'string']},
+  'info': {type: 'method', value: ['string', 'string']},
+  'warn': {type: 'method', value: ['string', 'string']},
+  'error': {type: 'method', value: ['string', 'string']}
+});

@@ -16,6 +16,7 @@ fdom.port.Debug = function() {
   this.emitChannel = false;
   this.console = null;
   this.config = false;
+  this.logger = null;
   fdom.util.handleEvents(this);
 };
 
@@ -38,7 +39,7 @@ fdom.port.Debug.prototype.toString = function() {
 fdom.port.Debug.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.channel && !this.emitChannel) {
     this.emitChannel = message.channel;
-    this.config = message.config.debug;
+    this.config = message.config;
     this.console = message.config.global.console;
     this.emit('ready');
   }
@@ -53,7 +54,18 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
  * @private
  */
 fdom.port.Debug.prototype.format = function(severity, source, args) {
-  var i, alist = [];
+  var i, alist = [], argarr;
+  if (typeof args === "string" && source) {
+    try {
+      argarr = JSON.parse(args);
+      if (argarr instanceof Array) {
+        args = argarr;
+      }
+    } catch(e) {
+      // pass.
+    }
+  }
+
   if (typeof args === "string") {
     alist.push(args);
   } else {
@@ -80,29 +92,19 @@ fdom.port.Debug.prototype.format = function(severity, source, args) {
  * @param {Object} message The message emitted by {@see format} to print.
  */
 fdom.port.Debug.prototype.print = function(message) {
-  var debug = Boolean(this.config), args, arr = [], i = 0;
-  if (typeof this.config === 'string') {
-    debug = false;
-    args = this.config.split(' ');
-    for (i = 0; i < args.length; i += 1) {
-      if (args[i].indexOf('source:') === 0) {
-        if (message.source === undefined ||
-            message.source.indexOf(args[i].substr(7)) > -1) {
-          debug = true;
-          break;
-        }
-      } else {
-        if (message.msg.indexOf(args[i]) > -1) {
-          debug = true;
-          break;
-        }
-      }
+  if (!this.logger || !this.logger.log) {
+    if (!this.logger) {
+      this.logger = fdom.apis.getCore('core.logger', this).then(function(Provider) {
+        this.logger = new Provider();
+        this.emit('logger');
+      }.bind(this));
     }
-  }
-  if (!debug && message.severity !== 'error') {
+    this.once('logger', this.print.bind(this, message));
     return;
   }
-  if (typeof this.console !== 'undefined' && this.console !== this) {
+
+  var args, arr = [], i = 0;
+  if (this.console !== this) {
     args = JSON.parse(message.msg);
     if (typeof args === "string") {
       arr.push(args);
@@ -112,22 +114,7 @@ fdom.port.Debug.prototype.print = function(message) {
         i += 1;
       }
     }
-
-    if (typeof process !== 'undefined' && message.source) {
-      arr.unshift('\x1B[39m');
-      arr.unshift('\x1B[31m' + message.source);
-    /*jslint nomen: true*/
-    } else if (this.console.__mozillaConsole__ && message.source) {
-      arr.unshift(message.source.toUpperCase());
-    /*jslint nomen: false*/
-    } else if (message.source) {
-      arr.unshift('color: red');
-      arr.unshift('%c ' + message.source);
-    }
-    if (!this.console[message.severity] && this.console.log) {
-      message.severity = 'log';
-    }
-    this.console[message.severity].apply(this.console, arr);
+    this.logger[message.severity].call(this.logger, message.source, arr, function() {});
   }
 };
 
@@ -137,6 +124,22 @@ fdom.port.Debug.prototype.print = function(message) {
  */
 fdom.port.Debug.prototype.log = function() {
   this.format('log', undefined, arguments);
+};
+
+/**
+ * Print an info message to the console.
+ * @method log
+ */
+fdom.port.Debug.prototype.info = function() {
+  this.format('info', undefined, arguments);
+};
+
+/**
+ * Print a debug message to the console.
+ * @method log
+ */
+fdom.port.Debug.prototype.debug = function() {
+  this.format('debug', undefined, arguments);
 };
 
 /**

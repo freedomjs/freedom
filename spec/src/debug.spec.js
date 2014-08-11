@@ -1,7 +1,20 @@
 describe("fdom.Port.Debug", function() {
-  var debug;
+  var debug, activeLogger, onLogger;
+  var logger = function() {
+    activeLogger = this;
+    this.spy = jasmine.createSpy('log');
+    this.log = function() {
+      this.spy(arguments[0], arguments[1]);
+      onLogger();
+    }
+    this.warn = function() {
+      this.spy(arguments[0], arguments[1]);
+      onLogger();
+    }
+  };
 
   beforeEach(function() {
+    fdom.apis.register('core.logger', logger);
     fdom.debug = new fdom.port.Debug();
   });
 
@@ -27,8 +40,7 @@ describe("fdom.Port.Debug", function() {
     expect(spy.calls.count()).toEqual(4);
   });
 
-  it("Allows filtering of Messages", function() {
-    var console = jasmine.createSpy('console');
+  it("Prints to a provider", function(done) {
     fdom.debug.console = {log: console};
     var msg = {
       severity: 'log',
@@ -36,39 +48,11 @@ describe("fdom.Port.Debug", function() {
       msg: JSON.stringify(["My Message"])
     }
     fdom.debug.print(msg);
-    expect(console).not.toHaveBeenCalled();
-
-    fdom.debug.config = true;
-    fdom.debug.print(msg);
-    expect(console).toHaveBeenCalled();
-
-    fdom.debug.config = 'keyword';
-    fdom.debug.print(msg);
-    expect(console.calls.count()).toEqual(1);
-
-    fdom.debug.config = 'My';
-    fdom.debug.print(msg);
-    expect(console.calls.count()).toEqual(2);
-  });
-
-  it("Filters on source", function() {
-    var console = jasmine.createSpy('console');
-    fdom.debug.console = {log: console};
-    var msg = {
-      severity: 'log',
-      source: "src1",
-      msg: JSON.stringify(["My Message"])
-    }
-    fdom.debug.print(msg);
-    expect(console).not.toHaveBeenCalled();
-
-    fdom.debug.config = 'source:test';
-    fdom.debug.print(msg);
-    expect(console).not.toHaveBeenCalled();
-
-    fdom.debug.config = 'source:src1';
-    fdom.debug.print(msg);
-    expect(console).toHaveBeenCalled();
-
+    onLogger = function() {
+      expect(activeLogger.log).toBeDefined();
+      expect(activeLogger.spy).toHaveBeenCalledWith(null, ["My Message"]);
+      done();
+      onLogger = function() {};
+    };
   });
 });
