@@ -111,6 +111,16 @@ fdom.apis.set('core.tcpsocket', {
     }
   },
 
+  // Upgrades a socket to TLS, expected to be invoked after connect.
+  'secure': {
+    type: 'method',
+    value: [],
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
+
   // Write buffer data to a socket.
   // Fails with an error if write fails.
   'write': {
