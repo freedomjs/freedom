@@ -136,7 +136,7 @@ describe("providers/core/peerconnection", function() {
     var event = {channel: dataChannel};
     
     rtcpc.listeners.datachannel(event);
-    expect(dispatchedEvents.onOpenDataChannel[0]).toEqual("onOpenDC");
+    expect(dispatchedEvents.onOpenDataChannel[0]).toEqual({ channelId: "onOpenDC"});
     done();
   });
 

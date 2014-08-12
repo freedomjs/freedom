@@ -388,7 +388,7 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
     // onOpenFn is called at the point messages will actually get through.
     onOpenFn: function (dataChannel, info) {
       self.dispatchEvent("onOpenDataChannel",
-                         info.label);
+                         { channelId: info.label});
     },
     onCloseFn: function (dataChannel, info) {
       self.dispatchEvent("onCloseDataChannel",
