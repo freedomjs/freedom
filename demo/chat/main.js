@@ -8,10 +8,12 @@
  **/
 
 var social = freedom.socialprovider();
+var logger;
 var userList = {};    //Keep track of the roster
 var clientList = {};
 var myClientState = null;
 var messages = [];
+freedom.core().getLogger('[Chat Backend]').then(function(log) { logger = log; });
 
 /** 
  * on a 'send-message' event from the parent (the outer page)
@@ -45,6 +47,7 @@ freedom.on('boot', function(val) {
  * Just forward it to the outer page
  */
 social.on('onMessage', function(data) {
+  logger.info("Message Received", data);
   messages.push(data);
   freedom.emit('recv-message', data);
 });
@@ -62,6 +65,7 @@ social.on('onUserProfile', function(data) {
  * On newly online or offline clients, let's update the roster
  **/
 social.on('onClientState', function(data) {
+  logger.debug("Roster Change", data);
   if (data.status == social.STATUS["OFFLINE"]) {
     if (clientList.hasOwnProperty(data.clientId)) {
       delete clientList[data.clientId];
@@ -103,7 +107,7 @@ social.login({
   rememberLogin: false
 }).then(function(ret) {
   myClientState = ret;
-  console.log("state: " + JSON.stringify(myClientState));
+  logger.log("onLogin", myClientState);
   if (ret.status == social.STATUS["ONLINE"]) {
     freedom.emit('recv-uid', ret.clientId);
     freedom.emit('recv-status', "online");
@@ -111,5 +115,6 @@ social.login({
     freedom.emit('recv-status', "offline");
   }
 }, function(err) {
+  logger.log("Log In Failed", err);
   freedom.emit("recv-err", err);
 });

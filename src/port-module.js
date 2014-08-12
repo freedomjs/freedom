@@ -237,7 +237,7 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
   if (name === 'control') {
     if (message.flow === 'debug' && message.message) {
       fdom.debug.format(message.message.severity,
-          this.toString(),
+          message.message.source || this.toString(),
           message.message.msg);
     } else if (message.flow === 'core' && message.message) {
       if (!this.core) {

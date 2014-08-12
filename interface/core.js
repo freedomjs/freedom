@@ -7,7 +7,8 @@ fdom.apis.set('core', {
     identifier: 'string'
   }},
   'bindChannel': {type: 'method', value: ['string'], ret: 'proxy'},
-  'getId': {type: 'method', value: [], ret: ['array', 'string']}
+  'getId': {type: 'method', value: [], ret: ['array', 'string']},
+  'getLogger': {type: 'method', value: ['string'], ret: 'proxy'}
 });
 
 fdom.apis.set('core.view', {
@@ -326,7 +327,9 @@ fdom.apis.set('core.peerconnection', {
   // Returns local SDP headers from createOffer.
   'getInfo': {type: 'method', value: [], ret: 'string'},
 
-  'createOffer': {type: 'method', value: [{
+  'createOffer': {
+    type: 'method',
+    value: [{
       // Optional :RTCOfferOptions object.
       offerToReceiveVideo: 'number',
       offerToReceiveAudio: 'number',

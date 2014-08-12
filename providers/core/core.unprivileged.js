@@ -196,6 +196,29 @@ Core_unprivileged.prototype.getId = function(callback) {
 };
 
 /**
+ * Get a logger for logging to the freedom.js logger. Provides a
+ * log object with an interface similar to the standard javascript console,
+ * which logs via fdom.debug.
+ * @method getLogger
+ * @param {String} name The name of the logger, used as its 'source'
+ * @param {Function} callback The function to call with the logger.
+ */
+Core_unprivileged.prototype.getLogger = function(name, callback) {
+  var log = function(severity, source) {
+    var args = Array.prototype.splice.call(arguments, 2);
+    this.format(severity, source, args);
+  },
+  logger = {
+    debug: log.bind(fdom.debug, 'debug', name),
+    info: log.bind(fdom.debug, 'info', name),
+    log: log.bind(fdom.debug, 'log', name),
+    warn: log.bind(fdom.debug, 'warn', name),
+    error: log.bind(fdom.debug, 'error', name)
+  };
+  callback(logger);
+};
+
+/**
  * Set the ID of the current freedom.js context.
  * @method setId
  * @private
