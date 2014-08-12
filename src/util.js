@@ -1,5 +1,5 @@
 /*globals fdom:true, crypto, freedomcfg, WebKitBlobBuilder, Blob, URL */
-/*globals webkitURL, Uint8Array */
+/*globals webkitURL, Uint8Array, Uint16Array, ArrayBuffer */
 /*jslint indent:2,white:true,browser:true,sloppy:true */
 if (typeof fdom === 'undefined') {
   fdom = {};
@@ -99,6 +99,37 @@ fdom.util.getId = function() {
   }
 
   return guid;
+};
+
+/**
+ * Encode a string into a binary array buffer, by treating each character as a
+ * utf16 encoded character - the native javascript encoding.
+ * @method str2ab
+ * @static
+ * @param {String} str The string to encode.
+ * @returns {ArrayBuffer} The encoded string.
+ */
+fdom.util.str2ab = function(str) {
+  var length = str.length,
+      buffer = new ArrayBuffer(length * 2), // 2 bytes for each char
+      bufferView = new Uint16Array(buffer),
+      i;
+  for (i = 0; i < length; i += 1) {
+    bufferView[i] = str.charCodeAt(i);
+  }
+
+  return buffer;
+};
+
+/**
+ * Convert an array buffer containing an encoded string back into a string.
+ * @method ab2str
+ * @static
+ * @param {ArrayBuffer} buffer The buffer to unwrap.
+ * @returns {String} The decoded buffer.
+ */
+fdom.util.ab2str = function(buffer) {
+  return String.fromCharCode.apply(null, new Uint16Array(buffer));
 };
 
 /**

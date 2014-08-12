@@ -24,27 +24,6 @@ describe("unit: transport.webrtc.json", function () {
     };
   }
 
-  // From http://stackoverflow.com/a/11058858/300539
-  function str2ab(str) {
-    var buf = new ArrayBuffer(str.length);
-    var bufView = new Uint8Array(buf);
-    for (var i=0, strLen=str.length; i<strLen; i++) {
-      bufView[i] = str.charCodeAt(i);
-    }
-    // Phantom does not support ArrayBuffer.slice, so we use a polyfill.
-    // From https://github.com/ttaubert/node-arraybuffer-slice
-    defineSlice(buf);
-    return buf;
-  }
-
-  function ab2str(buf) {
-    var result = "";
-    var view = new Uint8Array(buf);
-    for (var i = 0; i < buf.byteLength; i++) {
-      result += String.fromCharCode(view[i]);
-    }
-    return result;
-  }
 
   // Adds "on" listener that can register event listeners, which can
   // later be fired through "fireEvent". It is expected that listeners
@@ -106,8 +85,8 @@ describe("unit: transport.webrtc.json", function () {
 
   it("Sends data", function(done) {
     var tag = "test tag";
-    var firstMessage = str2ab("Hello World");
-    var secondMessage = str2ab("Wello Horld");
+    var firstMessage = fdom.util.str2ab("Hello World");
+    var secondMessage = fdom.util.str2ab("Wello Horld");
     spyOn(transport, "send").and.callThrough();
     transport.send(tag, firstMessage, firstSendCallback);
     function firstSendCallback() {
@@ -145,7 +124,7 @@ function printBuffer(buffer) {
 
   xit("fires on data event", function() {
     var tag = "test";
-    var data = str2ab("Hello World");
+    var data = fdom.util.str2ab("Hello World");
     var sizeAsBuffer = sizeToBuffer(data.byteLength);
     var toSend = new ArrayBuffer(data.byteLength + 8);
     defineSlice(toSend);
@@ -156,7 +135,7 @@ function printBuffer(buffer) {
                    buffer: toSend};
     transport.onData(message);
     console.info(dispatchedEvents.onData.data.byteLength);
-    console.info(ab2str(dispatchedEvents.onData.data));
+    console.info(fdom.util.ab2str(dispatchedEvents.onData.data));
     expect(dispatchedEvents.onData).toEqual({tag: tag,
                                              data: data});
   });
