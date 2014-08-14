@@ -11,12 +11,14 @@
  */
 var WS = function (module, dispatchEvent, url, protocols, socket) {
   var WSImplementation = null;
+  this.isNode = false;
   if (typeof socket !== 'undefined') {
     WSImplementation = socket;
   } else if (typeof WebSocket !== 'undefined') {
     WSImplementation = WebSocket;
   } else if (typeof require !== 'undefined') {
     WSImplementation = require('ws');
+    this.isNode = true;
   } else {
     console.error('Platform does not support WebSocket');
   }
@@ -53,7 +55,11 @@ WS.prototype.send = function(data, continuation) {
 
   if (toSend) {
     try {
-      this.websocket.send(toSend);
+      if (this.isNode && toSend instanceof ArrayBuffer) {
+        this.websocket.send(new Uint8Array(toSend), {binary:true})
+      } else {
+        this.websocket.send(toSend);
+      }
     } catch (e) {
       if (e instanceof SyntaxError) {
         errcode = "SYNTAX";
