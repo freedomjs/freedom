@@ -2,7 +2,8 @@
 /*jslint sloppy:true*/
 
 /**
- * A WebSocket core provider.
+ * A WebSocket core provider
+ *
  * @param {port.Module} module The Module requesting this provider
  * @param {Function} dispatchEvent Function to dispatch events.
  * @param {String} url The Remote URL to connect with.
@@ -43,10 +44,22 @@ var WS = function (module, dispatchEvent, url, protocols, socket) {
     return;
   }
 
-  this.websocket.onopen = this.onOpen.bind(this);
-  this.websocket.onclose = this.onClose.bind(this);
-  this.websocket.onmessage = this.onMessage.bind(this);
-  this.websocket.onerror = this.onError.bind(this);
+  if (this.isNode) {
+    this.websocket.on('message', this.onMessage.bind(this));
+    this.websocket.on('open', this.onOpen.bind(this));
+    // node.js websocket implementation not compliant
+    this.websocket.on('close', this.onClose.bind(this, {
+      code: 0,
+      reason: 'UNKNOWN',
+      wasClean: true
+    }));
+    this.websocket.on('error', this.onError.bind(this));
+  } else {
+    this.websocket.onopen = this.onOpen.bind(this);
+    this.websocket.onclose = this.onClose.bind(this);
+    this.websocket.onmessage = this.onMessage.bind(this);
+    this.websocket.onerror = this.onError.bind(this);
+  }
 };
 
 WS.prototype.send = function(data, continuation) {
@@ -55,8 +68,13 @@ WS.prototype.send = function(data, continuation) {
 
   if (toSend) {
     try {
+      // For node.js, we have to do weird buffer stuff
       if (this.isNode && toSend instanceof ArrayBuffer) {
-        this.websocket.send(new Uint8Array(toSend), {binary:true})
+        this.websocket.send(
+          new Uint8Array(toSend), 
+          { binary:true }, 
+          this.onError.bind(this)
+        );
       } else {
         this.websocket.send(toSend);
       }
@@ -117,9 +135,13 @@ WS.prototype.onOpen = function(event) {
   this.dispatchEvent('onOpen');
 };
 
-WS.prototype.onMessage = function(event) {
+WS.prototype.onMessage = function(event, flags) {
   var data = {};
-  if (typeof ArrayBuffer !== 'undefined' && event.data instanceof ArrayBuffer) {
+  if (this.isNode && flags && flags.binary) {
+    data.buffer = new Uint8Array(event).buffer;
+  } else if (this.isNode) {
+    data.text = event;
+  } else if (typeof ArrayBuffer !== 'undefined' && event.data instanceof ArrayBuffer) {
     data.buffer = event.data;
   } else if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
     data.binary = event.data;
@@ -142,4 +164,8 @@ WS.prototype.onClose = function(event) {
                       wasClean: event.wasClean});
 };
 
-fdom.apis.register('core.websocket', WS);
+
+/** REGISTER PROVIDER **/
+if (typeof fdom !== 'undefined') {
+  fdom.apis.register('core.websocket', WS);
+}
