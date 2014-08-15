@@ -7,10 +7,9 @@
  * @private
  * @param {App} app The application creating this provider, in practice unset.
  */
-var Logger_console = function (app, dispatchEvent) {
-  this.app = app;
-  this.level = (this.app.config && this.app.config.debug) || 'log';
-  this.console = this.app.config.global.console;
+var Logger_console = function (app) {
+  this.level = (app.config && app.config.debug) || 'log';
+  this.console = (app.config && app.config.global.console);
   fdom.util.handleEvents(this);
 };
 
@@ -35,6 +34,9 @@ Logger_console.prototype.print = function (severity, source, msg) {
   var arr = msg;
   if (typeof this.console === 'undefined') {
     return;
+  }
+  if (typeof arr === 'string') {
+    arr = [arr];
   }
   
   if (Logger_console.level[this.level] !== undefined &&
