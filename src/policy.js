@@ -61,7 +61,7 @@ fdom.Policy.prototype.get = function(lineage, id) {
       portId = this.isRunning(runtime, id, lineage,
                              constraints.isolation !== 'never');
       if(constraints.isolation !== 'always' && portId) {
-        fdom.debug.log('Reused port ' + portId);
+        fdom.debug.info('Reused port ' + portId);
         return runtime.manager.getPort(portId);
       } else {
         return new fdom.port.Module(id, manifest, lineage);

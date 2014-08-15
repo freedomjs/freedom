@@ -19,7 +19,8 @@ describe("freedom", function() {
       manifest: "relative://spec/helper/manifest.json",
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
-      src: freedom_src
+      src: freedom_src,
+      debug: 'error'
     });
   });
   
@@ -74,7 +75,8 @@ describe("freedom", function() {
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src,
-      stayLocal: true
+      stayLocal: true,
+      debug: "error"
     });
 
     expect(freedom.on).toBeDefined();
@@ -91,20 +93,25 @@ describe("freedom", function() {
     root.appendChild(script);
 
     var global = {
-      document: root
+      document: root,
+      console: {
+        error: function() {}
+      }
     };
+    
     freedomcfg = function() {
-      spyOn(fdom.debug, 'warn');
-    }
+      spyOn(fdom.debug, 'error');
+    };
 
     freedom = fdom.setup(global, undefined, {
       portType: 'Frame',
       inject: dir + "node_modules/es5-shim/es5-shim.js",
       src: freedom_src,
-      advertise: true
+      advertise: true,
+      debug: 'warn'
     });
 
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(fdom.debug.error).toHaveBeenCalled();
 
     root.removeChild(script);
   });

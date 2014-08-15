@@ -53,7 +53,7 @@ fdom.Hub.prototype.onMessage = function(source, message) {
         message.message.type === 'event') {
       type = 'event.' + message.message.name;
     }
-    fdom.debug.log(this.apps[destination.source].toString() +
+    fdom.debug.debug(this.apps[destination.source].toString() +
         " -" + type + "-> " +
         this.apps[destination.app].toString() + "." + destination.flow);
   }

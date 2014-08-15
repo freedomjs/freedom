@@ -133,6 +133,29 @@ fdom.util.ab2str = function(buffer) {
 };
 
 /**
+ * Get a logger that logs messages prefixed by a given name.
+ * @method getLogger
+ * @static
+ * @param {String} name The prefix for logged messages.
+ * @returns {Console} A console-like object.
+ */
+fdom.util.getLogger = function(name) {
+  var log = function(severity, source) {
+    var args = Array.prototype.splice.call(arguments, 2);
+    this.format(severity, source, args);
+  },
+  logger = {
+    debug: log.bind(fdom.debug, 'debug', name),
+    info: log.bind(fdom.debug, 'info', name),
+    log: log.bind(fdom.debug, 'log', name),
+    warn: log.bind(fdom.debug, 'warn', name),
+    error: log.bind(fdom.debug, 'error', name),
+    freedom: true
+  };
+  return logger;
+};
+
+/**
  * Add 'on' and 'emit' methods to an object, which act as a light weight
  * event handling structure.
  * @class handleEvents

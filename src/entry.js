@@ -65,7 +65,7 @@ fdom.setup = function (global, freedom_src, config) {
             try {
               fdom.util.mixin(site_cfg, JSON.parse(script.textContent), true);
             } catch (e) {
-              fdom.debug.warn("Failed to parse configuration: " + e);
+              fdom.debug.error("Failed to parse configuration: " + e);
             }
           }
           return true;
@@ -96,7 +96,7 @@ fdom.setup = function (global, freedom_src, config) {
 
   // Enable console.log from worker contexts.
   if (typeof global.console === 'undefined' || site_cfg.relayConsole) {
-    global.console = fdom.debug;
+    global.console = fdom.util.getLogger('Console');
   }
   
   return external.getInterface();

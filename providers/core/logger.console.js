@@ -9,7 +9,7 @@
  */
 var Logger_console = function (app, dispatchEvent) {
   this.app = app;
-  this.config = this.app.config;
+  this.level = (this.app.config && this.app.config.debug) || 'log';
   this.console = this.app.config.global.console;
   fdom.util.handleEvents(this);
 };
@@ -37,8 +37,8 @@ Logger_console.prototype.print = function (severity, source, msg) {
     return;
   }
   
-  if (Logger_console.level[this.config.debug] !== undefined &&
-      Logger_console.level[severity] < Logger_console.level[this.config.debug]) {
+  if (Logger_console.level[this.level] !== undefined &&
+      Logger_console.level[severity] < Logger_console.level[this.level]) {
     return;
   }
   

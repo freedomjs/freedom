@@ -110,14 +110,14 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   // when bindChannel is called directly, source will be undefined.
   // When it is propogated by onMessage, a source for binding will already exist.
   if (newSource) {
-    fdom.debug.log('making local proxy for core binding');
+    fdom.debug.debug('making local proxy for core binding');
     source = new fdom.port.Proxy(fdom.proxy.EventInterface);
     this.manager.setup(source);
   }
 
   // If this is a known identifier and is in the same context, binding is easy.
   if (toBind && toBind.local) {
-    fdom.debug.log('doing local binding with ' + source);
+    fdom.debug.debug('Binding a channel to port on this hub:' + source);
     this.manager.createLink(source, identifier, toBind.proxy, 'default');
     delete Core_unprivileged.unboundChannels[identifier];
     if (this.manager.delegate && this.manager.toDelegate['core']) {
@@ -132,7 +132,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       });
     }
   } else if (toBind && toBind.remote) {
-    fdom.debug.log('doing remote binding downward');
+    fdom.debug.debug('Binding a channel into a module.');
     this.manager.createLink(
         source,
         newSource ? 'default' : identifier,
@@ -149,7 +149,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
     });
     delete Core_unprivileged.unboundChannels[identifier];
   } else if (this.manager.delegate && this.manager.toDelegate['core']) {
-    fdom.debug.warn('delegating bind request for unseen ID:' + identifier);
+    fdom.debug.info('delegating channel bind for an unknown ID:' + identifier);
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -204,18 +204,7 @@ Core_unprivileged.prototype.getId = function(callback) {
  * @param {Function} callback The function to call with the logger.
  */
 Core_unprivileged.prototype.getLogger = function(name, callback) {
-  var log = function(severity, source) {
-    var args = Array.prototype.splice.call(arguments, 2);
-    this.format(severity, source, args);
-  },
-  logger = {
-    debug: log.bind(fdom.debug, 'debug', name),
-    info: log.bind(fdom.debug, 'info', name),
-    log: log.bind(fdom.debug, 'log', name),
-    warn: log.bind(fdom.debug, 'warn', name),
-    error: log.bind(fdom.debug, 'error', name)
-  };
-  callback(logger);
+  callback(fdom.util.getLogger(name));
 };
 
 /**

@@ -55,4 +55,9 @@ describe("fdom.Port.Debug", function() {
       onLogger = function() {};
     };
   });
+
+  afterEach(function() {
+    fdom.apis.register('core.logger', Logger_console);
+  });
+
 });

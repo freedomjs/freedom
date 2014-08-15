@@ -77,7 +77,8 @@ fdom.proxy.ApiInterface = function(def, onMsg, emit) {
           resolver.resolve(fdom.proxy.portableToMessage(template, msg));
         }
       } else {
-        fdom.debug.warn('Dropped response message with id ' + msg.reqId);
+        fdom.debug.error('Incoming message claimed to be an RPC ' +
+                         'returning for unregistered call', msg.reqId);
       }
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
@@ -174,7 +175,7 @@ fdom.proxy.conform = function(template, from, externals, separate) {
         externals.push(from);
         return externals.length - 1;
       } else {
-        fdom.debug.warn('conform expecting Blob, sees ' + (typeof from));
+        fdom.debug.error('conform expecting Blob, but saw ' + (typeof from));
         externals.push(new Blob([]));
         return externals.length - 1;
       }
@@ -221,7 +222,7 @@ fdom.proxy.conform = function(template, from, externals, separate) {
     });
     return val;
   }
-  fdom.debug.warn('Unknown template type: ' + template);
+  fdom.debug.error('Unknown template provided: ' + template);
 };
 
 /**
@@ -244,7 +245,7 @@ fdom.proxy.makeArrayBuffer = function(thing) {
     // https://github.com/UWNetworksLab/freedom/issues/28
     return new DataView(thing).buffer;
   } else {
-    fdom.debug.warn('expecting ArrayBuffer, but saw ' +
+    fdom.debug.error('expecting ArrayBuffer, but saw ' +
         (typeof thing) + ': ' + JSON.stringify(thing));
     return new ArrayBuffer(0);
   }
