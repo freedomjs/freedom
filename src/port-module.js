@@ -18,6 +18,7 @@ fdom.port.Module = function(manifestURL, manifest, creator) {
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
   this.manifest = manifest;
+  this.quiet = this.manifest.quiet || false;
   this.lineage = [this.manifestId].concat(creator);
   this.externalPortMap = {};
   this.internalPortMap = {};

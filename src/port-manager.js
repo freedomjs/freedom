@@ -215,7 +215,7 @@ fdom.port.Manager.prototype.destroy = function(port) {
  * @method createLink
  * @param {Port} port The source port.
  * @param {String} name The flow for messages from destination to port.
- * @param {Port} destiantion The destination port.
+ * @param {Port} destination The destination port.
  * @param {String} [destName] The flow name for messages to the destination.
  * @param {Boolean} [toDest] Tell the destination rather than source about the link.
  */
@@ -236,13 +236,14 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
       return;
     }
   }
-  var outgoingName = destName || 'default',
-      outgoing = this.hub.install(port, destination.id, outgoingName),
+  var quiet = destination.quiet || false,
+      outgoingName = destName || 'default',
+      outgoing = this.hub.install(port, destination.id, outgoingName, quiet),
       reverse;
 
   // Recover the port so that listeners are installed.
   destination = this.hub.getDestination(outgoing);
-  reverse = this.hub.install(destination, port.id, name);
+  reverse = this.hub.install(destination, port.id, name, quiet);
 
   this.reverseFlowMap[outgoing] = reverse;
   this.dataFlows[port.id].push(outgoing);

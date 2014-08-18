@@ -11,7 +11,6 @@ if (typeof fdom === 'undefined') {
  * @constructor
  */
 fdom.Hub = function() {
-  this.route = Math.round(Math.random() * 1000000);
   this.config = {};
   this.apps = {};
   this.routes = {};
@@ -41,7 +40,7 @@ fdom.Hub.prototype.onMessage = function(source, message) {
     return;
   }
 
-  if (!message.quiet) {
+  if (!message.quiet && !destination.quiet) {
     type = message.type;
     if (message.type === 'message' && message.message &&
         message.message.action === 'method') {
@@ -131,9 +130,10 @@ fdom.Hub.prototype.deregister = function(app) {
  * @param {Port} source The source of the route.
  * @param {Port} destination The destination of the route.
  * @param {String} flow The flow where the destination will receive messages.
+ * @param {Boolean} quiet Whether messages on this route should be suppressed.
  * @return {String} A routing source identifier for sending messages.
  */
-fdom.Hub.prototype.install = function(source, destination, flow) {
+fdom.Hub.prototype.install = function(source, destination, flow, quiet) {
   source = this.getSource(source);
   if (!source) {
     return;
@@ -147,7 +147,8 @@ fdom.Hub.prototype.install = function(source, destination, flow) {
   this.routes[route] = {
     app: destination,
     flow: flow,
-    source: source.id
+    source: source.id,
+    quiet: quiet
   };
   if (typeof source.on === 'function') {
     source.on(route, this.onMessage.bind(this, route));
@@ -191,5 +192,5 @@ fdom.Hub.prototype.uninstall = function(source, flow) {
  * @private
  */
 fdom.Hub.prototype.generateRoute = function() {
-  return (this.route += 1);
+  return fdom.util.getId();
 };
