@@ -1,34 +1,38 @@
-/*globals fdom:true */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.port = fdom.port || {};
+var util = require('util');
+var debug = require('debug');
+var ModuleInternal = require('moduleinternal');
 
 /**
  * A freedom port which manages the control plane of of changing hub routes.
  * @class Manager
- * @extends Port
+ * @implements Port
  * @param {Hub} hub The routing hub to control.
+ * @param {Resource} resource The resource manager for the runtime.
+ * @param {Api} api The API manager for the runtime.
  * @constructor
  */
-fdom.port.Manager = function(hub) {
+var Manager = function(hub, resource, api) {
   this.id = 'control';
   this.config = {};
   this.controlFlows = {};
   this.dataFlows = {};
   this.dataFlows[this.id] = [];
   this.reverseFlowMap = {};
+
   this.hub = hub;
+  this.resource = resource;
+  this.api = api;
+
   this.delegate = null;
   this.toDelegate = {};
   
   this.hub.on('config', function(config) {
-    fdom.util.mixin(this.config, config);
+    util.mixin(this.config, config);
     this.emit('config');
   }.bind(this));
   
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
   this.hub.register(this);
 };
 
@@ -37,7 +41,7 @@ fdom.port.Manager = function(hub) {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.port.Manager.prototype.toString = function() {
+Manager.prototype.toString = function() {
   return "[Local Controller]";
 };
 
@@ -47,7 +51,7 @@ fdom.port.Manager.prototype.toString = function() {
  * identified by the request property.  The actions are:
  * 1. debug. Prints the message to the console.
  * 2. link. Creates a link between the source and a provided destination port.
- * 3. port. Creates a link between the source and a described port type.
+ * 3. environment. Instantiate a module environment defined in ModuleInternal.
  * 4. delegate. Routes a defined set of control messages to another location.
  * 5. resource. Registers the source as a resource resolver.
  * 6. core. Generates a core provider for the requester.
@@ -57,10 +61,10 @@ fdom.port.Manager.prototype.toString = function() {
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
  */
-fdom.port.Manager.prototype.onMessage = function(flow, message) {
+Manager.prototype.onMessage = function(flow, message) {
   var reverseFlow = this.controlFlows[flow], origin;
   if (!reverseFlow) {
-    fdom.debug.warn("Unknown message source: " + flow);
+    debug.warn("Unknown message source: " + flow);
     return;
   }
   origin = this.hub.getDestination(reverseFlow);
@@ -78,18 +82,14 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   }
 
   if (message.request === 'debug') {
-    fdom.debug.print(message);
+    debug.print(message);
     return;
   }
 
   if (message.request === 'link') {
     this.createLink(origin, message.name, message.to, message.overrideDest);
-  } else if (message.request === 'port') {
-    if (message.exposeManager) {
-      message.args = this;
-    }
-    this.createLink(origin, message.name,
-        new fdom.port[message.service](message.args));
+  } else if (message.request === 'environment') {
+    this.createLink(origin, message.name, new ModuleInternal(this));
   } else if (message.request === 'bindport') {
     this.createLink({id: message.id},
                     'custom' + message.port,
@@ -104,8 +104,8 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
     this.toDelegate[message.flow] = true;
     this.emit('delegate');
   } else if (message.request === 'resource') {
-    fdom.resources.addResolver(message.args[0]);
-    fdom.resources.addRetriever(message.service, message.args[1]);
+    this.resource.addResolver(message.args[0]);
+    this.resource.addRetriever(message.service, message.args[1]);
   } else if (message.request === 'core') {
     if (this.core && reverseFlow === this.delegate) {
       (new this.core()).onMessage(origin, message.message);
@@ -122,8 +122,8 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
   } else if (message.request === 'unlink') {
     this.removeLink(origin, message.to);
   } else {
-    fdom.debug.warn("Unknown control request: " + message.request);
-    fdom.debug.log(JSON.stringify(message));
+    debug.warn("Unknown control request: " + message.request);
+    debug.log(JSON.stringify(message));
     return;
   }
 };
@@ -134,7 +134,7 @@ fdom.port.Manager.prototype.onMessage = function(flow, message) {
  * @param {String} portId The ID of the port.
  * @returns {fdom.Port} The port with that ID.
  */
-fdom.port.Manager.prototype.getPort = function(portId) {
+Manager.prototype.getPort = function(portId) {
   return this.hub.getDestination(this.controlFlows[portId]);
 };
 
@@ -143,14 +143,14 @@ fdom.port.Manager.prototype.getPort = function(portId) {
  * @method setup
  * @param {Port} port The port to register.
  */
-fdom.port.Manager.prototype.setup = function(port) {
+Manager.prototype.setup = function(port) {
   if (!port.id) {
-    fdom.debug.warn("Refusing to setup unidentified port ");
+    debug.warn("Refusing to setup unidentified port ");
     return false;
   }
 
   if(this.controlFlows[port.id]) {
-    fdom.debug.warn("Refusing to re-initialize port " + port.id);
+    debug.warn("Refusing to re-initialize port " + port.id);
     return false;
   }
 
@@ -185,9 +185,9 @@ fdom.port.Manager.prototype.setup = function(port) {
  * @method destroy
  * @apram {Port} port The port to unregister.
  */
-fdom.port.Manager.prototype.destroy = function(port) {
+Manager.prototype.destroy = function(port) {
   if (!port.id) {
-    fdom.debug.warn("Unable to tear down unidentified port");
+    debug.warn("Unable to tear down unidentified port");
     return false;
   }
 
@@ -219,20 +219,20 @@ fdom.port.Manager.prototype.destroy = function(port) {
  * @param {String} [destName] The flow name for messages to the destination.
  * @param {Boolean} [toDest] Tell the destination rather than source about the link.
  */
-fdom.port.Manager.prototype.createLink = function(port, name, destination, destName, toDest) {
+Manager.prototype.createLink = function(port, name, destination, destName, toDest) {
   if (!this.config.global) {
     this.once('config', this.createLink.bind(this, port, name, destination, destName));
     return;
   }
   
   if (!this.controlFlows[port.id]) {
-    fdom.debug.warn('Unwilling to link from non-registered source.');
+    debug.warn('Unwilling to link from non-registered source.');
     return;
   }
 
   if (!this.controlFlows[destination.id]) {
     if(this.setup(destination) === false) {
-      fdom.debug.warn('Could not find or setup destination.');
+      debug.warn('Could not find or setup destination.');
       return;
     }
   }
@@ -273,18 +273,18 @@ fdom.port.Manager.prototype.createLink = function(port, name, destination, destN
  * @param {Port} port The source port.
  * @param {String} name The flow to be removed.
  */
-fdom.port.Manager.prototype.removeLink = function(port, name) {
+Manager.prototype.removeLink = function(port, name) {
   var reverse = this.hub.getDestination(name),
       rflow = this.reverseFlowMap[name],
       i;
 
   if (!reverse || !rflow) {
-    fdom.debug.warn("Could not find metadata to remove flow: " + name);
+    debug.warn("Could not find metadata to remove flow: " + name);
     return;
   }
 
   if (this.hub.getDestination(rflow).id !== port.id) {
-    fdom.debug.warn("Source port does not own flow " + name);
+    debug.warn("Source port does not own flow " + name);
     return;
   }
 
@@ -321,7 +321,7 @@ fdom.port.Manager.prototype.removeLink = function(port, name) {
  * @param {String} id The port ID of the source.
  * @param {String} name The flow name.
  */
-fdom.port.Manager.prototype.forgetFlow = function(id, name) {
+Manager.prototype.forgetFlow = function(id, name) {
   var i;
   if (this.dataFlows[id]) {
     for (i = 0; i < this.dataFlows[id].length; i += 1) {
@@ -339,14 +339,15 @@ fdom.port.Manager.prototype.forgetFlow = function(id, name) {
  * @private
  * @param {Function} cb Callback to fire with the core object.
  */
-fdom.port.Manager.prototype.getCore = function(cb) {
+Manager.prototype.getCore = function(cb) {
   if (this.core) {
     cb(this.core);
   } else {
-    fdom.apis.getCore('core', this).then(function(core) {
+    this.api.getCore('core', this).then(function(core) {
       this.core = core;
       cb(this.core);
     }.bind(this));
   }
 };
 
+module.exports = Manager;

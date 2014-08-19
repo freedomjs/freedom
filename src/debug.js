@@ -1,23 +1,19 @@
-/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.port = fdom.port || {};
+var util = require('util');
 
 /**
- * A freedom port providing debugging output to the console.
+ * A freedom entry point for debugging.
  * @uses handleEvents
- * @extends Port
+ * @implements Port
  * @constructor
  */
-fdom.port.Debug = function() {
+var Debug = function() {
   this.id = 'debug';
   this.emitChannel = false;
   this.console = null;
   this.config = false;
   this.logger = null;
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 };
 
 /**
@@ -25,7 +21,7 @@ fdom.port.Debug = function() {
  * @method toString
  * @return {String} the textual description.
  */
-fdom.port.Debug.prototype.toString = function() {
+Debug.prototype.toString = function() {
   return '[Console]';
 };
 
@@ -36,7 +32,7 @@ fdom.port.Debug.prototype.toString = function() {
  * @param {String} source the source identifier for the message.
  * @param {Object} message the received message.
  */
-fdom.port.Debug.prototype.onMessage = function(source, message) {
+Debug.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.channel && !this.emitChannel) {
     this.emitChannel = message.channel;
     this.config = message.config;
@@ -53,7 +49,7 @@ fdom.port.Debug.prototype.onMessage = function(source, message) {
  * @param {String[]} args The contents of the message.
  * @private
  */
-fdom.port.Debug.prototype.format = function(severity, source, args) {
+Debug.prototype.format = function(severity, source, args) {
   var i, alist = [], argarr;
   if (typeof args === "string" && source) {
     try {
@@ -91,7 +87,7 @@ fdom.port.Debug.prototype.format = function(severity, source, args) {
  * @method print
  * @param {Object} message The message emitted by {@see format} to print.
  */
-fdom.port.Debug.prototype.print = function(message) {
+Debug.prototype.print = function(message) {
   if (!this.logger || !this.logger.log) {
     if (!this.logger) {
       this.logger = fdom.apis.getCore('core.logger', this).then(function(Provider) {
@@ -122,7 +118,7 @@ fdom.port.Debug.prototype.print = function(message) {
  * Print a log message to the console.
  * @method log
  */
-fdom.port.Debug.prototype.log = function() {
+Debug.prototype.log = function() {
   this.format('log', undefined, arguments);
 };
 
@@ -130,7 +126,7 @@ fdom.port.Debug.prototype.log = function() {
  * Print an info message to the console.
  * @method log
  */
-fdom.port.Debug.prototype.info = function() {
+Debug.prototype.info = function() {
   this.format('info', undefined, arguments);
 };
 
@@ -138,7 +134,7 @@ fdom.port.Debug.prototype.info = function() {
  * Print a debug message to the console.
  * @method log
  */
-fdom.port.Debug.prototype.debug = function() {
+Debug.prototype.debug = function() {
   this.format('debug', undefined, arguments);
 };
 
@@ -146,7 +142,7 @@ fdom.port.Debug.prototype.debug = function() {
  * Print a warning message to the console.
  * @method warn
  */
-fdom.port.Debug.prototype.warn = function() {
+Debug.prototype.warn = function() {
   this.format('warn', undefined, arguments);
 };
 
@@ -154,9 +150,33 @@ fdom.port.Debug.prototype.warn = function() {
  * Print an error message to the console.
  * @method error
  */
-fdom.port.Debug.prototype.error = function() {
+Debug.prototype.error = function() {
   this.format('error', undefined, arguments);
   if (this.console && !this.console.freedom) {
     this.console.error.apply(this.console, arguments);
   }
 };
+
+/**
+ * Get a logger that logs messages prefixed by a given name.
+ * @method getLogger
+ * @static
+ * @param {String} name The prefix for logged messages.
+ * @returns {Console} A console-like object.
+ */
+Debug.getLogger = function(name) {
+  var log = function(severity, source) {
+    var args = Array.prototype.splice.call(arguments, 2);
+    this.format(severity, source, args);
+  },
+  logger = {
+    debug: log.bind(fdom.debug, 'debug', name),
+    info: log.bind(fdom.debug, 'info', name),
+    log: log.bind(fdom.debug, 'log', name),
+    warn: log.bind(fdom.debug, 'warn', name),
+    error: log.bind(fdom.debug, 'error', name)
+  };
+  return logger;
+};
+
+module.exports = Debug.getLogger();

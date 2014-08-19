@@ -1,22 +1,19 @@
-/*globals fdom:true */
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.link = fdom.link || {};
+/*jslint indent:2, white:true, node:true, sloppy:true */
+var Link = require('link');
+var entry = require('freedom');
 
 /**
  * A port providing message transport between two freedom contexts in the same namespace.
  * Note that using a direct link does not provide the isolation that freedom.js
  * encourages. To that end it should be limited to a method for testing and not
  * used in production without some serious though about the implications of that decision.
- * @class Link.Direct
- * @extends Port
+ * @class Direct
+ * @extends Link
  * @uses handleEvents
  * @constructor
  */
-fdom.link.Direct = function() {
-  fdom.Link.call(this);
+var Direct = function() {
+  Link.call(this);
 };
 
 /**
@@ -24,7 +21,7 @@ fdom.link.Direct = function() {
  * @method start
  * @private
  */
-fdom.link.Direct.prototype.start = function() {
+Direct.prototype.start = function() {
   if (this.config.moduleContext) {
     this.config.global.directLink.other = this;
     this.other = this.config.global.directLink;
@@ -33,13 +30,12 @@ fdom.link.Direct.prototype.start = function() {
     this.config.global.directLink = this;
 
     // Keep fdom.debug connected to parent hub.
-    var debug = fdom.debug,
-        child = fdom.setup(this.config.global, undefined, {
+    var child = entry(this.config.global, undefined, {
       isModule: true,
       portType: 'Direct'
+    }).then(function(entry) {
+      this.config.global.freedom = entry;
     });
-    fdom.debug = debug;
-    this.config.global.freedom = child;
   }
 };
 
@@ -48,7 +44,7 @@ fdom.link.Direct.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.link.Direct.prototype.stop = function() {
+Direct.prototype.stop = function() {
   if (this === this.config.global.directLink) {
     delete this.config.global.directLink;
   }
@@ -60,7 +56,7 @@ fdom.link.Direct.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.link.Direct.prototype.toString = function() {
+Direct.prototype.toString = function() {
   return "[Direct" + this.id + "]";
 };
 
@@ -71,7 +67,7 @@ fdom.link.Direct.prototype.toString = function() {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Direct.prototype.deliverMessage = function(flow, message) {
+Direct.prototype.deliverMessage = function(flow, message) {
   if (this.other) {
     /* //- For Debugging Purposes -
     if (this === this.config.global.directLink) {
@@ -89,3 +85,4 @@ fdom.link.Direct.prototype.deliverMessage = function(flow, message) {
   }
 };
 
+module.exports = Direct;

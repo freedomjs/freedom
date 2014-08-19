@@ -1,8 +1,7 @@
-/*globals fdom:true, XMLHttpRequest, Promise */
+/*globals XMLHttpRequest, Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
+var debug = require('debug');
+var util = require('util');
 
 /**
  * The Resource registry for FreeDOM.  Used to look up requested Resources,
@@ -56,7 +55,7 @@ Resource.prototype.getContents = function(url) {
   return new Promise(function(resolve, reject) {
     var prop;
     if (!url) {
-      fdom.debug.warn("Asked to get contents of undefined URL.");
+      debug.warn("Asked to get contents of undefined URL.");
       return reject();
     }
     for (prop in this.contentRetrievers) {
@@ -85,7 +84,7 @@ Resource.prototype.resolve = function(manifest, url) {
     if (url === undefined) {
       return reject();
     }
-    fdom.util.eachReverse(this.resolvers, function(resolver) {
+    util.eachReverse(this.resolvers, function(resolver) {
       promises.push(new Promise(resolver.bind({}, manifest, url)));
     }.bind(this));
     //TODO this would be much cleaner if Promise.any existed
@@ -125,7 +124,7 @@ Resource.prototype.addResolver = function(resolver) {
  */
 Resource.prototype.addRetriever = function(proto, retriever) {
   if (this.contentRetrievers[proto]) {
-    fdom.debug.warn("Unwilling to override file retrieval for " + proto);
+    debug.warn("Unwilling to override file retrieval for " + proto);
     return;
   }
   this.contentRetrievers[proto] = retriever;
@@ -269,7 +268,7 @@ Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
     JSON.parse(data);
     resolve(data);
   } catch(e) {
-    fdom.debug.warn("Invalid manifest URL referenced:" + manifest);
+    debug.warn("Invalid manifest URL referenced:" + manifest);
     reject();
   }
 };
@@ -288,7 +287,7 @@ Resource.prototype.xhrRetriever = function(url, resolve, reject) {
     if (ref.readyState === 4 && ref.responseText) {
       resolve(ref.responseText);
     } else if (ref.readyState === 4) {
-      fdom.debug.warn("Failed to load file " + url + ": " + ref.status);
+      debug.warn("Failed to load file " + url + ": " + ref.status);
       reject(ref.status);
     }
   }.bind({}, resolve, reject), false);
@@ -300,4 +299,4 @@ Resource.prototype.xhrRetriever = function(url, resolve, reject) {
 /**
  * Defines fdom.resources as a singleton registry for file management.
  */
-fdom.resources = new Resource();
+module.exports = Resource;

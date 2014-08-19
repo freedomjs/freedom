@@ -1,24 +1,23 @@
-/*globals fdom:true */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.port = fdom.port || {};
+var debug = require('debug');
+var Proxy = require('proxy');
+var ApiInterface = require('proxy/apiInterface');
+var util = require('util');
 
 /**
  * A freedom port for a user-accessable provider.
  * @class Provider
- * @extends Port
+ * @implements Port
  * @uses handleEvents
  * @param {Object} def The interface of the provider.
  * @contructor
  */
-fdom.port.Provider = function(def) {
-  this.id = fdom.port.Proxy.nextId();
-  fdom.util.handleEvents(this);
+var Provider = function(def) {
+  this.id = Proxy.nextId();
+  util.handleEvents(this);
   
   this.definition = def;
-  this.mode = fdom.port.Provider.mode.synchronous;
+  this.mode = Provider.mode.synchronous;
   this.channels = {};
   this.iface = null;
   this.providerCls = null;
@@ -31,7 +30,7 @@ fdom.port.Provider = function(def) {
  * @static
  * @type number
  */
-fdom.port.Provider.mode = {
+Provider.mode = {
   synchronous: 0,
   asynchronous: 1,
   promises: 2
@@ -43,7 +42,7 @@ fdom.port.Provider.mode = {
  * @param {String} source the source identifier of the message.
  * @param {Object} message The received message.
  */
-fdom.port.Provider.prototype.onMessage = function(source, message) {
+Provider.prototype.onMessage = function(source, message) {
   if (source === 'control' && message.reverse) {
     this.channels[message.name] = message.channel;
     this.emit(message.channel, {
@@ -64,7 +63,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       this.emit('start');
       return;
     } else if(!this.channels[source]) {
-      fdom.debug.warn('Message from unconfigured source: ' + source);
+      debug.warn('Message from unconfigured source: ' + source);
       return;
     }
 
@@ -76,7 +75,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       this.providerInstances[source][message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
-      var args = fdom.proxy.portableToMessage(
+      var args = ApiInterface.portableToMessage(
           (this.definition.constructor && this.definition.constructor.value) ?
               this.definition.constructor.value : [],
           message.message);
@@ -85,7 +84,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
       }
       this.providerInstances[source][message.to] = this.getProvider(source, message.to, args);
     } else {
-      fdom.debug.warn(this.toString() + ' dropping message ' +
+      debug.warn(this.toString() + ' dropping message ' +
           JSON.stringify(message));
     }
   }
@@ -95,7 +94,7 @@ fdom.port.Provider.prototype.onMessage = function(source, message) {
  * Close / teardown the flow this provider terminates.
  * @method close
  */
-fdom.port.Provider.prototype.close = function() {
+Provider.prototype.close = function() {
   if (this.controlChannel) {
     this.emit(this.controlChannel, {
       type: 'Provider Closing',
@@ -117,33 +116,33 @@ fdom.port.Provider.prototype.close = function() {
  * @method getInterface
  * @return {Object} The external interface of this Provider.
  */
-fdom.port.Provider.prototype.getInterface = function() {
+Provider.prototype.getInterface = function() {
   if (this.iface) {
     return this.iface;
   } else {
     this.iface = {
       provideSynchronous: function(prov) {
         this.providerCls = prov;
-        this.mode = fdom.port.Provider.mode.synchronous;
+        this.mode = Provider.mode.synchronous;
       }.bind(this),
       provideAsynchronous: function(prov) {
         this.providerCls = prov;
-        this.mode = fdom.port.Provider.mode.asynchronous;
+        this.mode = Provider.mode.asynchronous;
       }.bind(this),
       providePromises: function(prov) {
         this.providerCls = prov;
-        this.mode = fdom.port.Provider.mode.promises;
+        this.mode = Provider.mode.promises;
       }.bind(this),
       close: function() {
         this.close();
       }.bind(this)
     };
 
-    fdom.util.eachProp(this.definition, function(prop, name) {
+    util.eachProp(this.definition, function(prop, name) {
       switch(prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
-          value: fdom.proxy.recursiveFreezeObject(prop.value),
+          value: ApiInterface.recursiveFreezeObject(prop.value),
           writable: false
         });
         break;
@@ -159,14 +158,14 @@ fdom.port.Provider.prototype.getInterface = function() {
  * a user-visible point.
  * @method getProxyInterface
  */
-fdom.port.Provider.prototype.getProxyInterface = function() {
+Provider.prototype.getProxyInterface = function() {
   var func = function(p) {
     return p.getInterface();
   }.bind({}, this);
 
   func.close = function(iface) {
     if (iface) {
-      fdom.util.eachProp(this.ifaces, function(candidate, id) {
+      util.eachProp(this.ifaces, function(candidate, id) {
         if (candidate === iface) {
           this.teardown(id);
           this.emit(this.emitChannel, {
@@ -189,7 +188,7 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
       return;
     }
 
-    fdom.util.eachProp(this.ifaces, function(candidate, id) {
+    util.eachProp(this.ifaces, function(candidate, id) {
       if (candidate === iface) {
         if (this.handlers[id]) {
           this.handlers[id].push(handler);
@@ -212,9 +211,9 @@ fdom.port.Provider.prototype.getProxyInterface = function() {
  * @param {Array} args Constructor arguments for the provider.
  * @return {Function} A function to send messages to the provider.
  */
-fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
+Provider.prototype.getProvider = function(source, identifier, args) {
   if (!this.providerCls) {
-    fdom.debug.warn('Cannot instantiate provider, since it is not provided');
+    debug.warn('Cannot instantiate provider, since it is not provided');
     return null;
   }
 
@@ -223,7 +222,7 @@ fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
       BoundClass,
       instance;
 
-  fdom.util.eachProp(this.definition, function(prop, name) {
+  util.eachProp(this.definition, function(prop, name) {
     if (prop.type === 'event') {
       events[name] = prop;
     }
@@ -231,7 +230,7 @@ fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
 
   dispatchEvent = function(src, ev, id, name, value) {
     if (ev[name]) {
-      var streams = fdom.proxy.messageToPortable(ev[name].value, value);
+      var streams = ApiInterface.messageToPortable(ev[name].value, value);
       this.emit(this.channels[src], {
         type: 'message',
         to: id,
@@ -253,13 +252,13 @@ fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
   return function(port, src, msg) {
     if (msg.action === 'method') {
       if (typeof this[msg.type] !== 'function') {
-        fdom.debug.warn("Provider does not implement " + msg.type + "()!");
+        debug.warn("Provider does not implement " + msg.type + "()!");
         return;
       }
       var prop = port.definition[msg.type],
-          args = fdom.proxy.portableToMessage(prop.value, msg),
+          args = ApiInterface.portableToMessage(prop.value, msg),
           ret = function(src, msg, prop, resolve, reject) {
-            var streams = fdom.proxy.messageToPortable(prop.ret, resolve);
+            var streams = ApiInterface.messageToPortable(prop.ret, resolve);
             this.emit(this.channels[src], {
               type: 'method',
               to: msg.to,
@@ -277,15 +276,15 @@ fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
       if (!Array.isArray(args)) {
         args = [args];
       }
-      if (port.mode === fdom.port.Provider.mode.synchronous) {
+      if (port.mode === Provider.mode.synchronous) {
         try {
           ret(this[msg.type].apply(this, args));
         } catch(e) {
           ret(undefined, e.message);
         }
-      } else if (port.mode === fdom.port.Provider.mode.asynchronous) {
+      } else if (port.mode === Provider.mode.asynchronous) {
         this[msg.type].apply(instance, args.concat(ret));
-      } else if (port.mode === fdom.port.Provider.mode.promises) {
+      } else if (port.mode === Provider.mode.promises) {
         this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
       }
     }
@@ -297,10 +296,12 @@ fdom.port.Provider.prototype.getProvider = function(source, identifier, args) {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.port.Provider.prototype.toString = function() {
+Provider.prototype.toString = function() {
   if (this.emitChannel) {
     return "[Provider " + this.emitChannel + "]";
   } else {
     return "[unbound Provider]";
   }
 };
+
+module.exports = Provider;

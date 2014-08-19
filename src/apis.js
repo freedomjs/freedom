@@ -1,8 +1,6 @@
-/*globals fdom:true, Promise */
+/*globals Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
+var debug = require('debug');
 
 /**
  * The API registry for freedom.js.  Used to look up requested APIs,
@@ -92,7 +90,7 @@ Api.prototype.getCore = function(name, from) {
         });
       }
     } else {
-      fdom.debug.warn('Api.getCore asked for unknown core: ' + name);
+      debug.warn('Api.getCore asked for unknown core: ' + name);
       reject(null);
     }
   }.bind(this));
@@ -111,12 +109,12 @@ Api.prototype.getInterfaceStyle = function(name) {
   if (this.providers[name]) {
     return this.providers[name].style;
   } else {
-    fdom.debug.warn('Api.getInterfaceStyle for unknown provider: ' + name);
+    debug.warn('Api.getInterfaceStyle for unknown provider: ' + name);
     return undefined;
   }
 };
 
 /**
- * Defines fdom.apis for fdom module registry and core provider registation.
+ * Defines the apis module and provider registry.
  */
-fdom.apis = new Api();
+module.exports = Api;

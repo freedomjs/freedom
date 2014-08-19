@@ -1,9 +1,11 @@
-/*globals fdom:true, Promise */
+/*globals Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.port = fdom.port || {};
+var debug = require('debug');
+var ApiInterface = require('proxy/apiInterface');
+var EventInterface = require('proxy/eventInterface');
+var Provider = require('provider');
+var Proxy = require('proxy');
+var util = require('util');
 
 /**
  * The internal logic for module setup, which makes sure the public
@@ -13,9 +15,10 @@ fdom.port = fdom.port || {};
  * @param {Port} manager The manager in this module to use for routing setup.
  * @constructor
  */
-fdom.port.ModuleInternal = function(manager) {
+var ModuleInternal = function(manager) {
   this.config = {};
   this.manager = manager;
+  this.api = this.manager.api;
   this.manifests = {};
   
   this.id = 'ModuleInternal-' + Math.random();
@@ -23,7 +26,7 @@ fdom.port.ModuleInternal = function(manager) {
   this.requests = {};
   this.defaultProvider = null;
 
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 };
 
 /**
@@ -36,11 +39,11 @@ fdom.port.ModuleInternal = function(manager) {
  * @param {String} flow The detination of the message.
  * @param {Object} message The message.
  */
-fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
+ModuleInternal.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
-      fdom.util.mixin(this.config, message.config);
+      util.mixin(this.config, message.config);
     }
   } else if (flow === 'default' && !this.appId) {
     // Recover the ID of this module:
@@ -75,8 +78,8 @@ fdom.port.ModuleInternal.prototype.onMessage = function(flow, message) {
  * @method toString
  * @return {String} a description of this Port.
  */
-fdom.port.ModuleInternal.prototype.toString = function() {
-  return "[Module Environment Helper]";
+ModuleInternal.prototype.toString = function() {
+  return "[Environment Helper]";
 };
 
 /**
@@ -85,7 +88,7 @@ fdom.port.ModuleInternal.prototype.toString = function() {
  * @param {Object} manifest The manifest of the module.
  * @private
  */
-fdom.port.ModuleInternal.prototype.updateEnv = function(manifest) {
+ModuleInternal.prototype.updateEnv = function(manifest) {
   // Decide if/what other properties should be exported.
   // Keep in sync with Module.updateEnv
   var exp = this.config.global.freedom, metadata = {
@@ -107,7 +110,7 @@ fdom.port.ModuleInternal.prototype.updateEnv = function(manifest) {
  * @param {String} api The API the proxy implements.
  * @private.
  */
-fdom.port.ModuleInternal.prototype.attach = function(name, proxy, api) {
+ModuleInternal.prototype.attach = function(name, proxy, api) {
   var exp = this.config.global.freedom;
 
   if (!exp[name]) {
@@ -133,7 +136,7 @@ fdom.port.ModuleInternal.prototype.attach = function(name, proxy, api) {
  * @param {Object[]} items Descriptors of the proxy ports to load.
  * @private
  */
-fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
+ModuleInternal.prototype.loadLinks = function(items) {
   var i, proxy, provider, core,
       manifestPredicate = function(name, flow, msg) {
         return flow === 'manifest' && msg.name === name;
@@ -148,8 +151,8 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
 
   for (i = 0; i < items.length; i += 1) {
     if (items[i].provides && !items[i].def) {
-      fdom.debug.error('Module ' +this.appId + ' not loaded');
-      fdom.debug.error('Unknown provider: ' + items[i].name);
+      debug.error('Module ' +this.appId + ' not loaded');
+      debug.error('Unknown provider: ' + items[i].name);
     } else if (items[i].api && !items[i].def) {
       this.once(manifestPredicate.bind({}, items[i].name),
                 onManifest.bind(this, items[i]));
@@ -160,7 +163,7 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
   }
   
   // Allow resolution of files by parent.
-  fdom.resources.addResolver(function(manifest, url, resolve) {
+  this.manager.resource.addResolver(function(manifest, url, resolve) {
     var id = Math.random();
     this.requests[id] = resolve;
     this.emit(this.externalChannel, {
@@ -174,8 +177,8 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
   // Attach Core.
   this.pendingPorts += 1;
 
-  core = fdom.apis.get('core').definition;
-  provider = new fdom.port.Provider(core);
+  core = this.api.get('core').definition;
+  provider = new Provider(core);
   this.manager.getCore(function(CoreProv) {
     new CoreProv(this.manager).setId(this.lineage);
     provider.getInterface().provideAsynchronous(CoreProv);
@@ -188,7 +191,7 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
     to: provider
   });
 
-  proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, core));
+  proxy = new Proxy(ApiInterface.bind({}, core));
   this.manager.createLink(provider, 'default', proxy);
   this.attach('core', proxy);
 
@@ -208,21 +211,21 @@ fdom.port.ModuleInternal.prototype.loadLinks = function(items) {
  * @param {Boolean} definition.provides Whether the link is a provider.
  * @private
  */
-fdom.port.ModuleInternal.prototype.loadLink = function(name, definition) {
+ModuleInternal.prototype.loadLink = function(name, definition) {
   var proxy, api;
   if (definition) {
     api = definition.name;
     if (definition.provides) {
-      proxy = new fdom.port.Provider(definition.definition);
+      proxy = new Provider(definition.definition);
       if (!this.defaultProvider) {
         this.defaultProvider = proxy;
       }
     } else {
-      proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({},
+      proxy = new Proxy(ApiInterface.bind({},
           definition.definition));
     }
   } else {
-    proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
+    proxy = new Proxy(EventInterface);
   }
     
   proxy.once('start', this.attach.bind(this, name, proxy, api));
@@ -238,7 +241,7 @@ fdom.port.ModuleInternal.prototype.loadLink = function(name, definition) {
  * @param {String} name The Dependency
  * @param {Object} manifest The manifest of the dependency
  */
-fdom.port.ModuleInternal.prototype.updateManifest = function(name, manifest) {
+ModuleInternal.prototype.updateManifest = function(name, manifest) {
   var exp = this.config.global.freedom;
 
   if (exp[name]) {
@@ -254,7 +257,7 @@ fdom.port.ModuleInternal.prototype.updateManifest = function(name, manifest) {
  * @param {Object} manifest the module JSON manifest.
  * @return {Object[]} proxy descriptors defined in the manifest.
  */
-fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
+ModuleInternal.prototype.mapProxies = function(manifest) {
   var proxies = [], seen = ['core'], i, obj;
   
   if (manifest.permissions) {
@@ -263,7 +266,7 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
         name: manifest.permissions[i],
         def: undefined
       };
-      obj.def = fdom.apis.get(obj.name);
+      obj.def = this.api.get(obj.name);
       if (seen.indexOf(obj.name) < 0 && obj.def) {
         proxies.push(obj);
         seen.push(obj.name);
@@ -272,14 +275,14 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
   }
   
   if (manifest.dependencies) {
-    fdom.util.eachProp(manifest.dependencies, function(desc, name) {
+    util.eachProp(manifest.dependencies, function(desc, name) {
       obj = {
         name: name,
         api: desc.api
       };
       if (seen.indexOf(name) < 0) {
         if (desc.api) {
-          obj.def = fdom.apis.get(desc.api);
+          obj.def = this.api.get(desc.api);
         }
         proxies.push(obj);
         seen.push(name);
@@ -293,7 +296,7 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
         name: manifest.provides[i],
         def: undefined
       };
-      obj.def = fdom.apis.get(obj.name);
+      obj.def = this.api.get(obj.name);
       if (obj.def) {
         obj.def.provides = true;
       } else if (manifest.api && manifest.api[obj.name]) {
@@ -319,7 +322,7 @@ fdom.port.ModuleInternal.prototype.mapProxies = function(manifest) {
  * @param {String} from The URL of this modules's manifest.
  * @param {String[]} scripts The URLs of the scripts to load.
  */
-fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
+ModuleInternal.prototype.loadScripts = function(from, scripts) {
   // TODO(salomegeo): add a test for failure.
   var importer = function importScripts(script, resolve, reject) {
     try {
@@ -328,15 +331,16 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
     } catch(e) {
       reject(e);
     }
-  }.bind(this);
-  var scripts_count;
+  }.bind(this),
+      scripts_count,
+      load;
   if (typeof scripts === 'string') {
     scripts_count = 1;
   } else {
     scripts_count = scripts.length;
   }
 
-  var load = function(next) {
+  load = function(next) {
     if (next === scripts_count) {
       this.emit(this.externalChannel, {
         type: "ready"
@@ -351,7 +355,7 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
       script = scripts[next];
     }
 
-    fdom.resources.get(from, script).then(function(url) {
+    this.manager.resource.get(from, script).then(function(url) {
       this.tryLoad(importer, url).then(function() {
         load(next + 1);
       }.bind(this));
@@ -380,11 +384,13 @@ fdom.port.ModuleInternal.prototype.loadScripts = function(from, scripts) {
  * @param {String[]} urls The resoved URLs to load.
  * @returns {Promise} completion of load
  */
-fdom.port.ModuleInternal.prototype.tryLoad = function(importer, url) {
-  return new Promise(importer.bind({}, url)).catch(function(e) {
-    fdom.debug.warn(e.stack);
-    fdom.debug.error("Error loading " + url, e);
-    fdom.debug.error("If the stack trace is not useful, see https://" +
+ModuleInternal.prototype.tryLoad = function(importer, url) {
+  return new Promise(importer.bind({}, url)).fail(function(e) {
+    debug.warn(e.stack);
+    debug.error("Error loading " + url, e);
+    debug.error("If the stack trace is not useful, see https://" +
         "github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors");
   });
 };
+
+module.exports = ModuleInternal;

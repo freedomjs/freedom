@@ -1,9 +1,7 @@
-/*globals fdom:true */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.port = fdom.port || {};
+var debug = require('debug');
+var util = require('util');
+var Provider = require('provider');
 
 /**
  * The external Port face of a module on a hub.
@@ -13,7 +11,7 @@ fdom.port = fdom.port || {};
  * @param {String[]} creator The lineage of creation for this module.
  * @constructor
  */
-fdom.port.Module = function(manifestURL, manifest, creator) {
+var Module = function(manifestURL, manifest, creator) {
   this.config = {};
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
@@ -24,7 +22,7 @@ fdom.port.Module = function(manifestURL, manifest, creator) {
   this.internalPortMap = {};
   this.started = false;
 
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 };
 
 /**
@@ -33,11 +31,11 @@ fdom.port.Module = function(manifestURL, manifest, creator) {
  * @param {String} flow The origin of the message.
  * @param {Object} message The message received.
  */
-fdom.port.Module.prototype.onMessage = function(flow, message) {
+Module.prototype.onMessage = function(flow, message) {
   if (flow === 'control') {
     if (message.type === 'setup') {
       this.controlChannel = message.channel;
-      fdom.util.mixin(this.config, message.config);
+      util.mixin(this.config, message.config);
       this.emit(this.controlChannel, {
         type: 'Core Provider',
         request: 'core'
@@ -103,7 +101,7 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
       if (this.internalPortMap[flow] === false) {
         this.once('internalChannelReady', this.onMessage.bind(this, flow, message));
       } else if (!this.internalPortMap[flow]) {
-        fdom.debug.error('Unexpected message from ' + flow);
+        debug.error('Unexpected message from ' + flow);
         return;
       } else {
         this.port.onMessage(this.internalPortMap[flow], message);
@@ -120,7 +118,7 @@ fdom.port.Module.prototype.onMessage = function(flow, message) {
  * @returns {Boolean} Whether the flow was successfully deregistered.
  * @private
  */
-fdom.port.Module.prototype.deregisterFlow = function(flow, internal) {
+Module.prototype.deregisterFlow = function(flow, internal) {
   var key,
       map = internal ? this.internalPortMap : this.externalPortMap;
   // TODO: this is inefficient, but seems less confusing than a 3rd
@@ -153,13 +151,14 @@ fdom.port.Module.prototype.deregisterFlow = function(flow, internal) {
  * @method start
  * @private
  */
-fdom.port.Module.prototype.start = function() {
+Module.prototype.start = function() {
+  var Port;
   if (this.started || this.port) {
     return false;
   }
   if (this.controlChannel) {
     this.loadLinks();
-    this.port = new fdom.link[this.config.portType](this.manifest.name);
+    this.port = require(this.config.portType)(this.manifest.name);
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
     // Tell the local port to ask us for help.
@@ -183,10 +182,8 @@ fdom.port.Module.prototype.start = function() {
     // Tell the container to instantiate the counterpart to this external view.
     this.port.onMessage('control', {
       type: 'Environment Configuration',
-      request: 'port',
-      name: 'ModInternal',
-      service: 'ModuleInternal',
-      exposeManager: true
+      request: 'environment',
+      name: 'ModInternal'
     });
   }
 };
@@ -196,7 +193,7 @@ fdom.port.Module.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.port.Module.prototype.stop = function() {
+Module.prototype.stop = function() {
   if (!this.started) {
     return;
   }
@@ -216,7 +213,7 @@ fdom.port.Module.prototype.stop = function() {
  * @method toString
  * @return {String} The description of this Port.
  */
-fdom.port.Module.prototype.toString = function() {
+Module.prototype.toString = function() {
   return "[Module " + this.manifest.name +"]";
 };
 
@@ -228,7 +225,7 @@ fdom.port.Module.prototype.toString = function() {
  * @param {Object} message The message to send.
  * @private
  */
-fdom.port.Module.prototype.emitMessage = function(name, message) {
+Module.prototype.emitMessage = function(name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
@@ -237,7 +234,7 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
   // Terminate debug redirection requested in start().
   if (name === 'control') {
     if (message.flow === 'debug' && message.message) {
-      fdom.debug.format(message.message.severity,
+      debug.format(message.message.severity,
           message.message.source || this.toString(),
           message.message.msg);
     } else if (message.flow === 'core' && message.message) {
@@ -289,7 +286,7 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
         data: data
       });
     }.bind(this, message.id), function() {
-      fdom.debug.warn('Error Resolving URL for Module.');
+      debug.warn('Error Resolving URL for Module.');
     });
   } else {
     this.emit(this.externalPortMap[name], message);
@@ -302,7 +299,7 @@ fdom.port.Module.prototype.emitMessage = function(name, message) {
  * @method loadLinks
  * @private
  */
-fdom.port.Module.prototype.loadLinks = function() {
+Module.prototype.loadLinks = function() {
   var i, channels = ['default'], name, dep,
       finishLink = function(dep, name, provider) {
         var style = fdom.apis.getInterfaceStyle(name);
@@ -313,7 +310,7 @@ fdom.port.Module.prototype.loadLinks = function() {
       name = this.manifest.permissions[i];
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
-        dep = new fdom.port.Provider(fdom.apis.get(name).definition);
+        dep = new Provider(fdom.apis.get(name).definition);
         fdom.apis.getCore(name, this).then(finishLink.bind(this, dep, name));
 
         this.emit(this.controlChannel, {
@@ -326,7 +323,7 @@ fdom.port.Module.prototype.loadLinks = function() {
     }
   }
   if (this.manifest.dependencies) {
-    fdom.util.eachProp(this.manifest.dependencies, function(desc, name) {
+    util.eachProp(this.manifest.dependencies, function(desc, name) {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }
@@ -357,7 +354,7 @@ fdom.port.Module.prototype.loadLinks = function() {
  * @param {String} dep The dependency
  * @param {Object} manifest The manifest of the dependency
  */
-fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
+Module.prototype.updateEnv = function(dep, manifest) {
   if (!manifest) {
     return;
   }
@@ -391,12 +388,4 @@ fdom.port.Module.prototype.updateEnv = function(dep, manifest) {
   });
 };
 
-fdom.port.Module.prototype.serialize = function() {
-  return JSON.serialize({
-    manifestId: this.manifestId,
-    externalPortMap: this.externalPortMap,
-    internalPortMap: this.internalPortMap,
-    manifest: this.manifest,
-    controlChannel: this.controlChannel
-  });
-};
+module.exports = Module;
