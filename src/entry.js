@@ -9,6 +9,7 @@ var Policy = require('./policy');
 var ProxyBinder = require('./proxybinder');
 var Resource = require('./resource');
 var util = require('./util');
+var Bundle = require('./bundle');
 
 var freedomGlobal;
 var getGlobal = function () {
@@ -28,8 +29,13 @@ getGlobal();
 
 /**
  * Create a new freedom context.
+ * @param {Object} context Information about the local context.
+ * @see {util/preamble.js}
+ * @param {String} manifest The manifest to load.
+ * @param {Object} config Configuration keys set by the user.
+ * @returns {Promise} A promise for the module defined in the manifest.
  */
-var setup = function (manifest, config) {
+var setup = function (context, manifest, config) {
   'use strict';
   var debug = new Debug(),
     hub = new Hub(debug),
@@ -47,15 +53,20 @@ var setup = function (manifest, config) {
     },
     link,
     Port;
+  Bundle.register(api);
+  
 
   if (config) {
     util.mixin(site_cfg, config, true);
   }
   site_cfg.global = freedomGlobal;
+  if (context) {
+    util.mixin(site_cfg, context, true);
+  }
 
   return new Promise(function (resolve, reject) {
     if (site_cfg.moduleContext) {
-      Port = require(site_cfg.portType);
+      Port = site_cfg.portType;
       link = new Port();
       manager.setup(link);
 
@@ -69,11 +80,14 @@ var setup = function (manifest, config) {
     
       policy = new Policy(manager, resource, site_cfg);
 
-      resource.get(site_cfg.location, site_cfg.manifest).then(function (root_manifest) {
-        return policy.get([], root_manifest);
-      }).then(function (root_module) {
+      resource.get(site_cfg.location, site_cfg.manifest).then(
+        function (root_manifest) {
+          return policy.get([], root_manifest);
+        }
+      ).then(function (root_module) {
+        manager.setup(root_module);
         return binder.bindDefault(root_module, api, root_module.manifest);
-      }).fail(function (err) {
+      }, function (err) {
         debug.error('Failed to retrieve manifest: ' + err);
       }).then(resolve, reject);
     }

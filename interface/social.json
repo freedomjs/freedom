@@ -40,12 +40,12 @@
  *   - Returned in a global list from 'getUsers'
  * {
  *   // Mandatory
- *   'userId': 'string',    // Unique ID of user (e.g. alice@gmail.com)
- *   'lastUpdated': 'number'  // Timestamp of last change to the profile
+ *   "userId": "string",    // Unique ID of user (e.g. alice@gmail.com)
+ *   "lastUpdated": "number"  // Timestamp of last change to the profile
  *   // Optional
- *   'name': 'string',      // Name (e.g. Alice)
- *   'url': 'string',       // Homepage URL
- *   'imageData': 'string', // URI of a profile image.
+ *   "name": "string",      // Name (e.g. Alice)
+ *   "url": "string",       // Homepage URL
+ *   "imageData": "string", // URI of a profile image.
  * }
  **/
 {
@@ -54,40 +54,40 @@
     /** 
      * error codes and default messages that may be returned on failures.
      */
-    'ERRCODE': {type: 'constant', value: {
+    "ERRCODE": {"type": "constant", "value": {
       /** GENERAL **/
-      'SUCCESS': 'Success!',
+      "SUCCESS": "Success!",
       // Unknown
-      'UNKNOWN': 'Unknown error',
+      "UNKNOWN": "Unknown error",
       // User is currently offline
-      'OFFLINE': 'User is currently offline',
+      "OFFLINE": "User is currently offline",
       // Improper parameters
-      'MALFORMEDPARAMETERS': 'Parameters are malformed',
+      "MALFORMEDPARAMETERS": "Parameters are malformed",
   
       /** LOGIN **/
       // Error authenticating to the server (e.g. invalid credentials)
-      'LOGIN_BADCREDENTIALS': 'Error authenticating with server',
+      "LOGIN_BADCREDENTIALS": "Error authenticating with server",
       // Error with connecting to the server
-      'LOGIN_FAILEDCONNECTION': 'Error connecting to server',
+      "LOGIN_FAILEDCONNECTION": "Error connecting to server",
       // User is already logged in
-      'LOGIN_ALREADYONLINE': 'User is already logged in',
+      "LOGIN_ALREADYONLINE": "User is already logged in",
   
       /** SENDMESSAGE **/
       // Message sent to invalid destination (e.g. not in user's roster)
-      'SEND_INVALIDDESTINATION': 'Message sent to an invalid destination'
+      "SEND_INVALIDDESTINATION": "Message sent to an invalid destination"
     }},
     
     /**
      * List of possible statuses for <client_state>.status
      **/
-    'STATUS': {type: 'constant', value: {
+    "STATUS": {"type": "constant", "value": {
       // Not logged in
-      'OFFLINE': 'OFFLINE',
+      "OFFLINE": "OFFLINE",
       // This client runs the same freedom.js app as you and is online
-      'ONLINE': 'ONLINE',
+      "ONLINE": "ONLINE",
       // This client is online, but does not run the same app (chat client)
       // (i.e. can be useful to invite others to your freedom.js app)
-      'ONLINE_WITH_OTHER_APP': 'ONLINE_WITH_OTHER_APP'
+      "ONLINE_WITH_OTHER_APP": "ONLINE_WITH_OTHER_APP"
     }},
   
     /**
@@ -98,28 +98,28 @@
      * @param {Object} loginOptions - See below
      * @return {Object} <client_state>
      **/
-    'login': {
-      type: 'method',
-      value: [{
+    "login": {
+      "type": "method",
+      "value": [{
         // Optional
-        'agent': 'string',         // Name of the application
-        'version': 'string',       // Version of application
-        'url': 'string',           // URL of application
-        'interactive': 'boolean',  // Allow user interaction from provider.
+        "agent": "string",         // Name of the application
+        "version": "string",       // Version of application
+        "url": "string",           // URL of application
+        "interactive": "boolean",  // Allow user interaction from provider.
                                    // If not set, interpreted as true.
-        'rememberLogin': 'boolean' // Cache login credentials. If not set,
+        "rememberLogin": "boolean" // Cache login credentials. If not set,
                                    // interpreted as true.
       }],
-      ret: {                       // <client_state>, defined above.
-        'userId': 'string',
-        'clientId': 'string',
-        'status': 'string',
-        'lastUpdated': 'number',
-        'lastSeen': 'number'
+      "ret": {                       // <client_state>, defined above.
+        "userId": "string",
+        "clientId": "string",
+        "status": "string",
+        "lastUpdated": "number",
+        "lastSeen": "number"
       },
-      err: {
-        'errcode': 'string',
-        'message': 'string'
+      "err": {
+        "errcode": "string",
+        "message": "string"
       }
     },
   
@@ -129,7 +129,7 @@
      * @method clearCachedCredentials
      * @return nothing
      **/
-    'clearCachedCredentials': {type: 'method', value: []},
+    "clearCachedCredentials": {"type": "method", "value": []},
   
     /**
      * Get <client_state>s that have been observed.
@@ -140,19 +140,19 @@
      * 
      * @method getClients
      * @return {Object} { 
-     *    'clientId1': <client_state>,
-     *    'clientId2': <client_state>,
+     *    "clientId1": <client_state>,
+     *    "clientId2": <client_state>,
      *     ...
      * } List of <client_state>s indexed by clientId
      *   On failure, rejects with an error code.
      **/
-    'getClients': {
-      type: 'method',
-      value: [],
-      ret: 'object',
-      err: {
-        'errcode': 'string',
-        'message': 'string'
+    "getClients": {
+      "type": "method",
+      "value": [],
+      "ret": "object",
+      "err": {
+        "errcode": "string",
+        "message": "string"
       }
     },
   
@@ -165,19 +165,19 @@
      *
      * @method getUsers
      * @return {Object} { 
-     *    'userId1': <user_profile>,
-     *    'userId2': <user_profile>,
+     *    "userId1": <user_profile>,
+     *    "userId2": <user_profile>,
      *     ...
      * } List of <user_profile>s indexed by userId
      *   On failure, rejects with an error code.
      **/
-    'getUsers': {
-      type: 'method',
-      value: [],
-      ret: 'object',
-      err: {
-        'errcode': 'string',
-        'message': 'string'
+    "getUsers": {
+      "type": "method",
+      "value": [],
+      "ret": "object",
+      "err": {
+        "errcode": "string",
+        "message": "string"
       }
     },
   
@@ -192,12 +192,12 @@
      * @return nothing
      *  On failure, rejects with an error code
      **/
-    'sendMessage': {
-      type: 'method',
-      value: ['string', 'string'],
-      err: {
-        'errcode': 'string',
-        'message': 'string'
+    "sendMessage": {
+      "type": "method",
+      "value": ["string", "string"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
       }
     },
   
@@ -208,49 +208,49 @@
      * @return nothing
      *  On failure, rejects with an error code
      **/
-    'logout': {
-      type: 'method',
-      value: [],
-      err: {
-        'errcode': 'string',
-        'message': 'string'
+    "logout": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
       }
     },
   
     /**
      * Receive an incoming message.
      **/
-    'onMessage': {type: 'event', value: {
-      'from': {               // <client_state>, defined above.
-        'userId': 'string',
-        'clientId': 'string',
-        'status': 'string',
-        'lastUpdated': 'number',
-        'lastSeen': 'number'
+    "onMessage": {"type": "event", "value": {
+      "from": {               // <client_state>, defined above.
+        "userId": "string",
+        "clientId": "string",
+        "status": "string",
+        "lastUpdated": "number",
+        "lastSeen": "number"
       },
-      'message': 'string'     // message contents
+      "message": "string"     // message contents
     }},
   
     /**
      * Receive a change to a <user_profile>.
      **/
-    'onUserProfile': {type: 'event', value: { // <user_profile>, defined above.
-      'userId': 'string',
-      'lastUpdated': 'number',
-      'name': 'string',
-      'url': 'string',
-      'imageData': 'string'
+    "onUserProfile": {"type": "event", "value": { // <user_profile>, defined above.
+      "userId": "string",
+      "lastUpdated": "number",
+      "name": "string",
+      "url": "string",
+      "imageData": "string"
     }},
   
     /**
      * Receive a change to a <client_state>.
      **/
-    'onClientState': {type: 'event', value: { // <client_state>, defined above.
-      'userId': 'string',
-      'clientId': 'string',
-      'status': 'string',
-      'lastUpdated': 'number',
-      'lastSeen': 'number'
+    "onClientState": {"type": "event", "value": { // <client_state>, defined above.
+      "userId": "string",
+      "clientId": "string",
+      "status": "string",
+      "lastUpdated": "number",
+      "lastSeen": "number"
     }}
   }
 }

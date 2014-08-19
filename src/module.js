@@ -166,7 +166,8 @@ Module.prototype.start = function() {
   }
   if (this.controlChannel) {
     this.loadLinks();
-    this.port = require(this.config.portType)(this.manifest.name);
+    Port = this.config.portType;
+    this.port = new Port(this.manifest.name);
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
     this.port.addErrorHandler(function(err) {

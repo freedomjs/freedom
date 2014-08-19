@@ -9,7 +9,7 @@ var Link = require('../link');
  * @uses handleEvents
  * @constructor
  */
-var Worker = function(id) {
+var WorkerLink = function(id) {
   Link.call(this);
   if (id) {
     this.id = id;
@@ -21,7 +21,7 @@ var Worker = function(id) {
  * @method start
  * @private
  */
-Worker.prototype.start = function() {
+WorkerLink.prototype.start = function() {
   if (this.config.moduleContext) {
     this.setupListener();
   } else {
@@ -34,7 +34,7 @@ Worker.prototype.start = function() {
  * @method stop
  * @private
  */
-Worker.prototype.stop = function() {
+WorkerLink.prototype.stop = function() {
   // Function is determined by setupListener or setupFrame as appropriate.
 };
 
@@ -43,7 +43,7 @@ Worker.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-Worker.prototype.toString = function() {
+WorkerLink.prototype.toString = function() {
   return "[Worker " + this.id + "]";
 };
 
@@ -52,7 +52,7 @@ Worker.prototype.toString = function() {
  * freedom.js context.
  * @method setupListener
  */
-Worker.prototype.setupListener = function() {
+WorkerLink.prototype.setupListener = function() {
   var onMsg = function(msg) {
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this);
@@ -69,14 +69,12 @@ Worker.prototype.setupListener = function() {
  * Set up a worker with an isolated freedom.js context inside.
  * @method setupWorker
  */
-Worker.prototype.setupWorker = function() {
-  var worker, blob, self = this;
-  if (typeof (window.Blob) !== typeof (Function)) {
-    worker = new Worker(this.config.source);
-  } else {
-    blob = new window.Blob([this.config.src], {type: 'text/javascript'});
-    worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.id);
-  }
+WorkerLink.prototype.setupWorker = function() {
+  var worker,
+    blob,
+    self = this;
+  worker = new Worker(this.config.source);
+
   worker.addEventListener('error', function(err) {
     this.onError(err);
   }.bind(this), true);
@@ -102,7 +100,7 @@ Worker.prototype.setupWorker = function() {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-Worker.prototype.deliverMessage = function(flow, message) {
+WorkerLink.prototype.deliverMessage = function(flow, message) {
   if (flow === 'control' && message.type === 'close' &&
       message.channel === 'control') {
     this.stop();
@@ -119,5 +117,5 @@ Worker.prototype.deliverMessage = function(flow, message) {
   }
 };
 
-module.exports = Worker;
+module.exports = WorkerLink;
 

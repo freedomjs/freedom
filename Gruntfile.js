@@ -182,33 +182,15 @@ module.exports = function (grunt) {
         '-W069': true
       }
     },
-    uglify: {
+    browserify: {
       freedom: {
         files: {
-          'freedom.js': FILES.lib.concat(FILES.srcCore).concat(FILES.srcPlatform)
+          'freedom.js': ['src/util/preamble.js','interface/*.js']
         },
         options: {
-          sourceMap: true,
-          mangle: false,
-          beautify: true,
-          preserveComments: function(node, comment) {
-            return comment.value.indexOf('jslint') !== 0;
-          },
-          banner: require('fs').readFileSync('src/util/preamble.js', 'utf8'),
-          footer: require('fs').readFileSync('src/util/postamble.js', 'utf8')
+          transform: ['folderify']
         }
       },
-      min: {
-        files: {
-          'freedom.min.js': ['freedom.js']
-        },
-        options: {
-          mangle: { except: ['global'] },
-          preserveComments: 'some',
-          sourceMap: true,
-          sourceMapIn: 'freedom.js.map'
-        }
-      }
     },
     clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map'],
     yuidoc: {
@@ -275,10 +257,10 @@ module.exports = function (grunt) {
   });
 
   // Load tasks.
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-gitinfo');
@@ -289,7 +271,7 @@ module.exports = function (grunt) {
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
-    'uglify',
+    'browserify',
     'gitinfo',
     'connect:default'
   ]);
@@ -302,7 +284,7 @@ module.exports = function (grunt) {
     'karma:watch'
   ]);
   grunt.registerTask('demo', [
-    'uglify',
+    'browserify',
     'connect:demo',
   ]);
 

@@ -17,20 +17,17 @@
  * @license apache2.0
  * @see https://freedomjs.org
  */
-(function (global) {
-  'use strict';
-  (function freedom() {
-    /* jshint -W069 */
 
-    var freedom_src = '(function (global) {\'use strict\';(' + freedom + ')();})(this);';
-    var fdom;
-
-    if (typeof global['freedom'] !== 'undefined') {
-      return;
-    }
-
-    /* jshint -W093 */
-    /* jshint -W034 */
-    if (typeof window === 'undefined') {
-      var window = global;
-    }
+if (typeof window !== 'undefined') {
+  window.freedom = require('../entry').bind({}, {
+    location: window.location.href,
+    portType: require('../link/worker'),
+    // Works in Chrome
+    source: window.document.head.lastChild.src
+  });
+} else {
+  require('../entry')({
+    isModule: true,
+    portType: require('../link/worker')
+  });
+}

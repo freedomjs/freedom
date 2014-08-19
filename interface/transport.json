@@ -10,15 +10,15 @@
     /** 
      * error codes and default messages that may be returned on failures.
      */
-    'ERRCODE': {type: 'constant', value: {
+    "ERRCODE": {"type": "constant", "value": {
       /** GENERAL **/
-      'SUCCESS': 'Success!',
+      "SUCCESS": "Success!",
       // Unknown
-      'UNKNOWN': 'Unknown error',
+      "UNKNOWN": "Unknown error",
       // Database not ready
-      'OFFLINE': 'Not reachable',
+      "OFFLINE": "Not reachable",
       // Improper parameters
-      'MALFORMEDPARAMETERS': 'Parameters are malformed'
+      "MALFORMEDPARAMETERS": "Parameters are malformed"
     }},
   
     /**
@@ -32,11 +32,11 @@
      * @param {Proxy} channel - signalling channel
      * @return nothing.
      **/
-    'setup': {
-      type: "method",
-      value: ["string", "proxy"],
-      ret: [],
-      err: {
+    "setup": {
+      "type": "method",
+      "value": ["string", "proxy"],
+      "ret": [],
+      "err": {
         "errcode": "string",
         "message": "string"
       }
@@ -53,11 +53,11 @@
      * @param {buffer} data
      * @return nothing
      **/
-    'send': {
-      type: "method",
-      value: ["string", "buffer"],
-      ret: [],
-      err: {
+    "send": {
+      "type": "method",
+      "value": ["string", "buffer"],
+      "ret": [],
+      "err": {
         "errcode": "string",
         "message": "string"
       }
@@ -72,11 +72,11 @@
      * @method close
      * @return nothing
      **/
-    'close': {
-      type: "method",
-      value: [],
-      ret: [],
-      err: {
+    "close": {
+      "type": "method",
+      "value": [],
+      "ret": [],
+      "err": {
         "errcode": "string",
         "message": "string"
       }
@@ -85,9 +85,9 @@
     /**
      * Event on incoming data (ArrayBuffer)
      **/
-    'onData': {
-      type: "event",
-      value: {
+    "onData": {
+      "type": "event",
+      "value": {
         "tag": "string",
         "data": "buffer"
       }
@@ -96,9 +96,9 @@
     /**
      * Event on successful closing of the connection
      **/
-    'onClose': {
-      type: "event",
-      value: []
+    "onClose": {
+      "type": "event",
+      "value": []
     }
   }
 }
