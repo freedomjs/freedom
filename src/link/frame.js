@@ -1,6 +1,6 @@
 /*jslint indent:2, white:true, node:true, sloppy:true */
-var Link = require('link');
-var util = require('util');
+var Link = require('../link');
+var util = require('../util');
 
 /**
  * A port providing message transport between two freedom contexts via iFrames.

@@ -1,7 +1,6 @@
 /*globals Blob, ArrayBuffer, DataView */
-/*jslint indent:2, white:true, node:true, sloppy:true */
-var debug = require('debug');
-var util = require('util');
+/*jslint indent:2, node:true, sloppy:true */
+var util = require('./util');
 
 /**
  * A freedom port for a user-accessable proxy.
@@ -9,11 +8,13 @@ var util = require('util');
  * @implements Port
  * @uses handleEvents
  * @param {Object} interfaceCls The proxy interface exposed by this proxy.
+ * @param {Debug} debug The debugger to use for logging.
  * @constructor
  */
-var Proxy = function(interfaceCls) {
+var Proxy = function (interfaceCls, debug) {
   this.id = Proxy.nextId();
   this.interfaceCls = interfaceCls;
+  this.debug = debug;
   util.handleEvents(this);
   
   this.ifaces = {};
@@ -28,7 +29,7 @@ var Proxy = function(interfaceCls) {
  * @param {String} source The source of the message.
  * @param {Object} message The received message.
  */
-Proxy.prototype.onMessage = function(source, message) {
+Proxy.prototype.onMessage = function (source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
     this.emit(this.emitChannel, {
@@ -59,11 +60,11 @@ Proxy.prototype.onMessage = function(source, message) {
       if (this.emits[message.to]) {
         this.emits[message.to]('message', message.message);
       } else {
-        debug.warn('Could not deliver message, no such interface: ' + message.to);
+        this.debug.warn('Could not deliver message, no such interface: ' + message.to);
       }
     } else {
       var msg = message.message;
-      util.eachProp(this.emits, function(iface) {
+      util.eachProp(this.emits, function (iface) {
         iface('message', message.message);
       });
     }
@@ -81,9 +82,9 @@ Proxy.prototype.onMessage = function(source, message) {
  * id: string is the Identifier for this interface.
  * @method getInterface
  */
-Proxy.prototype.getInterface = function() {
+Proxy.prototype.getInterface = function () {
   var Iface = this.getInterfaceConstructor(),
-      args = Array.prototype.slice.call(arguments, 0);
+    args = Array.prototype.slice.call(arguments, 0);
   if (args.length) {
     Iface = Iface.bind.apply(Iface, [Iface].concat(args));
   }
@@ -95,8 +96,8 @@ Proxy.prototype.getInterface = function() {
  * a user-visible point.
  * @method getProxyInterface
  */
-Proxy.prototype.getProxyInterface = function() {
-  var func = function(p) {
+Proxy.prototype.getProxyInterface = function () {
+  var func = function (p) {
     var args = Array.prototype.slice.call(arguments, 1);
     if (args.length > 0) {
       return p.getInterface.apply(p, args);
@@ -105,9 +106,9 @@ Proxy.prototype.getProxyInterface = function() {
     }
   }.bind({}, this);
 
-  func.close = function(iface) {
+  func.close = function (iface) {
     if (iface) {
-      util.eachProp(this.ifaces, function(candidate, id) {
+      util.eachProp(this.ifaces, function (candidate, id) {
         if (candidate === iface) {
           this.teardown(id);
           this.emit(this.emitChannel, {
@@ -123,14 +124,14 @@ Proxy.prototype.getProxyInterface = function() {
     }
   }.bind(this);
 
-  func.onClose = function(iface, handler) {
+  func.onClose = function (iface, handler) {
     if (typeof iface === 'function' && handler === undefined) {
       // Add an on-channel-closed handler.
       this.once('close', iface);
       return;
     }
 
-    util.eachProp(this.ifaces, function(candidate, id) {
+    util.eachProp(this.ifaces, function (candidate, id) {
       if (candidate === iface) {
         if (this.closeHandlers[id]) {
           this.closeHandlers[id].push(handler);
@@ -142,12 +143,12 @@ Proxy.prototype.getProxyInterface = function() {
     }.bind(this));
   }.bind(this);
 
-  func.onError = function(iface, handler) {
+  func.onError = function (iface, handler) {
     if (typeof iface === 'function' && handler === undefined) {
       this.on('error', iface);
       return;
     }
-    util.eachProp(this.ifaces, function(candidate, id) {
+    util.eachProp(this.ifaces, function (candidate, id) {
       if (candidate === iface) {
         if (this.errorHandlers[id]) {
           this.errorHandlers[id].push(handler);
@@ -169,12 +170,17 @@ Proxy.prototype.getProxyInterface = function() {
  * @method getInterfaceConstructor
  * @private
  */
-Proxy.prototype.getInterfaceConstructor = function() {
+Proxy.prototype.getInterfaceConstructor = function () {
   var id = Proxy.nextId();
-  return this.interfaceCls.bind({}, function(id, obj, binder) {
-    this.ifaces[id] = obj;
-    this.emits[id] = binder;
-  }.bind(this, id), this.doEmit.bind(this, id));
+  return this.interfaceCls.bind(
+    {},
+    function (id, obj, binder) {
+      this.ifaces[id] = obj;
+      this.emits[id] = binder;
+    }.bind(this, id),
+    this.doEmit.bind(this, id),
+    this.debug
+  );
 };
 
 /**
@@ -185,12 +191,12 @@ Proxy.prototype.getInterfaceConstructor = function() {
  * @param {Object} msg The message to emit
  * @param {Boolean} all Send message to all recipients.
  */
-Proxy.prototype.doEmit = function(to, msg, all) {
+Proxy.prototype.doEmit = function (to, msg, all) {
   if (all) {
     to = false;
   }
   if (this.emitChannel) {
-    this.emit(this.emitChannel, {to: to, type:'message', message: msg});
+    this.emit(this.emitChannel, {to: to, type: 'message', message: msg});
   } else {
     this.once('start', this.doEmit.bind(this, to, msg));
   }
@@ -201,10 +207,10 @@ Proxy.prototype.doEmit = function(to, msg, all) {
  * @method teardown
  * @param {String} id The id of the interface to tear down.
  */
-Proxy.prototype.teardown = function(id) {
+Proxy.prototype.teardown = function (id) {
   delete this.emits[id];
   if (this.closeHandlers[id]) {
-    util.eachProp(this.closeHandlers[id], function(prop) {
+    util.eachProp(this.closeHandlers[id], function (prop) {
       prop();
     });
   }
@@ -219,9 +225,9 @@ Proxy.prototype.teardown = function(id) {
  * @param {String?} id The id of the interface where the error occured.
  * @param {Object} message The message which failed, if relevant.
  */
-Proxy.prototype.error = function(id, message) {
+Proxy.prototype.error = function (id, message) {
   if (id && this.errorHandlers[id]) {
-    util.eachProp(this.errorHandlers[id], function(prop) {
+    util.eachProp(this.errorHandlers[id], function (prop) {
       prop(message);
     });
   } else if (!id) {
@@ -234,7 +240,7 @@ Proxy.prototype.error = function(id, message) {
  * Close / teardown the flow this proxy terminates.
  * @method doClose
  */
-Proxy.prototype.doClose = function() {
+Proxy.prototype.doClose = function () {
   if (this.controlChannel) {
     this.emit(this.controlChannel, {
       type: 'Channel Closing',
@@ -242,7 +248,7 @@ Proxy.prototype.doClose = function() {
     });
   }
 
-  util.eachProp(this.emits, function(emit, id) {
+  util.eachProp(this.emits, function (emit, id) {
     this.teardown(id);
   }.bind(this));
 
@@ -257,7 +263,7 @@ Proxy.prototype.doClose = function() {
  * @method toString
  * @return The description of this port.
  */
-Proxy.prototype.toString = function() {
+Proxy.prototype.toString = function () {
   if (this.emitChannel) {
     return "[Proxy " + this.emitChannel + "]";
   } else {
@@ -271,7 +277,7 @@ Proxy.prototype.toString = function() {
  * @static
  * @private
  */
-Proxy.nextId = function() {
+Proxy.nextId = function () {
   if (!Proxy.id) {
     Proxy.id = 1;
   }
@@ -285,11 +291,12 @@ Proxy.nextId = function() {
  * @method messageToPortable
  * @param {Object} template The template to conform to
  * @param {Object} value The instance of the data structure to confrom
+ * @param {Debug} debug A debugger for errors.
  * @return {{text: Object, binary: Array}} Separated data streams.
  */
-Proxy.messageToPortable = function(template, value) {
+Proxy.messageToPortable = function (template, value, debug) {
   var externals = [],
-      message = Proxy.conform(template, value, externals, true);
+    message = Proxy.conform(template, value, externals, true, debug);
   return {
     text: message,
     binary: externals
@@ -303,10 +310,11 @@ Proxy.messageToPortable = function(template, value) {
  * @method portableToMessage
  * @param {Object} template The template to conform to
  * @param {{text: Object, binary: Array}} streams The streams to conform
+ * @param {Debug} debug A debugger for errors.
  * @return {Object} The data structure matching the template.
  */
-Proxy.portableToMessage = function(template, streams) {
-  return Proxy.conform(template, streams.text, streams.binary, false);
+Proxy.portableToMessage = function (template, streams, debug) {
+  return Proxy.conform(template, streams.text, streams.binary, false, debug);
 };
 
 /**
@@ -318,14 +326,15 @@ Proxy.portableToMessage = function(template, streams) {
  * @param {Object} from The value to conform
  * @param {Array} externals Listing of binary elements in the template
  * @param {Boolean} Whether to to separate or combine streams.
+ * @aparam {Debug} debug A debugger for errors.
  */
-Proxy.conform = function(template, from, externals, separate) {
+Proxy.conform = function (template, from, externals, separate, debug) {
   /* jshint -W086 */
-  if (typeof(from) === 'function') {
+  if (typeof (from) === 'function') {
     //from = undefined;
     //throw "Trying to conform a function";
     return undefined;
-  } else if (typeof(from) === 'undefined') {
+  } else if (typeof (from) === 'undefined') {
     return undefined;
   } else if (from === null) {
     return null;
@@ -334,7 +343,7 @@ Proxy.conform = function(template, from, externals, separate) {
     return undefined;
   }
 
-  switch(template) {
+  switch (template) {
   case 'string':
     return String('') + from;
   case 'number':
@@ -363,10 +372,10 @@ Proxy.conform = function(template, from, externals, separate) {
     }
   case 'buffer':
     if (separate) {
-      externals.push(Proxy.makeArrayBuffer(from));
+      externals.push(Proxy.makeArrayBuffer(from, debug));
       return externals.length - 1;
     } else {
-      return Proxy.makeArrayBuffer(externals[from]);
+      return Proxy.makeArrayBuffer(externals[from], debug);
     }
   case 'proxy':
     return from;
@@ -394,7 +403,7 @@ Proxy.conform = function(template, from, externals, separate) {
     return val;
   } else if (typeof template === 'object' && from !== undefined) {
     val = {};
-    util.eachProp(template, function(prop, name) {
+    util.eachProp(template, function (prop, name) {
       if (from[name] !== undefined) {
         val[name] = Proxy.conform(prop, from[name], externals, separate);
       }
@@ -409,9 +418,10 @@ Proxy.conform = function(template, from, externals, separate) {
  * @static
  * @method makeArrayBuffer
  * @param {Object} thing
+ * @param {Debug} debug A debugger in case of errors.
  * @return {ArrayBuffer} An Array Buffer
  */
-Proxy.makeArrayBuffer = function(thing) {
+Proxy.makeArrayBuffer = function (thing, debug) {
   if (!thing) {
     return new ArrayBuffer(0);
   }
@@ -440,7 +450,7 @@ Proxy.makeArrayBuffer = function(thing) {
  * @param {Object} obj - object to be frozen
  * @return {Object} obj
  **/
-Proxy.recursiveFreezeObject = function(obj) {
+Proxy.recursiveFreezeObject = function (obj) {
   var k, ret = {};
   if (typeof obj !== 'object') {
     return obj;

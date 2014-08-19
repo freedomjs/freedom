@@ -1,7 +1,6 @@
 /*jslint indent:2,white:true,node:true,sloppy:true */
-var debug = require('debug');
-var util = require('util');
-var Provider = require('provider');
+var util = require('./util');
+var Provider = require('./provider');
 
 /**
  * The external Port face of a module on a hub.
@@ -9,15 +8,24 @@ var Provider = require('provider');
  * @extends Port
  * @param {String} manifestURL The manifest this module loads.
  * @param {String[]} creator The lineage of creation for this module.
+ * @param {Policy} Policy The policy loader for dependencies.
  * @constructor
  */
-var Module = function(manifestURL, manifest, creator) {
+var Module = function(manifestURL, manifest, creator, policy) {
+  this.api = policy.api;
+  this.policy = policy;
+  this.resource = policy.resource;
+  this.debug = policy.debug;
+
   this.config = {};
+
   this.id = manifestURL + Math.random();
   this.manifestId = manifestURL;
   this.manifest = manifest;
-  this.quiet = this.manifest.quiet || false;
   this.lineage = [this.manifestId].concat(creator);
+
+  this.quiet = this.manifest.quiet || false;
+
   this.externalPortMap = {};
   this.internalPortMap = {};
   this.started = false;
@@ -101,7 +109,7 @@ Module.prototype.onMessage = function(flow, message) {
       if (this.internalPortMap[flow] === false) {
         this.once('internalChannelReady', this.onMessage.bind(this, flow, message));
       } else if (!this.internalPortMap[flow]) {
-        debug.error('Unexpected message from ' + flow);
+        this.debug.error('Unexpected message from ' + flow);
         return;
       } else {
         this.port.onMessage(this.internalPortMap[flow], message);
@@ -161,6 +169,10 @@ Module.prototype.start = function() {
     this.port = require(this.config.portType)(this.manifest.name);
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
+    this.port.addErrorHandler(function(err) {
+      this.warn('Module Failed', err);
+      this.stop();
+    }.bind(this));
     // Tell the local port to ask us for help.
     this.port.onMessage('control', {
       channel: 'control',
@@ -234,7 +246,7 @@ Module.prototype.emitMessage = function(name, message) {
   // Terminate debug redirection requested in start().
   if (name === 'control') {
     if (message.flow === 'debug' && message.message) {
-      debug.format(message.message.severity,
+      this.debug.format(message.message.severity,
           message.message.source || this.toString(),
           message.message.msg);
     } else if (message.flow === 'core' && message.message) {
@@ -279,15 +291,15 @@ Module.prototype.emitMessage = function(name, message) {
     this.started = true;
     this.emit('start');
   } else if (name === 'ModInternal' && message.type === 'resolve') {
-    fdom.resources.get(this.manifestId, message.data).then(function(id, data) {
+    this.resource.get(this.manifestId, message.data).then(function(id, data) {
       this.port.onMessage(this.modInternal, {
         type: 'resolve response',
         id: id,
         data: data
       });
     }.bind(this, message.id), function() {
-      debug.warn('Error Resolving URL for Module.');
-    });
+      this.debug.warn('Error Resolving URL for Module.');
+    }.bind(this));
   } else {
     this.emit(this.externalPortMap[name], message);
   }
@@ -302,7 +314,7 @@ Module.prototype.emitMessage = function(name, message) {
 Module.prototype.loadLinks = function() {
   var i, channels = ['default'], name, dep,
       finishLink = function(dep, name, provider) {
-        var style = fdom.apis.getInterfaceStyle(name);
+        var style = this.api.getInterfaceStyle(name);
         dep.getInterface()[style](provider);
       };
   if (this.manifest.permissions) {
@@ -310,8 +322,8 @@ Module.prototype.loadLinks = function() {
       name = this.manifest.permissions[i];
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
-        dep = new Provider(fdom.apis.get(name).definition);
-        fdom.apis.getCore(name, this).then(finishLink.bind(this, dep, name));
+        dep = new Provider(this.api.get(name).definition, this.debug);
+        this.api.getCore(name, this).then(finishLink.bind(this, dep, name));
 
         this.emit(this.controlChannel, {
           type: 'Core Link to ' + name,
@@ -327,8 +339,8 @@ Module.prototype.loadLinks = function() {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
       }
-      fdom.resources.get(this.manifestId, desc.url).then(function (url) {
-        this.config.policy.get(this.lineage, url).then(function(dep) {
+      this.resource.get(this.manifestId, desc.url).then(function (url) {
+        this.policy.get(this.lineage, url).then(function(dep) {
           this.emit(this.controlChannel, {
             type: 'Link to ' + name,
             request: 'link',
@@ -337,7 +349,7 @@ Module.prototype.loadLinks = function() {
             to: dep
           });
         }.bind(this));
-        fdom.resources.getContents(url).then(this.updateEnv.bind(this, name));
+        this.resource.getContents(url).then(this.updateEnv.bind(this, name));
       }.bind(this));
     }.bind(this));
   }
@@ -368,7 +380,7 @@ Module.prototype.updateEnv = function(dep, manifest) {
   try {
     data = JSON.parse(manifest);
   } catch(e) {
-    fdom.debug.error("Could not parse environmental manifest: " + e);
+    this.debug.error("Could not parse environmental manifest: " + e);
     return;
   }
 

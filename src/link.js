@@ -1,5 +1,5 @@
-/*jslint indent:2, white:true, node:true, sloppy:true */
-var util = require('util');
+/*jslint indent:2, node:true, sloppy:true */
+var util = require('./util');
 
 /**
  * A link connects two freedom hubs. This is an abstract class
@@ -9,7 +9,7 @@ var util = require('util');
  * @implements Port
  * @constructor
  */
-var Link = function() {
+var Link = function () {
   this.id = 'Link' + Math.random();
   this.config = {};
   this.src = null;
@@ -26,7 +26,7 @@ var Link = function() {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-Link.prototype.onMessage = function(flow, message) {
+Link.prototype.onMessage = function (flow, message) {
   if (flow === 'control' && !this.controlChannel) {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
@@ -39,12 +39,30 @@ Link.prototype.onMessage = function(flow, message) {
 };
 
 /**
+ * Register a handler to alert of errors on this port.
+ * @method addErrorHandler
+ * @param {Function} handler Method to call with errors.
+ */
+Link.prototype.addErrorHandler = function (handler) {
+  this.onError = handler;
+};
+
+/**
+ * Report an error on this link.
+ * @method onerror
+ * @param {Error} err The error that occurred.
+ */
+Link.prototype.onError = function (err) {
+  //Filled in by addErrorHandler
+};
+
+/**
  * Emit messages to the the hub, mapping control channels.
  * @method emitMessage
  * @param {String} flow the flow to emit the message on.
  * @param {Object} messgae The message to emit.
  */
-Link.prototype.emitMessage = function(flow, message) {
+Link.prototype.emitMessage = function (flow, message) {
   if (flow === 'control' && this.controlChannel) {
     flow = this.controlChannel;
   }

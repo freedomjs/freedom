@@ -1,14 +1,15 @@
-/*globals Promise */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-var debug = require('debug');
+var Promise = require('es6-promise').Promise;
 
 /**
  * The API registry for freedom.js.  Used to look up requested APIs,
  * and provides a bridge for core APIs to act like normal APIs.
  * @Class API
+ * @param {Debug} debug The debugger to use for logging.
  * @constructor
  */
-var Api = function() {
+var Api = function(debug) {
+  this.debug = debug;
   this.apis = {};
   this.providers = {};
   this.waiters = {};
@@ -90,7 +91,7 @@ Api.prototype.getCore = function(name, from) {
         });
       }
     } else {
-      debug.warn('Api.getCore asked for unknown core: ' + name);
+      this.debug.warn('Api.getCore asked for unknown core: ' + name);
       reject(null);
     }
   }.bind(this));
@@ -109,7 +110,7 @@ Api.prototype.getInterfaceStyle = function(name) {
   if (this.providers[name]) {
     return this.providers[name].style;
   } else {
-    debug.warn('Api.getInterfaceStyle for unknown provider: ' + name);
+    this.debug.warn('Api.getInterfaceStyle for unknown provider: ' + name);
     return undefined;
   }
 };

@@ -1,5 +1,5 @@
 /*jslint indent:2, white:true, node:true, sloppy:true */
-var Link = require('link');
+var Link = require('../link');
 var entry = require('freedom');
 
 /**
@@ -30,11 +30,9 @@ Direct.prototype.start = function() {
     this.config.global.directLink = this;
 
     // Keep fdom.debug connected to parent hub.
-    var child = entry(this.config.global, undefined, {
+    var child = entry(undefined, {
       isModule: true,
       portType: 'Direct'
-    }).then(function(entry) {
-      this.config.global.freedom = entry;
     });
   }
 };

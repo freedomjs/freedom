@@ -1,7 +1,7 @@
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-var util = require('util');
+var util = require('../util');
 
-var EventInterface = function(onMsg, emit) {
+var EventInterface = function(onMsg, emit, debug) {
   util.handleEvents(this);
   
   onMsg(this, function(emit, type, msg) {

@@ -1,8 +1,6 @@
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-var debug = require('debug');
-var Proxy = require('proxy');
-var ApiInterface = require('proxy/apiInterface');
-var util = require('util');
+/*jslint indent:2, node:true, sloppy:true, browser:true */
+var Proxy = require('./proxy');
+var util = require('./util');
 
 /**
  * A freedom port for a user-accessable provider.
@@ -10,11 +8,13 @@ var util = require('util');
  * @implements Port
  * @uses handleEvents
  * @param {Object} def The interface of the provider.
+ * @param {Debug} debug The debugger to use for logging.
  * @contructor
  */
-var Provider = function(def) {
+var Provider = function (def, debug) {
   this.id = Proxy.nextId();
   util.handleEvents(this);
+  this.debug = debug;
   
   this.definition = def;
   this.mode = Provider.mode.synchronous;
@@ -42,7 +42,7 @@ Provider.mode = {
  * @param {String} source the source identifier of the message.
  * @param {Object} message The received message.
  */
-Provider.prototype.onMessage = function(source, message) {
+Provider.prototype.onMessage = function (source, message) {
   if (source === 'control' && message.reverse) {
     this.channels[message.name] = message.channel;
     this.emit(message.channel, {
@@ -62,8 +62,8 @@ Provider.prototype.onMessage = function(source, message) {
       this.channels[source] = message.channel;
       this.emit('start');
       return;
-    } else if(!this.channels[source]) {
-      debug.warn('Message from unconfigured source: ' + source);
+    } else if (!this.channels[source]) {
+      this.debug.warn('Message from unconfigured source: ' + source);
       return;
     }
 
@@ -75,16 +75,18 @@ Provider.prototype.onMessage = function(source, message) {
       this.providerInstances[source][message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
-      var args = ApiInterface.portableToMessage(
+      var args = Proxy.portableToMessage(
           (this.definition.constructor && this.definition.constructor.value) ?
               this.definition.constructor.value : [],
-          message.message);
+          message.message,
+          this.debug
+        );
       if (!this.providerInstances[source]) {
         this.providerInstances[source] = {};
       }
       this.providerInstances[source][message.to] = this.getProvider(source, message.to, args);
     } else {
-      debug.warn(this.toString() + ' dropping message ' +
+      this.debug.warn(this.toString() + ' dropping message ' +
           JSON.stringify(message));
     }
   }
@@ -94,7 +96,7 @@ Provider.prototype.onMessage = function(source, message) {
  * Close / teardown the flow this provider terminates.
  * @method close
  */
-Provider.prototype.close = function() {
+Provider.prototype.close = function () {
   if (this.controlChannel) {
     this.emit(this.controlChannel, {
       type: 'Provider Closing',
@@ -116,33 +118,33 @@ Provider.prototype.close = function() {
  * @method getInterface
  * @return {Object} The external interface of this Provider.
  */
-Provider.prototype.getInterface = function() {
+Provider.prototype.getInterface = function () {
   if (this.iface) {
     return this.iface;
   } else {
     this.iface = {
-      provideSynchronous: function(prov) {
+      provideSynchronous: function (prov) {
         this.providerCls = prov;
         this.mode = Provider.mode.synchronous;
       }.bind(this),
-      provideAsynchronous: function(prov) {
+      provideAsynchronous: function (prov) {
         this.providerCls = prov;
         this.mode = Provider.mode.asynchronous;
       }.bind(this),
-      providePromises: function(prov) {
+      providePromises: function (prov) {
         this.providerCls = prov;
         this.mode = Provider.mode.promises;
       }.bind(this),
-      close: function() {
+      close: function () {
         this.close();
       }.bind(this)
     };
 
-    util.eachProp(this.definition, function(prop, name) {
-      switch(prop.type) {
+    util.eachProp(this.definition, function (prop, name) {
+      switch (prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
-          value: ApiInterface.recursiveFreezeObject(prop.value),
+          value: Proxy.recursiveFreezeObject(prop.value),
           writable: false
         });
         break;
@@ -158,14 +160,14 @@ Provider.prototype.getInterface = function() {
  * a user-visible point.
  * @method getProxyInterface
  */
-Provider.prototype.getProxyInterface = function() {
-  var func = function(p) {
+Provider.prototype.getProxyInterface = function () {
+  var func = function (p) {
     return p.getInterface();
   }.bind({}, this);
 
-  func.close = function(iface) {
+  func.close = function (iface) {
     if (iface) {
-      util.eachProp(this.ifaces, function(candidate, id) {
+      util.eachProp(this.ifaces, function (candidate, id) {
         if (candidate === iface) {
           this.teardown(id);
           this.emit(this.emitChannel, {
@@ -181,14 +183,14 @@ Provider.prototype.getProxyInterface = function() {
     }
   }.bind(this);
 
-  func.onClose = function(iface, handler) {
+  func.onClose = function (iface, handler) {
     if (typeof iface === 'function' && handler === undefined) {
       // Add an on-channel-closed handler.
       this.once('close', iface);
       return;
     }
 
-    util.eachProp(this.ifaces, function(candidate, id) {
+    util.eachProp(this.ifaces, function (candidate, id) {
       if (candidate === iface) {
         if (this.handlers[id]) {
           this.handlers[id].push(handler);
@@ -211,26 +213,27 @@ Provider.prototype.getProxyInterface = function() {
  * @param {Array} args Constructor arguments for the provider.
  * @return {Function} A function to send messages to the provider.
  */
-Provider.prototype.getProvider = function(source, identifier, args) {
+Provider.prototype.getProvider = function (source, identifier, args) {
   if (!this.providerCls) {
-    debug.warn('Cannot instantiate provider, since it is not provided');
+    this.debug.warn('Cannot instantiate provider, since it is not provided');
     return null;
   }
 
   var events = {},
-      dispatchEvent,
-      BoundClass,
-      instance;
+    dispatchEvent,
+    BoundClass,
+    instance;
 
-  util.eachProp(this.definition, function(prop, name) {
+  util.eachProp(this.definition, function (prop, name) {
     if (prop.type === 'event') {
       events[name] = prop;
     }
   });
 
-  dispatchEvent = function(src, ev, id, name, value) {
+  dispatchEvent = function (src, ev, id, name, value) {
     if (ev[name]) {
-      var streams = ApiInterface.messageToPortable(ev[name].value, value);
+      var streams = Proxy.messageToPortable(ev[name].value, value,
+                                                   this.debug);
       this.emit(this.channels[src], {
         type: 'message',
         to: id,
@@ -249,37 +252,39 @@ Provider.prototype.getProvider = function(source, identifier, args) {
       [this.providerCls, dispatchEvent].concat(args || []));
   instance = new BoundClass();
 
-  return function(port, src, msg) {
+  return function (port, src, msg) {
     if (msg.action === 'method') {
       if (typeof this[msg.type] !== 'function') {
-        debug.warn("Provider does not implement " + msg.type + "()!");
+        this.debug.warn("Provider does not implement " + msg.type + "()!");
         return;
       }
       var prop = port.definition[msg.type],
-          args = ApiInterface.portableToMessage(prop.value, msg),
-          ret = function(src, msg, prop, resolve, reject) {
-            var streams = ApiInterface.messageToPortable(prop.ret, resolve);
-            this.emit(this.channels[src], {
-              type: 'method',
+        debug = this.debug,
+        args = Proxy.portableToMessage(prop.value, msg, debug),
+        ret = function (src, msg, prop, resolve, reject) {
+          var streams = Proxy.messageToPortable(prop.ret, resolve,
+                                                       debug);
+          this.emit(this.channels[src], {
+            type: 'method',
+            to: msg.to,
+            message: {
               to: msg.to,
-              message: {
-                to: msg.to,
-                type: 'method',
-                reqId: msg.reqId,
-                name: msg.type,
-                text: streams.text,
-                binary: streams.binary,
-                error: reject
-              }
-            });
-          }.bind(port, src, msg, prop);
+              type: 'method',
+              reqId: msg.reqId,
+              name: msg.type,
+              text: streams.text,
+              binary: streams.binary,
+              error: reject
+            }
+          });
+        }.bind(port, src, msg, prop);
       if (!Array.isArray(args)) {
         args = [args];
       }
       if (port.mode === Provider.mode.synchronous) {
         try {
           ret(this[msg.type].apply(this, args));
-        } catch(e) {
+        } catch (e) {
           ret(undefined, e.message);
         }
       } else if (port.mode === Provider.mode.asynchronous) {
@@ -296,7 +301,7 @@ Provider.prototype.getProvider = function(source, identifier, args) {
  * @method toString
  * @return {String} the description of this port.
  */
-Provider.prototype.toString = function() {
+Provider.prototype.toString = function () {
   if (this.emitChannel) {
     return "[Provider " + this.emitChannel + "]";
   } else {

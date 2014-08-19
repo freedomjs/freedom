@@ -1,15 +1,18 @@
-/*globals XMLHttpRequest, Promise */
-/*jslint indent:2,white:true,node:true,sloppy:true */
-var debug = require('debug');
-var util = require('util');
+/*globals XMLHttpRequest */
+/*jslint indent:2,node:true,sloppy:true */
+var Promise = require('es6-promise').Promise;
+
+var util = require('./util');
 
 /**
  * The Resource registry for FreeDOM.  Used to look up requested Resources,
  * and provide lookup and migration of resources.
  * @Class Resource
+ * @param {Debug} debug The logger to use for debugging.
  * @constructor
  */
-var Resource = function() {
+var Resource = function (debug) {
+  this.debug = debug;
   this.files = {};
   this.resolvers = [this.httpResolver, this.nullResolver];
   this.contentRetrievers = {
@@ -29,14 +32,14 @@ var Resource = function() {
  * @param {String} url The resource to get.
  * @returns {Promise} A promise for the resource address.
  */
-Resource.prototype.get = function(manifest, url) {
+Resource.prototype.get = function (manifest, url) {
   var key = JSON.stringify([manifest, url]);
   
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     if (this.files[key]) {
       resolve(this.files[key]);
     } else {
-      this.resolve(manifest, url).then(function(key, resolve, address) {
+      this.resolve(manifest, url).then(function (key, resolve, address) {
         this.files[key] = address;
         //fdom.debug.log('Resolved ' + key + ' to ' + address);
         resolve(address);
@@ -51,11 +54,11 @@ Resource.prototype.get = function(manifest, url) {
  * @param {String} url The resource to read.
  * @returns {Promise} A promise for the resource contents.
  */
-Resource.prototype.getContents = function(url) {
-  return new Promise(function(resolve, reject) {
+Resource.prototype.getContents = function (url) {
+  return new Promise(function (resolve, reject) {
     var prop;
     if (!url) {
-      debug.warn("Asked to get contents of undefined URL.");
+      this.debug.warn("Asked to get contents of undefined URL.");
       return reject();
     }
     for (prop in this.contentRetrievers) {
@@ -78,17 +81,17 @@ Resource.prototype.getContents = function(url) {
  * @param {String} url The resource to resolve;
  * @returns {Promise} A promise for the resource address.
  */
-Resource.prototype.resolve = function(manifest, url) {
-  return new Promise(function(resolve, reject) {
+Resource.prototype.resolve = function (manifest, url) {
+  return new Promise(function (resolve, reject) {
     var promises = [];
     if (url === undefined) {
       return reject();
     }
-    util.eachReverse(this.resolvers, function(resolver) {
+    util.eachReverse(this.resolvers, function (resolver) {
       promises.push(new Promise(resolver.bind({}, manifest, url)));
     }.bind(this));
     //TODO this would be much cleaner if Promise.any existed
-    Promise.all(promises).then(function(values) {
+    Promise.all(promises).then(function (values) {
       var i;
       for (i = 0; i < values.length; i += 1) {
         if (typeof values[i] !== 'undefined' && values[i] !== false) {
@@ -110,7 +113,7 @@ Resource.prototype.resolve = function(manifest, url) {
  * @method addResolver
  * @param {Function} resolver The resolver to add.
  */
-Resource.prototype.addResolver = function(resolver) {
+Resource.prototype.addResolver = function (resolver) {
   this.resolvers.push(resolver);
 };
 
@@ -122,9 +125,9 @@ Resource.prototype.addResolver = function(resolver) {
  * @param {String} proto The protocol to register for.
  * @param {Function} retriever The retriever to add.
  */
-Resource.prototype.addRetriever = function(proto, retriever) {
+Resource.prototype.addRetriever = function (proto, retriever) {
   if (this.contentRetrievers[proto]) {
-    debug.warn("Unwilling to override file retrieval for " + proto);
+    this.debug.warn("Unwilling to override file retrieval for " + proto);
     return;
   }
   this.contentRetrievers[proto] = retriever;
@@ -139,7 +142,7 @@ Resource.prototype.addRetriever = function(proto, retriever) {
  * @param {String} URL the URL to match.
  * @returns {Boolean} If the URL is an absolute example of one of the schemes.
  */
-Resource.hasScheme = function(protocols, url) {
+Resource.hasScheme = function (protocols, url) {
   var i;
   for (i = 0; i < protocols.length; i += 1) {
     if (url.indexOf(protocols[i] + "://") === 0) {
@@ -157,10 +160,11 @@ Resource.hasScheme = function(protocols, url) {
  * @param {String} url The URL to modify
  * @returns {String} url without './' and '../'
  **/
-Resource.removeRelativePath = function(url) {
+Resource.removeRelativePath = function (url) {
   var idx = url.indexOf("://") + 3,
-      stack, toRemove,
-      result;
+    stack,
+    toRemove,
+    result;
   // Remove all instances of /./
   url = url.replace(/\/\.\//g, "/");
   //Weird bug where in cca, manifest starts with 'chrome:////'
@@ -200,9 +204,14 @@ Resource.removeRelativePath = function(url) {
  * @param {Function} reject The promise to reject.
  * @returns {Boolean} True if the URL could be resolved.
  */
-Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
+Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
   var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
-      dirname, protocolIdx, pathIdx, path, base, result;
+    dirname,
+    protocolIdx,
+    pathIdx,
+    path,
+    base,
+    result;
 
   if (Resource.hasScheme(protocols, url)) {
     resolve(Resource.removeRelativePath(url));
@@ -241,7 +250,7 @@ Resource.prototype.httpResolver = function(manifest, url, resolve, reject) {
  * @param {Function} reject The promise to reject.
  * @returns {Boolean} True if the URL could be resolved.
  */
-Resource.prototype.nullResolver = function(manifest, url, resolve, reject) {
+Resource.prototype.nullResolver = function (manifest, url, resolve, reject) {
   var protocols = ["manifest", "data;base64"];
   if (Resource.hasScheme(protocols, url)) {
     resolve(url);
@@ -261,14 +270,14 @@ Resource.prototype.nullResolver = function(manifest, url, resolve, reject) {
  * @param {Function} resolve The promise to complete.
  * @param {Function} reject The promise to reject.
  */
-Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
+Resource.prototype.manifestRetriever = function (manifest, resolve, reject) {
   var data;
   try {
     data = manifest.substr(11);
     JSON.parse(data);
     resolve(data);
-  } catch(e) {
-    debug.warn("Invalid manifest URL referenced:" + manifest);
+  } catch (e) {
+    this.debug.warn("Invalid manifest URL referenced:" + manifest);
     reject();
   }
 };
@@ -281,22 +290,19 @@ Resource.prototype.manifestRetriever = function(manifest, resolve, reject) {
  * @param {Function} resolve The promise to complete.
  * @param {Function} reject The promise to reject.
  */
-Resource.prototype.xhrRetriever = function(url, resolve, reject) {
+Resource.prototype.xhrRetriever = function (url, resolve, reject) {
   var ref = new XMLHttpRequest();
-  ref.addEventListener("readystatechange", function(resolve, reject) {
+  ref.addEventListener("readystatechange", function (resolve, reject) {
     if (ref.readyState === 4 && ref.responseText) {
       resolve(ref.responseText);
     } else if (ref.readyState === 4) {
-      debug.warn("Failed to load file " + url + ": " + ref.status);
+      this.debug.warn("Failed to load file " + url + ": " + ref.status);
       reject(ref.status);
     }
-  }.bind({}, resolve, reject), false);
+  }.bind(this, resolve, reject), false);
   ref.overrideMimeType("application/json");
   ref.open("GET", url, true);
   ref.send();
 };
 
-/**
- * Defines fdom.resources as a singleton registry for file management.
- */
 module.exports = Resource;

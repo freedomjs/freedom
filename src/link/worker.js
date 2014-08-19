@@ -1,7 +1,6 @@
 /*globals Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-var Link = require('link');
-var debug = require('debug');
+var Link = require('../link');
 
 /**
  * A port providing message transport between two freedom contexts via Worker.
@@ -79,8 +78,8 @@ Worker.prototype.setupWorker = function() {
     worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.id);
   }
   worker.addEventListener('error', function(err) {
-    debug.error(self.toString(), err.message);
-  }, true);
+    this.onError(err);
+  }.bind(this), true);
   worker.addEventListener('message', function(worker, msg) {
     if (!this.obj) {
       this.obj = worker;

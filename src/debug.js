@@ -1,5 +1,5 @@
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-var util = require('util');
+/*jslint indent:2, node:true, sloppy:true */
+var util = require('./util');
 
 /**
  * A freedom entry point for debugging.
@@ -7,12 +7,11 @@ var util = require('util');
  * @implements Port
  * @constructor
  */
-var Debug = function() {
+var Debug = function (logger) {
   this.id = 'debug';
   this.emitChannel = false;
   this.console = null;
   this.config = false;
-  this.logger = null;
   util.handleEvents(this);
 };
 
@@ -21,8 +20,21 @@ var Debug = function() {
  * @method toString
  * @return {String} the textual description.
  */
-Debug.prototype.toString = function() {
+Debug.prototype.toString = function () {
   return '[Console]';
+};
+
+/**
+ * Register a logger for outputting debugging messages.
+ * @method setLogger
+ * @param {Console} logger The logger to register
+ */
+Debug.prototype.setLogger = function (logger) {
+  if (this.logger) {
+    this.info('Replacing Logger.');
+  }
+  this.logger = logger;
+  this.emit('logger');
 };
 
 /**
@@ -32,7 +44,7 @@ Debug.prototype.toString = function() {
  * @param {String} source the source identifier for the message.
  * @param {Object} message the received message.
  */
-Debug.prototype.onMessage = function(source, message) {
+Debug.prototype.onMessage = function (source, message) {
   if (source === 'control' && message.channel && !this.emitChannel) {
     this.emitChannel = message.channel;
     this.config = message.config;
@@ -43,13 +55,14 @@ Debug.prototype.onMessage = function(source, message) {
 
 /**
  * Dispatch a debug message with arbitrary severity.
+ * All debug messages are routed through the manager, to allow for delegation.
  * @method format
  * @param {String} severity the severity of the message.
  * @param {String} source The location of message.
  * @param {String[]} args The contents of the message.
  * @private
  */
-Debug.prototype.format = function(severity, source, args) {
+Debug.prototype.format = function (severity, source, args) {
   var i, alist = [], argarr;
   if (typeof args === "string" && source) {
     try {
@@ -57,7 +70,7 @@ Debug.prototype.format = function(severity, source, args) {
       if (argarr instanceof Array) {
         args = argarr;
       }
-    } catch(e) {
+    } catch (e) {
       // pass.
     }
   }
@@ -84,17 +97,12 @@ Debug.prototype.format = function(severity, source, args) {
 
 /**
  * Print received messages on the console.
+ * This is called by the manager in response to an emission from format.
  * @method print
  * @param {Object} message The message emitted by {@see format} to print.
  */
-Debug.prototype.print = function(message) {
-  if (!this.logger || !this.logger.log) {
-    if (!this.logger) {
-      this.logger = fdom.apis.getCore('core.logger', this).then(function(Provider) {
-        this.logger = new Provider();
-        this.emit('logger');
-      }.bind(this));
-    }
+Debug.prototype.print = function (message) {
+  if (!this.logger) {
     this.once('logger', this.print.bind(this, message));
     return;
   }
@@ -110,7 +118,7 @@ Debug.prototype.print = function(message) {
         i += 1;
       }
     }
-    this.logger[message.severity].call(this.logger, message.source, arr, function() {});
+    this.logger[message.severity].call(this.logger, message.source, arr, function () {});
   }
 };
 
@@ -118,7 +126,7 @@ Debug.prototype.print = function(message) {
  * Print a log message to the console.
  * @method log
  */
-Debug.prototype.log = function() {
+Debug.prototype.log = function () {
   this.format('log', undefined, arguments);
 };
 
@@ -126,7 +134,7 @@ Debug.prototype.log = function() {
  * Print an info message to the console.
  * @method log
  */
-Debug.prototype.info = function() {
+Debug.prototype.info = function () {
   this.format('info', undefined, arguments);
 };
 
@@ -134,7 +142,7 @@ Debug.prototype.info = function() {
  * Print a debug message to the console.
  * @method log
  */
-Debug.prototype.debug = function() {
+Debug.prototype.debug = function () {
   this.format('debug', undefined, arguments);
 };
 
@@ -142,7 +150,7 @@ Debug.prototype.debug = function() {
  * Print a warning message to the console.
  * @method warn
  */
-Debug.prototype.warn = function() {
+Debug.prototype.warn = function () {
   this.format('warn', undefined, arguments);
 };
 
@@ -150,33 +158,29 @@ Debug.prototype.warn = function() {
  * Print an error message to the console.
  * @method error
  */
-Debug.prototype.error = function() {
+Debug.prototype.error = function () {
   this.format('error', undefined, arguments);
-  if (this.console && !this.console.freedom) {
-    this.console.error.apply(this.console, arguments);
-  }
 };
 
 /**
  * Get a logger that logs messages prefixed by a given name.
  * @method getLogger
- * @static
  * @param {String} name The prefix for logged messages.
  * @returns {Console} A console-like object.
  */
-Debug.getLogger = function(name) {
-  var log = function(severity, source) {
+Debug.prototype.getLogger = function (name) {
+  var log = function (severity, source) {
     var args = Array.prototype.splice.call(arguments, 2);
     this.format(severity, source, args);
   },
-  logger = {
-    debug: log.bind(fdom.debug, 'debug', name),
-    info: log.bind(fdom.debug, 'info', name),
-    log: log.bind(fdom.debug, 'log', name),
-    warn: log.bind(fdom.debug, 'warn', name),
-    error: log.bind(fdom.debug, 'error', name)
-  };
+    logger = {
+      debug: log.bind(this, 'debug', name),
+      info: log.bind(this, 'info', name),
+      log: log.bind(this, 'log', name),
+      warn: log.bind(this, 'warn', name),
+      error: log.bind(this, 'error', name)
+    };
   return logger;
 };
 
-module.exports = Debug.getLogger();
+module.exports = Debug;

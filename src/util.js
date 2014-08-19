@@ -1,7 +1,6 @@
 /*globals crypto, WebKitBlobBuilder, Blob, URL */
 /*globals webkitURL, Uint8Array, Uint16Array, ArrayBuffer */
 /*jslint indent:2,white:true,browser:true,node:true,sloppy:true */
-var debug = require('debug');
 
 /**
  * Utility method used within the freedom Library.
@@ -300,7 +299,6 @@ util.forceModuleContext = function(src) {
       source,
       blob;
   if (idx === -1 || funcidx === -1) {
-    debug.error('Unable to force mode, source is in unexpected condition.');
     return;
   }
   source = src.substr(0, funcidx) +  definition + ' || ' +

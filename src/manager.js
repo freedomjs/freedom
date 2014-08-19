@@ -1,7 +1,6 @@
-/*jslint indent:2,white:true,node:true,sloppy:true */
-var util = require('util');
-var debug = require('debug');
-var ModuleInternal = require('moduleinternal');
+/*jslint indent:2,node:true,sloppy:true */
+var util = require('./util');
+var ModuleInternal = require('./moduleinternal');
 
 /**
  * A freedom port which manages the control plane of of changing hub routes.
@@ -12,7 +11,7 @@ var ModuleInternal = require('moduleinternal');
  * @param {Api} api The API manager for the runtime.
  * @constructor
  */
-var Manager = function(hub, resource, api) {
+var Manager = function (hub, resource, api) {
   this.id = 'control';
   this.config = {};
   this.controlFlows = {};
@@ -20,6 +19,7 @@ var Manager = function(hub, resource, api) {
   this.dataFlows[this.id] = [];
   this.reverseFlowMap = {};
 
+  this.debug = hub.debug;
   this.hub = hub;
   this.resource = resource;
   this.api = api;
@@ -27,7 +27,7 @@ var Manager = function(hub, resource, api) {
   this.delegate = null;
   this.toDelegate = {};
   
-  this.hub.on('config', function(config) {
+  this.hub.on('config', function (config) {
     util.mixin(this.config, config);
     this.emit('config');
   }.bind(this));
@@ -41,7 +41,7 @@ var Manager = function(hub, resource, api) {
  * @method toString
  * @return {String} the description of this port.
  */
-Manager.prototype.toString = function() {
+Manager.prototype.toString = function () {
   return "[Local Controller]";
 };
 
@@ -61,15 +61,16 @@ Manager.prototype.toString = function() {
  * @param {String} flow The source identifier of the message.
  * @param {Object} message The received message.
  */
-Manager.prototype.onMessage = function(flow, message) {
+Manager.prototype.onMessage = function (flow, message) {
   var reverseFlow = this.controlFlows[flow], origin;
   if (!reverseFlow) {
-    debug.warn("Unknown message source: " + flow);
+    this.debug.warn("Unknown message source: " + flow);
     return;
   }
   origin = this.hub.getDestination(reverseFlow);
 
-  if (this.delegate && reverseFlow !== this.delegate && this.toDelegate[flow]) {
+  if (this.delegate && reverseFlow !== this.delegate &&
+      this.toDelegate[flow]) {
     // Ship off to the delegee
     this.emit(this.delegate, {
       type: 'Delegation',
@@ -82,7 +83,7 @@ Manager.prototype.onMessage = function(flow, message) {
   }
 
   if (message.request === 'debug') {
-    debug.print(message);
+    this.debug.print(message);
     return;
   }
 
@@ -90,12 +91,6 @@ Manager.prototype.onMessage = function(flow, message) {
     this.createLink(origin, message.name, message.to, message.overrideDest);
   } else if (message.request === 'environment') {
     this.createLink(origin, message.name, new ModuleInternal(this));
-  } else if (message.request === 'bindport') {
-    this.createLink({id: message.id},
-                    'custom' + message.port,
-                    new fdom.port[message.service](message.args),
-                    'default',
-                    true);
   } else if (message.request === 'delegate') {
     // Initate Delegation.
     if (this.delegate === null) {
@@ -111,7 +106,7 @@ Manager.prototype.onMessage = function(flow, message) {
       (new this.core()).onMessage(origin, message.message);
       return;
     }
-    this.getCore(function(to, core) {
+    this.getCore(function (to, core) {
       this.hub.onMessage(to, {
         type: 'core',
         core: core
@@ -122,8 +117,8 @@ Manager.prototype.onMessage = function(flow, message) {
   } else if (message.request === 'unlink') {
     this.removeLink(origin, message.to);
   } else {
-    debug.warn("Unknown control request: " + message.request);
-    debug.log(JSON.stringify(message));
+    this.debug.warn("Unknown control request: " + message.request);
+    this.debug.log(JSON.stringify(message));
     return;
   }
 };
@@ -134,7 +129,7 @@ Manager.prototype.onMessage = function(flow, message) {
  * @param {String} portId The ID of the port.
  * @returns {fdom.Port} The port with that ID.
  */
-Manager.prototype.getPort = function(portId) {
+Manager.prototype.getPort = function (portId) {
   return this.hub.getDestination(this.controlFlows[portId]);
 };
 
@@ -143,14 +138,14 @@ Manager.prototype.getPort = function(portId) {
  * @method setup
  * @param {Port} port The port to register.
  */
-Manager.prototype.setup = function(port) {
+Manager.prototype.setup = function (port) {
   if (!port.id) {
-    debug.warn("Refusing to setup unidentified port ");
+    this.debug.warn("Refusing to setup unidentified port ");
     return false;
   }
 
-  if(this.controlFlows[port.id]) {
-    debug.warn("Refusing to re-initialize port " + port.id);
+  if (this.controlFlows[port.id]) {
+    this.debug.warn("Refusing to re-initialize port " + port.id);
     return false;
   }
 
@@ -161,7 +156,7 @@ Manager.prototype.setup = function(port) {
 
   this.hub.register(port);
   var flow = this.hub.install(this, port.id, "control"),
-      reverse = this.hub.install(port, this.id, port.id);
+    reverse = this.hub.install(port, this.id, port.id);
   this.controlFlows[port.id] = flow;
   this.dataFlows[port.id] = [reverse];
   this.reverseFlowMap[flow] = reverse;
@@ -185,9 +180,9 @@ Manager.prototype.setup = function(port) {
  * @method destroy
  * @apram {Port} port The port to unregister.
  */
-Manager.prototype.destroy = function(port) {
+Manager.prototype.destroy = function (port) {
   if (!port.id) {
-    debug.warn("Unable to tear down unidentified port");
+    this.debug.warn("Unable to tear down unidentified port");
     return false;
   }
 
@@ -217,29 +212,31 @@ Manager.prototype.destroy = function(port) {
  * @param {String} name The flow for messages from destination to port.
  * @param {Port} destination The destination port.
  * @param {String} [destName] The flow name for messages to the destination.
- * @param {Boolean} [toDest] Tell the destination rather than source about the link.
+ * @param {Boolean} [toDest] Tell the destination about the link.
  */
-Manager.prototype.createLink = function(port, name, destination, destName, toDest) {
+Manager.prototype.createLink = function (port, name, destination, destName,
+                                         toDest) {
   if (!this.config.global) {
-    this.once('config', this.createLink.bind(this, port, name, destination, destName));
+    this.once('config',
+      this.createLink.bind(this, port, name, destination, destName));
     return;
   }
   
   if (!this.controlFlows[port.id]) {
-    debug.warn('Unwilling to link from non-registered source.');
+    this.debug.warn('Unwilling to link from non-registered source.');
     return;
   }
 
   if (!this.controlFlows[destination.id]) {
-    if(this.setup(destination) === false) {
-      debug.warn('Could not find or setup destination.');
+    if (this.setup(destination) === false) {
+      this.debug.warn('Could not find or setup destination.');
       return;
     }
   }
   var quiet = destination.quiet || false,
-      outgoingName = destName || 'default',
-      outgoing = this.hub.install(port, destination.id, outgoingName, quiet),
-      reverse;
+    outgoingName = destName || 'default',
+    outgoing = this.hub.install(port, destination.id, outgoingName, quiet),
+    reverse;
 
   // Recover the port so that listeners are installed.
   destination = this.hub.getDestination(outgoing);
@@ -273,18 +270,18 @@ Manager.prototype.createLink = function(port, name, destination, destName, toDes
  * @param {Port} port The source port.
  * @param {String} name The flow to be removed.
  */
-Manager.prototype.removeLink = function(port, name) {
+Manager.prototype.removeLink = function (port, name) {
   var reverse = this.hub.getDestination(name),
-      rflow = this.reverseFlowMap[name],
-      i;
+    rflow = this.reverseFlowMap[name],
+    i;
 
   if (!reverse || !rflow) {
-    debug.warn("Could not find metadata to remove flow: " + name);
+    this.debug.warn("Could not find metadata to remove flow: " + name);
     return;
   }
 
   if (this.hub.getDestination(rflow).id !== port.id) {
-    debug.warn("Source port does not own flow " + name);
+    this.debug.warn("Source port does not own flow " + name);
     return;
   }
 
@@ -321,7 +318,7 @@ Manager.prototype.removeLink = function(port, name) {
  * @param {String} id The port ID of the source.
  * @param {String} name The flow name.
  */
-Manager.prototype.forgetFlow = function(id, name) {
+Manager.prototype.forgetFlow = function (id, name) {
   var i;
   if (this.dataFlows[id]) {
     for (i = 0; i < this.dataFlows[id].length; i += 1) {
@@ -339,11 +336,11 @@ Manager.prototype.forgetFlow = function(id, name) {
  * @private
  * @param {Function} cb Callback to fire with the core object.
  */
-Manager.prototype.getCore = function(cb) {
+Manager.prototype.getCore = function (cb) {
   if (this.core) {
     cb(this.core);
   } else {
-    this.api.getCore('core', this).then(function(core) {
+    this.api.getCore('core', this).then(function (core) {
       this.core = core;
       cb(this.core);
     }.bind(this));

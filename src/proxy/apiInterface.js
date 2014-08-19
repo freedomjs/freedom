@@ -1,10 +1,10 @@
-/*globals Promise */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-var debug = require('debug');
-var util = require('util');
-var Proxy = require('proxy');
+var Promise = require('es6-promise').Promise;
 
-var ApiInterface = function(def, onMsg, emit) {
+var util = require('../util');
+var Proxy = require('../proxy');
+
+var ApiInterface = function(def, onMsg, emit, debug) {
   var inflight = {},
       events = null,
       emitter = null,
@@ -26,7 +26,8 @@ var ApiInterface = function(def, onMsg, emit) {
               };
             }),
             streams = Proxy.messageToPortable(prop.value,
-                Array.prototype.slice.call(arguments, 0));
+                Array.prototype.slice.call(arguments, 0),
+                debug);
         reqId += 1;
         emit({
           action: 'method',
@@ -89,7 +90,8 @@ var ApiInterface = function(def, onMsg, emit) {
 
   args = ApiInterface.messageToPortable(
       (def.constructor && def.constructor.value) ? def.constructor.value : [],
-      Array.prototype.slice.call(args, 3));
+      Array.prototype.slice.call(args, 3),
+      debug);
 
   emit({
     type: 'construct',

@@ -1,8 +1,9 @@
-/*globals XMLHttpRequest, Promise */
+/*globals XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-var debug = require('debug');
-var Module = require('module');
-var util = require('util');
+var Promise = require('es6-promise').Promise;
+
+var Module = require('./module');
+var util = require('./util');
 
 /**
  * The Policy registry for freedom.js.  Used to look up modules and provide
@@ -14,8 +15,11 @@ var util = require('util');
  * @constructor
  */
 var Policy = function(manager, resource, config) {
+  this.api = manager.api;
+  this.debug = manager.debug;
   this.location = config.location;
   this.resource = resource;
+
   this.config = config;
   this.runtimes = [];
   this.policies = [];
@@ -65,20 +69,20 @@ Policy.prototype.get = function(lineage, id) {
       portId = this.isRunning(runtime, id, lineage,
                              constraints.isolation !== 'never');
       if(constraints.isolation !== 'always' && portId) {
-        debug.info('Reused port ' + portId);
+        this.debug.info('Reused port ' + portId);
         return runtime.manager.getPort(portId);
       } else {
         return new Module(id, manifest, lineage, this);
       }
     } else {
       // TODO: Create a port to go to the remote runtime.
-      debug.error('Unexpected location selected for module placement');
+      this.debug.error('Unexpected location selected for module placement');
       return false;
     }
   }.bind(this), function(err) {
-    debug.error('Policy Error Resolving ' + id, err);
+    this.debug.error('Policy Error Resolving ' + id, err);
     return false;
-  });
+  }.bind(this));
 };
 
 /**
@@ -164,7 +168,7 @@ Policy.prototype.loadManifest = function(manifest) {
     try {
       return JSON.parse(data);
     } catch(err) {
-      debug.warn("Failed to load " + manifest + ": " + err);
+      this.debug.warn("Failed to load " + manifest + ": " + err);
       return {};
     }
   });
@@ -200,7 +204,7 @@ Policy.prototype.add = function(port, policy) {
         return;
       }
     }
-    debug.warn('Unknown module to remove: ', info.id);
+    this.debug.warn('Unknown module to remove: ', info.id);
   }.bind(this, runtime));
 };
 
