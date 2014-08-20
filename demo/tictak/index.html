@@ -22,7 +22,6 @@
       });
 
       board.on('update', function (state) {
-        console.log('update', state);
         for (var i = 0; i < state.length; i++) {
           var realid = 'b' + (i + 1);
           document.getElementById(realid).className = 'c' + state[i];

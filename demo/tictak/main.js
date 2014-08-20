@@ -22,25 +22,18 @@ var Board = function (dispatchEvent) {
 
 Board.prototype.move = function (spot) {
   if (this.playerMove && this.state[spot] === 0) {
-    console.log('will move');
     this.state[spot] = 1;
-    console.log('will check win');
     this.checkWin();
-    console.log('will not move');
     this.playerMove = false;
-    console.log('will play ai');
     this.aiMove();
-    console.log('moved');
   }
 
   // This sends the board state to the front-end to display
-  console.log(this.state);
   this.dispatchEvent('update', this.state);
 };
 
 Board.prototype.loadStats = function () {
   this.store.get('stats').then(function (value) {
-    console.log('hunh');
     var numericScore;
     try {
       numericScore = JSON.parse(value);

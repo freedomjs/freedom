@@ -83,6 +83,7 @@ Module.prototype.onMessage = function(flow, message) {
 
         // New incoming connection attempts should get routed to modInternal.
         if (this.manifest.provides && this.modInternal) {
+          console.warn('conn req sent');
           this.port.onMessage(this.modInternal, {
             type: 'Connection',
             channel: flow
@@ -107,6 +108,7 @@ Module.prototype.onMessage = function(flow, message) {
       this.once('start', this.onMessage.bind(this, flow, message));
     } else {
       if (this.internalPortMap[flow] === false) {
+        console.warn('waiting on internal channel for msg');
         this.once('internalChannelReady', this.onMessage.bind(this, flow, message));
       } else if (!this.internalPortMap[flow]) {
         this.debug.error('Unexpected message from ' + flow);

@@ -26,7 +26,6 @@ var ModuleInternal = function (manager) {
   this.id = 'ModuleInternal';
   this.pendingPorts = 0;
   this.requests = {};
-  this.defaultProvider = null;
 
   util.handleEvents(this);
 };
@@ -68,9 +67,11 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
     this.updateManifest(message.name, message.manifest);
   } else if (flow === 'default' && message.type === 'Connection') {
     // Multiple connections can be made to the default provider.
-    if (this.defaultProvider) {
-      this.manager.createLink(this.defaultProvider, message.channel,
+    if (this.defaultPort) {
+      this.manager.createLink(this.defaultPort, message.channel,
                               this.port, message.channel);
+    } else {
+      this.once('start', this.onMessage.bind(this, flow, message));
     }
   }
 };
@@ -94,16 +95,17 @@ ModuleInternal.prototype.toString = function () {
  */
 ModuleInternal.prototype.generateEnv = function (manifest, items) {
   return this.binder.bindDefault(this.port, this.api, manifest, true).then(
-    function (iface) {
-      if (iface.api) {
+    function (binding) {
+      this.defaultPort = binding.port;
+      if (binding.external.api) {
         for (var i = 0; i < items.length; i += 1) {
-          if (items[i].name === iface.api && items[i].def.provides) {
+          if (items[i].name === binding.external.api && items[i].def.provides) {
             items.splice(i, 1);
             break;
           }
         }
       }
-      this.config.global.freedom = iface;
+      this.config.global.freedom = binding.external;
     }.bind(this)
   );
 };
@@ -120,7 +122,7 @@ ModuleInternal.prototype.attach = function (name, proxy) {
   var exp = this.config.global.freedom;
 
   if (!exp[name]) {
-    exp[name] = proxy;
+    exp[name] = proxy.external;
     if (this.manifests[name]) {
       exp[name].manifest = this.manifests[name];
     }
@@ -165,7 +167,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
       this.once(manifestPredicate.bind({}, items[i].name),
                 onManifest.bind(this, items[i]));
     } else {
-      this.binder.bind(this.port, items[i].name, items[i].def).then(
+      this.binder.getExternal(this.port, items[i].name, items[i].def).then(
         this.attach.bind(this, items[i].name)
       );
     }

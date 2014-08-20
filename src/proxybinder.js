@@ -21,7 +21,7 @@ var ProxyBinder = function (manager) {
 
 /**
  * Create a proxy for a freedom port, and return it once loaded.
- * @method bind
+ * @method getExternal
  * @param {Port} port The port for the proxy to communicate with.
  * @param {String} name The name of the proxy.
  * @param {Object} [definition] The definition of the API to expose.
@@ -30,7 +30,7 @@ var ProxyBinder = function (manager) {
  * @param {Boolean} definition.provides Whether this is a consumer or provider.
  * @returns {Promise} A promise for the active proxy interface.
  */
-ProxyBinder.prototype.bind = function (port, name, definition) {
+ProxyBinder.prototype.getExternal = function (port, name, definition) {
   'use strict';
   var proxy, api;
   return new Promise(function (resolve, reject) {
@@ -52,7 +52,10 @@ ProxyBinder.prototype.bind = function (port, name, definition) {
       if (api) {
         iface.api = api;
       }
-      resolve(iface);
+      resolve({
+        port: proxy,
+        external: iface
+      });
     });
 
     this.manager.createLink(port, name, proxy);
@@ -94,10 +97,10 @@ ProxyBinder.prototype.bindDefault = function (port, api, manifest, internal) {
     }
   }
 
-  return this.bind(port, 'default', def).then(
-    function (metadata, iface) {
-      iface.manifest = metadata;
-      return iface;
+  return this.getExternal(port, 'default', def).then(
+    function (metadata, info) {
+      info.external.manifest = metadata;
+      return info;
     }.bind(this, metadata)
   );
 };

@@ -86,7 +86,10 @@ var setup = function (context, manifest, config) {
         }
       ).then(function (root_module) {
         manager.setup(root_module);
-        return binder.bindDefault(root_module, api, root_module.manifest);
+        return binder.bindDefault(root_module, api, root_module.manifest).then(
+          function(info) {
+            return info.external;
+          });
       }, function (err) {
         debug.error('Failed to retrieve manifest: ' + err);
       }).then(resolve, reject);
