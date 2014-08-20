@@ -1,7 +1,8 @@
 var channels = [];
 var core = freedom.core();
 
-freedom.on('message', function(msg) {
+var parent = freedom();
+parent.on('message', function(msg) {
   if(msg.cmd === 'create') {
     core.bindChannel(msg.chan).then(function(id, chan) {
       console.log('channel resolved: ' + id);
@@ -14,6 +15,6 @@ freedom.on('message', function(msg) {
 });
 
 var handler = function(cid, chan, msg) {
-  freedom.emit('message', 'channel ' + cid + ' sent ' + msg);
+  parent.emit('message', 'channel ' + cid + ' sent ' + msg);
   chan.emit('message', 'channel ' + cid + ' replies ' + msg);
 };
