@@ -23,7 +23,7 @@ OAuth.handlers = [];
  * @private
  */
 OAuth.register = function(handler) {
-  this.handlers.push(handler);
+  OAuth.handlers.push(handler);
 };
 
 /**
@@ -51,5 +51,6 @@ OAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   });
 };
 
+exports.register = OAuth.register;
 exports.provider = OAuth;
 exports.name = 'core.oauth';

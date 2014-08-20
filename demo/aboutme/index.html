@@ -3,35 +3,36 @@
 <head>
   <title>About Me</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-  <script type="text/javascript"
-      src="../../freedom.js"
-      data-manifest="manifest.json">
-  </script>
+  <script type="text/javascript" src="../../freedom.js"></script>
   <script type="text/javascript">
-  freedom.on('profile', function(data) {
-    document.getElementById("profilepic").src = data.picture;
-    if (data.link) {
-      var link = document.createElement('a');
-      link.href = data.link;
-      link.innerText = data.name;
-      document.getElementById("name").appendChild(link);
-    } else {
-      document.getElementById("name").appendChild(
-          document.createTextNode(data.name));
-    }
-    if (data.details) {
-      document.getElementById("subtitle").appendChild(
-          document.createTextNode(data.details));
-    }
-    document.getElementById("details").appendChild(
-        document.createTextNode(JSON.stringify(data)));
-    document.body.className = "loaded";
-  });
-  freedom.on('oAuth', function(url) {
-    document.getElementById('loginContainer').onclick = function() {
-      window.open(url);
-    };
-  });
+  freedom('manifest.json').then(function (app) { start(app()); });
+    
+  function start(aboutme) {
+    aboutme.on('profile', function(data) {
+      document.getElementById("profilepic").src = data.picture;
+      if (data.link) {
+        var link = document.createElement('a');
+        link.href = data.link;
+        link.innerText = data.name;
+        document.getElementById("name").appendChild(link);
+      } else {
+        document.getElementById("name").appendChild(
+            document.createTextNode(data.name));
+      }
+      if (typeof data.details === "string") {
+        document.getElementById("subtitle").appendChild(
+            document.createTextNode(data.details));
+      }
+      document.getElementById("details").appendChild(
+          document.createTextNode(JSON.stringify(data)));
+      document.body.className = "loaded";
+    });
+    aboutme.on('oAuth', function(url) {
+      document.getElementById('loginContainer').onclick = function() {
+        window.open(url);
+      };
+    });
+  }
   </script>
   <style type="text/css">
   #loginContainer {
