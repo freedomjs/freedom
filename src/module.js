@@ -171,7 +171,7 @@ Module.prototype.start = function() {
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
     this.port.addErrorHandler(function(err) {
-      this.warn('Module Failed', err);
+      this.debug.warn('Module Failed', err);
       this.stop();
     }.bind(this));
     // Tell the local port to ask us for help.

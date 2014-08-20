@@ -231,7 +231,9 @@ Provider.prototype.getProvider = function (source, identifier, args) {
   });
 
   dispatchEvent = function (src, ev, id, name, value) {
+    console.log('attempted event raised', name);
     if (ev[name]) {
+      console.log('valid event raised', ev[name]);
       var streams = Proxy.messageToPortable(ev[name].value, value,
                                                    this.debug);
       this.emit(this.channels[src], {

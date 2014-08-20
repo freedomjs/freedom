@@ -74,7 +74,7 @@ var ApiInterface = function(def, onMsg, emit, debug) {
         if (msg.error) {
           resolver.reject(msg.error);
         } else {
-          resolver.resolve(Proxy.portableToMessage(template, msg));
+          resolver.resolve(Proxy.portableToMessage(template, msg, debug));
         }
       } else {
         debug.error('Incoming message claimed to be an RPC ' +
@@ -83,7 +83,7 @@ var ApiInterface = function(def, onMsg, emit, debug) {
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
         emitter(msg.name, Proxy.portableToMessage(events[msg.name].value,
-                msg));
+                msg, debug));
       }
     }
   }.bind(this));

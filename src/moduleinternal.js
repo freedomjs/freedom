@@ -224,7 +224,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
 ModuleInternal.prototype.updateManifest = function (name, manifest) {
   var exp = this.config.global.freedom;
 
-  if (exp[name]) {
+  if (exp && exp[name]) {
     exp[name].manifest = manifest;
   } else {
     this.manifests[name] = manifest;
@@ -267,7 +267,7 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
         proxies.push(obj);
         seen.push(name);
       }
-    });
+    }.bind(this));
   }
   
   if (manifest.provides) {

@@ -74,7 +74,7 @@ WorkerLink.prototype.setupWorker = function() {
   var worker,
     blob,
     self = this;
-  worker = new Worker(this.config.source);
+  worker = new Worker(this.config.source + '#' + this.id);
 
   worker.addEventListener('error', function(err) {
     this.onError(err);

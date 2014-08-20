@@ -139,5 +139,5 @@ IsolatedStorageProvider.prototype._isMyKey = function(storedKey) {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.storage().provideAsynchronous(IsolatedStorageProvider);
+  freedom().provideAsynchronous(IsolatedStorageProvider);
 }

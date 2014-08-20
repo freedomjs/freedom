@@ -32,5 +32,5 @@ SharedStorageProvider.prototype.clear = function(continuation) {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.storage().provideAsynchronous(SharedStorageProvider);
+  freedom().provideAsynchronous(SharedStorageProvider);
 }
