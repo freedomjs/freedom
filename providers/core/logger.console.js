@@ -47,7 +47,8 @@ Logger_console.prototype.print = function (severity, source, msg) {
     return;
   }
   
-  if (typeof process !== 'undefined' && source) {
+  if (typeof process !== 'undefined' &&
+      {}.toString.call(process) === '[object process]' && source) {
     arr.unshift('\x1B[39m');
     arr.unshift('\x1B[31m' + source);
     /*jslint nomen: true*/

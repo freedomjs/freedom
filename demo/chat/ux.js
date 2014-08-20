@@ -1,7 +1,13 @@
 /*
  * These functions provide interaction for the freedom.js chat demo.
  */
-window.onload = function() {
+window.onload = function () {
+  freedom('manifest.json').then(start);
+};
+
+function start(freedom) {
+  var chatClient = freedom();
+
   document.getElementById('msg-input').focus();
   // If messages are going to a specific user, store that here.
   var activeBuddylistEntry;
@@ -25,13 +31,13 @@ window.onload = function() {
   }
 
   function makeDisplayString(buddylistEntry) {
-    return buddylistEntry.name && buddylistEntry.name != buddylistEntry.userId ?
+    return buddylistEntry.name && buddylistEntry.name !== buddylistEntry.userId ?
         buddylistEntry.name + ' (' + buddylistEntry.userId + ')' :
         buddylistEntry.userId;
   }
 
   function redrawBuddylist() {
-    var onClick = function(buddylistEntry, child) {
+    var onClick = function (buddylistEntry, child) {
       console.log("Messages will be sent to: " + buddylistEntry.userId);
       activeBuddylistEntry = buddylistEntry;
       redrawBuddylist();
@@ -58,13 +64,13 @@ window.onload = function() {
   }
   
   // on changes to the buddylist, redraw entire buddylist
-  window.freedom.on('recv-buddylist', function(val) {
+  chatClient.on('recv-buddylist', function(val) {
     buddylist = val;
     redrawBuddylist();
   });
 
   // On new messages, append it to our message log
-  window.freedom.on('recv-message', function(data) {
+  chatClient.on('recv-message', function(data) {
     // Show the name instead of the userId, if it's available.
     var userId = data.from.userId;
     var displayName = buddylist[userId].name || userId;
@@ -73,17 +79,17 @@ window.onload = function() {
   });
   
   // On new messages, append it to our message log
-  window.freedom.on('recv-err', function(data) {
+  chatClient.on('recv-err', function(data) {
     document.getElementById('uid').textContent = "Error: "+data.message;
   });
 
   // Display our own userId when we get it
-  window.freedom.on('recv-uid', function(data) {
+  chatClient.on('recv-uid', function(data) {
     document.getElementById('uid').textContent = "Logged in as: " + data;
   });
 
   // Display the current status of our connection to the Social provider
-  window.freedom.on('recv-status', function(msg) {
+  chatClient.on('recv-status', function(msg) {
     if (msg && msg == 'online') {
       document.getElementById('msg-input').disabled = false;
     } else {
@@ -102,10 +108,7 @@ window.onload = function() {
       var text = input.value;
       input.value = "";
       appendLog(document.createTextNode("You: " + text));
-      window.freedom.emit('send-message',
-          {to: activeBuddylistEntry.userId, message: text});
+      chatClient.send(activeBuddylistEntry.userId, text);
     }
   };
-
-  freedom.emit('boot');
-};
+}

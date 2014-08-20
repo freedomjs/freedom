@@ -270,5 +270,5 @@ WSSocialProvider.prototype.err = function(code) {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.social().provideAsynchronous(WSSocialProvider);
+  freedom().provideAsynchronous(WSSocialProvider);
 }

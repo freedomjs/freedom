@@ -20,6 +20,7 @@ var Board = function (dispatchEvent) {
   this.loadStats();
 };
 
+// This is called by the front end.
 Board.prototype.move = function (spot) {
   if (this.playerMove && this.state[spot] === 0) {
     this.state[spot] = 1;
@@ -50,7 +51,7 @@ Board.prototype.loadStats = function () {
 };
 
 Board.prototype.finishGame = function () {
-  this.state = [0,0,0,0,0,0,0,0,0];
+  this.state = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   this.playerMove = true;
 
   this.store.set('stats', JSON.stringify(this.score));
