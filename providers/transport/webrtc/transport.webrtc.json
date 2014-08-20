@@ -7,6 +7,7 @@
   "provides": [
     "transport"
   ],
+  "default": "transport",
   "permissions": [
     "core.peerconnection"
   ]

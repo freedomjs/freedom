@@ -42,7 +42,7 @@ FileFetcher.prototype.onMessage = function(val) {
     }, function(err) {
       console.error(JSON.stringify(err));
     });
-    freedom.emit('download-data', val.data);
+    freedom().emit('download-data', val.data);
     return;
   }
 
@@ -57,7 +57,7 @@ FileFetcher.prototype.onMessage = function(val) {
   
   if (val.from.clientId && val.msg.cmd && val.msg.data && val.msg.cmd == 'error') {
     console.log('social.onMessage: ' + val.msg.data);
-    freedom.emit('download-error', val.msg.data);
+    freedom().emit('download-error', val.msg.data);
   } else {
     console.log("social.onMessage: Unrecognized message: " + JSON.stringify(val));
   }

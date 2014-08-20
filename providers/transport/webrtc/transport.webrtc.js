@@ -310,5 +310,5 @@ WebRTCTransportProvider.prototype._assembleBuffers = function(tag) {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.transport().provideAsynchronous(WebRTCTransportProvider);
+  freedom().provideAsynchronous(WebRTCTransportProvider);
 }

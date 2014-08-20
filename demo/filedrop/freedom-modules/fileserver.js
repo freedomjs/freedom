@@ -10,13 +10,13 @@ FileServer.prototype.serve = function(myClientState, key, value, name) {
     stats: {}
   };
   if (myClientState.status == this.social.STATUS["ONLINE"]) {
-    freedom.emit('serve-descriptor', {
+    freedom().emit('serve-descriptor', {
       targetId: myClientState.clientId,
       key: key,
       name: name
     });
   } else {
-    freedom.emit('serve-error', "Error connecting to server.");
+    freedom().emit('serve-error', "Error connecting to server.");
   }
   this.updateStats(key, 0, 0);
 };
@@ -31,7 +31,7 @@ FileServer.prototype.updateStats = function(key, inprogress, done) {
   this.files[key].stats.key = key;
   this.files[key].stats.inprogress += inprogress;
   this.files[key].stats.done += done;
-  freedom.emit('stats', this.files[key].stats);
+  freedom().emit('stats', this.files[key].stats);
 };
 
 FileServer.prototype.onMessage = function(val) {

@@ -25,11 +25,11 @@ var clientList = {};
 
 console.log('File Drop root module');
 
-freedom.on('serve-data', function(data) {
+freedom().on('serve-data', function(data) {
   fileServer.serve(myClientState, data.key, data.value, data.name);
 });
 
-freedom.on('download', function(downloadDesc) {
+freedom().on('download', function(downloadDesc) {
   fileFetcher.download(downloadDesc);
 });
 
@@ -69,9 +69,9 @@ social.login({
     console.log('social.login: ONLINE!');
   } else {
     console.log('social.login: ERROR!');
-    freedom.emit("serve-error", "Failed logging in. Status: "+ret.status);
+    freedom().emit("serve-error", "Failed logging in. Status: "+ret.status);
   }
 }, function(err) {
-  freedom.emit("serve-error", err.message); 
+  freedom().emit("serve-error", err.message); 
 });
 

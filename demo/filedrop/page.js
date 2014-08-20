@@ -52,7 +52,7 @@ var FileRead = {
     Modal.displayProgress(100);
     // Send data to be served. Expect a 'serve-url' response with our descriptor
     var key = Math.random() + "";
-    window.freedom.emit('serve-data', {
+    FileRead.app.emit('serve-data', {
       key: key,
       value: evt.target.result,
       name: file.name
@@ -186,8 +186,16 @@ window.onload = function() {
     startServing(files);
   };
 
-  // Setup FreeDOM listeners
-  window.freedom.on('serve-descriptor', function(val) {
+  // Start freedom.
+  freedom('manifest.json').then(function(app) {
+    initialize(app());
+  });
+};
+
+function initialize(freedom) {
+  FileRead.app = freedom;
+
+  freedom.on('serve-descriptor', function(val) {
     var displayUrl = window.location + "#" + JSON.stringify(val);
     Modal.open();
     Modal.displayMessage("Share the following URL with your friends. Don't be a jerk, keep this tab open while file transfer is happening");
@@ -196,18 +204,18 @@ window.onload = function() {
     Stats.initialize(val.key, val.name, displayUrl);
   });
 
-  window.freedom.on('serve-error', function(val) {
+  freedom.on('serve-error', function(val) {
     Modal.open();
     Modal.displayMessage(val);
   });
 
-  window.freedom.on('download-progress', function(val) {
+  freedom.on('download-progress', function(val) {
     //val is an integer with a percentage
     Modal.open();
     Modal.displayProgress(val);
   });
   
-  window.freedom.on('download-data', function(val) {
+  freedom.on('download-data', function(val) {
     console.log("Download complete"); 
     Modal.open();
     var blob = new Blob([val]);
@@ -223,12 +231,12 @@ window.onload = function() {
     //Modal.displayDownload(window.URL.createObjectURL(blob));
   });
 
-  window.freedom.on('download-error', function(val) {
+  freedom.on('download-error', function(val) {
     Modal.open();
     Modal.displayMessage(val);
   });
 
-  window.freedom.on('stats', Stats.update);
+  freedom.on('stats', Stats.update);
 
   // See if there's a hash with a descriptor we can download
   try {
@@ -244,5 +252,4 @@ window.onload = function() {
   }
   // Hide the stats header at first
   $("#statsHeader").hide();   
-};
-
+}
