@@ -63,6 +63,7 @@ WorkerLink.prototype.setupListener = function() {
     delete this.obj;
   };
   this.emit('started');
+  this.obj.postMessage("Ready For Messages");
 };
 
 /**
@@ -82,6 +83,7 @@ WorkerLink.prototype.setupWorker = function() {
     if (!this.obj) {
       this.obj = worker;
       this.emit('started');
+      return;
     }
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this, worker), true);
@@ -106,7 +108,6 @@ WorkerLink.prototype.deliverMessage = function(flow, message) {
     this.stop();
   } else {
     if (this.obj) {
-      //fdom.debug.log('message sent to worker: ', flow, message);
       this.obj.postMessage({
         flow: flow,
         message: message

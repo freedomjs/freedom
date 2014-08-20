@@ -88,6 +88,9 @@ ProxyBinder.prototype.bindDefault = function (port, api, manifest, internal) {
     if (internal && manifest.provides &&
         manifest.provides.indexOf(manifest['default']) !== false) {
       def.provides = true;
+    } else if (internal) {
+      api.debug.warn("default API not provided, " +
+                     "are you missing a provides key in your manifest?");
     }
   }
 

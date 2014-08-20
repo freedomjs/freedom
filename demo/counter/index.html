@@ -15,18 +15,17 @@
     freedom("manifest.json", {
       "debug": "debug"
     }).then(function(interface) {
-      var channel = interface();
-      //Forward click events to the module.
+      window.clickFactory = interface;
+      var clicker = interface();
+      //Send click events to the module.
       document.getElementById('click').onclick = function() {
-        channel.emit('click', 1);
+        clicker.click(1).then(function (sum) {
+          document.getElementById('count').innerHTML = sum;
+        });
       }
-      //Display numbers from the module
-      channel.on('number', function(n) {
-        document.getElementById('count').innerHTML = n;
-      });
 
-      //Initialize the counter on start at 0
-      channel.emit('click', 0);
+      //Find the initial value
+      clicker.click(0);
     });
   }
   </script>

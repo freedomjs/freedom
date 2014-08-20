@@ -56,7 +56,7 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
 
     var objects = this.mapProxies(message.manifest);
 
-    this.generateEnv(message.manifest).then(function () {
+    this.generateEnv(message.manifest, objects).then(function () {
       return this.loadLinks(objects);
     }.bind(this)).then(this.loadScripts.bind(this, message.id,
         message.manifest.app.script));
@@ -88,12 +88,21 @@ ModuleInternal.prototype.toString = function () {
  * Generate an externaly visisble namespace
  * @method generateEnv
  * @param {Object} manifest The manifest of the module.
+ * @param {Object[]} items Other interfaces to load.
  * @returns {Promise} A promise when the external namespace is visible.
  * @private
  */
-ModuleInternal.prototype.generateEnv = function (manifest) {
+ModuleInternal.prototype.generateEnv = function (manifest, items) {
   return this.binder.bindDefault(this.port, this.api, manifest, true).then(
     function (iface) {
+      if (iface.api) {
+        for (var i = 0; i < items.length; i += 1) {
+          if (items[i].name === iface.api && items[i].def.provides) {
+            items.splice(i, 1);
+            break;
+          }
+        }
+      }
       this.config.global.freedom = iface;
     }.bind(this)
   );
@@ -295,10 +304,10 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
  */
 ModuleInternal.prototype.loadScripts = function (from, scripts) {
   // TODO(salomegeo): add a test for failure.
-  var importer = function importScripts(script, resolve, reject) {
+  var importer = function (script, resolve, reject) {
     try {
       this.config.global.importScripts(script);
-      resolve();
+      resolve(true);
     } catch (e) {
       reject(e);
     }
@@ -356,7 +365,9 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
  * @returns {Promise} completion of load
  */
 ModuleInternal.prototype.tryLoad = function (importer, url) {
-  return new Promise(importer.bind({}, url)).fail(function (e) {
+  return new Promise(importer.bind({}, url)).then(function (val) {
+    return val;
+  }, function (e) {
     this.debug.warn(e.stack);
     this.debug.error("Error loading " + url, e);
     this.debug.error("If the stack trace is not useful, see https://" +

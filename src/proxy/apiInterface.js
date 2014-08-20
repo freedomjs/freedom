@@ -88,7 +88,7 @@ var ApiInterface = function(def, onMsg, emit, debug) {
     }
   }.bind(this));
 
-  args = ApiInterface.messageToPortable(
+  args = Proxy.messageToPortable(
       (def.constructor && def.constructor.value) ? def.constructor.value : [],
       Array.prototype.slice.call(args, 3),
       debug);

@@ -112,6 +112,9 @@ Module.prototype.onMessage = function(flow, message) {
         this.debug.error('Unexpected message from ' + flow);
         return;
       } else {
+        if (flow === 'default') {
+          console.log('incomg msg');
+        }
         this.port.onMessage(this.internalPortMap[flow], message);
       }
     }
@@ -272,13 +275,6 @@ Module.prototype.emitMessage = function(name, message) {
       });
       this.emit('modInternal');
     } else if (message.type === 'createLink') {
-      // A design decision was that the default channel is
-      // overridden when acting as a provider.
-      if (this.manifest.provides &&
-          this.manifest.provides.indexOf(message.name) === 0) {
-        this.internalPortMap['default'] = message.channel;
-      }
-
       this.internalPortMap[message.name] = message.channel;
       this.port.onMessage(message.channel, {
         type: 'channel announcement',

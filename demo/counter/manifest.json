@@ -5,5 +5,16 @@
     "script": "counter.js",
     "index": "index.html",
     "static": [ "../style.css" ]
+  },
+  "provides": ["counter"],
+  "default": "counter",
+  "api": {
+    "counter": {
+      "click": {
+        "type": "method",
+        "value": ["number"],
+        "ret": "number"
+      }
+    }
   }
 }

@@ -41,6 +41,7 @@ if (typeof window !== 'undefined') {
   require('../entry')({
     isModule: true,
     portType: require('../link/worker'),
-    providers: providers
+    providers: providers,
+    global: global
   });
 }

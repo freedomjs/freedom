@@ -102,7 +102,6 @@ Debug.prototype.format = function (severity, source, args) {
  * @param {Object} message The message emitted by {@see format} to print.
  */
 Debug.prototype.print = function (message) {
-  console.log(message);
   if (!this.logger) {
     this.once('logger', this.print.bind(this, message));
     return;

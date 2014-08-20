@@ -47,9 +47,9 @@ var setup = function (context, manifest, config) {
     site_cfg = {
       'debug': 'log',
       'manifest': manifest,
-      'moduleContext': (!config || typeof (config.isModule) === "undefined") ?
+      'moduleContext': (!context || typeof (context.isModule) === "undefined") ?
           util.isModuleContext() :
-          config.isModule
+          context.isModule
     },
     link,
     Port;
