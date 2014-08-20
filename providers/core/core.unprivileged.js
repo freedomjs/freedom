@@ -16,11 +16,6 @@ var Core_unprivileged = function(manager, postMessage) {
   this.debug = this.manager.debug;
 };
 
-/**
- * The freedom.js API Name
- */
-Core_unprivileged.name = "core";
-
 Core_unprivileged.unboundChannels = {};
 
 Core_unprivileged.contextId = undefined;
@@ -224,4 +219,5 @@ Core_unprivileged.prototype.setId = function(id) {
   Core_unprivileged.contextId = id;
 };
 
-module.exports = Core_unprivileged;
+exports.provider = Core_unprivileged;
+exports.name = "core";

@@ -63,8 +63,6 @@ var WS = function (module, dispatchEvent, url, protocols, socket) {
   }
 };
 
-WS.name = "core.websocket";
-
 WS.prototype.send = function (data, continuation) {
   var toSend = data.text || data.binary || data.buffer,
     errcode,
@@ -168,4 +166,5 @@ WS.prototype.onClose = function (event) {
                       wasClean: event.wasClean});
 };
 
-module.exports = WS;
+exports.provider = WS;
+exports.name = 'core.websocket';

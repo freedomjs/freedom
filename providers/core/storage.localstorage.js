@@ -18,8 +18,6 @@ var Storage_unprivileged = function (app, dispatchEvent) {
   util.handleEvents(this);
 };
 
-Storage_unprivileged.name = 'core.storage';
-
 /**
  * Lists keys in the storage repository
  * @method keys
@@ -79,4 +77,5 @@ Storage_unprivileged.prototype.clear = function (continuation) {
   continuation();
 };
 
-module.exports = Storage_unprivileged;
+exports.provider = Storage_unprivileged;
+exports.name = 'core.storage';

@@ -26,11 +26,6 @@ var Echo_unprivileged = function(mod, dispatchEvent) {
 };
 
 /**
- * The freedom.js API Name
- */
-Echo_unprivileged.name = "core.echo";
-
-/**
  * Setup the provider to echo on a specific proxy. Subsequent messages
  * From the custom channel bound here will be re-emitted as a message
  * from the provider.  Subsequent messages to the provider will be
@@ -76,4 +71,5 @@ Echo_unprivileged.prototype.send = function(str, continuation) {
   }
 };
 
-module.exports = Echo_unprivileged;
+exports.provider = Echo_unprivileged;
+exports.name = "core.echo";

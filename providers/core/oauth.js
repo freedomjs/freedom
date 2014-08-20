@@ -13,11 +13,6 @@ var OAuth = function(mod, dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
 };
 
-/**
- * The freedom.js API
- */
-OAuth.name = 'core.oauth';
-
 OAuth.handlers = [];
 
 /**
@@ -56,4 +51,5 @@ OAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   });
 };
 
-module.exports = OAuth;
+exports.provider = OAuth;
+exports.name = 'core.oauth';

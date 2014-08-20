@@ -368,11 +368,6 @@ function PeerConnection(portModule, dispatchEvent,
   });
 }
 
-/**
- * The freedom.js API
- */
-PeerConnection.name = 'core.peerconnection';
-
 // Start a peer connection using the given freedomChannelId as the way to
 // communicate with the peer. The argument |freedomChannelId| is a way to speak
 // to an identity provide to send them SDP headers negotiate the address/port to
@@ -504,4 +499,5 @@ PeerConnection.prototype.close = function (continuation) {
   continuation();
 };
 
-module.exports = PeerConnection;
+exports.provider = PeerConnection;
+exports.name = 'core.peerconnection';

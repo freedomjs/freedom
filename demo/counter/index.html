@@ -14,7 +14,8 @@
   window.onload = function() {
     freedom("manifest.json", {
       "debug": "debug"
-    }).then(function(channel) {
+    }).then(function(interface) {
+      var channel = interface();
       //Forward click events to the module.
       document.getElementById('click').onclick = function() {
         channel.emit('click', 1);

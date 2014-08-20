@@ -15,10 +15,6 @@ var Logger_console = function (app) {
   util.handleEvents(this);
 };
 
-/**
- * The freedom.js API name.
- */
-Logger_console.name = 'core.logger';
 
 /**
  * Logging levels, for filtering output.
@@ -124,4 +120,5 @@ Logger_console.prototype.error = function (source, msg, continuation) {
 };
 
 /** REGISTER PROVIDER **/
-module.exports = Logger_console;
+exports.provider = Logger_console;
+exports.name = 'core.logger';

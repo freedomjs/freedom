@@ -23,11 +23,6 @@ var View_unprivileged = function (caller, dispatchEvent) {
 };
 
 /**
- * The freedom.js API
- */
-View_unprivileged.name = 'core.view';
-
-/**
  * Ask for this view to open a specific location, either a File relative to
  * the loader, or an explicit code location.
  * @method open
@@ -115,4 +110,5 @@ View_unprivileged.prototype.onMessage = function (m) {
   }
 };
 
-module.exports = View_unprivileged;
+exports.provider = View_unprivileged;
+exports.name = 'core.view';
