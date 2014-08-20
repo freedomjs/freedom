@@ -96,9 +96,10 @@ ModuleInternal.prototype.toString = function () {
 ModuleInternal.prototype.generateEnv = function (manifest, items) {
   return this.binder.bindDefault(this.port, this.api, manifest, true).then(
     function (binding) {
+      var i = 0;
       this.defaultPort = binding.port;
       if (binding.external.api) {
-        for (var i = 0; i < items.length; i += 1) {
+        for (i = 0; i < items.length; i += 1) {
           if (items[i].name === binding.external.api && items[i].def.provides) {
             items.splice(i, 1);
             break;
@@ -202,10 +203,18 @@ ModuleInternal.prototype.loadLinks = function (items) {
     name: 'core',
     to: provider
   });
+  
+  this.binder.getExternal(provider, 'default', {
+    name: 'core',
+    definition: core
+  }).then(
+    this.attach.bind(this, 'core')
+  );
 
-  proxy = new Proxy(ApiInterface.bind({}, core), this.debug);
-  this.manager.createLink(provider, 'default', proxy);
-  this.attach('core', proxy);
+
+//  proxy = new Proxy(ApiInterface.bind({}, core), this.debug);
+//  this.manager.createLink(provider, 'default', proxy);
+//  this.attach('core', {port: pr, external: proxy});
 
   if (this.pendingPorts === 0) {
     this.emit('start');

@@ -8,7 +8,7 @@
  **/
 
 var logger;
-//freedom.core().getLogger('[Chat Backend]').then(function (log) { logger = log; });
+freedom.core().getLogger('[Chat Backend]').then(function (log) { logger = log; });
 
 var Chat = function (dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
@@ -91,7 +91,7 @@ Chat.prototype.boot = function () {
     }
     
     this.updateBuddyList();
-  });
+  }.bind(this));
 };
 
 Chat.prototype.updateBuddyList = function() {

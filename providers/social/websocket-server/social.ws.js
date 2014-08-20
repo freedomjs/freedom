@@ -26,7 +26,7 @@ function WSSocialProvider(dispatchEvent, webSocket) {
   } else {
     this.WS_URL = 'wss://p2pbr.com/route/';
   }
-  this.social= freedom.social();
+  this.social= freedom();
 
   this.conn = null;   // Web Socket
   this.id = null;     // userId of this user

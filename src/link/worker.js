@@ -88,7 +88,7 @@ WorkerLink.prototype.setupWorker = function() {
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this, worker), true);
   this.stop = function() {
-    worker.stop();
+    worker.terminate();
     if (this.obj) {
       delete this.obj;
     }
