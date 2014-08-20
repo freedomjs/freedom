@@ -90,7 +90,7 @@ var ApiInterface = function(def, onMsg, emit, debug) {
 
   args = Proxy.messageToPortable(
       (def.constructor && def.constructor.value) ? def.constructor.value : [],
-      Array.prototype.slice.call(args, 3),
+      Array.prototype.slice.call(args, 4),
       debug);
 
   emit({

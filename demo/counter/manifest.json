@@ -10,6 +10,9 @@
   "default": "counter",
   "api": {
     "counter": {
+      "constructor": {
+        "value": ["number"]
+      },
       "click": {
         "type": "method",
         "value": ["number"],

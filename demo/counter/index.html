@@ -13,19 +13,16 @@
   // object, which is used as a message passing channel to the root module
   window.onload = function() {
     freedom("manifest.json", {
-      "debug": "debug"
+      "debug": "log"
     }).then(function(interface) {
-      window.clickFactory = interface;
-      var clicker = interface();
+      var clicker = interface(0);
+
       //Send click events to the module.
       document.getElementById('click').onclick = function() {
         clicker.click(1).then(function (sum) {
           document.getElementById('count').innerHTML = sum;
         });
       }
-
-      //Find the initial value
-      clicker.click(0);
     });
   }
   </script>

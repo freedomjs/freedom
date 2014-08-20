@@ -1,18 +1,16 @@
 /**
- * This is the root module of our FreeDOM backend.
+ * This is the root module of freedom.js.
  * It runs in an isolated thread with its own namespace.
  * The root module has a special object 'freedom', which
- * is used as a message-passing channel to its parent (the outer webpage)
+ * is used to provide the interface defined in manifest.json
  **/
-var n = 0;
-console.log("Hello World!");
-
-var Counter = function() {
+var Counter = function(dispatchEvents, base) {
+  this.num = base;
 };
 
 Counter.prototype.click = function(num) {
-  n += num;
-  return n;
+  this.num += num;
+  return this.num;
 };
 
 freedom().provideSynchronous(Counter);

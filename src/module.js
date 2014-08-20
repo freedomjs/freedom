@@ -112,9 +112,6 @@ Module.prototype.onMessage = function(flow, message) {
         this.debug.error('Unexpected message from ' + flow);
         return;
       } else {
-        if (flow === 'default') {
-          console.log('incomg msg');
-        }
         this.port.onMessage(this.internalPortMap[flow], message);
       }
     }
