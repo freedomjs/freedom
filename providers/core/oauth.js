@@ -1,5 +1,5 @@
-/*globals fdom:true, console */
-/*jslint indent:2,white:true,sloppy:true */
+/*globals console */
+/*jslint indent:2,white:true,sloppy:true,node:true */
 
 /**
  * An oAuth meta-provider allowing multiple platform-dependant
@@ -12,6 +12,11 @@ var OAuth = function(mod, dispatchEvent) {
   this.mod = mod;
   this.dispatchEvent = dispatchEvent;
 };
+
+/**
+ * The freedom.js API
+ */
+OAuth.name = 'core.oauth';
 
 OAuth.handlers = [];
 
@@ -51,4 +56,4 @@ OAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   });
 };
 
-fdom.apis.register("core.oauth", OAuth);
+module.exports = OAuth;

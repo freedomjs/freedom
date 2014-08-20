@@ -7,19 +7,27 @@ var util = require('./util');
 var Bundle = function () {
   'use strict';
   this.interfaces = [];
+  /*jslint nomen: true */
   var interfaces = includeFolder(__dirname + '/../interface');
+  /*jslint nomen: false */
   util.eachProp(interfaces, function (json) {
     this.interfaces.push(JSON.parse(minify(json)));
   }.bind(this));
 };
 
 
-exports.register = function (registry) {
+exports.register = function (providers, registry) {
   'use strict';
   var bundle = new Bundle();
   bundle.interfaces.forEach(function (api) {
     if (api && api.name && api.api) {
       registry.set(api.name, api.api);
+    }
+  });
+
+  providers.forEach(function (provider) {
+    if (provider.name) {
+      registry.register(provider.name, provider, provider.style);
     }
   });
 };

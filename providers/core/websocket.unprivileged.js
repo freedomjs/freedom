@@ -1,5 +1,5 @@
-/*globals freedom:true, fdom, WebSocket, console, require*/
-/*jslint sloppy:true*/
+/*globals WebSocket, ArrayBuffer, Blob, Uint8Array, console */
+/*jslint sloppy:true, node:true */
 
 /**
  * A WebSocket core provider
@@ -11,7 +11,8 @@
  * @param {WebSocket?} socket An alternative socket class to use.
  */
 var WS = function (module, dispatchEvent, url, protocols, socket) {
-  var WSImplementation = null;
+  var WSImplementation = null,
+    error;
   this.isNode = false;
   if (typeof socket !== 'undefined') {
     WSImplementation = socket;
@@ -33,7 +34,7 @@ var WS = function (module, dispatchEvent, url, protocols, socket) {
     }
     this.websocket.binaryType = 'arraybuffer';
   } catch (e) {
-    var error = {};
+    error = {};
     if (e instanceof SyntaxError) {
       error.errcode = 'SYNTAX';
     } else {
@@ -62,17 +63,20 @@ var WS = function (module, dispatchEvent, url, protocols, socket) {
   }
 };
 
-WS.prototype.send = function(data, continuation) {
-  var toSend = data.text || data.binary || data.buffer;
-  var errcode, message;
+WS.name = "core.websocket";
+
+WS.prototype.send = function (data, continuation) {
+  var toSend = data.text || data.binary || data.buffer,
+    errcode,
+    message;
 
   if (toSend) {
     try {
       // For node.js, we have to do weird buffer stuff
       if (this.isNode && toSend instanceof ArrayBuffer) {
         this.websocket.send(
-          new Uint8Array(toSend), 
-          { binary:true }, 
+          new Uint8Array(toSend),
+          { binary: true },
           this.onError.bind(this)
         );
       } else {
@@ -101,15 +105,15 @@ WS.prototype.send = function(data, continuation) {
   }
 };
 
-WS.prototype.getReadyState = function(continuation) {
+WS.prototype.getReadyState = function (continuation) {
   continuation(this.websocket.readyState);
 };
 
-WS.prototype.getBufferedAmount = function(continuation) {
+WS.prototype.getBufferedAmount = function (continuation) {
   continuation(this.websocket.bufferedAmount);
 };
 
-WS.prototype.close = function(code, reason, continuation) {
+WS.prototype.close = function (code, reason, continuation) {
   try {
     if (code && reason) {
       this.websocket.close(code, reason);
@@ -124,18 +128,18 @@ WS.prototype.close = function(code, reason, continuation) {
     } else {
       errorCode = "INVALID_ACCESS";
     }
-    continuation(undefined,{
+    continuation(undefined, {
       errcode: errorCode,
       message: e.message
     });
   }
 };
 
-WS.prototype.onOpen = function(event) {
+WS.prototype.onOpen = function (event) {
   this.dispatchEvent('onOpen');
 };
 
-WS.prototype.onMessage = function(event, flags) {
+WS.prototype.onMessage = function (event, flags) {
   var data = {};
   if (this.isNode && flags && flags.binary) {
     data.buffer = new Uint8Array(event).buffer;
@@ -151,21 +155,17 @@ WS.prototype.onMessage = function(event, flags) {
   this.dispatchEvent('onMessage', data);
 };
 
-WS.prototype.onError = function(event) {
+WS.prototype.onError = function (event) {
   // Nothing to pass on
   // See: http://stackoverflow.com/a/18804298/300539
   this.dispatchEvent('onError');
 };
 
-WS.prototype.onClose = function(event) {
+WS.prototype.onClose = function (event) {
   this.dispatchEvent('onClose',
                      {code: event.code,
                       reason: event.reason,
                       wasClean: event.wasClean});
 };
 
-
-/** REGISTER PROVIDER **/
-if (typeof fdom !== 'undefined') {
-  fdom.apis.register('core.websocket', WS);
-}
+module.exports = WS;

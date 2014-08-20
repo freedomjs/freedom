@@ -1,7 +1,9 @@
-/*globals fdom, process, console */
-/*jslint indent:2,sloppy:true */
+/*globals process, console */
+/*jslint indent:2,sloppy:true, node:true */
+var util = require('../../src/util');
+
 /**
- * A FreeDOM logging provider that logs to chrome, firefox, and node consoles.
+ * A freedom.js logging provider that logs to chrome, firefox, and node consoles.
  * @Class Logger_console
  * @constructor
  * @private
@@ -10,8 +12,13 @@
 var Logger_console = function (app) {
   this.level = (app.config && app.config.debug) || 'log';
   this.console = (app.config && app.config.global.console);
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 };
+
+/**
+ * The freedom.js API name.
+ */
+Logger_console.name = 'core.logger';
 
 /**
  * Logging levels, for filtering output.
@@ -117,4 +124,4 @@ Logger_console.prototype.error = function (source, msg, continuation) {
 };
 
 /** REGISTER PROVIDER **/
-fdom.apis.register("core.logger", Logger_console);
+module.exports = Logger_console;

@@ -188,7 +188,8 @@ module.exports = function (grunt) {
           'freedom.js': ['src/util/preamble.js','interface/*.js']
         },
         options: {
-          transform: ['folderify']
+          transform: ['folderify'],
+          ignore: ['ws']
         }
       },
     },

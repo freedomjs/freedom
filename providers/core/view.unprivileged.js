@@ -1,5 +1,7 @@
-/*globals fdom, document */
-/*jslint indent:2,sloppy:true */
+/*globals document */
+/*jslint indent:2,sloppy:true,node:true */
+var util = require('../../src/util');
+
 /**
  * A freedom.js view is the interface for user interaction.
  * A view exists as an iFrame, which is shown to the user in some way.
@@ -17,8 +19,13 @@ var View_unprivileged = function (caller, dispatchEvent) {
   this.host = null;
   this.win = null;
   this.module = caller;
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 };
+
+/**
+ * The freedom.js API
+ */
+View_unprivileged.name = 'core.view';
 
 /**
  * Ask for this view to open a specific location, either a File relative to
@@ -51,7 +58,7 @@ View_unprivileged.prototype.open = function (name, what, continuation) {
   frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts allow-forms");
   if (what.file) {
-    fdom.resources.get(this.module.manifestId, what.file).then(
+    this.module.resource.get(this.module.manifestId, what.file).then(
       function (fname) {
         this.finishOpen(root, frame, fname, continuation);
       }.bind(this)
@@ -108,4 +115,4 @@ View_unprivileged.prototype.onMessage = function (m) {
   }
 };
 
-fdom.apis.register("core.view", View_unprivileged);
+module.exports = View_unprivileged;

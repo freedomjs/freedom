@@ -53,7 +53,7 @@ var setup = function (context, manifest, config) {
     },
     link,
     Port;
-  Bundle.register(api);
+  Bundle.register(context.providers, api);
   
 
   if (config) {
