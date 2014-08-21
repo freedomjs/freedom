@@ -1098,7 +1098,10 @@ describe('ModuleInternal', function() {
     global = {freedom: {}};
     hub = new Hub(new Debug());
     var resource = testUtil.setupResolvers();
-    manager = new Manager(hub, resource, new Api());
+    var api = new Api();
+    api.set('core', {});
+    api.register('core', function () {});
+    manager = new Manager(hub, resource, api);
     app = new ModuleInternal(manager);
     hub.emit('config', {
       global: global,
@@ -1175,13 +1178,13 @@ describe('ModuleInternal', function() {
                           'non_existing_file']);
   })
 
-  it('exposes dependency apis', function(done) {
+  iit('exposes dependency apis', function(done) {
     var source = testUtil.createTestPort('test');
     manager.setup(source);
     manager.createLink(source, 'default', app, 'default');
     source.on('onMessage', function(msg) {
       // Dependencies will be requested via 'createLink' messages. resolve those.
-      if (msg.channel && msg.name !== 'default') {
+      if (msg.channel && msg.type === 'createLink') {
         hub.onMessage(msg.channel, {
           type: 'channel announcement',
           channel: msg.reverse
@@ -1191,6 +1194,8 @@ describe('ModuleInternal', function() {
           id: msg.id,
           data: 'spec/' + msg.data
         });
+      } else {
+        console.warn('unknown msg', msg);
       }
     });
 
@@ -1214,16 +1219,16 @@ describe('ModuleInternal', function() {
       },
       id: 'relative://spec/helper/manifest.json',
     });
+    hub.onMessage(source.messages[1][1].channel, {
+      type: 'manifest',
+      name: 'test',
+      manifest: {name: 'test manifest'}
+    });
 
     window.callback = function() {
+      delete callback;
       expect(global.freedom.manifest.name).toEqual('My Module Name');
       expect(global.freedom.test.api).toEqual('social');
-      delete callback;
-      hub.onMessage(source.messages[1][1].channel, {
-        type: 'manifest',
-        name: 'test',
-        manifest: {name: 'test manifest'}
-      });
       expect(global.freedom.test.manifest.name).toEqual('test manifest');
       done();
     };
@@ -3849,11 +3854,17 @@ ModuleInternal.prototype.loadLinks = function (items) {
     },
     onManifest = function (item, msg) {
       var definition = {
-        name: item.api,
-        definition: msg.manifest.api[item.api]
+        name: item.api
       };
-      this.loadLink(item.name, definition);
-    },
+      if (!msg.manifest.api || !msg.manifest.api[item.api]) {
+        definition.definition = null;
+      } else {
+        definition.definition = msg.manifest.api[item.api];
+      }
+      this.binder.getExternal(this.port, item.name, definition).then(
+        this.attach.bind(this, item.name)
+      );
+    }.bind(this),
     promise = new Promise(function (resolve, reject) {
       this.once('start', resolve);
     }.bind(this));
@@ -3863,8 +3874,14 @@ ModuleInternal.prototype.loadLinks = function (items) {
       this.debug.error('Module ' + this.appId + ' not loaded');
       this.debug.error('Unknown provider: ' + items[i].name);
     } else if (items[i].api && !items[i].def) {
-      this.once(manifestPredicate.bind({}, items[i].name),
-                onManifest.bind(this, items[i]));
+      if (this.manifests[items[i].name]) {
+        onManifest(items[i], {
+          manifest: this.manifests[items[i].name]
+        });
+      } else {
+        this.once(manifestPredicate.bind({}, items[i].name),
+                  onManifest.bind(this, items[i]));
+      }
     } else {
       this.binder.getExternal(this.port, items[i].name, items[i].def).then(
         this.attach.bind(this, items[i].name)

@@ -258,6 +258,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('unit', [
     'browserify:jasmine',
+    'connect:default',
     'karma:phantom'
   ]);
   grunt.registerTask('test', [
