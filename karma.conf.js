@@ -1,15 +1,4 @@
 var FILES = require('./Gruntfile').FILES;
-var karmaFiles = require('./Gruntfile').unGlob([].concat(
-    FILES.srcCore,
-    FILES.srcPlatform,
-    FILES.srcJasmineHelper,
-    FILES.specCoreUnit,
-    FILES.specPlatformUnit,
-    FILES.srcProvider,
-    FILES.specProviderUnit,
-    FILES.srcProviderIntegration,
-    FILES.specProviderIntegration
-  ));
 
 module.exports = function(config) {
   config.set({
@@ -23,10 +12,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     // Testing Providers for now
-    files: karmaFiles.include,
-
-    // list of files to exclude
-    exclude: karmaFiles.exclude,
+    files: [require.resolve('es5-shim'), 'spec.js'],
     
     // web server port
     port: 9876,
@@ -54,17 +40,6 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['progress', 'coverage', 'saucelabs', 'unicorn', 'story'],
-
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: [].concat(
-      FILES.srcCore, 
-      FILES.srcPlatform,
-      FILES.srcProvider
-    ).reduce(function(prev, curr, i, arr) {
-      prev[curr] = 'coverage';
-      return prev;
-    }, {}),
     
     // Coverage report options
     coverageReporter: {

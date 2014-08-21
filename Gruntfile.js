@@ -24,35 +24,26 @@
  *  - Report coverage to coveralls.io
  **/
 
-var promisePath = require.resolve('es6-promise');
-var promisePrefix = promisePath.substr(0, promisePath.indexOf('es6-promise'));
-var promiseSelector = [
-  promisePrefix + '/es6-promise/dist/promise-*.js',
-  '!' + promisePrefix + '/es6-promise/dist/promise-*amd.js',
-  '!' + promisePrefix + '/es6-promise/dist/promise-*min.js'
-];
-
 var FILES = {
-  lib: promiseSelector.concat([
-    'src/util/jshinthelper.js'
-  ]),
-  srcJasmineHelper: promiseSelector.concat([
-    require.resolve('es5-shim'),
-    'spec/util.js'
-  ]),
   srcCore: [
     'src/*.js',
-    'src/link/*.js',
-    'src/proxy/*.js',
-    'interface/*.js'
+      'src/link/*.js',
+      'src/proxy/*.js',
+      'interface/*.js'
   ],
   srcPlatform: [
     'providers/core/*.js'
   ],
   specCoreUnit: [
-    'spec/src/{a,b,c,d,e}*.spec.js',
-    'spec/src/{f,g}*.spec.js',
-    'spec/src/{h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}*.spec.js'
+    'spec/src/api.spec.js',
+    'spec/src/debug.spec.js',
+    'spec/src/moduleInternal.spec.js',
+    'spec/src/policy.spec.js',
+    'spec/src/provider.spec.js',
+    'spec/src/proxy.spec.js',
+    'spec/src/proxyAPIInterface.spec.js',
+    'spec/src/resource.spec.js',
+    'spec/src/util.spec.js',
   ],
   specPlatformUnit: [
     'spec/providers/core/**/*.spec.js'
@@ -106,18 +97,6 @@ var CUSTOM_LAUNCHER = {
   }
 };
 
-function unGlob(arr) {
-  var include = [], exclude = [];
-  arr.filter(function(el) {
-    if (el.length > 0 && el.charAt(0) !== '!') {
-      include.push(el);
-    } else if (el.length > 0) {
-      exclude.push(el.substr(1));
-    }
-  });
-  return {include: include, exclude: exclude};
-}
-
 module.exports = function (grunt) {
   /**
    * GRUNT CONFIG
@@ -138,17 +117,11 @@ module.exports = function (grunt) {
         coverageReporter: {}
       },
       phantom: { 
-        exclude: unGlob(FILES.srcJasmineHelper).exclude.concat(
-          FILES.specProviderIntegration
-        ),
         browsers: ['PhantomJS'], 
         singleRun: true, 
         autoWatch: false
       },
       saucelabs: {
-        exclude: unGlob(FILES.srcJasmineHelper).exclude.concat(
-          FILES.specProviderIntegration
-        ),
         browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
         singleRun: true,
         autoWatch: false,
@@ -192,6 +165,11 @@ module.exports = function (grunt) {
           ignore: ['ws']
         }
       },
+      jasmine: {
+        files: {
+          'spec.js': FILES.specCoreUnit
+        }
+      }
     },
     clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map'],
     yuidoc: {
@@ -276,6 +254,10 @@ module.exports = function (grunt) {
     'gitinfo',
     'connect:default'
   ]);
+  grunt.registerTask('unit', [
+    'browserify:jasmine',
+    'karma:phantom'
+  ]);
   grunt.registerTask('test', [
     'build',
     'karma:single'
@@ -330,4 +312,3 @@ module.exports = function (grunt) {
 
 module.exports.FILES = FILES;
 module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;
-module.exports.unGlob = unGlob;

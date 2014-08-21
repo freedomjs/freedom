@@ -1,4 +1,7 @@
-var createTestPort = function(id) {
+var Resource = require('../src/resource');
+var util = require('../src/util');
+
+exports.createTestPort = function(id) {
   var port = {
     id: id,
     messages: [],
@@ -48,12 +51,12 @@ var createTestPort = function(id) {
     
   };
 
-  fdom.util.handleEvents(port);
+  util.handleEvents(port);
 
   return port;
 };
 
-var mockIface = function(props, consts) {
+exports.mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
     if (p[1] && p[1].then) {
@@ -77,59 +80,8 @@ var mockIface = function(props, consts) {
   };
 };
 
-var createProxyFor = function(app, api) {
-  setupResolvers();
-  var global = {
-    document: document
-  };
-  fdom.debug = new fdom.port.Debug();
-
-  // Wrap the resolving subsystem to grab the child's 'freedom' object and promote it
-  // to window before the internal script is loaded. 
-  for(var i = 0; i < fdom.resources.resolvers.length; i++) {
-    var resolver = fdom.resources.resolvers[i];
-    fdom.resources.resolvers[i] = function(wrap, m, u, d) {
-      if (u.lastIndexOf(".js") === u.length - 3) {
-        window.freedom = global.freedom;
-      }
-      return wrap(m, u, d);
-    }.bind({}, resolver);
-  }
-  
-  var hub = new fdom.Hub(),
-      site_cfg = {
-        'debug': true,
-        'portType': 'Direct',
-        'moduleContext': false,
-        'manifest': app,
-        'resources': fdom.resources,
-        'global': global
-      },
-      manager = new fdom.port.Manager(hub),
-      proxy;
-  
-  if (api) {
-    proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, fdom.apis.get(api).definition));
-  } else {
-    proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
-  }
-  manager.setup(proxy);
-  
-  var link = location.protocol + "//" + location.host + location.pathname;
-  fdom.resources.get(link, site_cfg.manifest).then(function(url) {
-    fdom.resources.getContents(url).then(function(manifest) {
-      var app = new fdom.port.Module(url, manifest, []);
-      manager.setup(app);
-      manager.createLink(proxy, 'default', app);
-    });
-  });
-  hub.emit('config', site_cfg);
-
-  return proxy.getProxyInterface();
-};
-
 var fdom_src;
-var getFreedomSource = function(id) {
+exports.getFreedomSource = function(id) {
   if(typeof fdom_src === 'undefined'){
     try {
       var xhr = new XMLHttpRequest();
@@ -149,9 +101,9 @@ var getFreedomSource = function(id) {
 }
 
 // Setup resource loading for the test environment, which uses file:// urls.
-function setupResolvers() { 
-  fdom.resources = new Resource();
-  fdom.resources.addResolver(function(manifest, url, resolve) {
+exports.setupResolvers = function() { 
+  var rsrc = new Resource();
+  rsrc.addResolver(function(manifest, url, resolve) {
     if (url.indexOf('relative://') === 0) {
       var loc = location.protocol + "//" + location.host + location.pathname;
       var dirname = loc.substr(0, loc.lastIndexOf('/'));
@@ -161,10 +113,10 @@ function setupResolvers() {
     resolve(false);
     return false;
   });
-  fdom.resources.addResolver(function(manifest, url, resolve) {
+  rsrc.addResolver(function(manifest, url, resolve) {
     if (manifest.indexOf('file://') === 0) {
       manifest = 'http' + manifest.substr(4);
-      fdom.resources.resolve(manifest, url).then(function(addr) {
+      rsrc.resolve(manifest, url).then(function(addr) {
         addr = 'file' + addr.substr(4);
         resolve(addr);
       });
@@ -173,10 +125,11 @@ function setupResolvers() {
     resolve(false);
     return false;
   });
-  fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
+  rsrc.addRetriever('file', rsrc.xhrRetriever);
+  return rsrc;
 }
 
-function cleanupIframes() {
+exports.cleanupIframes = function() {
   var frames = document.getElementsByTagName('iframe');
   // frames is a live HTMLCollection, so it is modified each time an
   // element is removed.
@@ -185,7 +138,7 @@ function cleanupIframes() {
   }
 }
 
-function setupModule(manifest_url) {
+exports.setupModule = function(manifest_url) {
   var freedom_src = getFreedomSource();
   var global = {console: {log: function(){}}, document: document};
   setupResolvers();
@@ -201,7 +154,7 @@ function setupModule(manifest_url) {
   });
 }
 
-function providerFor(module, api) {
+exports.providerFor = function(module, api) {
   var manifest = {
     name: 'providers',
     app: {script: 'relative://spec/helper/providers.js'},
@@ -331,3 +284,4 @@ ProviderHelper.prototype.onInFromChannel = function(data) {
   this.chanCallbacks[data.chanId](data.message);
 };
 
+exports.ProviderHelper = ProviderHelper;

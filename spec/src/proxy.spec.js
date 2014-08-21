@@ -1,7 +1,10 @@
-describe("fdom.Port.Proxy", function() {
+var Proxy = require('../../src/proxy');
+var EventInterface = require('../../src/proxy/eventInterface');
+
+describe("Proxy", function() {
   var port;
   beforeEach(function() {
-    port = new fdom.port.Proxy(fdom.proxy.EventInterface);
+    port = new Proxy(EventInterface);
   });
 
   it("reports messages back to the port", function() {
@@ -41,11 +44,11 @@ describe("fdom.Port.Proxy", function() {
   
   it("sends constructor arguments to appropriate interface", function() {
     var arg = undefined;
-    var myInterface = function(onMsg, emit, x) {
+    var myInterface = function(onMsg, emit, debug, x) {
       arg = x;
     };
     // setup.
-    port = new fdom.port.Proxy(myInterface);
+    port = new Proxy(myInterface);
 
     port.onMessage('default', {
       channel: 'message'

@@ -251,8 +251,11 @@ Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.nullResolver = function (manifest, url, resolve, reject) {
-  var protocols = ["manifest", "data;base64"];
+  var protocols = ["manifest"];
   if (Resource.hasScheme(protocols, url)) {
+    resolve(url);
+    return true;
+  } else if (url.indexOf('data:') === 0) {
     resolve(url);
     return true;
   }
