@@ -748,7 +748,7 @@ describe("Api", function() {
   });
 });
 
-},{"../../src/api":22}],13:[function(require,module,exports){
+},{"../../src/api":24}],13:[function(require,module,exports){
 var Debug = require('../../src/debug.js');
 
 describe("Debug", function() {
@@ -813,7 +813,277 @@ describe("Debug", function() {
 });
 });
 
-},{"../../src/debug.js":23}],14:[function(require,module,exports){
+},{"../../src/debug.js":25}],14:[function(require,module,exports){
+var Hub = require('../../src/hub');
+var Debug = require('../../src/debug');
+
+describe("Hub", function() {
+  var hub, debug;
+
+  beforeEach(function() {
+    debug = new Debug();
+    hub = new Hub(debug);
+  });
+
+  it("routes messages", function() {
+    var app = {
+      id: 'testApp'
+    };
+    hub.register(app);
+    app.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app, 'testApp', 'test');
+    
+    var msg = {test: true};
+    hub.onMessage(route, msg);
+
+    expect(app.onMessage).toHaveBeenCalledWith('test', msg);
+  });
+
+  it("requires registration", function() {
+    var app = {
+      id: 'testApp'
+    };
+    spyOn(debug, 'warn');
+    hub.install(app, null, 'magic');
+    expect(debug.warn).toHaveBeenCalled();
+
+    hub.register(app);
+    hub.install(app, null, 'magic');
+    expect(debug.warn.calls.count()).toEqual(2);
+    expect(hub.register(app)).toEqual(false);
+
+    expect(hub.deregister(app)).toEqual(true);
+    expect(hub.deregister(app)).toEqual(false);
+  });
+
+  it("goes between apps", function() {
+    var app1 = {
+      id: 'testApp'
+    };
+    var app2 = {
+      id: 'otherApp'
+    };
+    hub.register(app1);
+    hub.register(app2);
+    app2.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app1, 'otherApp', 'testx');
+    
+    var msg = {test: true};
+    hub.onMessage(route, msg);
+
+    expect(app2.onMessage).toHaveBeenCalledWith('testx', msg);
+  });
+
+  it("alerts if messages are sent improperly", function() {
+    var app = {
+      id: 'testApp'
+    };
+    hub.register(app);
+    app.onMessage = jasmine.createSpy('cb');
+
+    spyOn(debug, 'warn');
+    
+    hub.onMessage('test', "testing");
+
+    expect(app.onMessage).not.toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
+  });
+
+  it("removes routes", function() {
+    spyOn(debug, 'warn');
+    var app1 = {
+      id: 'testApp'
+    };
+    var app2 = {
+      id: 'otherApp'
+    };
+    hub.register(app1);
+    hub.register(app2);
+    app2.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app1, 'otherApp', 'testx');
+    
+    var msg = {test: true};
+    hub.onMessage(route, msg);
+
+    expect(app2.onMessage).toHaveBeenCalledWith('testx', msg);
+
+    hub.uninstall(app1, route);
+
+    expect(debug.warn).not.toHaveBeenCalled();
+
+    hub.onMessage(route, msg);
+    expect(debug.warn).toHaveBeenCalled();
+  });
+
+  it("Handles failures when removing routes", function() {
+    spyOn(debug, 'warn');
+    var app1 = {
+      id: 'testApp'
+    };
+    var app2 = {
+      id: 'otherApp'
+    };
+    hub.register(app1);
+    hub.register(app2);
+    app2.onMessage = jasmine.createSpy('cb');
+    var route = hub.install(app1, 'otherApp', 'testx');
+    
+    hub.uninstall(app2, route);
+    expect(debug.warn).toHaveBeenCalled();
+
+    hub.uninstall({id: null}, route);
+    expect(debug.warn.calls.count()).toEqual(2);
+
+    expect(hub.uninstall(app1, route+'fake')).toEqual(false);
+
+    hub.deregister(app2);
+    expect(hub.getDestination(route)).toEqual(undefined);
+    expect(hub.getDestination(route+'fake')).toEqual(null);
+
+    hub.onMessage(route, {test: true});
+    expect(debug.warn.calls.count()).toEqual(3);
+  });
+});
+
+
+},{"../../src/debug":25,"../../src/hub":26}],15:[function(require,module,exports){
+var Debug = require('../../src/debug');
+var Hub = require('../../src/hub');
+var Manager = require('../../src/manager');
+var Resource = require('../../src/resource');
+var Api = require('../../src/api');
+
+var testUtil = require('../util');
+
+describe("Manager", function() {
+  var debug, hub, manager, port, resource, api;
+
+  beforeEach(function() {
+    debug = new Debug();
+    hub = new Hub(debug);
+    resource = new Resource(debug);
+    api = new Api(debug);
+    api.set('core',{});
+    api.register('core',function() {});
+    manager = new Manager(hub, resource, api);
+    var global = {};
+
+    hub.emit('config', {
+      global: global,
+      debug: true
+    });
+    port = testUtil.createTestPort('testing');
+    manager.setup(port);
+  });
+
+  it("Handles Debug Messages", function() {
+    spyOn(debug, 'print');
+    manager.onMessage('testing', {
+      request: 'debug'
+    });
+    expect(debug.print).toHaveBeenCalled();
+    manager.onMessage('unregistered', {
+      request: 'debug'
+    });
+    expect(debug.print.calls.count()).toEqual(1);
+  });
+
+  it("Creates Links", function() {
+    var testPort = testUtil.createTestPort('dest');
+
+    manager.onMessage('testing', {
+      request: 'link',
+      name: 'testLink',
+      to: testPort
+    });
+    // Setup message.
+    expect(testPort.gotMessage('control')).not.toEqual(false);
+    // Notification of link.
+    var notification = port.gotMessage('control', {type: 'createLink'});
+    expect(notification).not.toEqual(false);
+
+    // Forward link is 'default'.
+    var msg = {contents: "hi!"};
+    port.emit(notification.channel, msg);
+    expect(testPort.gotMessage('default')).toEqual(msg);
+
+    // Backwards link should be 'testLink'.
+    testPort.emit(notification.reverse, msg);
+    expect(port.gotMessage('testLink')).toEqual(msg);
+  });
+
+  it("Supports delegation of control", function() {
+    var testPort = testUtil.createTestPort('dest');
+
+    manager.setup(testPort);
+
+    // Delegate messages from the new port to our port.
+    manager.onMessage('testing', {
+      request: 'delegate',
+      flow: 'dest'
+    });
+
+    // Send a message from the new port.
+    manager.onMessage('dest', {
+      contents: 'hi!'
+    });
+
+    var notification = port.gotMessage('control', {type: 'Delegation'});
+    expect(notification).not.toEqual(false);
+    expect(notification.flow).toEqual('dest');
+    expect(notification.message.contents).toEqual('hi!');
+  });
+
+  it("Registers resource resolvers", function() {
+    manager.onMessage('testing', {
+      request: 'resource',
+      service: 'testing',
+      args: ['retriever', 'resolver']
+    });
+    expect(resource.contentRetrievers['testing']).toEqual('resolver');
+  });
+
+  it("Provides singleton access to the Core API", function(done) {
+    manager.onMessage('testing', {
+      request: 'core'
+    });
+    port.gotMessageAsync('control', {type: 'core'}, function(response) {
+      expect(response).not.toEqual(false);
+      var core = response.core;
+
+      var otherPort = testUtil.createTestPort('dest');
+      manager.setup(otherPort);
+      manager.onMessage('dest', {
+        request: 'core'
+      });
+      
+      otherPort.gotMessageAsync('control', {type: 'core'}, function(otherResponse) {
+        expect(otherResponse.core).toEqual(core);
+        done();
+      });
+    });
+  });
+
+  it("Tears down Ports", function() {
+    manager.onMessage('testing', {
+      request: 'close'
+    });
+
+    // Subsequent requests should fail / cause a warning.
+    spyOn(debug, 'warn');
+    manager.onMessage('testing', {
+      request: 'core'
+    });
+    expect(debug.warn).toHaveBeenCalled();
+    expect(port.gotMessage('control', {type: 'core'})).toEqual(false);
+  });
+
+  it("Retreives Ports by ID", function() {
+    expect(manager.getPort(port.id)).toEqual(port);
+  });
+});
+
+},{"../../src/api":24,"../../src/debug":25,"../../src/hub":26,"../../src/manager":27,"../../src/resource":38,"../util":23}],16:[function(require,module,exports){
 var Api = require('../../src/api');
 var Debug = require('../../src/debug');
 var Hub = require('../../src/hub');
@@ -960,7 +1230,7 @@ describe('ModuleInternal', function() {
   });
 });
 
-},{"../../src/api":22,"../../src/debug":23,"../../src/hub":24,"../../src/manager":25,"../../src/moduleInternal":27,"../util":21}],15:[function(require,module,exports){
+},{"../../src/api":24,"../../src/debug":25,"../../src/hub":26,"../../src/manager":27,"../../src/moduleInternal":29,"../util":23}],17:[function(require,module,exports){
 var Debug = require('../../src/debug');
 var Policy = require('../../src/policy');
 var Resource = require('../../src/resource');
@@ -1040,7 +1310,7 @@ describe('Policy', function() {
     expect(policy.overlay(policy.defaultPolicy, nullPolicy)).toEqual(policy.defaultPolicy);
   });
 });
-},{"../../src/debug":23,"../../src/policy":29,"../../src/resource":36,"../../src/util":37}],16:[function(require,module,exports){
+},{"../../src/debug":25,"../../src/policy":31,"../../src/resource":38,"../../src/util":39}],18:[function(require,module,exports){
 var Provider = require('../../src/provider');
 var Promise = require('es6-promise').Promise;
 
@@ -1157,7 +1427,7 @@ describe("Provider", function() {
   });
 });
 
-},{"../../src/provider":30,"es6-promise":1}],17:[function(require,module,exports){
+},{"../../src/provider":32,"es6-promise":1}],19:[function(require,module,exports){
 var Proxy = require('../../src/proxy');
 var EventInterface = require('../../src/proxy/eventInterface');
 
@@ -1277,7 +1547,7 @@ describe("Proxy", function() {
   });
 });
 
-},{"../../src/proxy":31,"../../src/proxy/eventInterface":34}],18:[function(require,module,exports){
+},{"../../src/proxy":33,"../../src/proxy/eventInterface":36}],20:[function(require,module,exports){
 var ApiInterface = require('../../src/proxy/apiInterface');
 
 describe("proxy/APIInterface", function() {
@@ -1547,7 +1817,7 @@ describe("Proxy.conform", function() {
   });
 });
 
-},{"../../src/proxy":31,"../../src/proxy/apiInterface":32}],19:[function(require,module,exports){
+},{"../../src/proxy":33,"../../src/proxy/apiInterface":34}],21:[function(require,module,exports){
 var Debug = require('../../src/debug');
 var Resource = require('../../src/resource');
 
@@ -1694,7 +1964,7 @@ describe('resources.httpResolver', function() {
   });
 });
 
-},{"../../src/debug":23,"../../src/resource":36}],20:[function(require,module,exports){
+},{"../../src/debug":25,"../../src/resource":38}],22:[function(require,module,exports){
 var util = require('../../src/util');
 
 describe("util", function() {
@@ -1874,7 +2144,7 @@ describe("util", function() {
   });
 });
 
-},{"../../src/util":37}],21:[function(require,module,exports){
+},{"../../src/util":39}],23:[function(require,module,exports){
 var Resource = require('../src/resource');
 var util = require('../src/util');
 
@@ -2162,7 +2432,7 @@ ProviderHelper.prototype.onInFromChannel = function(data) {
 };
 
 exports.ProviderHelper = ProviderHelper;
-},{"../src/resource":36,"../src/util":37}],22:[function(require,module,exports){
+},{"../src/resource":38,"../src/util":39}],24:[function(require,module,exports){
 /*jslint indent:2,white:true,node:true,sloppy:true */
 var Promise = require('es6-promise').Promise;
 
@@ -2285,7 +2555,7 @@ Api.prototype.getInterfaceStyle = function(name) {
  */
 module.exports = Api;
 
-},{"es6-promise":1}],23:[function(require,module,exports){
+},{"es6-promise":1}],25:[function(require,module,exports){
 /*jslint indent:2, node:true, sloppy:true */
 var util = require('./util');
 
@@ -2473,7 +2743,7 @@ Debug.prototype.getLogger = function (name) {
 
 module.exports = Debug;
 
-},{"./util":37}],24:[function(require,module,exports){
+},{"./util":39}],26:[function(require,module,exports){
 /*jslint indent:2,sloppy:true,node:true */
 var util = require('./util');
 
@@ -2672,7 +2942,7 @@ Hub.prototype.generateRoute = function () {
 
 module.exports = Hub;
 
-},{"./util":37}],25:[function(require,module,exports){
+},{"./util":39}],27:[function(require,module,exports){
 /*jslint indent:2,node:true,sloppy:true */
 var util = require('./util');
 var ModuleInternal = require('./moduleinternal');
@@ -3024,7 +3294,7 @@ Manager.prototype.getCore = function (cb) {
 
 module.exports = Manager;
 
-},{"./moduleinternal":28,"./util":37}],26:[function(require,module,exports){
+},{"./moduleinternal":30,"./util":39}],28:[function(require,module,exports){
 /*jslint indent:2,white:true,node:true,sloppy:true */
 var util = require('./util');
 var Provider = require('./provider');
@@ -3425,7 +3695,7 @@ Module.prototype.updateEnv = function(dep, manifest) {
 
 module.exports = Module;
 
-},{"./provider":30,"./util":37}],27:[function(require,module,exports){
+},{"./provider":32,"./util":39}],29:[function(require,module,exports){
 /*jslint indent:2, node:true,sloppy:true */
 var Promise = require('es6-promise').Promise;
 
@@ -3816,9 +4086,9 @@ ModuleInternal.prototype.tryLoad = function (importer, url) {
 
 module.exports = ModuleInternal;
 
-},{"./provider":30,"./proxy":31,"./proxy/apiinterface":33,"./proxybinder":35,"./util":37,"es6-promise":1}],28:[function(require,module,exports){
-module.exports=require(27)
-},{"./provider":30,"./proxy":31,"./proxy/apiinterface":33,"./proxybinder":35,"./util":37,"es6-promise":1}],29:[function(require,module,exports){
+},{"./provider":32,"./proxy":33,"./proxy/apiinterface":35,"./proxybinder":37,"./util":39,"es6-promise":1}],30:[function(require,module,exports){
+module.exports=require(29)
+},{"./provider":32,"./proxy":33,"./proxy/apiinterface":35,"./proxybinder":37,"./util":39,"es6-promise":1}],31:[function(require,module,exports){
 /*globals XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
 var Promise = require('es6-promise').Promise;
@@ -4050,7 +4320,7 @@ Policy.prototype.overlay = function(base, overlay) {
 
 module.exports = Policy;
 
-},{"./module":26,"./util":37,"es6-promise":1}],30:[function(require,module,exports){
+},{"./module":28,"./util":39,"es6-promise":1}],32:[function(require,module,exports){
 /*jslint indent:2, node:true, sloppy:true, browser:true */
 var Proxy = require('./proxy');
 var util = require('./util');
@@ -4364,7 +4634,7 @@ Provider.prototype.toString = function () {
 
 module.exports = Provider;
 
-},{"./proxy":31,"./util":37}],31:[function(require,module,exports){
+},{"./proxy":33,"./util":39}],33:[function(require,module,exports){
 /*globals Blob, ArrayBuffer, DataView */
 /*jslint indent:2, node:true, sloppy:true */
 var util = require('./util');
@@ -4836,7 +5106,7 @@ Proxy.recursiveFreezeObject = function (obj) {
 
 module.exports = Proxy;
 
-},{"./util":37}],32:[function(require,module,exports){
+},{"./util":39}],34:[function(require,module,exports){
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 var Promise = require('es6-promise').Promise;
 
@@ -4941,9 +5211,9 @@ var ApiInterface = function(def, onMsg, emit, debug) {
 
 module.exports = ApiInterface;
 
-},{"../proxy":31,"../util":37,"es6-promise":1}],33:[function(require,module,exports){
-module.exports=require(32)
-},{"../proxy":31,"../util":37,"es6-promise":1}],34:[function(require,module,exports){
+},{"../proxy":33,"../util":39,"es6-promise":1}],35:[function(require,module,exports){
+module.exports=require(34)
+},{"../proxy":33,"../util":39,"es6-promise":1}],36:[function(require,module,exports){
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 var util = require('../util');
 
@@ -4961,7 +5231,7 @@ var EventInterface = function(onMsg, emit, debug) {
 
 module.exports = EventInterface;
 
-},{"../util":37}],35:[function(require,module,exports){
+},{"../util":39}],37:[function(require,module,exports){
 /*jslint indent:2, node:true */
 var Promise = require('es6-promise').Promise;
 
@@ -5071,7 +5341,7 @@ ProxyBinder.prototype.bindDefault = function (port, api, manifest, internal) {
 
 module.exports = ProxyBinder;
 
-},{"./provider":30,"./proxy":31,"./proxy/apiInterface":32,"./proxy/eventInterface":34,"es6-promise":1}],36:[function(require,module,exports){
+},{"./provider":32,"./proxy":33,"./proxy/apiInterface":34,"./proxy/eventInterface":36,"es6-promise":1}],38:[function(require,module,exports){
 /*globals XMLHttpRequest */
 /*jslint indent:2,node:true,sloppy:true */
 var Promise = require('es6-promise').Promise;
@@ -5384,7 +5654,7 @@ Resource.prototype.xhrRetriever = function (url, resolve, reject) {
 
 module.exports = Resource;
 
-},{"./util":37,"es6-promise":1}],37:[function(require,module,exports){
+},{"./util":39,"es6-promise":1}],39:[function(require,module,exports){
 /*globals crypto, WebKitBlobBuilder, Blob, URL */
 /*globals webkitURL, Uint8Array, Uint16Array, ArrayBuffer */
 /*jslint indent:2,white:true,browser:true,node:true,sloppy:true */
@@ -5737,4 +6007,4 @@ util.scripts = function(global) {
 
 module.exports = util;
 
-},{}]},{},[12,13,14,15,16,17,18,19,20]);
+},{}]},{},[12,13,14,15,16,17,18,19,20,21,22]);

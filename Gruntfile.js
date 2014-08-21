@@ -37,6 +37,8 @@ var FILES = {
   specCoreUnit: [
     'spec/src/api.spec.js',
     'spec/src/debug.spec.js',
+    'spec/src/hub.spec.js',
+    'spec/src/manager.spec.js',
     'spec/src/moduleInternal.spec.js',
     'spec/src/policy.spec.js',
     'spec/src/provider.spec.js',
