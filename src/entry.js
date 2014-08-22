@@ -54,7 +54,8 @@ var setup = function (context, manifest, config) {
     link,
     Port;
   Bundle.register(context.providers, api);
-  
+  resource.register(context.resolvers);
+
 
   if (config) {
     util.mixin(site_cfg, config, true);

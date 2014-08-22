@@ -1,6 +1,6 @@
 /*jslint indent:2, white:true, node:true, sloppy:true */
 var Link = require('../link');
-var entry = require('freedom');
+var entry = require('../entry');
 
 /**
  * A port providing message transport between two freedom contexts in the same namespace.

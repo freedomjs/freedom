@@ -92,7 +92,7 @@ describe('ModuleInternal', function() {
                           'non_existing_file']);
   })
 
-  iit('exposes dependency apis', function(done) {
+  it('exposes dependency apis', function(done) {
     var source = testUtil.createTestPort('test');
     manager.setup(source);
     manager.createLink(source, 'default', app, 'default');
@@ -108,8 +108,6 @@ describe('ModuleInternal', function() {
           id: msg.id,
           data: 'spec/' + msg.data
         });
-      } else {
-        console.warn('unknown msg', msg);
       }
     });
 

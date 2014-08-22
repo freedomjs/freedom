@@ -1,28 +1,30 @@
-describe("freedom", function() {
-  var freedom, global;
+var entry = require('../../src/entry');
+var testUtil = require('../util');
+var direct = require('../../src/link/direct');
+
+describe("FreedomModule", function() {
+  var freedom, global, h = [];
   beforeEach(function() {
     global = {
-      addEventListener: function(msg, handler) {
-        this['on'+msg] = handler;
-      },
-      postMessage: function(msg, to) {
-        this.lastmsg = msg;
+      directLink: {
+        emit: function(flow, msg) {
+          h.push([flow, msg]);
+        }
       }
     };
-  
-    setupResolvers();  
 
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/'),
         dir = path.substr(0, dir_idx) + '/';
-    freedom = fdom.setup(global, undefined, {
-      'isModule': true
+    freedom = entry({
+      'portType': direct,
+      'isModule': true,
+      'providers': [],
+      'global': global
     });
   });
   
-  it("Loads an App", function() {
-    var cb = jasmine.createSpy('cb');
-    freedom.emit('fromApp', 'data');
-    expect(global.lastmsg).toBeDefined();
+  it("Initiates connection outwards.", function() {
+    expect(h.length).toBeGreaterThan(0);
   });
 });

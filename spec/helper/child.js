@@ -1,4 +1,6 @@
-freedom.on('input', function(value) {
+var app = freedom();
+
+app.on('input', function(value) {
   //console.log('got ' + value);
-  freedom.emit('output', value);
+  app.emit('output', value);
 });

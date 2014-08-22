@@ -14,5 +14,5 @@ Logger.prototype.getLog = function () {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.log().providePromises(Logger);
+  freedom().providePromises(Logger);
 }
