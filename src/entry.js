@@ -24,7 +24,7 @@ fdom.setup = function (global, freedom_src, config) {
 
   var hub = new fdom.Hub(),
     site_cfg = {
-      'debug': true,
+      'debug': 'warn',
       'stayLocal': false,
       'portType': 'Worker',
       'moduleContext': (!config || typeof (config.isModule) === "undefined") ?
@@ -39,7 +39,7 @@ fdom.setup = function (global, freedom_src, config) {
 
   if (site_cfg.moduleContext) {
     if (config) {
-      fdom.util.mixin(site_cfg, config, true);
+      fdom.util.mixin(config, site_cfg, true);
     }
     site_cfg.global = global;
     site_cfg.src = freedom_src;
@@ -52,7 +52,7 @@ fdom.setup = function (global, freedom_src, config) {
   } else {
     manager.setup(fdom.debug);
     fdom.util.advertise(config ? config.advertise : undefined);
-    
+
     // Configure against data-manifest.
     if (typeof global.document !== 'undefined') {
       fdom.util.eachReverse(fdom.util.scripts(global), function (script) {
@@ -98,6 +98,6 @@ fdom.setup = function (global, freedom_src, config) {
   if (typeof global.console === 'undefined' || site_cfg.relayConsole) {
     global.console = fdom.util.getLogger('Console');
   }
-  
+
   return external.getInterface();
 };
