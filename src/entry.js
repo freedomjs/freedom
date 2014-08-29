@@ -39,7 +39,7 @@ fdom.setup = function (global, freedom_src, config) {
 
   if (site_cfg.moduleContext) {
     if (config) {
-      fdom.util.mixin(config, site_cfg, true);
+      fdom.util.mixin(site_cfg, config, true);
     }
     site_cfg.global = global;
     site_cfg.src = freedom_src;
