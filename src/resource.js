@@ -135,6 +135,22 @@ Resource.prototype.addRetriever = function (proto, retriever) {
 };
 
 /**
+ * Register external resolvers and retreavers
+ * @method register
+ * @param {{"proto":String, "resolver":Function, "retreaver":Function}[]}
+ *     resolvers The list of retreivers and resolvers.
+ */
+Resource.prototype.register = function (resolvers) {
+  resolvers.forEach(function (item) {
+    if (item.resolver) {
+      this.addResolver(item.resolver);
+    } else if (item.proto && item.retriever) {
+      this.addRetriever(item.proto, item.retriever);
+    }
+  }.bind(this));
+};
+
+/**
  * Determine if a URL is an absolute URL of a given Scheme.
  * @method hasScheme
  * @static

@@ -1,12 +1,17 @@
-describe("fdom.port.Module", function() {
-  var module, link, port;
+var Module = require('../../src/module');
+var testUtil = require('../util');
+
+describe("Module", function() {
+  var module, link, port, policy;
   beforeEach(function(done) {
-    module = new fdom.port.Module("manifest://{}", {}, []);
-    port = createTestPort('messager');
+    policy = testUtil.createMockPolicy();
+    module = new Module("manifest://{}", {}, [], policy);
+    port = testUtil.createTestPort('messager');
     module.on('control', port.onMessage.bind(port, 'control'));
     module.on('extport', port.onMessage.bind(port, 'extport'));
-    link = createTestPort('modulelink');
-    fdom.link.test = function() {
+    link = testUtil.createTestPort('modulelink');
+    var test = function() {
+      this.addErrorHandler = function() {};
       this.onMessage = link.onMessage.bind(link);
       this.on = link.on.bind(link);
       this.off = link.off.bind(link);
@@ -15,18 +20,14 @@ describe("fdom.port.Module", function() {
       type: 'setup',
       channel: 'control',
       config: {
-        portType: 'test'
+        portType: test
       }
     });
     setTimeout(done, 0);
   });
   
-  afterEach(function() {
-    delete fdom.link.test;
-  });
-
   it("Attempts Module Startup", function() {
-    expect(link.gotMessage('control', {request: 'port'}).service).toEqual("ModuleInternal");
+    expect(link.gotMessage('control', {request: 'environment'})).not.toBeFalsy();
   });
 
   it("Maps flows between inner and outer hub", function() {

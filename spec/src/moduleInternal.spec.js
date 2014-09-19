@@ -12,7 +12,10 @@ describe('ModuleInternal', function() {
     global = {freedom: {}};
     hub = new Hub(new Debug());
     var resource = testUtil.setupResolvers();
-    manager = new Manager(hub, resource, new Api());
+    var api = new Api();
+    api.set('core', {});
+    api.register('core', function () {});
+    manager = new Manager(hub, resource, api);
     app = new ModuleInternal(manager);
     hub.emit('config', {
       global: global,
@@ -95,7 +98,7 @@ describe('ModuleInternal', function() {
     manager.createLink(source, 'default', app, 'default');
     source.on('onMessage', function(msg) {
       // Dependencies will be requested via 'createLink' messages. resolve those.
-      if (msg.channel && msg.name !== 'default') {
+      if (msg.channel && msg.type === 'createLink') {
         hub.onMessage(msg.channel, {
           type: 'channel announcement',
           channel: msg.reverse
@@ -128,16 +131,16 @@ describe('ModuleInternal', function() {
       },
       id: 'relative://spec/helper/manifest.json',
     });
+    hub.onMessage(source.messages[1][1].channel, {
+      type: 'manifest',
+      name: 'test',
+      manifest: {name: 'test manifest'}
+    });
 
     window.callback = function() {
+      delete callback;
       expect(global.freedom.manifest.name).toEqual('My Module Name');
       expect(global.freedom.test.api).toEqual('social');
-      delete callback;
-      hub.onMessage(source.messages[1][1].channel, {
-        type: 'manifest',
-        name: 'test',
-        manifest: {name: 'test manifest'}
-      });
       expect(global.freedom.test.manifest.name).toEqual('test manifest');
       done();
     };

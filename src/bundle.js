@@ -6,11 +6,16 @@ var util = require('./util');
 
 var Bundle = function () {
   'use strict';
+  var found;
   this.interfaces = [];
   /*jslint nomen: true */
-  var interfaces = includeFolder(__dirname + '/../interface');
+  try {
+    found = includeFolder(__dirname + '/../interface');
+  } catch (e) {
+    // pass.
+  }
   /*jslint nomen: false */
-  util.eachProp(interfaces, function (json) {
+  util.eachProp(found, function (json) {
     this.interfaces.push(JSON.parse(minify(json)));
   }.bind(this));
 };

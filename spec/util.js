@@ -1,3 +1,4 @@
+var Api = require('../src/api');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 
@@ -56,6 +57,12 @@ exports.createTestPort = function(id) {
   return port;
 };
 
+exports.createMockPolicy = function() {
+  return {
+    api: new Api()
+  };
+};
+
 exports.mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
@@ -101,9 +108,9 @@ exports.getFreedomSource = function(id) {
 }
 
 // Setup resource loading for the test environment, which uses file:// urls.
-exports.setupResolvers = function() { 
-  var rsrc = new Resource();
-  rsrc.addResolver(function(manifest, url, resolve) {
+exports.getResolvers = function() {
+  var resolvers = [];
+  resolvers.push({'resolver': function(manifest, url, resolve) {
     if (url.indexOf('relative://') === 0) {
       var loc = location.protocol + "//" + location.host + location.pathname;
       var dirname = loc.substr(0, loc.lastIndexOf('/'));
@@ -112,9 +119,9 @@ exports.setupResolvers = function() {
     }
     resolve(false);
     return false;
-  });
-  rsrc.addResolver(function(manifest, url, resolve) {
-    if (manifest.indexOf('file://') === 0) {
+  }});
+  resolvers.push({'resolver': function(manifest, url, resolve) {
+    if (manifest && manifest.indexOf('file://') === 0) {
       manifest = 'http' + manifest.substr(4);
       rsrc.resolve(manifest, url).then(function(addr) {
         addr = 'file' + addr.substr(4);
@@ -124,8 +131,15 @@ exports.setupResolvers = function() {
     }
     resolve(false);
     return false;
-  });
-  rsrc.addRetriever('file', rsrc.xhrRetriever);
+  }});
+  var rsrc = new Resource();
+  resolvers.push({'proto':'file', 'retriever': rsrc.xhrRetriever});
+  return resolvers;
+}
+
+exports.setupResolvers = function() { 
+  var rsrc = new Resource();
+  rsrc.register(exports.getResolvers());
   return rsrc;
 }
 
