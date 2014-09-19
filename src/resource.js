@@ -21,6 +21,7 @@ var Resource = function (debug) {
     'chrome-extension': this.xhrRetriever,
     'resource': this.xhrRetriever,
     'chrome': this.xhrRetriever,
+    'app': this.xhrRetriever,
     'manifest': this.manifestRetriever
   };
 };
@@ -205,7 +206,8 @@ Resource.removeRelativePath = function (url) {
  * @returns {Boolean} True if the URL could be resolved.
  */
 Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
-  var protocols = ["http", "https", "chrome", "chrome-extension", "resource"],
+  var protocols = ["http", "https", "chrome", "chrome-extension", "resource",
+                   "app"],
     dirname,
     protocolIdx,
     pathIdx,
