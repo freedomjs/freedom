@@ -3,6 +3,8 @@
 /freedom.js.map
 /freedom.min.js
 /freedom.min.js.map
+/spec.js
+/frame.js
 
 ### Auto-generated
 tools/doc
@@ -14,8 +16,6 @@ node_modules
 
 ### Scrap
 .*.swp
-providers/social/websocket-server/server/tornado
-_SpecRunner.html
 sauce_connect.log*
 .grunt/
 

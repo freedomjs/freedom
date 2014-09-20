@@ -150,20 +150,24 @@ module.exports = function (grunt) {
     browserify: {
       freedom: {
         files: {
-          'freedom.js': ['src/util/preamble.js','interface/*.js']
-        },
-        options: {
-          transform: ['folderify'],
-          ignore: ['ws']
+          'freedom.js': ['src/util/workerEntry.js','interface/*.js']
         }
       },
       jasmine: {
         files: {
-          'spec.js': FILES.specCoreUnit
+          'spec.js': FILES.specCoreUnit,
+          'frame.js': ['src/util/frameEntry.js']
+        }
+      },
+      options: {
+        transform: ['folderify'],
+        ignore: ['ws'],
+        postBundleCB: function(err, src, next) {
+          next(err, require('fs').readFileSync('src/util/header.txt') + src);
         }
       }
     },
-    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map'],
+    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'frame.js'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',

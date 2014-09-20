@@ -12,8 +12,8 @@ var entry = require('../entry');
  * @uses handleEvents
  * @constructor
  */
-var Direct = function() {
-  Link.call(this);
+var Direct = function(id, resource) {
+  Link.call(this, id, resource);
 };
 
 /**

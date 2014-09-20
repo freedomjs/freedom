@@ -20,6 +20,7 @@ describe("freedom", function() {
       ],
       'resolvers': testUtil.getResolvers(),
       'portType': Frame,
+      'source': dir + "frame.js",
       'inject': dir + "node_modules/es5-shim/es5-shim.js",
     }, "relative://spec/helper/manifest.json", {
       debug: 'debug'

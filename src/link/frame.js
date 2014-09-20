@@ -9,8 +9,8 @@ var util = require('../util');
  * @uses handleEvents
  * @constructor
  */
-var Frame = function() {
-  Link.call(this);
+var Frame = function(id, resource) {
+  Link.call(this, id, resource);
 };
 
 /**
@@ -64,6 +64,7 @@ Frame.prototype.setupListener = function() {
     this.obj.removeEventListener('message', onMsg, true);
     delete this.obj;
   };
+  console.error('internal frame running');
   this.emit('started');
 };
 
@@ -73,7 +74,7 @@ Frame.prototype.setupListener = function() {
  */
 Frame.prototype.setupFrame = function() {
   var frame, onMsg;
-  frame = this.makeFrame(this.config.src, this.config.inject);
+  frame = this.makeFrame(this.config.source, this.config.inject);
   
   if (!document.body) {
     document.appendChild(document.createElement("body"));
@@ -109,22 +110,21 @@ Frame.prototype.setupFrame = function() {
  * @method makeFrame
  */
 Frame.prototype.makeFrame = function(src, inject) {
+  // TODO(willscott): add sandboxing protection.
+
+  // TODO(willscott): survive name mangling.
   var frame = document.createElement('iframe'),
       extra = '',
       loader,
       blob;
-  // TODO(willscott): add sandboxing protection.
 
-  // TODO(willscott): survive name mangling.
-  src = src.replace('portType: "Worker"', 'portType: "Frame"');
   if (inject) {
     extra = '<script src="' + inject + '" onerror="' +
       'throw new Error(\'Injection of ' + inject +' Failed!\');' +
       '"></script>';
   }
   loader = '<html><meta http-equiv="Content-type" content="text/html;' +
-      'charset=UTF-8">' + extra + '<script src="' +
-      util.forceModuleContext(src) + '"></script></html>';
+    'charset=UTF-8">' + extra + '<script src="' + src + '"></script></html>';
   blob = util.getBlob(loader, 'text/html');
   frame.src = util.getURL(blob);
 

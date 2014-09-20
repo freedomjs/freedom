@@ -9,8 +9,10 @@ var util = require('./util');
  * @implements Port
  * @constructor
  */
-var Link = function () {
+var Link = function (name, resource) {
   this.id = 'Link' + Math.random();
+  this.name = name;
+  this.resource = resource;
   this.config = {};
   this.src = null;
 

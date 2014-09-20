@@ -9,8 +9,8 @@ var Link = require('../link');
  * @uses handleEvents
  * @constructor
  */
-var WorkerLink = function(id) {
-  Link.call(this);
+var WorkerLink = function(id, resource) {
+  Link.call(this, id, resource);
   if (id) {
     this.id = id;
   }
