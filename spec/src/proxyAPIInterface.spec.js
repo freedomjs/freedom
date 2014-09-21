@@ -1,4 +1,5 @@
 var ApiInterface = require('../../src/proxy/apiInterface');
+var Consumer = require('../../src/consumer');
 
 describe("proxy/APIInterface", function() {
   var emit, reg, api;
@@ -127,8 +128,6 @@ afterEach(function() {
     frames[i].parentNode.removeChild(frames[i]);
   }
 });
-
-var Consumer = require('../../src/consumer');
 
 describe("Consumer.recursiveFreezeObject", function() {
   it("Freezes objects", function () {

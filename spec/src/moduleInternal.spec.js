@@ -2,7 +2,7 @@ var Api = require('../../src/api');
 var Debug = require('../../src/debug');
 var Hub = require('../../src/hub');
 var Manager = require('../../src/manager');
-var ModuleInternal = require('../../src/moduleInternal');
+var ModuleInternal = require('../../src/moduleinternal');
 
 var testUtil = require('../util');
 
