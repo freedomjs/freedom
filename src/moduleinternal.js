@@ -1,9 +1,8 @@
 /*jslint indent:2, node:true,sloppy:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var ApiInterface = require('./proxy/apiinterface');
 var Provider = require('./provider');
-var Proxy = require('./proxy');
 var ProxyBinder = require('./proxybinder');
 var util = require('./util');
 
@@ -162,7 +161,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
         this.attach.bind(this, item.name)
       );
     }.bind(this),
-    promise = new Promise(function (resolve, reject) {
+    promise = new PromiseCompat(function (resolve, reject) {
       this.once('start', resolve);
     }.bind(this));
 
@@ -388,7 +387,7 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
  * @returns {Promise} completion of load
  */
 ModuleInternal.prototype.tryLoad = function (importer, url) {
-  return new Promise(importer.bind({}, url)).then(function (val) {
+  return new PromiseCompat(importer.bind({}, url)).then(function (val) {
     return val;
   }, function (e) {
     this.debug.warn(e.stack);

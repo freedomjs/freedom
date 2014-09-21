@@ -1,5 +1,5 @@
 /*jslint indent:2,white:true,node:true,sloppy:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 /**
  * The API registry for freedom.js.  Used to look up requested APIs,
@@ -76,7 +76,7 @@ Api.prototype.register = function(name, constructor, style) {
  * a local API definition.
  */
 Api.prototype.getCore = function(name, from) {
-  return new Promise(function(resolve, reject) {
+  return new PromiseCompat(function(resolve, reject) {
     if (this.apis[name]) {
       if (this.providers[name]) {
         resolve(this.providers[name].constructor.bind({}, from));

@@ -1,8 +1,8 @@
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var util = require('../util');
-var Proxy = require('../proxy');
+var Consumer = require('../consumer');
 
 var ApiInterface = function(def, onMsg, emit, debug) {
   var inflight = {},
@@ -18,14 +18,14 @@ var ApiInterface = function(def, onMsg, emit, debug) {
         // Note: inflight should be registered before message is passed
         // in order to prepare for synchronous in-window pipes.
         var thisReq = reqId,
-            promise = new Promise(function(resolve, reject) {
+            promise = new PromiseCompat(function(resolve, reject) {
               inflight[thisReq] = {
                 resolve:resolve,
                 reject:reject,
                 template: prop.ret
               };
             }),
-            streams = Proxy.messageToPortable(prop.value,
+            streams = Consumer.messageToPortable(prop.value,
                 Array.prototype.slice.call(arguments, 0),
                 debug);
         reqId += 1;
@@ -50,7 +50,7 @@ var ApiInterface = function(def, onMsg, emit, debug) {
       break;
     case 'constant':
       Object.defineProperty(this, name, {
-        value: Proxy.recursiveFreezeObject(prop.value),
+        value: Consumer.recursiveFreezeObject(prop.value),
         writable: false
       });
       break;
@@ -74,7 +74,7 @@ var ApiInterface = function(def, onMsg, emit, debug) {
         if (msg.error) {
           resolver.reject(msg.error);
         } else {
-          resolver.resolve(Proxy.portableToMessage(template, msg, debug));
+          resolver.resolve(Consumer.portableToMessage(template, msg, debug));
         }
       } else {
         debug.error('Incoming message claimed to be an RPC ' +
@@ -82,13 +82,13 @@ var ApiInterface = function(def, onMsg, emit, debug) {
       }
     } else if (msg.type === 'event') {
       if (events[msg.name]) {
-        emitter(msg.name, Proxy.portableToMessage(events[msg.name].value,
+        emitter(msg.name, Consumer.portableToMessage(events[msg.name].value,
                 msg, debug));
       }
     }
   }.bind(this));
 
-  args = Proxy.messageToPortable(
+  args = Consumer.messageToPortable(
       (def.constructor && def.constructor.value) ? def.constructor.value : [],
       Array.prototype.slice.call(args, 4),
       debug);

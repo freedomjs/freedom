@@ -1,5 +1,5 @@
 /*jslint indent:2,node:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var Api = require('./api');
 var Debug = require('./debug');
@@ -65,7 +65,7 @@ var setup = function (context, manifest, config) {
     util.mixin(site_cfg, context, true);
   }
 
-  return new Promise(function (resolve, reject) {
+  return new PromiseCompat(function (resolve, reject) {
     if (site_cfg.moduleContext) {
       Port = site_cfg.portType;
       link = new Port('Outbound', resource);

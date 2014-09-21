@@ -1,5 +1,5 @@
 /*jslint indent:2, node:true, sloppy:true, browser:true */
-var Proxy = require('./proxy');
+var Consumer = require('./consumer');
 var util = require('./util');
 
 /**
@@ -12,7 +12,7 @@ var util = require('./util');
  * @contructor
  */
 var Provider = function (def, debug) {
-  this.id = Proxy.nextId();
+  this.id = Consumer.nextId();
   util.handleEvents(this);
   this.debug = debug;
   
@@ -75,7 +75,7 @@ Provider.prototype.onMessage = function (source, message) {
       this.providerInstances[source][message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
-      var args = Proxy.portableToMessage(
+      var args = Consumer.portableToMessage(
           (this.definition.constructor && this.definition.constructor.value) ?
               this.definition.constructor.value : [],
           message.message,
@@ -144,7 +144,7 @@ Provider.prototype.getInterface = function () {
       switch (prop.type) {
       case "constant":
         Object.defineProperty(this.iface, name, {
-          value: Proxy.recursiveFreezeObject(prop.value),
+          value: Consumer.recursiveFreezeObject(prop.value),
           writable: false
         });
         break;
@@ -232,7 +232,7 @@ Provider.prototype.getProvider = function (source, identifier, args) {
 
   dispatchEvent = function (src, ev, id, name, value) {
     if (ev[name]) {
-      var streams = Proxy.messageToPortable(ev[name].value, value,
+      var streams = Consumer.messageToPortable(ev[name].value, value,
                                                    this.debug);
       this.emit(this.channels[src], {
         type: 'message',
@@ -260,9 +260,9 @@ Provider.prototype.getProvider = function (source, identifier, args) {
       }
       var prop = port.definition[msg.type],
         debug = this.debug,
-        args = Proxy.portableToMessage(prop.value, msg, debug),
+        args = Consumer.portableToMessage(prop.value, msg, debug),
         ret = function (src, msg, prop, resolve, reject) {
-          var streams = Proxy.messageToPortable(prop.ret, resolve,
+          var streams = Consumer.messageToPortable(prop.ret, resolve,
                                                        debug);
           this.emit(this.channels[src], {
             type: 'method',

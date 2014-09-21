@@ -1,6 +1,6 @@
 /*globals XMLHttpRequest */
 /*jslint indent:2,node:true,sloppy:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var util = require('./util');
 
@@ -36,7 +36,7 @@ var Resource = function (debug) {
 Resource.prototype.get = function (manifest, url) {
   var key = JSON.stringify([manifest, url]);
   
-  return new Promise(function (resolve, reject) {
+  return new PromiseCompat(function (resolve, reject) {
     if (this.files[key]) {
       resolve(this.files[key]);
     } else {
@@ -56,7 +56,7 @@ Resource.prototype.get = function (manifest, url) {
  * @returns {Promise} A promise for the resource contents.
  */
 Resource.prototype.getContents = function (url) {
-  return new Promise(function (resolve, reject) {
+  return new PromiseCompat(function (resolve, reject) {
     var prop;
     if (!url) {
       this.debug.warn("Asked to get contents of undefined URL.");
@@ -83,16 +83,16 @@ Resource.prototype.getContents = function (url) {
  * @returns {Promise} A promise for the resource address.
  */
 Resource.prototype.resolve = function (manifest, url) {
-  return new Promise(function (resolve, reject) {
+  return new PromiseCompat(function (resolve, reject) {
     var promises = [];
     if (url === undefined) {
       return reject();
     }
     util.eachReverse(this.resolvers, function (resolver) {
-      promises.push(new Promise(resolver.bind({}, manifest, url)));
+      promises.push(new PromiseCompat(resolver.bind({}, manifest, url)));
     }.bind(this));
     //TODO this would be much cleaner if Promise.any existed
-    Promise.all(promises).then(function (values) {
+    PromiseCompat.all(promises).then(function (values) {
       var i;
       for (i = 0; i < values.length; i += 1) {
         if (typeof values[i] !== 'undefined' && values[i] !== false) {

@@ -1,7 +1,5 @@
 /*globals XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-var Promise = require('es6-promise').Promise;
-
 var Module = require('./module');
 var util = require('./util');
 

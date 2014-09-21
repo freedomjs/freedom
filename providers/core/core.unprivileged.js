@@ -1,6 +1,6 @@
 /*jslint indent:2,white:true,sloppy:true,node:true */
 var EventInterface = require('../../src/proxy/eventInterface');
-var Proxy = require('../../src/proxy');
+var Consumer = require('../../src/consumer');
 var util = require('../../src/util');
 
 /**
@@ -30,7 +30,7 @@ Core_unprivileged.contextId = undefined;
  * @params {Function} continuation Method to call with the cosntructed structure.
  */
 Core_unprivileged.prototype.createChannel = function(continuation) {
-  var proxy = new Proxy(EventInterface, this.manager.debug),
+  var proxy = new Consumer(EventInterface, this.manager.debug),
       id = util.getId(),
       chan = this.getChannel(proxy);
   this.manager.setup(proxy);
@@ -113,7 +113,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   // When it is propogated by onMessage, a source for binding will already exist.
   if (newSource) {
     this.debug.debug('making local proxy for core binding');
-    source = new Proxy(EventInterface, this.debug);
+    source = new Consumer(EventInterface, this.debug);
     this.manager.setup(source);
   }
 

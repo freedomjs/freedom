@@ -1,10 +1,10 @@
 /*jslint indent:2, node:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var ApiInterface = require('./proxy/apiInterface');
 var EventInterface = require('./proxy/eventInterface');
+var Consumer = require('./consumer');
 var Provider = require('./provider');
-var Proxy = require('./proxy');
 
 /**
  * A Proxy Binder manages the external interface, and creates one of
@@ -33,18 +33,18 @@ var ProxyBinder = function (manager) {
 ProxyBinder.prototype.getExternal = function (port, name, definition) {
   'use strict';
   var proxy, api;
-  return new Promise(function (resolve, reject) {
+  return new PromiseCompat(function (resolve, reject) {
     if (definition) {
       api = definition.name;
       if (definition.provides) {
         proxy = new Provider(definition.definition, this.manager.debug);
       } else {
-        proxy = new Proxy(ApiInterface.bind({},
+        proxy = new Consumer(ApiInterface.bind({},
             definition.definition),
             this.manager.debug);
       }
     } else {
-      proxy = new Proxy(EventInterface, this.manager.debug);
+      proxy = new Consumer(EventInterface, this.manager.debug);
     }
 
     proxy.once('start', function () {

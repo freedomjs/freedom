@@ -1,6 +1,5 @@
 /*jslint indent:2,browser:true, node:true */
-
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var oAuthRedirectId = 'freedom.oauth.redirect.handler',
   listeners = {};
@@ -46,7 +45,7 @@ exports.register = function (OAuth) {
             listener = storageListener.bind({}, id, provider);
           listeners[id] = listener;
           window.addEventListener("storage", listener, false);
-          return Promise.resolve(id);
+          return PromiseCompat.resolve(id);
         }
         return false;
       });

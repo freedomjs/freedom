@@ -1,5 +1,5 @@
 /*jslint indent:2,browser:true, node:true */
-var Promise = require('es6-promise').Promise;
+var PromiseCompat = require('es6-promise').Promise;
 
 var oAuthRedirectId = 'freedom.oauth.redirect.handler',
   listeners = {};
@@ -10,7 +10,7 @@ var oAuthRedirectId = 'freedom.oauth.redirect.handler',
  */
 function monitorFrame(src, oAuth) {
   'use strict';
-  return new Promise(function (resolve, reject) {
+  return new PromiseCompat(function (resolve, reject) {
     var frame = global.document.createElement('iframe'),
       state = oAuthRedirectId + Math.random();
     frame.src = src;
@@ -56,7 +56,7 @@ exports.register = function (OAuth) {
         }
       }
       if (promises.length) {
-        return Promise.race(promises);
+        return PromiseCompat.race(promises);
       } else {
         return false;
       }

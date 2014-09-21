@@ -3,16 +3,16 @@
 var util = require('./util');
 
 /**
- * A freedom port for a user-accessable proxy.
- * @class Proxy
+ * A freedom port for a user-accessable api.
+ * @class Consumer
  * @implements Port
  * @uses handleEvents
- * @param {Object} interfaceCls The proxy interface exposed by this proxy.
+ * @param {Object} interfaceCls The api interface exposed by this consumer.
  * @param {Debug} debug The debugger to use for logging.
  * @constructor
  */
-var Proxy = function (interfaceCls, debug) {
-  this.id = Proxy.nextId();
+var Consumer = function (interfaceCls, debug) {
+  this.id = Consumer.nextId();
   this.interfaceCls = interfaceCls;
   this.debug = debug;
   util.handleEvents(this);
@@ -24,12 +24,12 @@ var Proxy = function (interfaceCls, debug) {
 };
 
 /**
- * Receive incoming messages for this proxy.
+ * Receive incoming messages for this consumer.
  * @method onMessage
  * @param {String} source The source of the message.
  * @param {Object} message The received message.
  */
-Proxy.prototype.onMessage = function (source, message) {
+Consumer.prototype.onMessage = function (source, message) {
   if (source === 'control' && message.reverse) {
     this.emitChannel = message.channel;
     this.emit(this.emitChannel, {
@@ -72,9 +72,9 @@ Proxy.prototype.onMessage = function (source, message) {
 };
 
 /**
- * Create a proxy.Interface associated with this proxy.
+ * Create a consumer.Interface associated with this consumer.
  * An interface is returned, which is supplied with important control of the
- * proxy via constructor arguments: (bound below in getInterfaceConstructor)
+ * api via constructor arguments: (bound below in getInterfaceConstructor)
  * 
  * onMsg: function(binder) sets the function to call when messages for this
  *    interface arrive on the channel,
@@ -82,7 +82,7 @@ Proxy.prototype.onMessage = function (source, message) {
  * id: string is the Identifier for this interface.
  * @method getInterface
  */
-Proxy.prototype.getInterface = function () {
+Consumer.prototype.getInterface = function () {
   var Iface = this.getInterfaceConstructor(),
     args = Array.prototype.slice.call(arguments, 0);
   if (args.length) {
@@ -92,11 +92,11 @@ Proxy.prototype.getInterface = function () {
 };
 
 /**
- * Create a function that can be used to get interfaces from this proxy from
- * a user-visible point.
+ * Create a function that can be used to get interfaces from this api consumer
+ * from a user-visible point.
  * @method getProxyInterface
  */
-Proxy.prototype.getProxyInterface = function () {
+Consumer.prototype.getProxyInterface = function () {
   var func = function (p) {
     var args = Array.prototype.slice.call(arguments, 1);
     if (args.length > 0) {
@@ -164,14 +164,14 @@ Proxy.prototype.getProxyInterface = function () {
 };
 
 /**
- * Provides a bound class for creating a proxy.Interface associated
- * with this proxy. This partial level of construction can be used
- * to allow the proxy to be used as a provider for another API.
+ * Provides a bound class for creating a consumer.Interface associated
+ * with this api. This partial level of construction can be used
+ * to allow the consumer to be used as a provider for another API.
  * @method getInterfaceConstructor
  * @private
  */
-Proxy.prototype.getInterfaceConstructor = function () {
-  var id = Proxy.nextId();
+Consumer.prototype.getInterfaceConstructor = function () {
+  var id = Consumer.nextId();
   return this.interfaceCls.bind(
     {},
     function (id, obj, binder) {
@@ -191,7 +191,7 @@ Proxy.prototype.getInterfaceConstructor = function () {
  * @param {Object} msg The message to emit
  * @param {Boolean} all Send message to all recipients.
  */
-Proxy.prototype.doEmit = function (to, msg, all) {
+Consumer.prototype.doEmit = function (to, msg, all) {
   if (all) {
     to = false;
   }
@@ -203,11 +203,11 @@ Proxy.prototype.doEmit = function (to, msg, all) {
 };
 
 /**
- * Teardown a single interface of this proxy.
+ * Teardown a single interface of this api.
  * @method teardown
  * @param {String} id The id of the interface to tear down.
  */
-Proxy.prototype.teardown = function (id) {
+Consumer.prototype.teardown = function (id) {
   delete this.emits[id];
   if (this.closeHandlers[id]) {
     util.eachProp(this.closeHandlers[id], function (prop) {
@@ -220,12 +220,12 @@ Proxy.prototype.teardown = function (id) {
 };
 
 /**
- * Handle a message error reported to this proxy.
+ * Handle a message error reported to this api.
  * @method error
  * @param {String?} id The id of the interface where the error occured.
  * @param {Object} message The message which failed, if relevant.
  */
-Proxy.prototype.error = function (id, message) {
+Consumer.prototype.error = function (id, message) {
   if (id && this.errorHandlers[id]) {
     util.eachProp(this.errorHandlers[id], function (prop) {
       prop(message);
@@ -237,10 +237,10 @@ Proxy.prototype.error = function (id, message) {
 
 
 /**
- * Close / teardown the flow this proxy terminates.
+ * Close / teardown the flow this api terminates.
  * @method doClose
  */
-Proxy.prototype.doClose = function () {
+Consumer.prototype.doClose = function () {
   if (this.controlChannel) {
     this.emit(this.controlChannel, {
       type: 'Channel Closing',
@@ -263,25 +263,25 @@ Proxy.prototype.doClose = function () {
  * @method toString
  * @return The description of this port.
  */
-Proxy.prototype.toString = function () {
+Consumer.prototype.toString = function () {
   if (this.emitChannel) {
-    return "[Proxy " + this.emitChannel + "]";
+    return "[Consumer " + this.emitChannel + "]";
   } else {
-    return "[unbound Proxy]";
+    return "[unbound Consumer]";
   }
 };
 
 /**
- * Get the next ID for a proxy channel.
+ * Get the next ID for an api channel.
  * @method nextId
  * @static
  * @private
  */
-Proxy.nextId = function () {
-  if (!Proxy.id) {
-    Proxy.id = 1;
+Consumer.nextId = function () {
+  if (!Consumer.id) {
+    Consumer.id = 1;
   }
-  return (Proxy.id += 1);
+  return (Consumer.id += 1);
 };
 
 /**
@@ -294,9 +294,9 @@ Proxy.nextId = function () {
  * @param {Debug} debug A debugger for errors.
  * @return {{text: Object, binary: Array}} Separated data streams.
  */
-Proxy.messageToPortable = function (template, value, debug) {
+Consumer.messageToPortable = function (template, value, debug) {
   var externals = [],
-    message = Proxy.conform(template, value, externals, true, debug);
+    message = Consumer.conform(template, value, externals, true, debug);
   return {
     text: message,
     binary: externals
@@ -313,8 +313,8 @@ Proxy.messageToPortable = function (template, value, debug) {
  * @param {Debug} debug A debugger for errors.
  * @return {Object} The data structure matching the template.
  */
-Proxy.portableToMessage = function (template, streams, debug) {
-  return Proxy.conform(template, streams.text, streams.binary, false, debug);
+Consumer.portableToMessage = function (template, streams, debug) {
+  return Consumer.conform(template, streams.text, streams.binary, false, debug);
 };
 
 /**
@@ -328,7 +328,7 @@ Proxy.portableToMessage = function (template, streams, debug) {
  * @param {Boolean} Whether to to separate or combine streams.
  * @aparam {Debug} debug A debugger for errors.
  */
-Proxy.conform = function (template, from, externals, separate, debug) {
+Consumer.conform = function (template, from, externals, separate, debug) {
   /* jshint -W086 */
   if (typeof (from) === 'function') {
     //from = undefined;
@@ -372,10 +372,10 @@ Proxy.conform = function (template, from, externals, separate, debug) {
     }
   case 'buffer':
     if (separate) {
-      externals.push(Proxy.makeArrayBuffer(from, debug));
+      externals.push(Consumer.makeArrayBuffer(from, debug));
       return externals.length - 1;
     } else {
-      return Proxy.makeArrayBuffer(externals[from], debug);
+      return Consumer.makeArrayBuffer(externals[from], debug);
     }
   case 'proxy':
     return from;
@@ -387,13 +387,13 @@ Proxy.conform = function (template, from, externals, separate, debug) {
     if (template.length === 2 && template[0] === 'array') {
       //console.log("template is array, value is " + JSON.stringify(value));
       for (i = 0; i < from.length; i += 1) {
-        val.push(Proxy.conform(template[1], from[i], externals,
+        val.push(Consumer.conform(template[1], from[i], externals,
                                     separate));
       }
     } else {
       for (i = 0; i < template.length; i += 1) {
         if (from[i] !== undefined) {
-          val.push(Proxy.conform(template[i], from[i], externals,
+          val.push(Consumer.conform(template[i], from[i], externals,
                                       separate));
         } else {
           val.push(undefined);
@@ -405,7 +405,7 @@ Proxy.conform = function (template, from, externals, separate, debug) {
     val = {};
     util.eachProp(template, function (prop, name) {
       if (from[name] !== undefined) {
-        val[name] = Proxy.conform(prop, from[name], externals, separate);
+        val[name] = Consumer.conform(prop, from[name], externals, separate);
       }
     });
     return val;
@@ -421,7 +421,7 @@ Proxy.conform = function (template, from, externals, separate, debug) {
  * @param {Debug} debug A debugger in case of errors.
  * @return {ArrayBuffer} An Array Buffer
  */
-Proxy.makeArrayBuffer = function (thing, debug) {
+Consumer.makeArrayBuffer = function (thing, debug) {
   if (!thing) {
     return new ArrayBuffer(0);
   }
@@ -450,7 +450,7 @@ Proxy.makeArrayBuffer = function (thing, debug) {
  * @param {Object} obj - object to be frozen
  * @return {Object} obj
  **/
-Proxy.recursiveFreezeObject = function (obj) {
+Consumer.recursiveFreezeObject = function (obj) {
   var k, ret = {};
   if (typeof obj !== 'object') {
     return obj;
@@ -458,7 +458,7 @@ Proxy.recursiveFreezeObject = function (obj) {
   for (k in obj) {
     if (obj.hasOwnProperty(k)) {
       Object.defineProperty(ret, k, {
-        value: Proxy.recursiveFreezeObject(obj[k]),
+        value: Consumer.recursiveFreezeObject(obj[k]),
         writable: false,
         enumerable: true
       });
@@ -467,4 +467,4 @@ Proxy.recursiveFreezeObject = function (obj) {
   return ret;
 };
 
-module.exports = Proxy;
+module.exports = Consumer;

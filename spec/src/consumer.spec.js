@@ -1,10 +1,10 @@
-var Proxy = require('../../src/proxy');
+var Consumer = require('../../src/consumer');
 var EventInterface = require('../../src/proxy/eventInterface');
 
-describe("Proxy", function() {
+describe("Consumer", function() {
   var port;
   beforeEach(function() {
-    port = new Proxy(EventInterface);
+    port = new Consumer(EventInterface);
   });
 
   it("reports messages back to the port", function() {
@@ -48,7 +48,7 @@ describe("Proxy", function() {
       arg = x;
     };
     // setup.
-    port = new Proxy(myInterface);
+    port = new Consumer(myInterface);
 
     port.onMessage('default', {
       channel: 'message'

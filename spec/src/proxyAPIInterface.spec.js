@@ -128,9 +128,9 @@ afterEach(function() {
   }
 });
 
-var Proxy = require('../../src/proxy');
+var Consumer = require('../../src/consumer');
 
-describe("Proxy.recursiveFreezeObject", function() {
+describe("Consumer.recursiveFreezeObject", function() {
   it("Freezes objects", function () {
     var obj = {
       a: 1,
@@ -138,7 +138,7 @@ describe("Proxy.recursiveFreezeObject", function() {
         c: 2
       }
     };
-    var frozen = Proxy.recursiveFreezeObject(obj);
+    var frozen = Consumer.recursiveFreezeObject(obj);
     frozen.a = 5;
     frozen.b = 5;
     frozen.c = 5;
@@ -147,7 +147,7 @@ describe("Proxy.recursiveFreezeObject", function() {
   });
 });
 
-describe("Proxy.conform", function() {
+describe("Consumer.conform", function() {
   var debug = {
     error: function() {}
   };
@@ -185,7 +185,7 @@ describe("Proxy.conform", function() {
       'p10': ['test', 12],
       'p11': {'a': 'hi', 'b': 12}
     };
-    var conformed = Proxy.conform(template, correct,
+    var conformed = Consumer.conform(template, correct,
                                        [blob, new ArrayBuffer(2)], false);
     correct['p5'] = conformed['p5'];
     correct['p6'] = conformed['p6'];
@@ -204,7 +204,7 @@ describe("Proxy.conform", function() {
       'p11': []
     };
 
-    conformed = Proxy.conform(template, incorrect, [0, blob, blob], false);
+    conformed = Consumer.conform(template, incorrect, [0, blob, blob], false);
     expect(conformed).toEqual({
       'p1': '12',
       'p2': 12,
@@ -219,35 +219,35 @@ describe("Proxy.conform", function() {
   });
 
   it("conforms simple arguments", function() {
-    expect(Proxy.conform("string", "mystring", [], false, debug)).toEqual("mystring");
-    expect(Proxy.conform("number", "mystring", [], false, debug)).toEqual(jasmine.any(Number));
-    expect(Proxy.conform("boolean", "mystring", [], false, debug)).toEqual(false);
-    expect(Proxy.conform("", "mystring", [], false, debug)).toEqual(undefined);
-    expect(Proxy.conform(["string", "number"], ["test", 0], [], false, debug))
+    expect(Consumer.conform("string", "mystring", [], false, debug)).toEqual("mystring");
+    expect(Consumer.conform("number", "mystring", [], false, debug)).toEqual(jasmine.any(Number));
+    expect(Consumer.conform("boolean", "mystring", [], false, debug)).toEqual(false);
+    expect(Consumer.conform("", "mystring", [], false, debug)).toEqual(undefined);
+    expect(Consumer.conform(["string", "number"], ["test", 0], [], false, debug))
       .toEqual(["test", 0]);
-    expect(Proxy.conform("number", 0, [], false, debug)).toEqual(0);
+    expect(Consumer.conform("number", 0, [], false, debug)).toEqual(0);
   });
 
   it("conforms complex arguments", function() {
-    expect(Proxy.conform({"key":"string"}, {"key":"good", "other":"bad"},[], false)).
+    expect(Consumer.conform({"key":"string"}, {"key":"good", "other":"bad"},[], false)).
         toEqual({"key":"good"});
-    expect(Proxy.conform(["string"], ["test", 12],[], false)).toEqual(["test"]);
-    expect(Proxy.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
-    expect(Proxy.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
+    expect(Consumer.conform(["string"], ["test", 12],[], false)).toEqual(["test"]);
+    expect(Consumer.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
+    expect(Consumer.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
     //expect(fdom.proxy.conform.bind({}, "object", function() {},[], false)).toThrow();
-    expect(Proxy.conform("object", function() {},[], false)).not.toBeDefined();
+    expect(Consumer.conform("object", function() {},[], false)).not.toBeDefined();
   });
 
   it("conforms nulls", function() {
-    expect(Proxy.conform({"key": "string"}, {"key": null}, [], false)).
+    expect(Consumer.conform({"key": "string"}, {"key": null}, [], false)).
       toEqual({"key": null});
-    expect(Proxy.conform("object", null, [], false)).toEqual(null);
-    expect(Proxy.conform({"key": "string"}, {"key": undefined}, [], false)).
+    expect(Consumer.conform("object", null, [], false)).toEqual(null);
+    expect(Consumer.conform({"key": "string"}, {"key": undefined}, [], false)).
       toEqual({});
-    expect(Proxy.conform(["string", "string", "string", "string"], 
+    expect(Consumer.conform(["string", "string", "string", "string"], 
                               [null, undefined, null, 0], [], false)).
       toEqual([null, undefined, null, "0"]);
-    expect(Proxy.conform("object", undefined, [], false)).toEqual(undefined);
+    expect(Consumer.conform("object", undefined, [], false)).toEqual(undefined);
   });
 
   it("conforms binary arguments", function() {
@@ -260,9 +260,9 @@ describe("Proxy.conform", function() {
 
     var buffer = new ArrayBuffer(4);
     var externals = [];
-    expect(Proxy.conform("buffer", buffer, externals, true, debug)).toEqual(0);
+    expect(Consumer.conform("buffer", buffer, externals, true, debug)).toEqual(0);
     expect(externals.length).toEqual(1);
-    expect(Proxy.conform("buffer", 0, ["string"], false, debug)).toEqual(jasmine.any(ArrayBuffer));
-    expect(Proxy.conform("buffer", 0, externals, false, debug)).toEqual(buffer);
+    expect(Consumer.conform("buffer", 0, ["string"], false, debug)).toEqual(jasmine.any(ArrayBuffer));
+    expect(Consumer.conform("buffer", 0, externals, false, debug)).toEqual(buffer);
   });
 });
