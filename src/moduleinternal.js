@@ -1,7 +1,7 @@
 /*jslint indent:2, node:true,sloppy:true */
 var PromiseCompat = require('es6-promise').Promise;
 
-var ApiInterface = require('./proxy/apiinterface');
+var ApiInterface = require('./proxy/apiInterface');
 var Provider = require('./provider');
 var ProxyBinder = require('./proxybinder');
 var util = require('./util');
