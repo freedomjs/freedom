@@ -64,8 +64,8 @@ Frame.prototype.setupListener = function() {
     this.obj.removeEventListener('message', onMsg, true);
     delete this.obj;
   };
-  console.error('internal frame running');
   this.emit('started');
+  this.obj.postMessage("Ready For Messages", "*");
 };
 
 /**
@@ -82,7 +82,6 @@ Frame.prototype.setupFrame = function() {
   document.body.appendChild(frame);
 
   onMsg = function(frame, msg) {
-    console.warn('msg came out from frame');
     if (!this.obj) {
       this.obj = frame;
       this.emit('started');
@@ -123,7 +122,9 @@ Frame.prototype.makeFrame = function(src, inject) {
       '"></script>';
   }
   loader = '<html><meta http-equiv="Content-type" content="text/html;' +
-    'charset=UTF-8">' + extra + '<script src="' + src + '"></script></html>';
+    'charset=UTF-8">' + extra + '<script src="' + src + '" onerror="' +
+    'throw new Error(\'Loading of ' + src +' Failed!\');' +
+    '"></script></html>';
   blob = util.getBlob(loader, 'text/html');
   frame.src = util.getURL(blob);
 

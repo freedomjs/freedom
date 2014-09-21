@@ -35,9 +35,8 @@ describe("freedom", function() {
     freedom = null;
   });
 
-  iit("creates modules", function(done) {
+  it("creates modules", function(done) {
     freedom.then(function(iface) {
-      console.warn('interface made');
       var app = iface();
       app.on('output', function(value) {
         expect(value).toEqual('roundtrip');
