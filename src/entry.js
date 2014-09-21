@@ -68,7 +68,7 @@ var setup = function (context, manifest, config) {
   return new Promise(function (resolve, reject) {
     if (site_cfg.moduleContext) {
       Port = site_cfg.portType;
-      link = new Port();
+      link = new Port('Outbound', resource);
       manager.setup(link);
 
       // Delay debug messages until delegation to the parent context is setup.
@@ -88,9 +88,10 @@ var setup = function (context, manifest, config) {
       ).then(function (root_module) {
         manager.setup(root_module);
         return binder.bindDefault(root_module, api, root_module.manifest).then(
-          function(info) {
+          function (info) {
             return info.external;
-          });
+          }
+        );
       }, function (err) {
         debug.error('Failed to retrieve manifest: ' + err);
       }).then(resolve, reject);

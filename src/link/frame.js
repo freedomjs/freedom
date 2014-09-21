@@ -117,9 +117,14 @@ Frame.prototype.makeFrame = function(src, inject) {
       blob;
 
   if (inject) {
-    extra = '<script src="' + inject + '" onerror="' +
-      'throw new Error(\'Injection of ' + inject +' Failed!\');' +
+    if (!inject.length) {
+      inject = [inject];
+    }
+    inject.forEach(function(script) {
+      extra += '<script src="' + script + '" onerror="' +
+      'throw new Error(\'Injection of ' + script +' Failed!\');' +
       '"></script>';
+    });
   }
   loader = '<html><meta http-equiv="Content-type" content="text/html;' +
     'charset=UTF-8">' + extra + '<script src="' + src + '" onerror="' +
