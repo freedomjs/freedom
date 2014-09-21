@@ -286,28 +286,6 @@ util.isModuleContext = function() {
 };
 
 /**
- * Provide a version of src where the 'isModuleContext' function will return
- * true. Used for creating module contexts which may not be able to determine
- * that they need to start up in that mode by themselves.
- * @method forceModuleContext
- * @static
- */
-util.forceModuleContext = function(src) {
-  var definition = "function () { return true; }",
-      idx = src.indexOf('StartModuleContextDeclaration'),
-      funcidx = src.indexOf('function', idx),
-      source,
-      blob;
-  if (idx === -1 || funcidx === -1) {
-    return;
-  }
-  source = src.substr(0, funcidx) +  definition + ' || ' +
-      src.substr(funcidx);
-  blob = util.getBlob(source, 'text/javascript');
-  return util.getURL(blob);
-};
-
-/**
  * Get a Blob object of a string.
  * Polyfills implementations which don't have a current Blob constructor, like
  * phantomjs.

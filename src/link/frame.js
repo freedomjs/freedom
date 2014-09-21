@@ -82,6 +82,7 @@ Frame.prototype.setupFrame = function() {
   document.body.appendChild(frame);
 
   onMsg = function(frame, msg) {
+    console.warn('msg came out from frame');
     if (!this.obj) {
       this.obj = frame;
       this.emit('started');
@@ -111,8 +112,6 @@ Frame.prototype.setupFrame = function() {
  */
 Frame.prototype.makeFrame = function(src, inject) {
   // TODO(willscott): add sandboxing protection.
-
-  // TODO(willscott): survive name mangling.
   var frame = document.createElement('iframe'),
       extra = '',
       loader,

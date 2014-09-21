@@ -30,7 +30,7 @@ getGlobal();
 /**
  * Create a new freedom context.
  * @param {Object} context Information about the local context.
- * @see {util/preamble.js}
+ * @see {util/workerEntry.js}
  * @param {String} manifest The manifest to load.
  * @param {Object} config Configuration keys set by the user.
  * @returns {Promise} A promise for the module defined in the manifest.
@@ -54,7 +54,7 @@ var setup = function (context, manifest, config) {
     link,
     Port;
   Bundle.register(context.providers, api);
-  resource.register(context.resolvers);
+  resource.register(context.resolvers || []);
 
 
   if (config) {

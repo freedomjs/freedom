@@ -141,6 +141,10 @@ Resource.prototype.addRetriever = function (proto, retriever) {
  *     resolvers The list of retreivers and resolvers.
  */
 Resource.prototype.register = function (resolvers) {
+  if (!resolvers.length) {
+    return;
+  }
+
   resolvers.forEach(function (item) {
     if (item.resolver) {
       this.addResolver(item.resolver);
