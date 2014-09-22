@@ -1,3 +1,5 @@
+var PeerConnection = require('../../../providers/core/peerconnection.unprivileged');
+
 function MockRTCIceCandidate() {
 }
 function MockRTCPeerConnection(configuration, constraints) {
@@ -89,7 +91,7 @@ describe("providers/core/peerconnection", function() {
       emit: function() {
       }
     };
-    peerconnection = new PeerConnection(portApp,
+    peerconnection = new PeerConnection.provider(portApp,
                                         undefined,
                                         MockRTCPeerConnection,
                                         MockRTCSessionDescription,

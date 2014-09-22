@@ -1,3 +1,5 @@
+var WS = require('../../../providers/core/websocket.unprivileged');
+
 function MockWebSocket(url, protocols) {
   MockWebSocket.currentInstance = this;
 
@@ -69,7 +71,7 @@ describe("core.websocket unprivileged", function() {
   beforeEach(function() {
     eventManager = new EventManager();
     var dispatchEvent = eventManager.dispatchEvent.bind(eventManager);
-    websocket = new WS(undefined,dispatchEvent,
+    websocket = new WS.provider(undefined,dispatchEvent,
                        WS_URL, undefined,
                        MockWebSocket);
     spyOn(MockWebSocket.currentInstance, "send").and.callThrough();

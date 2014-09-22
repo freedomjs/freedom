@@ -1,3 +1,5 @@
+var View = require('../../../providers/core/view.unprivileged');
+
 describe("core.view", function() {
   var provider, app, el;
 
@@ -11,7 +13,7 @@ describe("core.view", function() {
         views: {}
       }
     };
-    provider = new View_unprivileged(app);
+    provider = new View.provider(app);
  
     el = document.createElement('div');
     el.id = 'myview';
