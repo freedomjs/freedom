@@ -1,14 +1,15 @@
+var testUtil = require('../../util');
+var Util = require('../../../src/util');
+var Echo = require('../../../providers/core/echo.unprivileged');
+
 describe("providers/core/Echo_Unprivileged", function() {
   var app;
   var echo;
 
   beforeEach(function() {
-    app = createTestPort('test');
-    app.controlChannel = 'control'
-    echo = new Echo_unprivileged(app);
-  
-    // Simulate the method attached by provider.
-    echo.dispatchEvent = app.emit.bind(app);
+    app = testUtil.createTestPort('test');
+    app.controlChannel = 'control';
+    echo = new Echo.provider(app, app.emit.bind(app));
   });
 
   it("Needs core", function() {
@@ -34,7 +35,7 @@ describe("providers/core/Echo_Unprivileged", function() {
     expect(args[0]).toEqual('test');
     
     var chan = {};
-    fdom.util.handleEvents(chan);
+    Util.handleEvents(chan);
     chan.onClose = function(c) {};
     
     args[1](chan);
@@ -56,7 +57,7 @@ describe("providers/core/Echo_Unprivileged", function() {
     expect(args[0]).toEqual('test');
     
     var chan = {};
-    fdom.util.handleEvents(chan);
+    Util.handleEvents(chan);
     chan.onClose = function(c) {};
     chan.close = jasmine.createSpy('close');
     
