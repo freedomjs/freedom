@@ -4,7 +4,7 @@
 /freedom.min.js
 /freedom.min.js.map
 /spec.js
-/frame.js
+/spec/helper/frame.js
 
 ### Auto-generated
 tools/doc

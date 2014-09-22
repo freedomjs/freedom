@@ -1,6 +1,7 @@
 var Api = require('../src/api');
 var Resource = require('../src/resource');
 var util = require('../src/util');
+var Frame = require('../src/link/frame');
 
 exports.createTestPort = function(id) {
   var port = {
@@ -87,26 +88,6 @@ exports.mockIface = function(props, consts) {
   };
 };
 
-var fdom_src;
-exports.getFreedomSource = function(id) {
-  if(typeof fdom_src === 'undefined'){
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open("get", "freedom.js", false);
-      xhr.overrideMimeType("text/javascript; charset=utf-8");
-      xhr.send(null);
-      fdom_src = xhr.responseText;
-    } catch (err) { // Synchronous XHR wont work in Chrome App (Chrome Test Runner), so load from global var.
-      if (typeof jasmine.getGlobal().freedom_src !== 'undefined') {
-        fdom_src = jasmine.getGlobal().freedom_src;
-      } else {
-        throw "Could not load freedom source from XHR or global var. To work in a Chrome App, getFreedomSource() must be called from a jasmine test case or beforeEach()";
-      }
-    }
-  }
-  return fdom_src;
-}
-
 // Setup resource loading for the test environment, which uses file:// urls.
 exports.getResolvers = function() {
   var resolvers = [];
@@ -153,19 +134,29 @@ exports.cleanupIframes = function() {
 }
 
 exports.setupModule = function(manifest_url) {
-  var freedom_src = getFreedomSource();
-  var global = {console: {log: function(){}}, document: document};
-  setupResolvers();
+  var global = {
+    document: document
+  };
 
-  var path = window.location.href;
-  var dir_idx = path.lastIndexOf('/');
-  var dir = path.substr(0, dir_idx) + '/';
-  return fdom.setup(global, undefined, {
-    manifest: manifest_url,
-    portType: "Frame",
-    inject: dir + "node_modules/es5-shim/es5-shim.js",
-    src: freedom_src
-  });
+  var path = window.location.href,
+      dir_idx = path.lastIndexOf('/');
+  dir = path.substr(0, dir_idx) + '/';
+  return require('../src/entry')({
+    'global': global,
+      'providers': [
+        require('../providers/core/core.unprivileged'),
+        require('../providers/core/logger.console')
+      ],
+      'resolvers': exports.getResolvers(),
+      'portType': Frame,
+      'source': dir + "spec/helper/frame.js",
+      'inject': [
+        dir + "node_modules/es5-shim/es5-shim.js",
+        dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
+      ],
+    }, manifest_url, {
+      debug: 'debug'
+    });
 }
 
 exports.providerFor = function(module, api) {

@@ -1,40 +1,13 @@
-var entry = require('../../src/entry');
-var Frame = require('../../src/link/frame');
 var testUtil = require('../util');
 
 describe("freedom", function() {
-  var freedom, dir;
+  var freedom;
   beforeEach(function() {
-    var global = {
-      document: document
-    };
-    
-    var path = window.location.href,
-        dir_idx = path.lastIndexOf('/');
-    dir = path.substr(0, dir_idx) + '/';
-    freedom = entry({
-      'global': global,
-      'providers': [
-        require('../../providers/core/core.unprivileged'),
-        require('../../providers/core/logger.console')
-      ],
-      'resolvers': testUtil.getResolvers(),
-      'portType': Frame,
-      'source': dir + "frame.js",
-      'inject': [
-        dir + "node_modules/es5-shim/es5-shim.js",
-        dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
-      ],
-    }, "relative://spec/helper/manifest.json", {
-      debug: 'debug'
-    });
+    freedom = testUtil.setupModule("relative://spec/helper/manifest.json");
   });
   
   afterEach(function() {
-    var frames = document.getElementsByTagName('iframe');
-    for (var i = 0; i < frames.length; i++) {
-      frames[i].parentNode.removeChild(frames[i]);
-    }
+    testUtil.cleanupIframes();
     freedom = null;
   });
 

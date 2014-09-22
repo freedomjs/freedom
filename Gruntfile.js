@@ -109,8 +109,8 @@ module.exports = function (grunt) {
         coverageReporter: {}
       },
       phantom: { 
-        browsers: ['PhantomJS'], 
-        singleRun: true, 
+        browsers: ['PhantomJS'],
+        singleRun: true,
         autoWatch: false
       },
       saucelabs: {
@@ -150,13 +150,13 @@ module.exports = function (grunt) {
     browserify: {
       freedom: {
         files: {
-          'freedom.js': ['src/util/workerEntry.js','interface/*.js']
+          'freedom.js': ['src/util/workerEntry.js']
         }
       },
       jasmine: {
         files: {
-          'spec.js': FILES.specCoreUnit,
-          'frame.js': ['src/util/frameEntry.js']
+          'spec.js': FILES.specCoreUnit.concat(FILES.specPlatformUnit),
+          'spec/helper/frame.js': ['src/util/frameEntry.js']
         }
       },
       options: {
@@ -167,7 +167,7 @@ module.exports = function (grunt) {
         }
       }
     },
-    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'frame.js'],
+    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'spec/helper/frame.js'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',

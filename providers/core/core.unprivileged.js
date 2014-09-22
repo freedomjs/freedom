@@ -5,10 +5,10 @@ var util = require('../../src/util');
 
 /**
  * Core freedom services available to all modules.
- * Created by a local manager in response to a 'core' request.
+ * Created by the environment helper in response to a 'core' request.
  * @Class Core_unprivileged
  * @constructor
- * @param {Port.Manager} manager The manager this core is connected with.
+ * @param {Manager} manager The manager this core is connected with.
  * @private
  */
 var Core_unprivileged = function(manager, postMessage) {

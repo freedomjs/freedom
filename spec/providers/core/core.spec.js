@@ -1,36 +1,23 @@
+var Debug = require('../../../src/debug');
+var Hub = require('../../../src/hub');
+var Resource = require('../../../src/resource');
+var Api = require('../../../src/api');
+var Bundle = require('../../../src/bundle');
+var Manager = require('../../../src/manager');
+var Core = require('../../../providers/core/core.unprivileged');
+var testUtil = require('../../util');
+
 describe("Core Provider Integration", function() {
-  var freedom_src;
-
   var freedom;
-  beforeEach(function() {
-    freedom_src = getFreedomSource();
-    fdom.debug = new fdom.port.Debug();
-    
-    var global = {
-      console: {
-        log: function() {}
-      },
-      document: document
-    };
-  
-    setupResolvers();
-
-    var path = window.location.href,
-        dir_idx = path.lastIndexOf('/'),
-        dir = path.substr(0, dir_idx) + '/';
-    freedom = fdom.setup(global, undefined, {
-      manifest: "relative://spec/helper/channel.json",
-      portType: 'Frame',
-      inject: dir + "node_modules/es5-shim/es5-shim.js",
-      src: freedom_src
+  beforeEach(function(done) {
+    testUtil.setupModule('relative://spec/helper/channel.json').then(function(iface) {
+      freedom = iface();
+      done();
     });
   });
   
   afterEach(function() {
-    var frames = document.getElementsByTagName('iframe');
-    for (var i = 0; i < frames.length; i++) {
-      frames[i].parentNode.removeChild(frames[i]);
-    }
+    testUtil.cleanupIframes();
   });
 
   it("Manages Channels Between Modules", function(done) {
@@ -70,14 +57,20 @@ describe("Core Provider Channels", function() {
   var manager, hub, global, source, core;
   
   beforeEach(function(done) {
-    global = {freedom: {}, document: document};
-    fdom.debug = new fdom.port.Debug();
-    hub = new fdom.Hub();
-    manager = new fdom.port.Manager(hub);
+    var debug = new Debug(),
+      hub = new Hub(debug),
+      resource = new Resource(debug),
+      api = new Api(debug),
+      manager = new Manager(hub, resource, api),
+      source = testUtil.createTestPort('test');
+    Bundle.register([{
+      'name': 'core',
+      'provider': Core.provider
+    }], api);
+
     hub.emit('config', {
-      global: global
+      global: {}
     });
-    source = createTestPort('test');
     manager.setup(source);
 
     var chan = source.gotMessage('control').channel;
@@ -87,6 +80,7 @@ describe("Core Provider Channels", function() {
     });
     
     source.gotMessageAsync('control', {type: 'core'}, function(response) {
+      console.error(response);
       core = response.core;
       done();
     });
