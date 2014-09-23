@@ -1,4 +1,5 @@
 var Api = require('../src/api');
+var Bundle = require('../src/bundle');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 var Frame = require('../src/link/frame');
@@ -86,6 +87,12 @@ exports.mockIface = function(props, consts) {
   return function() {
     return iface;
   };
+};
+
+exports.getApis = function() {
+  var api = new Api();
+  Bundle.register([], api);
+  return api;
 };
 
 // Setup resource loading for the test environment, which uses file:// urls.

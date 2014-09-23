@@ -6,5 +6,6 @@
   },
   "provides": [
     "social"
-  ]
+  ],
+  "default": "social"
 }

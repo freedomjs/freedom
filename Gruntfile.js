@@ -155,7 +155,9 @@ module.exports = function (grunt) {
       },
       jasmine: {
         files: {
-          'spec.js': FILES.specCoreUnit.concat(FILES.specPlatformUnit),
+          'spec.js': FILES.specCoreUnit.concat(
+            FILES.specPlatformUnit,
+            FILES.specProviderUnit),
           'spec/helper/frame.js': ['src/util/frameEntry.js']
         }
       },
