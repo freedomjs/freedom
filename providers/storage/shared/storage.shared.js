@@ -34,3 +34,8 @@ SharedStorageProvider.prototype.clear = function(continuation) {
 if (typeof freedom !== 'undefined') {
   freedom().provideAsynchronous(SharedStorageProvider);
 }
+
+if (typeof exports !== 'undefined') {
+  exports.provider = SharedStorageProvider;
+  exports.name = 'storage';
+}

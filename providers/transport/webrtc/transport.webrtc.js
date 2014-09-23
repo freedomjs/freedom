@@ -312,3 +312,8 @@ WebRTCTransportProvider.prototype._assembleBuffers = function(tag) {
 if (typeof freedom !== 'undefined') {
   freedom().provideAsynchronous(WebRTCTransportProvider);
 }
+
+if (typeof exports !== 'undefined') {
+  exports.provider = WebRTCTransportProvider;
+  exports.name = 'transport';
+}

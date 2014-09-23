@@ -141,3 +141,8 @@ IsolatedStorageProvider.prototype._isMyKey = function(storedKey) {
 if (typeof freedom !== 'undefined') {
   freedom().provideAsynchronous(IsolatedStorageProvider);
 }
+
+if (typeof exports !== 'undefined') {
+  exports.provider = IsolatedStorageProvider;
+  exports.name = 'storage';
+}

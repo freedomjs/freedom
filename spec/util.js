@@ -3,6 +3,7 @@ var Bundle = require('../src/bundle');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 var Frame = require('../src/link/frame');
+var PromiseCompat = require('es6-promise').Promise;
 
 exports.createTestPort = function(id) {
   var port = {
@@ -74,7 +75,7 @@ exports.mockIface = function(props, consts) {
       }.bind({}, p[1]);
     } else {
       iface[p[0]] = function(r) {
-        return Promise.resolve(r);
+        return PromiseCompat.resolve(r);
       }.bind({}, p[1]);
     }
     spyOn(iface, p[0]).and.callThrough();

@@ -10,8 +10,8 @@ describe("unit: social.loopback.json", function () {
     
     var social = testUtil.getApis().get("social").definition;
 
-    freedom = {
-      social: testUtil.mockIface([], [
+    freedom = function() {
+      return testUtil.mockIface([], [
         ['STATUS', social.STATUS.value],
         ['ERRCODE', social.ERRCODE.value]
       ])

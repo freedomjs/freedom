@@ -276,11 +276,12 @@ IndexedDBStorageProvider.prototype._flushQueue = function() {
 
 
 /** REGISTER PROVIDER **/
-if (typeof freedom !== 'undefined' &&
-    typeof freedom.storage !== 'undefined') {
-  freedom.storage().provideAsynchronous(IndexedDBStorageProvider);
+if (typeof freedom !== 'undefined') {
+  freedom().provideAsynchronous(IndexedDBStorageProvider);
 }
-if (typeof freedom !== 'undefined' &&
-    typeof freedom.storebuffer !== 'undefined') {
-  freedom.storebuffer().provideAsynchronous(IndexedDBStorageProvider);
+
+if (typeof exports !== 'undefined') {
+  exports.provider = IndexedDBStorageProvider;
+  exports.name = 'storage';
 }
+

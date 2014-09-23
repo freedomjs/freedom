@@ -1,9 +1,12 @@
+var testUtil = require('../../util');
+var Provider = require('../../../providers/storage/shared/storage.shared');
+
 describe("unit: storage.shared.json", function () {
   var provider;
   beforeEach(function() {
     freedom = {
-      core: mockIface([['getId', ['myId']]]),
-      'core.storage': mockIface([
+      core: testUtil.mockIface([['getId', ['myId']]]),
+      'core.storage': testUtil.mockIface([
         ['keys', ['myId;Test', 'otherTest']],
         ['get', 'value'],
         ['set', undefined],
@@ -11,7 +14,7 @@ describe("unit: storage.shared.json", function () {
         ['clear', undefined]
       ])
     };
-    provider = new SharedStorageProvider();
+    provider = new Provider.provider();
   });
 
   it("returns owned keys", function(done) {

@@ -1,22 +1,26 @@
+var testUtil = require('../../util');
+var Provider = require('../../../providers/storage/isolated/storage.isolated');
+var PromiseCompat = require('es6-promise').Promise;
+
 describe("unit: storage.isolated.json", function () {
   var provider, finishCore, promise;
   beforeEach(function() {
     // Comment for log messages.
     spyOn(console, "log");
-    promise = new Promise(function(resolve) {
+    promise = new PromiseCompat(function(resolve) {
       finishCore = resolve;
     });
 
     freedom = {
-      core: mockIface([['getId', promise]]),
-      'core.storage': mockIface([
+      core: testUtil.mockIface([['getId', promise]]),
+      'core.storage': testUtil.mockIface([
         ['keys', ['myId;Test', 'otherTest']],
         ['get', 'value'],
         ['set', undefined],
         ['remove', undefined]
       ])
     };
-    provider = new IsolatedStorageProvider(null);
+    provider = new Provider.provider(null);
   });
 
   it("returns owned keys", function(done) {
