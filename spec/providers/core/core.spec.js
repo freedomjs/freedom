@@ -80,7 +80,6 @@ describe("Core Provider Channels", function() {
     });
     
     source.gotMessageAsync('control', {type: 'core'}, function(response) {
-      console.error(response);
       core = response.core;
       done();
     });

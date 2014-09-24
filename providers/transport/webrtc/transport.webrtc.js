@@ -2,6 +2,7 @@
  * Peer 2 Peer transport provider.
  *
  */
+var PromiseCompat = require('es6-promise').Promise;
 
 var WebRTCTransportProvider = function(dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
@@ -159,7 +160,7 @@ WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
       bufferBound += nextBuffer.byteLength;
     }
 
-    var allSends = Promise.all(promises);
+    var allSends = PromiseCompat.all(promises);
     if (buffers.length === 0) {
       return allSends;
     }
@@ -170,7 +171,7 @@ WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
     return this.pc.getBufferedAmount(tag).then(function(bufferedAmount) {
       bufferBound = bufferedAmount;
       if (bufferedAmount + this._chunkSize > this._pcQueueLimit) {
-        return new Promise(function(resolve) {
+        return new PromiseCompat(function(resolve) {
           setTimeout(function() {
             resolve(checkBufferedAmount());
           }, 100);
