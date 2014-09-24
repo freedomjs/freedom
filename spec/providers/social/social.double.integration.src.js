@@ -1,19 +1,15 @@
-var INTEGRATIONTEST;
-if (typeof INTEGRATIONTEST == 'undefined') {
-  INTEGRATIONTEST = {};
-}
-if (typeof INTEGRATIONTEST.social == 'undefined') {
-  INTEGRATIONTEST.social = {};
-}
+var testUtil = require('../../util');
 
-INTEGRATIONTEST.social.double = function(provider_url) {
+module.exports = function(provider_url) {
   var helper;
 
   beforeEach(function(done) {
-    helper = providerFor(provider_url, 'social');
-    helper.create("SocialA");
-    helper.create("SocialB");
-    done();
+    testUtil.providerFor(provider_url, 'social').then(function(h) {
+      helper = h;
+      helper.create("SocialA");
+      helper.create("SocialB");
+      done();
+    });
   });
   
   afterEach(function(done) {

@@ -173,12 +173,14 @@ exports.providerFor = function(module, api) {
     app: {script: 'relative://spec/helper/providers.js'},
     dependencies: {undertest: {url: 'relative://' + module, api: api}}
   };
-  var freedom = setupModule('manifest://' + JSON.stringify(manifest));
-  var provider = new ProviderHelper(freedom);
-  provider.create = function(name) {
-    this.freedom.emit("create", {name: name, provider: 'undertest'});
-  };
-  return provider;
+  var freedom = exports.setupModule('manifest://' + JSON.stringify(manifest));
+  return freedom.then(function(chan) {
+    var provider = new ProviderHelper(chan);
+    provider.create = function(name) {
+      chan.emit("create", {name: name, provider: 'undertest'});
+    };
+    return provider;
+  });
 }
 
 function ProviderHelper(inFreedom) {

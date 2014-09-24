@@ -1,17 +1,6 @@
-var INTEGRATIONTEST;
-if (typeof INTEGRATIONTEST == 'undefined') {
-  INTEGRATIONTEST = {};
-}
+var testUtil = require('../../util');
 
-INTEGRATIONTEST.storage = function(provider_url) {
-  INTEGRATIONTEST._storage(provider_url, false);
-};
-
-INTEGRATIONTEST.storebuffer = function(provider_url) {
-  INTEGRATIONTEST._storage(provider_url, true);
-};
-
-INTEGRATIONTEST._storage = function(provider_url, useArrayBuffer) { 
+module.exports = function(provider_url, useArrayBuffer) { 
   var helper;
 
   function beforeSet(str) {
@@ -38,18 +27,22 @@ INTEGRATIONTEST._storage = function(provider_url, useArrayBuffer) {
   }
 
   beforeEach(function(done) {
+    var promise;
     if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
-      helper = providerFor(provider_url, "storage")
+      promise = testUtil.providerFor(provider_url, "storage");
     } else {
-      helper = providerFor(provider_url, "storebuffer")
+      promise = testUtil.providerFor(provider_url, "storebuffer");
     }
-    helper.create("s");
-    helper.call("s", "clear", [], done);
+    promise.then(function(h) {
+      helper = h;
+      helper.create("s");
+      helper.call("s", "clear", [], done);
+    });
   });
 
   afterEach(function() {
     helper.removeListeners("s");
-    cleanupIframes();
+    testUtil.cleanupIframes();
   });
   
   it("sets and gets keys", function(done) {

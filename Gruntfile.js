@@ -40,17 +40,6 @@ var FILES = {
   specPlatformUnit: [
     'spec/providers/core/**/*.spec.js'
   ],
-  //Integration tests
-  srcProviderIntegration: [
-    'spec/providers/social/**/*.integration.src.js',
-    'spec/providers/storage/**/*.integration.src.js',
-    'spec/providers/transport/**/*.integration.src.js'
-  ],
-  specProviderIntegration: [
-    'spec/providers/social/**/*.integration.spec.js',
-    'spec/providers/storage/**/*.integration.spec.js',
-    'spec/providers/transport/**/*.integration.spec.js'
-  ],
   srcProvider: [
     'providers/oauth/*.js',
     'providers/social/websocket-server/*.js',
@@ -62,6 +51,11 @@ var FILES = {
     'spec/providers/social/**/*.unit.spec.js',
     'spec/providers/storage/**/*.unit.spec.js',
     'spec/providers/transport/**/*.unit.spec.js'
+  ],
+  specProviderIntegration: [
+    'spec/providers/social/**/*.integration.spec.js',
+    'spec/providers/storage/**/*.integration.spec.js',
+    'spec/providers/transport/**/*.integration.spec.js'
   ],
   specAll: ['spec/**/*.spec.js'],
   freedom: [
@@ -100,7 +94,7 @@ module.exports = function (grunt) {
         // NOTE: need to run 'connect:default' to serve files
         configFile: 'karma.conf.js',
       },
-      single: { singleRun: true, autoWatch: false },
+      single: { singleRun: false, autoWatch: false },
       watch: { 
         singleRun: false, 
         autoWatch: true,
@@ -153,11 +147,20 @@ module.exports = function (grunt) {
           'freedom.js': ['src/util/workerEntry.js']
         }
       },
-      jasmine: {
+      jasmine_unit: {
         files: {
           'spec.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
             FILES.specProviderUnit),
+          'spec/helper/frame.js': ['src/util/frameEntry.js']
+        }
+      },
+      jasmine_full: {
+        files: {
+          'spec.js': FILES.specCoreUnit.concat(
+            FILES.specPlatformUnit,
+            FILES.specProviderUnit,
+            FILES.specProviderIntegration),
           'spec/helper/frame.js': ['src/util/frameEntry.js']
         }
       },
@@ -248,25 +251,28 @@ module.exports = function (grunt) {
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
-    'browserify',
+    'browserify:freedom',
     'gitinfo',
     'connect:default'
   ]);
   grunt.registerTask('unit', [
-    'browserify:jasmine',
+    'browserify:jasmine_unit',
     'connect:default',
     'karma:phantom'
   ]);
   grunt.registerTask('test', [
-    'build',
+    'jshint',
+    'browserify:jasmine_full',
+    'connect:default',
     'karma:single'
   ]);
   grunt.registerTask('debug', [
     'build',
+    'browserify:jasmine_full',
     'karma:watch'
   ]);
   grunt.registerTask('demo', [
-    'browserify',
+    'browserify:freedom',
     'connect:demo',
   ]);
 

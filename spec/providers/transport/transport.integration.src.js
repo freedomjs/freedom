@@ -1,18 +1,18 @@
-var INTEGRATIONTEST;
-if (typeof INTEGRATIONTEST == 'undefined') {
-  INTEGRATIONTEST = {};
-}
+var testUtil = require('../../util');
 
-INTEGRATIONTEST.transport = function(provider_url) { 
+module.exports = function(provider_url) { 
   var helper, signals;
 
-  beforeEach(function() {
-    helper = providerFor(provider_url, "transport")
+  beforeEach(function(done) {
     signals = [];
+    testUtil.providerFor(provider_url, "transport").then(function(h) {
+      helper = h;
+      done();
+    });
   });
 
   afterEach(function() {
-    cleanupIframes();
+    testUtil.cleanupIframes();
   });
 
   function createTwoProviders(callback) {

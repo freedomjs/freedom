@@ -1,16 +1,20 @@
+var testUtil = require('../../util');
+
 describe("storage.isolated.json - storage.shared.json", function() {
   var freedom, helper;
 
   beforeEach(function(done) {
-    freedom = setupModule("relative://spec/helper/providers.json");
-    helper = new ProviderHelper(freedom);
-    helper.createProvider("shared", "storage.shared");
-    helper.createProvider("isolated", "storage.isolated");
-    helper.call("shared", "clear", [], done);
+    freedom = testUtil.setupModule("relative://spec/helper/providers.json");
+    freedom.then(function(chan) {
+      helper = new testUtil.ProviderHelper(chan);
+      helper.createProvider("shared", "storage.shared");
+      helper.createProvider("isolated", "storage.isolated");
+      helper.call("shared", "clear", [], done);
+    });
   });
   
   afterEach(function() {
-    cleanupIframes();
+    testUtil.cleanupIframes();
   });
 
   it("isolates partitions", function(done) {

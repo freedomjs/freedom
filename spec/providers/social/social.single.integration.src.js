@@ -1,24 +1,20 @@
-var INTEGRATIONTEST;
-if (typeof INTEGRATIONTEST == 'undefined') {
-  INTEGRATIONTEST = {};
-}
-if (typeof INTEGRATIONTEST.social == 'undefined') {
-  INTEGRATIONTEST.social = {};
-}
+var testUtil = require('../../util');
 
-INTEGRATIONTEST.social.single = function(provider_url) {
+module.exports = function(provider_url) {
   var helper;
-  var ERRCODE = fdom.apis.get("social").definition.ERRCODE.value;
+  var ERRCODE = testUtil.getApis().get("social").definition.ERRCODE.value;
 
   beforeEach(function(done) {
-    helper = providerFor(provider_url, 'social');
-    helper.create("s");
-    done();
+    testUtil.providerFor(provider_url, 'social').then(function(h) {
+      helper = h;
+      helper.create("s");
+      done();
+    });
   });
   
   afterEach(function(done) {
     helper.removeListeners("s");
-    cleanupIframes();
+    testUtil.cleanupIframes();
     done();
   });
 
