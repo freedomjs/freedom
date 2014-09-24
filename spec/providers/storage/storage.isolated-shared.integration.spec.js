@@ -6,7 +6,8 @@ describe("storage.isolated.json - storage.shared.json", function() {
   beforeEach(function(done) {
     freedom = testUtil.setupModule("relative://spec/helper/providers.json");
     freedom.then(function(chan) {
-      helper = new testUtil.ProviderHelper(chan);
+      var inst = chan();
+      helper = new testUtil.ProviderHelper(inst);
       helper.createProvider("shared", "storage.shared");
       helper.createProvider("isolated", "storage.isolated");
       helper.call("shared", "clear", [], done);

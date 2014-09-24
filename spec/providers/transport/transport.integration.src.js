@@ -1,4 +1,5 @@
 var testUtil = require('../../util');
+var util = require('../../../src/util');
 
 module.exports = function(provider_url) { 
   var helper, signals;
@@ -52,7 +53,7 @@ module.exports = function(provider_url) {
         expect(signals.length).toBeGreaterThan(0);
         done();
       });
-      var sendData = fdom.util.str2ab("HI");
+      var sendData = util.str2ab("HI");
       ids[0] = helper.call('t', "setup", ["t", chanId]);
       ids[1] = helper.call('t', "send", ["tag", sendData]);
     });
@@ -63,7 +64,7 @@ module.exports = function(provider_url) {
     var ids = {};
     function doSend (chanId1, chanId2) {
       helper.on("t2", "onData", function(result) {
-        var resultStr = fdom.util.ab2str(result.data);
+        var resultStr = util.ab2str(result.data);
         expect(signals.length).toBeGreaterThan(0);
         //@todo This returns false on Firefox 30
         //expect(result.data instanceof ArrayBuffer).toBe(true);
@@ -73,7 +74,7 @@ module.exports = function(provider_url) {
         done();
       });
 
-      var sendData = fdom.util.str2ab(testString);
+      var sendData = util.str2ab(testString);
       ids[0] = helper.call("t1", "setup", ["t1", chanId1]);
       ids[1] = helper.call("t2", "setup", ["t2", chanId2]);
       ids[2] = helper.call("t1", "send", ["tag", sendData]);
@@ -94,7 +95,7 @@ module.exports = function(provider_url) {
 
     function doSend (chanId1, chanId2) {
       helper.on("t2", "onData", function(result) {
-        var resultStr = fdom.util.ab2str(result.data);
+        var resultStr = util.ab2str(result.data);
         expect(signals.length).toBeGreaterThan(0);
         //@todo This returns false on Firefox 30
         //expect(result.data instanceof ArrayBuffer).toBe(true);
@@ -104,7 +105,7 @@ module.exports = function(provider_url) {
         done();
       });
 
-      var sendData = fdom.util.str2ab(testString);
+      var sendData = util.str2ab(testString);
       ids[0] = helper.call("t1", "setup", ["t1", chanId1]);
       ids[1] = helper.call("t2", "setup", ["t2", chanId2]);
       ids[2] = helper.call("t1", "send", ["tag", sendData]);
@@ -125,7 +126,7 @@ module.exports = function(provider_url) {
       var tagsRecievedOn = [];
       helper.on("t2", "onData", function(result) {
         onDataCount += 1;
-        var resultStr = fdom.util.ab2str(result.data);
+        var resultStr = util.ab2str(result.data);
         expect(signals.length).toBeGreaterThan(0);
         //@todo This returns false on Firefox 30
         //expect(result.data instanceof ArrayBuffer).toBe(true);
@@ -144,7 +145,7 @@ module.exports = function(provider_url) {
       ids[id++] = helper.call("t2", "setup", ["t2", chanId2]);
       for (var tag in toSend) {
         ids[id++] = helper.call("t1", "send", [tag,
-                                               fdom.util.str2ab(toSend[tag])]);
+                                               util.str2ab(toSend[tag])]);
       }
     };
 

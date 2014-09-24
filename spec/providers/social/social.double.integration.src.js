@@ -15,7 +15,7 @@ module.exports = function(provider_url) {
   afterEach(function(done) {
     helper.removeListeners("SocialA");
     helper.removeListeners("SocialB");
-    cleanupIframes();
+    testUtil.cleanupIframes();
     done();
   });
 

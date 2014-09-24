@@ -53,9 +53,8 @@ var FILES = {
     'spec/providers/transport/**/*.unit.spec.js'
   ],
   specProviderIntegration: [
-    'spec/providers/social/**/*.integration.spec.js',
-    'spec/providers/storage/**/*.integration.spec.js',
-    'spec/providers/transport/**/*.integration.spec.js'
+    'spec/providers/*.integration.spec.js',
+    'spec/providers/storage/*.integration.spec.js'
   ],
   specAll: ['spec/**/*.spec.js'],
   freedom: [
@@ -94,7 +93,7 @@ module.exports = function (grunt) {
         // NOTE: need to run 'connect:default' to serve files
         configFile: 'karma.conf.js',
       },
-      single: { singleRun: false, autoWatch: false },
+      single: { singleRun: true, autoWatch: false },
       watch: { 
         singleRun: false, 
         autoWatch: true,

@@ -141,6 +141,11 @@ exports.cleanupIframes = function() {
   }
 }
 
+var coreProviders;
+exports.setCoreProviders = function(providers) {
+  coreProviders = providers;
+};
+
 exports.setupModule = function(manifest_url) {
   var global = {
     document: document
@@ -151,10 +156,7 @@ exports.setupModule = function(manifest_url) {
   dir = path.substr(0, dir_idx) + '/';
   return require('../src/entry')({
     'global': global,
-      'providers': [
-        require('../providers/core/core.unprivileged'),
-        require('../providers/core/logger.console')
-      ],
+      'providers': coreProviders,
       'resolvers': exports.getResolvers(),
       'portType': Frame,
       'source': dir + "spec/helper/frame.js",
@@ -175,9 +177,10 @@ exports.providerFor = function(module, api) {
   };
   var freedom = exports.setupModule('manifest://' + JSON.stringify(manifest));
   return freedom.then(function(chan) {
-    var provider = new ProviderHelper(chan);
+    var inst = chan();
+    var provider = new ProviderHelper(inst);
     provider.create = function(name) {
-      chan.emit("create", {name: name, provider: 'undertest'});
+      inst.emit("create", {name: name, provider: 'undertest'});
     };
     return provider;
   });
