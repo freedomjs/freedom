@@ -3,6 +3,10 @@ var testUtil = require('../util');
 describe("freedom", function() {
   var freedom;
   beforeEach(function() {
+    testUtil.setCoreProviders([
+      require('../../providers/core/core.unprivileged'),
+      require('../../providers/core/logger.console')
+    ]);
     freedom = testUtil.setupModule("relative://spec/helper/manifest.json");
   });
   

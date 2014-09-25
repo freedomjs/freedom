@@ -144,6 +144,20 @@ module.exports = function (grunt) {
       freedom: {
         files: {
           'freedom.js': ['src/util/workerEntry.js']
+        },
+        options: {
+          transform: ['folderify'],
+          postBundleCB: function(err, src, next) {
+            next(err, require('fs').readFileSync('src/util/header.txt') + src);
+          }
+        }
+      },
+      frame: {
+        files: {
+          'spec/helper/frame.js': ['src/util/frameEntry.js']
+        },
+        options: {
+          transform: ['folderify']
         }
       },
       jasmine_unit: {
@@ -151,7 +165,12 @@ module.exports = function (grunt) {
           'spec.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
             FILES.specProviderUnit),
-          'spec/helper/frame.js': ['src/util/frameEntry.js']
+        },
+        options: {
+          transform: ['folderify', ['browserify-istanbul', {
+            // Note: bundle must be ignored, 
+            ignore: ['**/spec/**', '**/providers/**', '**/src/bundle.js']
+          }]]
         }
       },
       jasmine_full: {
@@ -161,14 +180,15 @@ module.exports = function (grunt) {
             FILES.specProviderUnit,
             FILES.specProviderIntegration),
           'spec/helper/frame.js': ['src/util/frameEntry.js']
+        },
+        options: {
+          transform: ['folderify', ['browserify-istanbul', {
+            ignore: ['**/spec/**', '**/providers/**', '**/src/bundle.js']
+          }]]
         }
       },
       options: {
-        transform: ['folderify'],
-        ignore: ['ws'],
-        postBundleCB: function(err, src, next) {
-          next(err, require('fs').readFileSync('src/util/header.txt') + src);
-        }
+        ignore: ['ws']
       }
     },
     clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'spec/helper/frame.js'],
@@ -255,12 +275,14 @@ module.exports = function (grunt) {
     'connect:default'
   ]);
   grunt.registerTask('unit', [
+    'browserify:frame',
     'browserify:jasmine_unit',
     'connect:default',
     'karma:phantom'
   ]);
   grunt.registerTask('test', [
     'jshint',
+    'browserify:frame',
     'browserify:jasmine_full',
     'connect:default',
     'karma:single'
@@ -311,7 +333,7 @@ module.exports = function (grunt) {
   });
 
 
-  grunt.registerTask('default', ['build', 'karma:phantom']);
+  grunt.registerTask('default', ['build', 'unit']);
 };
 
 module.exports.FILES = FILES;

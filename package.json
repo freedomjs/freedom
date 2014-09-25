@@ -17,6 +17,7 @@
   },
   "main": "Gruntfile.js",
   "devDependencies": {
+    "browserify-istanbul": "^0.1.2",
     "es5-shim": "^3.1.1",
     "es6-promise": "^1.0.0",
     "folderify": "^0.6.0",

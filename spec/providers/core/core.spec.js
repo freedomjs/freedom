@@ -10,6 +10,9 @@ var testUtil = require('../../util');
 describe("Core Provider Integration", function() {
   var freedom;
   beforeEach(function(done) {
+    testUtil.setCoreProviders([
+      Core
+    ]);
     testUtil.setupModule('relative://spec/helper/channel.json').then(function(iface) {
       freedom = iface();
       done();
