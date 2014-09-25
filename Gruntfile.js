@@ -272,7 +272,6 @@ module.exports = function (grunt) {
     'jshint',
     'browserify:freedom',
     'gitinfo',
-    'connect:default'
   ]);
   grunt.registerTask('unit', [
     'browserify:frame',
@@ -289,6 +288,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('debug', [
     'build',
+    'connect:default',
     'browserify:jasmine_full',
     'karma:watch'
   ]);
@@ -303,6 +303,7 @@ module.exports = function (grunt) {
     if (jobParts.length > 1 && jobParts[1] == '1') {
       grunt.registerTask('ci', [
         'build',
+        'connect:default',
         'karma:phantom',
         'karma:saucelabs',
         'coveralls:report'
@@ -310,12 +311,14 @@ module.exports = function (grunt) {
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
         'build',
+        'connect:default',
         'karma:phantom'
       ]);
     }
   } else {  //When run from command-line
     grunt.registerTask('ci', [
       'build',
+      'connect:default',
       'karma:phantom',
       'karma:saucelabs',
     ]);
