@@ -302,7 +302,8 @@ module.exports = function (grunt) {
     //When run from Travis from jobs *.1
     if (jobParts.length > 1 && jobParts[1] == '1') {
       grunt.registerTask('ci', [
-        'build',
+        'browserify:frame',
+        'browserify:jasmine_unit',
         'connect:default',
         'karma:phantom',
         'karma:saucelabs',
@@ -310,14 +311,16 @@ module.exports = function (grunt) {
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
-        'build',
+        'browserify:frame',
+        'browserify:jasmine_unit',
         'connect:default',
         'karma:phantom'
       ]);
     }
   } else {  //When run from command-line
     grunt.registerTask('ci', [
-      'build',
+      'browserify:frame',
+      'browserify:jasmine_unit',
       'connect:default',
       'karma:phantom',
       'karma:saucelabs',
