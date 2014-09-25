@@ -167,6 +167,16 @@ module.exports = function (grunt) {
             FILES.specProviderUnit),
         },
         options: {
+          transform: ['folderify']
+        }
+      },
+      jasmine_coverage: {
+        files: {
+          'spec.js': FILES.specCoreUnit.concat(
+            FILES.specPlatformUnit,
+            FILES.specProviderUnit),
+        },
+        options: {
           transform: ['folderify', ['browserify-istanbul', {
             // Note: bundle must be ignored, 
             ignore: ['**/spec/**', '**/providers/**', '**/src/bundle.js']
@@ -182,9 +192,7 @@ module.exports = function (grunt) {
           'spec/helper/frame.js': ['src/util/frameEntry.js']
         },
         options: {
-          transform: ['folderify', ['browserify-istanbul', {
-            ignore: ['**/spec/**', '**/providers/**', '**/src/bundle.js']
-          }]]
+          transform: ['folderify']
         }
       },
       options: {
@@ -303,7 +311,7 @@ module.exports = function (grunt) {
     if (jobParts.length > 1 && jobParts[1] == '1') {
       grunt.registerTask('ci', [
         'browserify:frame',
-        'browserify:jasmine_unit',
+        'browserify:jasmine_coverage',
         'connect:default',
         'karma:phantom',
         'karma:saucelabs',
