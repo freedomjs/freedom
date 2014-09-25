@@ -279,7 +279,6 @@ module.exports = function (grunt) {
   grunt.registerTask('build', [
     'jshint',
     'browserify:freedom',
-    'gitinfo',
   ]);
   grunt.registerTask('unit', [
     'browserify:frame',
@@ -314,6 +313,7 @@ module.exports = function (grunt) {
         'browserify:jasmine_coverage',
         'connect:default',
         'karma:phantom',
+        'gitinfo',
         'karma:saucelabs',
         'coveralls:report'
       ]);
@@ -331,6 +331,7 @@ module.exports = function (grunt) {
       'browserify:jasmine_unit',
       'connect:default',
       'karma:phantom',
+      'gitinfo',
       'karma:saucelabs',
     ]);
   }
