@@ -72,8 +72,8 @@ var CUSTOM_LAUNCHER = {
   sauce_chrome_win: {
     base: 'SauceLabs',
     browserName: 'chrome',
-    version: 'beta',
-    platform: 'Windows 8'
+    version: '',
+    platform: 'Windows 7'
   },
   sauce_firefox: {
     base: 'SauceLabs',
