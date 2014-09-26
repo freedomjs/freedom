@@ -63,22 +63,22 @@ var FILES = {
 };
 
 var CUSTOM_LAUNCHER = {
-  sauce_chrome_34: {
+  sauce_chrome_mac: {
     base: 'SauceLabs',
     browserName: 'chrome',
-    version: '34',
+    version: '',
     platform: 'OS X 10.9'
   },
-  sauce_chrome_33: {
+  sauce_chrome_win: {
     base: 'SauceLabs',
     browserName: 'chrome',
-    version: '33',
-    platform: 'Windows 7'
+    version: 'beta',
+    platform: 'Windows 8'
   },
   sauce_firefox: {
     base: 'SauceLabs',
     browserName: 'firefox',
-    version: '29'
+    version: ''
   }
 };
 
@@ -107,7 +107,7 @@ module.exports = function (grunt) {
         autoWatch: false
       },
       saucelabs: {
-        browsers: ['sauce_chrome_34', 'sauce_chrome_33'],//, 'sauce_firefox'],
+        browsers: ['sauce_chrome_mac', 'sauce_chrome_win', 'sauce_firefox'],
         singleRun: true,
         autoWatch: false,
         reporters: ['dots', 'saucelabs'],
