@@ -1,3 +1,7 @@
+### Built files
+/spec.js
+/spec/helper/frame.js
+
 ### Auto-generated
 tools/doc
 tools/coverage*.json
