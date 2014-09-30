@@ -1,12 +1,15 @@
+/*jslint node:true */
 var FILES = require('./Gruntfile').FILES;
 
-var locate_promises = function() {
-  var includer = require.resolve('es6-promise');
-  var base = includer.substr(0, includer.lastIndexOf('es6-promise'));
+var locate_promises = function () {
+  'use strict';
+  var includer = require.resolve('es6-promise'),
+    base = includer.substr(0, includer.lastIndexOf('es6-promise'));
   return base + 'es6-promise/dist/promise-1.0.0.js';
 };
 
-module.exports = function(config) {
+module.exports = function (config) {
+  'use strict';
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -18,7 +21,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     // Testing Providers for now
-    files: [require.resolve('es5-shim'), locate_promises(), 'spec.js'],
+    files: [
+      require.resolve('es5-shim'),
+      locate_promises(),
+      'spec.js',
+      {pattern: 'spec/helper/frame.js', included: false}
+    ],
     
     // web server port
     port: 9876,
@@ -56,6 +64,6 @@ module.exports = function(config) {
 
     // SauceLabs config that gets overwritten in Gruntfile.js
     sauceLabs: {},
-    customLaunchers: {},
+    customLaunchers: {}
   });
 };

@@ -27,9 +27,9 @@
 var FILES = {
   srcCore: [
     'src/*.js',
-      'src/link/*.js',
-      'src/proxy/*.js',
-      'interface/*.js'
+    'src/link/*.js',
+    'src/proxy/*.js',
+    'interface/*.js'
   ],
   srcPlatform: [
     'providers/core/*.js'
@@ -91,17 +91,16 @@ module.exports = function (grunt) {
     karma: {
       options: {
         // NOTE: need to run 'connect:default' to serve files
-        configFile: 'karma.conf.js',
+        configFile: 'karma.conf.js'
       },
       single: { singleRun: true, autoWatch: false },
-      watch: { 
-        singleRun: false, 
+      watch: {
+        singleRun: false,
         autoWatch: true,
-        reporters: ['progress', 'story'],
-        preprocessors: {},
+        reporters: ['progress', 'html'],
         coverageReporter: {}
       },
-      phantom: { 
+      phantom: {
         browsers: ['PhantomJS'],
         singleRun: true,
         autoWatch: false
@@ -121,8 +120,8 @@ module.exports = function (grunt) {
             '<%= gitinfo.local.branch.current.shortSHA %>',
             '<%= gitinfo.local.branch.current.currentUser %>',
             '<%= gitinfo.local.branch.current.lastCommitAuthor %>',
-            '<%= gitinfo.local.branch.current.lastCommitTime %>',
-          ],
+            '<%= gitinfo.local.branch.current.lastCommitTime %>'
+          ]
         },
         customLaunchers: CUSTOM_LAUNCHER
       }
@@ -146,8 +145,7 @@ module.exports = function (grunt) {
           'freedom.js': ['src/util/workerEntry.js']
         },
         options: {
-          transform: ['folderify'],
-          postBundleCB: function(err, src, next) {
+          postBundleCB: function (err, src, next) {
             next(err, require('fs').readFileSync('src/util/header.txt') + src);
           }
         }
@@ -155,26 +153,22 @@ module.exports = function (grunt) {
       frame: {
         files: {
           'spec/helper/frame.js': ['src/util/frameEntry.js']
-        },
-        options: {
-          transform: ['folderify']
         }
       },
       jasmine_unit: {
         files: {
           'spec.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
-            FILES.specProviderUnit),
-        },
-        options: {
-          transform: ['folderify']
+            FILES.specProviderUnit
+          )
         }
       },
       jasmine_coverage: {
         files: {
           'spec.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
-            FILES.specProviderUnit),
+            FILES.specProviderUnit
+          )
         },
         options: {
           transform: ['folderify', ['browserify-istanbul', {
@@ -188,15 +182,14 @@ module.exports = function (grunt) {
           'spec.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
             FILES.specProviderUnit,
-            FILES.specProviderIntegration),
+            FILES.specProviderIntegration
+          ),
           'spec/helper/frame.js': ['src/util/frameEntry.js']
-        },
-        options: {
-          transform: ['folderify']
         }
       },
       options: {
-        ignore: ['ws']
+        ignore: ['ws'],
+        transform: ['folderify']
       }
     },
     clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'spec/helper/frame.js'],
@@ -233,7 +226,7 @@ module.exports = function (grunt) {
         options: {
           port: 8000,
           keepalive: true,
-          base: ["./","demo/"],
+          base: ["./", "demo/"],
           open: "http://localhost:8000/demo/"
         }
       }
@@ -257,7 +250,7 @@ module.exports = function (grunt) {
         // list of tasks that are required before publishing
         requires: [],
         // if the workspace is dirty, abort publishing (to avoid publishing local changes)
-        abortIfDirty: true,
+        abortIfDirty: true
       }
     }
 
@@ -275,10 +268,21 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-npm');
   
+  grunt.registerTask('watch', 'Run browserify and karma in watch mode.',
+    function () {
+      grunt.config.merge({
+        browserify: {
+          options: {
+            watch: true
+          }
+        }
+      });
+    });
+  
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
-    'browserify:freedom',
+    'browserify:freedom'
   ]);
   grunt.registerTask('unit', [
     'browserify:frame',
@@ -294,6 +298,7 @@ module.exports = function (grunt) {
     'karma:single'
   ]);
   grunt.registerTask('debug', [
+    'watch',
     'build',
     'connect:default',
     'browserify:jasmine_full',
@@ -301,13 +306,13 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('demo', [
     'browserify:freedom',
-    'connect:demo',
+    'connect:demo'
   ]);
 
   if (process.env.TRAVIS_JOB_NUMBER) {
     var jobParts = process.env.TRAVIS_JOB_NUMBER.split('.');
     //When run from Travis from jobs *.1
-    if (jobParts.length > 1 && jobParts[1] == '1') {
+    if (jobParts.length > 1 && jobParts[1] === '1') {
       grunt.registerTask('ci', [
         'browserify:frame',
         'browserify:jasmine_coverage',
@@ -332,17 +337,17 @@ module.exports = function (grunt) {
       'connect:default',
       'karma:phantom',
       'gitinfo',
-      'karma:saucelabs',
+      'karma:saucelabs'
     ]);
   }
   
-  grunt.registerTask('release', function(arg) {
+  grunt.registerTask('release', function (arg) {
     if (arguments.length === 0) {
       arg = 'patch';
     }
     grunt.task.run([
       'default',
-      'bump:'+arg,
+      'bump:' + arg,
       'npm-publish'
     ]);
   });
