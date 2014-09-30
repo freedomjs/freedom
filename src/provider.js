@@ -259,7 +259,7 @@ Provider.prototype.getProvider = function (source, identifier, args) {
         return;
       }
       var prop = port.definition[msg.type],
-        debug = this.debug,
+        debug = port.debug,
         args = Consumer.portableToMessage(prop.value, msg, debug),
         ret = function (src, msg, prop, resolve, reject) {
           var streams = Consumer.messageToPortable(prop.ret, resolve,
