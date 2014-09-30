@@ -82,9 +82,16 @@ util.getId = function() {
   var guid = 'guid',
       domain = 12,
       buffer;
-  if (typeof crypto === 'object') {
+  // Chrome / Firefox.
+  if (typeof crypto === 'object' && crypto.getRandomValues) {
     buffer = new Uint8Array(domain);
     crypto.getRandomValues(buffer);
+    util.eachReverse(buffer, function(n) {
+      guid += '-' + n;
+    });
+  // Node
+  } else if (typeof crypto === 'object' && crypto.randomBytes) {
+    buffer = crypto.randomBytes(domain);
     util.eachReverse(buffer, function(n) {
       guid += '-' + n;
     });
