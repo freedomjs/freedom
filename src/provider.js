@@ -255,7 +255,7 @@ Provider.prototype.getProvider = function (source, identifier, args) {
   return function (port, src, msg) {
     if (msg.action === 'method') {
       if (typeof this[msg.type] !== 'function') {
-        this.debug.warn("Provider does not implement " + msg.type + "()!");
+        port.debug.warn("Provider does not implement " + msg.type + "()!");
         return;
       }
       var prop = port.definition[msg.type],

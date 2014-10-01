@@ -388,13 +388,13 @@ Consumer.conform = function (template, from, externals, separate, debug) {
       //console.log("template is array, value is " + JSON.stringify(value));
       for (i = 0; i < from.length; i += 1) {
         val.push(Consumer.conform(template[1], from[i], externals,
-                                    separate));
+                                  separate, debug));
       }
     } else {
       for (i = 0; i < template.length; i += 1) {
         if (from[i] !== undefined) {
           val.push(Consumer.conform(template[i], from[i], externals,
-                                      separate));
+                                    separate, debug));
         } else {
           val.push(undefined);
         }
@@ -405,7 +405,8 @@ Consumer.conform = function (template, from, externals, separate, debug) {
     val = {};
     util.eachProp(template, function (prop, name) {
       if (from[name] !== undefined) {
-        val[name] = Consumer.conform(prop, from[name], externals, separate);
+        val[name] = Consumer.conform(prop, from[name], externals, separate,
+                                     debug);
       }
     });
     return val;
