@@ -122,6 +122,17 @@ fdom.apis.set('core.tcpsocket', {
     }
   },
 
+  // Prepares a socket for becoming secure after the next read event.
+  // See details at https://github.com/uProxy/uproxy/issues/413
+  'prepareSecure': {
+    type: 'method',
+    value: [],
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
+
   // Write buffer data to a socket.
   // Fails with an error if write fails.
   'write': {
