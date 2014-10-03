@@ -122,6 +122,21 @@ fdom.apis.set('core.tcpsocket', {
     }
   },
 
+  // Prepares a socket for becoming secure after the next read event.
+  // See details at
+  // https://github.com/freedomjs/freedom/wiki/prepareSecure-API-Usage
+  // This should be called one read prior to calling .secure, e.g. in XMPP
+  // this should be called before sending "starttls", then after a "proceed"
+  // message is read .secure should be called.
+  'prepareSecure': {
+    type: 'method',
+    value: [],
+    err: {
+      'errcode': 'string',
+      'message': 'string'
+    }
+  },
+
   // Write buffer data to a socket.
   // Fails with an error if write fails.
   'write': {
