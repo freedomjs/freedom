@@ -65,7 +65,9 @@ Resource.prototype.getContents = function (url) {
     for (prop in this.contentRetrievers) {
       if (this.contentRetrievers.hasOwnProperty(prop)) {
         if (url.indexOf(prop + "://") === 0) {
-          return this.contentRetrievers[prop](url, resolve, reject);
+          return this.contentRetrievers[prop].call(this, url, resolve, reject);
+        } else if (url.indexOf("://") === -1 && prop === "null") {
+          return this.contentRetrievers[prop].call(this, url, resolve, reject);
         }
       }
     }

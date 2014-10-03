@@ -97,13 +97,20 @@ exports.getApis = function() {
 };
 
 // Setup resource loading for the test environment, which uses file:// urls.
+var specBase = null;
+(function findDefaultBase() {
+  var loc = location.protocol + "//" + location.host + location.pathname;
+  var dirname = loc.substr(0, loc.lastIndexOf('/'));
+  specBase = dirname;
+})();
+exports.setSpecBase = function(base) {
+  specBase = base;
+}
 exports.getResolvers = function() {
   var resolvers = [];
   resolvers.push({'resolver': function(manifest, url, resolve) {
     if (url.indexOf('relative://') === 0) {
-      var loc = location.protocol + "//" + location.host + location.pathname;
-      var dirname = loc.substr(0, loc.lastIndexOf('/'));
-      resolve(dirname + '/' + url.substr(11));
+      resolve(specBase + '/' + url.substr(11));
       return true;
     }
     resolve(false);
@@ -123,6 +130,7 @@ exports.getResolvers = function() {
   }});
   var rsrc = new Resource();
   resolvers.push({'proto':'file', 'retriever': rsrc.xhrRetriever});
+  resolvers.push({'proto':'null', 'retriever': rsrc.xhrRetriever});
   return resolvers;
 }
 
@@ -145,6 +153,12 @@ var coreProviders;
 exports.setCoreProviders = function(providers) {
   coreProviders = providers;
 };
+var testPort = Frame;
+var testSource = "spec/helper/frame.js";
+exports.setModuleStrategy = function(port, source) {
+  testPort = port;
+  testSource = source;
+};
 
 exports.setupModule = function(manifest_url) {
   var global = {
@@ -158,12 +172,12 @@ exports.setupModule = function(manifest_url) {
     'global': global,
       'providers': coreProviders,
       'resolvers': exports.getResolvers(),
-      'portType': Frame,
-      'source': dir + "spec/helper/frame.js",
+      'portType': testPort,
+      'source': dir + testSource,
       'inject': [
         dir + "node_modules/es5-shim/es5-shim.js",
         dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
-      ],
+      ]
     }, manifest_url, {
       debug: 'debug'
     });
