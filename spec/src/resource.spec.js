@@ -105,7 +105,7 @@ describe('resources.httpResolver', function() {
   beforeEach(function() {
     resources = new Resource();
     r = spy = jasmine.createSpy('resolvedURL');
-    f = function() {};
+    f = jasmine.createSpy('rejectURL');
   });
 
   it("should resolve relative URLs", function() {
@@ -125,7 +125,7 @@ describe('resources.httpResolver', function() {
 
   it("should not resolve URLs without manifest", function() {
     resources.httpResolver(undefined, 'test.html', r, f);
-    expect(spy).toHaveBeenCalledWith(false);
+    expect(f).toHaveBeenCalled();
   });
 
   it("should remove relative paths", function() {

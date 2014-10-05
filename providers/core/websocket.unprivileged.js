@@ -1,6 +1,9 @@
 /*globals WebSocket, ArrayBuffer, Blob, Uint8Array, console */
 /*jslint sloppy:true, node:true */
 
+var WSHandle = null;
+var nodeStyle = false;
+
 /**
  * A WebSocket core provider
  *
@@ -13,14 +16,13 @@
 var WS = function (module, dispatchEvent, url, protocols, socket) {
   var WSImplementation = null,
     error;
-  this.isNode = false;
+  this.isNode = nodeStyle;
   if (typeof socket !== 'undefined') {
     WSImplementation = socket;
+  } else if (WSHandle !== null) {
+    WSImplementation = WSHandle;
   } else if (typeof WebSocket !== 'undefined') {
     WSImplementation = WebSocket;
-  } else if (typeof require !== 'undefined') {
-    WSImplementation = require('ws');
-    this.isNode = true;
   } else {
     console.error('Platform does not support WebSocket');
   }
@@ -168,3 +170,7 @@ WS.prototype.onClose = function (event) {
 
 exports.provider = WS;
 exports.name = 'core.websocket';
+exports.setSocket = function(impl, isNode) {
+  WSHandle = impl;
+  nodeStyle = isNode;
+};

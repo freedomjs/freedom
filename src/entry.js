@@ -78,7 +78,7 @@ var setup = function (context, manifest, config) {
       api.getCore('core.logger', debug).then(function (Logger) {
         debug.setLogger(new Logger());
       });
-    
+
       policy = new Policy(manager, resource, site_cfg);
 
       resource.get(site_cfg.location, site_cfg.manifest).then(

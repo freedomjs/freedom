@@ -76,6 +76,31 @@ Resource.prototype.getContents = function (url) {
 };
 
 /**
+ * Return a promise that resolves when the first of an array of promises
+ * resolves, or rejects after all promises reject. Can be thought of as
+ * the missing 'Promise.any' - race is no good, since early rejections
+ * preempt a subsequent resolution.
+ * @private
+ * @static
+ * @method FirstPromise
+ * @param {Promise[]} Promises to select from
+ * @returns {Promise} Promise resolving with a value from arguments.
+ */
+var firstPromise = function(promises) {
+  return new PromiseCompat(function(resolve, reject) {
+    var errors = [];
+    promises.forEach(function(promise) {
+      promise.then(resolve, function(err) {
+        errors.push(err);
+        if (errors.length === promises.length) {
+          reject(errors);
+        }
+      });
+    });
+  });
+};
+
+/**
  * Resolve a resource using known resolvers. Unlike get, resolve does
  * not cache resolved resources.
  * @method resolve
@@ -93,15 +118,7 @@ Resource.prototype.resolve = function (manifest, url) {
     util.eachReverse(this.resolvers, function (resolver) {
       promises.push(new PromiseCompat(resolver.bind({}, manifest, url)));
     }.bind(this));
-    //TODO this would be much cleaner if Promise.any existed
-    PromiseCompat.all(promises).then(function (values) {
-      var i;
-      for (i = 0; i < values.length; i += 1) {
-        if (typeof values[i] !== 'undefined' && values[i] !== false) {
-          resolve(values[i]);
-          return;
-        }
-      }
+    firstPromise(promises).then(resolve, function() {
       reject('No resolvers to handle url: ' + JSON.stringify([manifest, url]));
     });
   }.bind(this));
@@ -243,7 +260,7 @@ Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
   }
   
   if (!manifest) {
-    resolve(false);
+    reject();
     return false;
   }
   if (Resource.hasScheme(protocols, manifest) &&
@@ -260,8 +277,7 @@ Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
     }
     return true;
   }
-  resolve(false);
-  return false;
+  reject();
 };
 
 /**
@@ -283,8 +299,7 @@ Resource.prototype.nullResolver = function (manifest, url, resolve, reject) {
     resolve(url);
     return true;
   }
-  resolve(false);
-  return false;
+  reject();
 };
 
 /**

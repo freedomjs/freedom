@@ -97,15 +97,28 @@ exports.getApis = function() {
 };
 
 // Setup resource loading for the test environment, which uses file:// urls.
-var specBase = null;
+var specBase = null, extraResolve = function() {};
 (function findDefaultBase() {
+  if (typeof location === 'undefined') {
+    return;
+  }
   var loc = location.protocol + "//" + location.host + location.pathname;
   var dirname = loc.substr(0, loc.lastIndexOf('/'));
   specBase = dirname;
 })();
-exports.setSpecBase = function(base) {
+
+/**
+ * Define where the relative resolver used by generic integration tests
+ * should map to, and provide a hook to register additional, implementation
+ * specific resolvers.
+ */
+exports.setSpecBase = function(base, resolvers) {
   specBase = base;
+  if (resolvers) {
+    extraResolve = resolvers;
+  }
 }
+
 exports.getResolvers = function() {
   var resolvers = [];
   resolvers.push({'resolver': function(manifest, url, resolve) {
@@ -113,8 +126,7 @@ exports.getResolvers = function() {
       resolve(specBase + '/' + url.substr(11));
       return true;
     }
-    resolve(false);
-    return false;
+    reject();
   }});
   resolvers.push({'resolver': function(manifest, url, resolve) {
     if (manifest && manifest.indexOf('file://') === 0) {
@@ -125,12 +137,12 @@ exports.getResolvers = function() {
       });
       return true;
     }
-    resolve(false);
-    return false;
+    reject();
   }});
   var rsrc = new Resource();
   resolvers.push({'proto':'file', 'retriever': rsrc.xhrRetriever});
   resolvers.push({'proto':'null', 'retriever': rsrc.xhrRetriever});
+  extraResolve(resolvers);
   return resolvers;
 }
 
@@ -141,6 +153,9 @@ exports.setupResolvers = function() {
 }
 
 exports.cleanupIframes = function() {
+  if (typeof document === 'undefined') {
+    return;
+  }
   var frames = document.getElementsByTagName('iframe');
   // frames is a live HTMLCollection, so it is modified each time an
   // element is removed.
@@ -161,15 +176,21 @@ exports.setModuleStrategy = function(port, source) {
 };
 
 exports.setupModule = function(manifest_url) {
-  var global = {
-    document: document
-  };
+  var glo = global, dir = '';
+  if (typeof document !== 'undefined') {
+    glo = {
+      document: document
+    };
+  }
 
-  var path = window.location.href,
-      dir_idx = path.lastIndexOf('/');
-  dir = path.substr(0, dir_idx) + '/';
+  if (typeof window !== 'undefined') {  
+    var path = window.location.href,
+        dir_idx = path.lastIndexOf('/');
+    dir = path.substr(0, dir_idx) + '/';
+  }
   return require('../src/entry')({
-    'global': global,
+      'global': glo,
+      'isModule': false,
       'providers': coreProviders,
       'resolvers': exports.getResolvers(),
       'portType': testPort,
