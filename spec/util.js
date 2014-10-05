@@ -170,9 +170,11 @@ exports.setCoreProviders = function(providers) {
 };
 var testPort = Frame;
 var testSource = "spec/helper/frame.js";
-exports.setModuleStrategy = function(port, source) {
+var testDebug = 'debug';
+exports.setModuleStrategy = function(port, source, debug) {
   testPort = port;
   testSource = source;
+  testDebug = debug;
 };
 
 exports.setupModule = function(manifest_url) {
@@ -200,7 +202,7 @@ exports.setupModule = function(manifest_url) {
         dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
       ]
     }, manifest_url, {
-      debug: 'debug'
+      debug: testDebug
     });
 }
 
