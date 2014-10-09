@@ -188,10 +188,20 @@ module.exports = function (grunt) {
         }
       },
       options: {
-        transform: ['folderify']
+        transform: ['folderify'],
+        browserifyOptions: {
+          debug: true
+        }
       }
     },
     clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'spec/helper/frame.js'],
+    "extract_sourcemap": {
+      freedom: {
+        files: {
+          "./": ["freedom.js"]
+        }
+      }
+    },
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -257,14 +267,15 @@ module.exports = function (grunt) {
 
   // Load tasks.
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-extract-sourcemap');
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
-  grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-npm');
   
   grunt.registerTask('watch', 'Run browserify and karma in watch mode.',
@@ -281,7 +292,8 @@ module.exports = function (grunt) {
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
-    'browserify:freedom'
+    'browserify:freedom',
+    'extract_sourcemap'
   ]);
   grunt.registerTask('unit', [
     'browserify:frame',
