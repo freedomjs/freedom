@@ -283,6 +283,7 @@ module.exports = function (grunt) {
       grunt.config.merge({
         browserify: {
           options: {
+            debug: true,
             watch: true
           }
         }
