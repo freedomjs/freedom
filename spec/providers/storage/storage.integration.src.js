@@ -1,6 +1,6 @@
 var testUtil = require('../../util');
 
-module.exports = function(provider_url, useArrayBuffer) { 
+module.exports = function(provider_url, setup, useArrayBuffer) { 
   var helper;
 
   function beforeSet(str) {
@@ -27,6 +27,7 @@ module.exports = function(provider_url, useArrayBuffer) {
   }
 
   beforeEach(function(done) {
+    setup();
     var promise;
     if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
       promise = testUtil.providerFor(provider_url, "storage");

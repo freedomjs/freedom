@@ -28,6 +28,7 @@ var Module = function(manifestURL, manifest, creator, policy) {
 
   this.externalPortMap = {};
   this.internalPortMap = {};
+  this.dependantChannels = [];
   this.started = false;
 
   util.handleEvents(this);
@@ -149,6 +150,17 @@ Module.prototype.deregisterFlow = function(flow, internal) {
       }
       delete this.externalPortMap[key];
       delete this.internalPortMap[key];
+
+      // When there are still non-dependant channels, keep running
+      for (key in this.externalPortMap) {
+        if (this.externalPortMap.hasOwnProperty(key)) {
+          if (this.dependantChannels.indexOf(key) < 0) {
+            return true;
+          }
+        }
+      }
+      // Otherwise shut down the module.
+      this.stop();
       return true;
     }
   }
@@ -218,6 +230,7 @@ Module.prototype.stop = function() {
       type: 'close',
       channel: 'control'
     });
+    this.port.stop();
     delete this.port;
   }
   this.started = false;
@@ -318,6 +331,7 @@ Module.prototype.loadLinks = function() {
       name = this.manifest.permissions[i];
       if (channels.indexOf(name) < 0 && name.indexOf('core.') === 0) {
         channels.push(name);
+        this.dependantChannels.push(name);
         dep = new Provider(this.api.get(name).definition, this.debug);
         this.api.getCore(name, this).then(finishLink.bind(this, dep, name));
 
@@ -334,6 +348,7 @@ Module.prototype.loadLinks = function() {
     util.eachProp(this.manifest.dependencies, function(desc, name) {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
+        this.dependantChannels.push(name);
       }
       this.resource.get(this.manifestId, desc.url).then(function (url) {
         this.policy.get(this.lineage, url).then(function(dep) {

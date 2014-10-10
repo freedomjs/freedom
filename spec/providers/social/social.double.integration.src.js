@@ -1,9 +1,10 @@
 var testUtil = require('../../util');
 
-module.exports = function(provider_url) {
+module.exports = function(provider_url, setup) {
   var helper;
 
   beforeEach(function(done) {
+    setup();
     testUtil.providerFor(provider_url, 'social').then(function(h) {
       helper = h;
       helper.create("SocialA");

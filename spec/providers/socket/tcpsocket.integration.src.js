@@ -1,8 +1,9 @@
 var testUtil = require('../../util');
 
-module.exports = function(provider) {
+module.exports = function(provider, setup) {
   var socket, dispatch;
   beforeEach(function () {
+    setup();
     dispatch = testUtil.createTestPort('msgs');
     socket = new provider.provider(undefined, dispatch.onMessage.bind(dispatch));
   });

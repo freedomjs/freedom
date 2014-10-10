@@ -4,6 +4,11 @@ describe("storage.isolated.json - storage.shared.json", function() {
   var freedom, helper;
 
   beforeEach(function(done) {
+    testUtil.setCoreProviders([
+      require('../../../providers/core/core.unprivileged'),
+      require('../../../providers/core/logger.console'),
+      require('../../../providers/core/storage.localstorage')
+    ]);
     freedom = testUtil.setupModule("relative://spec/helper/providers.json");
     freedom.then(function(chan) {
       var inst = chan();

@@ -152,7 +152,12 @@ exports.setupResolvers = function() {
   return rsrc;
 }
 
+var activeContexts = [];
 exports.cleanupIframes = function() {
+  activeContexts.forEach(function(f) {
+    f.close();
+  });
+  activeContexts = [];
   if (typeof document === 'undefined') {
     return;
   }
@@ -178,9 +183,9 @@ exports.setModuleStrategy = function(port, source, debug) {
 };
 
 exports.setupModule = function(manifest_url) {
-  var glo = global, dir = '';
+  var myGlobal = global, dir = '';
   if (typeof document !== 'undefined') {
-    glo = {
+    myGlobal = {
       document: document
     };
   }
@@ -190,8 +195,8 @@ exports.setupModule = function(manifest_url) {
         dir_idx = path.lastIndexOf('/');
     dir = path.substr(0, dir_idx) + '/';
   }
-  return require('../src/entry')({
-      'global': glo,
+  var freedom = require('../src/entry')({
+      'global': myGlobal,
       'isModule': false,
       'providers': coreProviders,
       'resolvers': exports.getResolvers(),
@@ -204,6 +209,10 @@ exports.setupModule = function(manifest_url) {
     }, manifest_url, {
       debug: testDebug
     });
+  freedom.then(function(c) {
+    activeContexts.push(c);
+  });
+  return freedom;
 }
 
 exports.providerFor = function(module, api) {
@@ -214,6 +223,7 @@ exports.providerFor = function(module, api) {
   };
   var freedom = exports.setupModule('manifest://' + JSON.stringify(manifest));
   return freedom.then(function(chan) {
+    activeContexts.push(chan);
     var inst = chan();
     var provider = new ProviderHelper(inst);
     provider.create = function(name) {

@@ -1,10 +1,11 @@
 var testUtil = require('../../util');
 var util = require('../../../src/util');
 
-module.exports = function(provider_url) { 
+module.exports = function(provider_url, setup) { 
   var helper, signals;
 
   beforeEach(function(done) {
+    setup();
     signals = [];
     testUtil.providerFor(provider_url, "transport").then(function(h) {
       helper = h;

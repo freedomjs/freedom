@@ -1,4 +1,5 @@
 /*jslint indent:2, white:true, node:true, sloppy:true */
+/*globals URL,webkitURL */
 var Link = require('../link');
 var util = require('../util');
 
@@ -69,6 +70,34 @@ Frame.prototype.setupListener = function() {
 };
 
 /**
+ * Get a URL of a blob object for inclusion in a frame.
+ * Polyfills implementations which don't have a current URL object, like
+ * phantomjs.
+ * @method getURL
+ */
+Frame.prototype.getURL = function(blob) {
+  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
+    return webkitURL.createObjectURL(blob);
+  } else {
+    return URL.createObjectURL(blob);
+  }
+};
+
+/**
+ * Deallocate the URL of a blob object.
+ * Polyfills implementations which don't have a current URL object, like
+ * phantomjs.
+ * @method getURL
+ */
+Frame.prototype.revokeURL = function(url) {
+  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
+    webkitURL.revokeObjectURL(url);
+  } else {
+    URL.revokeObjectURL(url);
+  }
+};
+
+/**
  * Set up an iFrame with an isolated freedom.js context inside.
  * @method setupFrame
  */
@@ -97,6 +126,7 @@ Frame.prototype.setupFrame = function() {
     if (this.obj) {
       delete this.obj;
     }
+    this.revokeURL(frame.src);
     frame.src = "about:blank";
     document.body.removeChild(frame);
   };
@@ -131,7 +161,7 @@ Frame.prototype.makeFrame = function(src, inject) {
     'throw new Error(\'Loading of ' + src +' Failed!\');' +
     '"></script></html>';
   blob = util.getBlob(loader, 'text/html');
-  frame.src = util.getURL(blob);
+  frame.src = this.getURL(blob);
 
   return frame;
 };

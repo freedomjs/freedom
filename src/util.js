@@ -310,21 +310,6 @@ util.getBlob = function(data, type) {
 };
 
 /**
- * Get a URL of a blob object for inclusion in a frame.
- * Polyfills implementations which don't have a current URL object, like
- * phantomjs.
- * @method getURL
- * @static
- */
-util.getURL = function(blob) {
-  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
-    return webkitURL.createObjectURL(blob);
-  } else {
-    return URL.createObjectURL(blob);
-  }
-};
-
-/**
  * Find all scripts on the given page.
  * @method scripts
  * @static

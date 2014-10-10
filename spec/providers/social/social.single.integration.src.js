@@ -1,10 +1,11 @@
 var testUtil = require('../../util');
 
-module.exports = function(provider_url) {
+module.exports = function(provider_url, setup) {
   var helper;
   var ERRCODE = testUtil.getApis().get("social").definition.ERRCODE.value;
 
   beforeEach(function(done) {
+    setup();
     testUtil.providerFor(provider_url, 'social').then(function(h) {
       helper = h;
       helper.create("s");
@@ -102,7 +103,7 @@ module.exports = function(provider_url) {
       expect(message.from.clientId).toEqual(myClientState.clientId);
       expect(message.message).toEqual(msg);
       ids[2] = helper.call("s", "logout", [], function(ret) {
-        expect(sendSpy.calls.length).toEqual(1);
+        expect(sendSpy.calls.count()).toEqual(1);
         done();
       });
     });
