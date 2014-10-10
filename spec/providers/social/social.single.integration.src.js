@@ -103,7 +103,7 @@ module.exports = function(provider_url, setup) {
       expect(message.from.clientId).toEqual(myClientState.clientId);
       expect(message.message).toEqual(msg);
       ids[2] = helper.call("s", "logout", [], function(ret) {
-        expect(sendSpy.calls.count()).toEqual(1);
+        expect(sendSpy.calls.length || sendSpy.calls.count()).toEqual(1);
         done();
       });
     });
