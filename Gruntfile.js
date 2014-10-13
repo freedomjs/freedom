@@ -91,24 +91,18 @@ module.exports = function (grunt) {
     karma: {
       options: {
         // NOTE: need to run 'connect:default' to serve files
-        configFile: 'karma.conf.js'
-      },
-      single: { singleRun: true, autoWatch: false },
-      watch: {
-        singleRun: false,
-        autoWatch: true,
-        reporters: ['progress', 'html'],
-        coverageReporter: {}
-      },
-      phantom: {
-        browsers: ['PhantomJS'],
+        configFile: 'karma.conf.js',
         singleRun: true,
         autoWatch: false
       },
+      browsers: {
+        browsers: ['Chrome', 'Firefox']
+      },
+      phantom: {
+        browsers: ['PhantomJS']
+      },
       saucelabs: {
         browsers: ['sauce_chrome_mac', 'sauce_chrome_win', 'sauce_firefox'],
-        singleRun: true,
-        autoWatch: false,
         reporters: ['dots', 'saucelabs'],
         sauceLabs: {
           testName: 'freedom.js',
@@ -278,13 +272,21 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   
-  grunt.registerTask('prepare_browserify_watch', 'Run browserify and karma in watch mode.',
+  grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
     function () {
       grunt.config.merge({
         browserify: {
           options: {
             debug: true,
             watch: true
+          }
+        },
+        karma: {
+          options: {
+            singleRun: false,
+            autoWatch: true,
+            reporters: ['progress', 'html'],
+            coverageReporter: {}
           }
         }
       });
@@ -307,14 +309,14 @@ module.exports = function (grunt) {
     'browserify:frame',
     'browserify:jasmine_full',
     'connect:default',
-    'karma:single'
+    'karma:browsers'
   ]);
   grunt.registerTask('debug', [
-    'prepare_browserify_watch',
+    'prepare_watch',
     'build',
     'connect:default',
     'browserify:jasmine_full',
-    'karma:watch'
+    'karma:browsers'
   ]);
   grunt.registerTask('demo', [
     'browserify:freedom',
