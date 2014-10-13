@@ -121,14 +121,14 @@ exports.setSpecBase = function(base, resolvers) {
 
 exports.getResolvers = function() {
   var resolvers = [];
-  resolvers.push({'resolver': function(manifest, url, resolve) {
+  resolvers.push({'resolver': function(manifest, url, resolve, reject) {
     if (url.indexOf('relative://') === 0) {
       resolve(specBase + '/' + url.substr(11));
       return true;
     }
     reject();
   }});
-  resolvers.push({'resolver': function(manifest, url, resolve) {
+  resolvers.push({'resolver': function(manifest, url, resolve, reject) {
     if (manifest && manifest.indexOf('file://') === 0) {
       manifest = 'http' + manifest.substr(4);
       rsrc.resolve(manifest, url).then(function(addr) {

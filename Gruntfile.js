@@ -278,7 +278,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   
-  grunt.registerTask('watch', 'Run browserify and karma in watch mode.',
+  grunt.registerTask('prepare_browserify_watch', 'Run browserify and karma in watch mode.',
     function () {
       grunt.config.merge({
         browserify: {
@@ -310,7 +310,7 @@ module.exports = function (grunt) {
     'karma:single'
   ]);
   grunt.registerTask('debug', [
-    'watch',
+    'prepare_browserify_watch',
     'build',
     'connect:default',
     'browserify:jasmine_full',
