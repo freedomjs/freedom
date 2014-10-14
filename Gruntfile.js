@@ -164,7 +164,7 @@ module.exports = function (grunt) {
         options: {
           transform: ['folderify', ['browserify-istanbul', {
             // Note: bundle must be ignored, 
-            ignore: ['**/spec/**', '**/providers/**', '**/src/bundle.js']
+            ignore: ['**/spec/**', '**/src/bundle.js']
           }]]
         }
       },
