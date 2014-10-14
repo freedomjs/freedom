@@ -4,14 +4,16 @@ var core = freedom.core();
 var channels = {};
 var id = 0;
 
-freedom.on('create', function() {
+var app = freedom();
+
+app.on('create', function() {
   var thisid = id;
   id += 1;
 
   core.createChannel().then(function(id, cinfo) {
     channels[id] = cinfo.channel;
-    freedom.emit('message', 'creating custom channel ' + thisid);
-    cinfo.channel.on('message', function(msg) {freedom.emit('message', msg);});
+    app.emit('message', 'creating custom channel ' + thisid);
+    cinfo.channel.on('message', function(msg) {app.emit('message', msg);});
     friend.emit('message', {
       cmd: 'create',
       id: id,
@@ -20,8 +22,8 @@ freedom.on('create', function() {
   }.bind(this, thisid));
 });
 
-freedom.on('destroy', function(id) {
-  freedom.emit('message', 'destroying channel ' + id);
+app.on('destroy', function(id) {
+  app.emit('message', 'destroying channel ' + id);
   channels[id].close();
   delete channels[id];
   friend.emit('message', {
@@ -30,29 +32,29 @@ freedom.on('destroy', function(id) {
   });
 });
 
-freedom.on('message', function(id) {
+app.on('message', function(id) {
   if(channels[id].peer) {
-   freedom.emit('message', 'sending message to peer ' + id);
+   app.emit('message', 'sending message to peer ' + id);
    channels[id].send({'channelLabel':'test', 'text':'message to peer ' + id});
  } else {
-    freedom.emit('message', 'sending message to ' + id);
+    app.emit('message', 'sending message to ' + id);
     channels[id].emit('message', 'Message to chan ' + id);
   }
 });
 
-freedom.on('peer', function() {
+app.on('peer', function() {
   var thisid = id;
   id++;
   core.createChannel().then(function(cinfo) {
     var peer = freedom['core.echo']();
     peer.on('message', function(str) { 
-      freedom.emit('message', "from provider: " + JSON.stringify(str));
+      app.emit('message', "from provider: " + JSON.stringify(str));
     });
  
     channels[thisid] = cinfo.channel;
-    freedom.emit('message', 'creating custom channel ' + thisid);
+    app.emit('message', 'creating custom channel ' + thisid);
     channels[thisid].on('message', function(m) {
-      freedom.emit('message', "from custom: " + JSON.stringify(m));
+      app.emit('message', "from custom: " + JSON.stringify(m));
     });
 
     peer.setup(cinfo.identifier);
@@ -62,6 +64,6 @@ freedom.on('peer', function() {
 });
 
 friend.on('message', function(str) {
-  freedom.emit('message', str);
+  app.emit('message', str);
 });
 

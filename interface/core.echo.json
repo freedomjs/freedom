@@ -1,0 +1,8 @@
+{
+  "name": "core.echo",
+  "api": {
+    "setup": {"type": "method", "value": ["string"]},
+    "send": {"type": "method", "value": ["string"]},
+    "message": {"type": "event", "value": "string"}
+  }
+}

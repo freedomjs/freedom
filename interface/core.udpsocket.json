@@ -1,0 +1,95 @@
+// A UDP socket.
+// Generally, to use you just need to call bind() at which point onData
+// events will start to flow. Note that bind() should only be called
+// once per instance.
+{
+  "name": "core.udpsocket",
+  "api": {
+    /** 
+     * error codes and default messages that may be returned on failures.
+     */
+    "ERRCODE": {"type": "constant", "value": {
+      /** GENERAL **/
+      "SUCCESS": "Success!",
+      // Unknown
+      "UNKNOWN": "Unknown error",
+      
+      // Socket is already bound
+      "ALREADY_BOUND": "Socket already bound",
+      // Invalid Argument, client error
+      "INVALID_ARGUMENT": "Invalid argument",
+      // Socket reset because of change in network state.
+      "NETWORK_CHANGED": "Network changed",
+      // Failure to send data
+      "SNED_FAILED": "Send failed"
+    }},
+  
+    // Creates a socket, binds it to an interface and port and listens for
+    // messages, dispatching each message as on onData event.
+    // Returns on success, or fails with an error on failure.
+    "bind": {
+      "type": "method",
+      "value": [
+        // Interface (address) on which to bind.
+        "string",
+        // Port on which to bind.
+        "number"
+      ],
+      "ret": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Retrieves the state of the socket.
+    // Returns an object with the following properties:
+    //  - localAddress: the socket's local address, if bound
+    //  - localPort: the socket's local port, if bound
+    "getInfo": {"type": "method", "value": [], "ret": {
+      "localAddress": "string",
+      "localPort": "number"
+    }},
+  
+    // Sends data to a server.
+    // The socket must be bound.
+    // Returns an integer indicating the number of bytes written, with no
+    // guarantee that the remote side received the data.
+    "sendTo": {
+      "type": "method",
+      "value": [
+        // Data to send.
+        "buffer",
+        // Destination address.
+        "string",
+        // Destination port.
+        "number"
+      ],
+      "ret": "number",
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Releases all resources associated with this socket.
+    // No-op if the socket is not bound.
+    "destroy": {"type": "method", "value": []},
+  
+    // Called once for each message received on this socket, once it's
+    // been successfully bound.
+    "onData": {
+      "type": "event",
+      "value": {
+        // Zero means success, any other "value" is implementation-dependent.
+        "resultCode": "number",
+        // Address from which data was received.
+        "address": "string",
+        // Port from which data was received.
+        "port": "number",
+        // Data received.
+        "data": "buffer"
+      }
+    }
+  }
+}

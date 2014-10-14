@@ -1,8 +1,8 @@
-/*globals fdom:true, console, RTCPeerConnection, webkitRTCPeerConnection */
+/*globals console, RTCPeerConnection, webkitRTCPeerConnection */
 /*globals mozRTCPeerConnection, RTCSessionDescription, RTCIceCandidate */
 /*globals mozRTCSessionDescription, mozRTCIceCandidate */
-/*globals ArrayBuffer */
-/*jslint indent:2,sloppy:true */
+/*globals ArrayBuffer, Blob */
+/*jslint indent:2,sloppy:true,node:true */
 /**
  * DataPeer - a class that wraps peer connections and data channels.
  */
@@ -15,8 +15,8 @@ var SimpleDataPeerState = {
 
 function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   var constraints,
-      config,
-      i;
+    config,
+    i;
   this.peerName = peerName;
   this.channels = {};
   this.dataChannelCallbacks = dataChannelCallbacks;
@@ -34,7 +34,7 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
 
   if (typeof mocks.RTCSessionDescription !== "undefined") {
     this.RTCSessionDescription = mocks.RTCSessionDescription;
-  } else if (typeof RTCSessionDescription !== "undefined"){
+  } else if (typeof RTCSessionDescription !== "undefined") {
     this.RTCSessionDescription = RTCSessionDescription;
   } else if (typeof mozRTCSessionDescription !== "undefined") {
     this.RTCSessionDescription = mozRTCSessionDescription;
@@ -44,9 +44,9 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
 
   if (typeof mocks.RTCIceCandidate !== "undefined") {
     this.RTCIceCandidate = mocks.RTCIceCandidate;
-  } else if (typeof RTCIceCandidate !== "undefined"){
+  } else if (typeof RTCIceCandidate !== "undefined") {
     this.RTCIceCandidate = RTCIceCandidate;
-  } else if (typeof  mozRTCIceCandidate !== "undefined") {
+  } else if (typeof mozRTCIceCandidate !== "undefined") {
     this.RTCIceCandidate = mozRTCIceCandidate;
   } else {
     throw new Error("This environment does not appear to support RTCIceCandidate");
@@ -83,7 +83,7 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
     // event here for freedom.transport to pick up.
     if (this.pc.signalingState === "stable") {
       this.pcState = SimpleDataPeerState.CONNECTED;
-      this.onConnectedQueue.map(function(callback) { callback(); });
+      this.onConnectedQueue.map(function (callback) { callback(); });
     }
   }.bind(this));
   // This state variable is used to fake offer/answer when they are wrongly
@@ -95,7 +95,7 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
 }
 
 SimpleDataPeer.prototype.createOffer = function (constaints, continuation) {
-  this.pc.createOffer(continuation, function() {
+  this.pc.createOffer(continuation, function () {
     console.error('core.peerconnection createOffer failed.');
   }, constaints);
 };
@@ -119,7 +119,7 @@ SimpleDataPeer.prototype.openDataChannel = function (channelId, continuation) {
     this.addDataChannel(channelId, dataChannel);
     continuation();
   }.bind(this);
-  dataChannel.onerror = function(err) {
+  dataChannel.onerror = function (err) {
     //@(ryscheng) todo - replace with errors that work across the interface
     console.error(err);
     continuation(undefined, err);
@@ -156,7 +156,8 @@ SimpleDataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
 // Handle a message send on the signalling channel to this peer.
 SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
   //console.log(this.peerName + ": " + "handleSignalMessage: \n" + messageText);
-  var json = JSON.parse(messageText);
+  var json = JSON.parse(messageText),
+    ice_candidate;
 
   // TODO: If we are offering and they are also offerring at the same time,
   // pick the one who has the lower randomId?
@@ -183,7 +184,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
   } else if (json.candidate) {
     // Add remote ice candidate.
     //console.log(this.peerName + ": Adding ice candidate: " + JSON.stringify(json.candidate));
-    var ice_candidate = new this.RTCIceCandidate(json.candidate);
+    ice_candidate = new this.RTCIceCandidate(json.candidate);
     this.pc.addIceCandidate(ice_candidate);
   } else {
     console.warn(this.peerName + ": " +
@@ -312,7 +313,7 @@ SimpleDataPeer.prototype.onSignalingStateChange = function () {
   //console.log(this.peerName + ": " + "onSignalingStateChange: ", this._pc.signalingState);
   if (this.pc.signalingState === "stable") {
     this.pcState = SimpleDataPeerState.CONNECTED;
-    this.onConnectedQueue.map(function(callback) { callback(); });
+    this.onConnectedQueue.map(function (callback) { callback(); });
   }
 };
 
@@ -382,43 +383,45 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
   this.peerName = peerName;
   var mocks = {RTCPeerConnection: this.RTCPeerConnection,
                RTCSessionDescription: this.RTCSessionDescription,
-               RTCIceCandidate: this.RTCIceCandidate};
-  var self = this;
-  var dataChannelCallbacks = {
-    // onOpenFn is called at the point messages will actually get through.
-    onOpenFn: function (dataChannel, info) {
-      self.dispatchEvent("onOpenDataChannel",
+               RTCIceCandidate: this.RTCIceCandidate},
+    self = this,
+    dataChannelCallbacks = {
+      // onOpenFn is called at the point messages will actually get through.
+      onOpenFn: function (dataChannel, info) {
+        self.dispatchEvent("onOpenDataChannel",
                          { channelId: info.label});
-    },
-    onCloseFn: function (dataChannel, info) {
-      self.dispatchEvent("onCloseDataChannel",
+      },
+      onCloseFn: function (dataChannel, info) {
+        self.dispatchEvent("onCloseDataChannel",
                          { channelId: info.label});
-    },
-    // Default on real message prints it to console.
-    onMessageFn: function (dataChannel, info, event) {
-      if (event.data instanceof ArrayBuffer) {
-        self.dispatchEvent('onReceived', {
-          'channelLabel': info.label,
-          'buffer': event.data
-        });
-      } else if (event.data instanceof Blob) {
-        self.dispatchEvent('onReceived', {
-          'channelLabel': info.label,
-          'binary': event.data
-        });
-      } else if (typeof (event.data) === 'string') {
-        self.dispatchEvent('onReceived', {
-          'channelLabel': info.label,
-          'text': event.data
-        });
+      },
+      // Default on real message prints it to console.
+      onMessageFn: function (dataChannel, info, event) {
+        if (event.data instanceof ArrayBuffer) {
+          self.dispatchEvent('onReceived', {
+            'channelLabel': info.label,
+            'buffer': event.data
+          });
+        } else if (event.data instanceof Blob) {
+          self.dispatchEvent('onReceived', {
+            'channelLabel': info.label,
+            'binary': event.data
+          });
+        } else if (typeof (event.data) === 'string') {
+          self.dispatchEvent('onReceived', {
+            'channelLabel': info.label,
+            'text': event.data
+          });
+        }
+      },
+      // Default on error, prints it.
+      onErrorFn: function (dataChannel, info, err) {
+        console.error(dataChannel.peerName + ": dataChannel(" +
+                      dataChannel.dataChannel.label + "): error: ", err);
       }
     },
-    // Default on error, prints it.
-    onErrorFn: function (dataChannel, info, err) {
-      console.error(dataChannel.peerName + ": dataChannel(" +
-                    dataChannel.dataChannel.label + "): error: ", err);
-    }
-  };
+    channelId,
+    openDataChannelContinuation;
 
   this.peer = new SimpleDataPeer(this.peerName, stunServers,
                                  dataChannelCallbacks, mocks);
@@ -441,8 +444,8 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
   if (initiateConnection) {
     // Setup a connection right away, then invoke continuation.
     console.log(this.peerName + ' initiating connection');
-    var channelId = 'hello' + Math.random().toString();
-    var openDataChannelContinuation = function(success, error) {
+    channelId = 'hello' + Math.random().toString();
+    openDataChannelContinuation = function (success, error) {
       if (error) {
         continuation(undefined, error);
       } else {
@@ -496,4 +499,5 @@ PeerConnection.prototype.close = function (continuation) {
   continuation();
 };
 
-fdom.apis.register('core.peerconnection', PeerConnection);
+exports.provider = PeerConnection;
+exports.name = 'core.peerconnection';

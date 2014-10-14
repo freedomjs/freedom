@@ -1,4 +1,7 @@
-describe("fdom.Port.Provider", function() {
+var Provider = require('../../src/provider');
+var Promise = require('es6-promise').Promise;
+
+describe("Provider", function() {
   var port, o, constructspy;
   beforeEach(function() {
     var definition = {
@@ -7,7 +10,7 @@ describe("fdom.Port.Provider", function() {
       'e1': {type: 'event', value:'string'},
       'c1': {type: 'constant', value:"test_constant"}
     };
-    port = new fdom.port.Provider(definition);
+    port = new Provider(definition);
 
     constructspy = jasmine.createSpy('constructor');
     o = function() {
@@ -42,7 +45,7 @@ describe("fdom.Port.Provider", function() {
     var definition = {
       'constructor': {value: ['object']}
     };
-    port = new fdom.port.Provider(definition);
+    port = new Provider(definition);
     var iface = port.getInterface();
     expect(iface['provideSynchronous']).toBeDefined();
 

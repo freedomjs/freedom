@@ -1,3 +1,6 @@
+var testUtil = require('../../util');
+var Provider = require('../../../providers/social/websocket-server/social.ws');
+
 describe("unit: social.ws.json", function () {
   var provider, de, ws;
 
@@ -5,10 +8,12 @@ describe("unit: social.ws.json", function () {
     // Comment for more debugging messages.
     spyOn(console, 'log');
 
-    freedom = {
-      social: mockIface([], [
-        ['STATUS', fdom.apis.get("social").definition.STATUS.value],
-        ['ERRCODE', fdom.apis.get("social").definition.ERRCODE.value]
+    var social = testUtil.getApis().get("social").definition;
+
+    freedom = function() {
+      return testUtil.mockIface([], [
+        ['STATUS', social.STATUS.value],
+        ['ERRCODE', social.ERRCODE.value]
       ])
     };
 
@@ -26,7 +31,7 @@ describe("unit: social.ws.json", function () {
       };
       return ws;
     };
-    provider = new WSSocialProvider(de, wsprov);
+    provider = new Provider.provider(de, wsprov);
   });
   
   afterEach(function() {

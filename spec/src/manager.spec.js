@@ -1,37 +1,46 @@
-describe("fdom.Port.Manager", function() {
-  var hub, manager, port;
+var Debug = require('../../src/debug');
+var Hub = require('../../src/hub');
+var Manager = require('../../src/manager');
+var Resource = require('../../src/resource');
+var Api = require('../../src/api');
+
+var testUtil = require('../util');
+
+describe("Manager", function() {
+  var debug, hub, manager, port, resource, api;
 
   beforeEach(function() {
-    hub = new fdom.Hub();
-    fdom.debug = new fdom.port.Debug();
-    manager = new fdom.port.Manager(hub);
-    var global = {
-      console: {
-        log: function() {}
-      }
-    };
+    debug = new Debug();
+    hub = new Hub(debug);
+    resource = new Resource(debug);
+    api = new Api(debug);
+    api.set('core',{});
+    api.register('core',function() {});
+    manager = new Manager(hub, resource, api);
+    var global = {};
+
     hub.emit('config', {
       global: global,
       debug: true
     });
-    port = createTestPort('testing');
+    port = testUtil.createTestPort('testing');
     manager.setup(port);
   });
 
   it("Handles Debug Messages", function() {
-    spyOn(fdom.debug, 'print');
+    spyOn(debug, 'print');
     manager.onMessage('testing', {
       request: 'debug'
     });
-    expect(fdom.debug.print).toHaveBeenCalled();
+    expect(debug.print).toHaveBeenCalled();
     manager.onMessage('unregistered', {
       request: 'debug'
     });
-    expect(fdom.debug.print.calls.count()).toEqual(1);
+    expect(debug.print.calls.count()).toEqual(1);
   });
 
   it("Creates Links", function() {
-    var testPort = createTestPort('dest');
+    var testPort = testUtil.createTestPort('dest');
 
     manager.onMessage('testing', {
       request: 'link',
@@ -54,21 +63,8 @@ describe("fdom.Port.Manager", function() {
     expect(port.gotMessage('testLink')).toEqual(msg);
   });
 
-  it("Creates new ports", function() {
-    manager.onMessage('testing', {
-      request: 'port',
-      name: 'testPort',
-      service: 'Debug',
-      args: null
-    });
-
-    // Notification of link.
-    var notification = port.gotMessage('control', {type: 'createLink'});
-    expect(notification).not.toEqual(false);
-  });
-
   it("Supports delegation of control", function() {
-    var testPort = createTestPort('dest');
+    var testPort = testUtil.createTestPort('dest');
 
     manager.setup(testPort);
 
@@ -95,10 +91,7 @@ describe("fdom.Port.Manager", function() {
       service: 'testing',
       args: ['retriever', 'resolver']
     });
-    expect(fdom.resources.contentRetrievers['testing']).toEqual('resolver');
-
-    // Reset resources
-    fdom.resources = new Resource();
+    expect(resource.contentRetrievers['testing']).toEqual('resolver');
   });
 
   it("Provides singleton access to the Core API", function(done) {
@@ -109,7 +102,7 @@ describe("fdom.Port.Manager", function() {
       expect(response).not.toEqual(false);
       var core = response.core;
 
-      var otherPort = createTestPort('dest');
+      var otherPort = testUtil.createTestPort('dest');
       manager.setup(otherPort);
       manager.onMessage('dest', {
         request: 'core'
@@ -128,11 +121,11 @@ describe("fdom.Port.Manager", function() {
     });
 
     // Subsequent requests should fail / cause a warning.
-    spyOn(fdom.debug, 'warn');
+    spyOn(debug, 'warn');
     manager.onMessage('testing', {
       request: 'core'
     });
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
     expect(port.gotMessage('control', {type: 'core'})).toEqual(false);
   });
 

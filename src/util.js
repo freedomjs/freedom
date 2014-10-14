@@ -1,16 +1,13 @@
-/*globals fdom:true, crypto, freedomcfg, WebKitBlobBuilder, Blob, URL */
+/*globals crypto, WebKitBlobBuilder, Blob, URL */
 /*globals webkitURL, Uint8Array, Uint16Array, ArrayBuffer */
-/*jslint indent:2,white:true,browser:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
+/*jslint indent:2,white:true,browser:true,node:true,sloppy:true */
 
 /**
  * Utility method used within the freedom Library.
  * @class util
  * @static
  */
-fdom.util = {};
+var util = {};
 
 
 /**
@@ -19,7 +16,7 @@ fdom.util = {};
  * @method eachReverse
  * @static
  */
-fdom.util.eachReverse = function(ary, func) {
+util.eachReverse = function(ary, func) {
   if (ary) {
     var i;
     for (i = ary.length - 1; i > -1; i -= 1) {
@@ -34,7 +31,7 @@ fdom.util.eachReverse = function(ary, func) {
  * @method hasProp
  * @static
  */
-fdom.util.hasProp = function(obj, prop) {
+util.hasProp = function(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 };
 
@@ -45,7 +42,7 @@ fdom.util.hasProp = function(obj, prop) {
  * @method eachProp
  * @static
  */
-fdom.util.eachProp = function(obj, func) {
+util.eachProp = function(obj, func) {
   var prop;
   for (prop in obj) {
     if (obj.hasOwnProperty(prop)) {
@@ -65,10 +62,10 @@ fdom.util.eachProp = function(obj, func) {
  * @method mixin
  * @static
  */
-fdom.util.mixin = function(target, source, force) {
+util.mixin = function(target, source, force) {
   if (source) {
-    fdom.util.eachProp(source, function (value, prop) {
-      if (force || !fdom.util.hasProp(target, prop)) {
+    util.eachProp(source, function (value, prop) {
+      if (force || !util.hasProp(target, prop)) {
         target[prop] = value;
       }
     });
@@ -81,14 +78,21 @@ fdom.util.mixin = function(target, source, force) {
  * @method getId
  * @static
  */
-fdom.util.getId = function() {
+util.getId = function() {
   var guid = 'guid',
       domain = 12,
       buffer;
-  if (typeof crypto === 'object') {
+  // Chrome / Firefox.
+  if (typeof crypto === 'object' && crypto.getRandomValues) {
     buffer = new Uint8Array(domain);
     crypto.getRandomValues(buffer);
-    fdom.util.eachReverse(buffer, function(n) {
+    util.eachReverse(buffer, function(n) {
+      guid += '-' + n;
+    });
+  // Node
+  } else if (typeof crypto === 'object' && crypto.randomBytes) {
+    buffer = crypto.randomBytes(domain);
+    util.eachReverse(buffer, function(n) {
       guid += '-' + n;
     });
   } else {
@@ -109,7 +113,7 @@ fdom.util.getId = function() {
  * @param {String} str The string to encode.
  * @returns {ArrayBuffer} The encoded string.
  */
-fdom.util.str2ab = function(str) {
+util.str2ab = function(str) {
   var length = str.length,
       buffer = new ArrayBuffer(length * 2), // 2 bytes for each char
       bufferView = new Uint16Array(buffer),
@@ -128,31 +132,8 @@ fdom.util.str2ab = function(str) {
  * @param {ArrayBuffer} buffer The buffer to unwrap.
  * @returns {String} The decoded buffer.
  */
-fdom.util.ab2str = function(buffer) {
+util.ab2str = function(buffer) {
   return String.fromCharCode.apply(null, new Uint16Array(buffer));
-};
-
-/**
- * Get a logger that logs messages prefixed by a given name.
- * @method getLogger
- * @static
- * @param {String} name The prefix for logged messages.
- * @returns {Console} A console-like object.
- */
-fdom.util.getLogger = function(name) {
-  var log = function(severity, source) {
-    var args = Array.prototype.splice.call(arguments, 2);
-    this.format(severity, source, args);
-  },
-  logger = {
-    debug: log.bind(fdom.debug, 'debug', name),
-    info: log.bind(fdom.debug, 'info', name),
-    log: log.bind(fdom.debug, 'log', name),
-    warn: log.bind(fdom.debug, 'warn', name),
-    error: log.bind(fdom.debug, 'error', name),
-    freedom: true
-  };
-  return logger;
 };
 
 /**
@@ -161,7 +142,7 @@ fdom.util.getLogger = function(name) {
  * @class handleEvents
  * @static
  */
-fdom.util.handleEvents = function(obj) {
+util.handleEvents = function(obj) {
   var eventState = {
     multiple: {},
     maybemultiple: [],
@@ -307,31 +288,8 @@ fdom.util.handleEvents = function(obj) {
  * @static
  */
 /*!@preserve StartModuleContextDeclaration*/
-fdom.util.isModuleContext = function() {
+util.isModuleContext = function() {
   return (typeof document === 'undefined');
-};
-
-/**
- * Provide a version of src where the 'isModuleContext' function will return
- * true. Used for creating module contexts which may not be able to determine
- * that they need to start up in that mode by themselves.
- * @method forceModuleContext
- * @static
- */
-fdom.util.forceModuleContext = function(src) {
-  var definition = "function () { return true; }",
-      idx = src.indexOf('StartModuleContextDeclaration'),
-      funcidx = src.indexOf('function', idx),
-      source,
-      blob;
-  if (idx === -1 || funcidx === -1) {
-    fdom.debug.error('Unable to force mode, source is in unexpected condition.');
-    return;
-  }
-  source = src.substr(0, funcidx) +  definition + ' || ' +
-      src.substr(funcidx);
-  blob = fdom.util.getBlob(source, 'text/javascript');
-  return fdom.util.getURL(blob);
 };
 
 /**
@@ -341,7 +299,7 @@ fdom.util.forceModuleContext = function(src) {
  * @method getBlob
  * @static
  */
-fdom.util.getBlob = function(data, type) {
+util.getBlob = function(data, type) {
   if (typeof Blob !== 'function' && typeof WebKitBlobBuilder !== 'undefined') {
     var builder = new WebKitBlobBuilder();
     builder.append(data);
@@ -352,46 +310,12 @@ fdom.util.getBlob = function(data, type) {
 };
 
 /**
- * Get a URL of a blob object for inclusion in a frame.
- * Polyfills implementations which don't have a current URL object, like
- * phantomjs.
- * @method getURL
- * @static
- */
-fdom.util.getURL = function(blob) {
-  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
-    return webkitURL.createObjectURL(blob);
-  } else {
-    return URL.createObjectURL(blob);
-  }
-};
-
-/**
- * When running in a priviledged context, honor a global
- * 'freedomcfg' function to allow registration of additional API providers.
- * @method advertise
- * @param {Boolean} force Advertise even if not in a priviledged context.
- * @static
- */
-fdom.util.advertise = function(force) {
-  // TODO: Determine a better mechanism than this whitelisting.
-  if (typeof location !== 'undefined') {
-    if ((location.protocol === 'chrome-extension:' ||
-        location.protocol === 'chrome:' ||
-        location.protocol === 'resource:' || force) &&
-        typeof freedomcfg !== "undefined") {
-      freedomcfg(fdom.apis.register.bind(fdom.apis));
-    }
-  } else if (force && typeof freedomcfg !== "undefined") {
-    freedomcfg(fdom.apis.register.bind(fdom.apis));
-  }
-};
-
-/**
  * Find all scripts on the given page.
  * @method scripts
  * @static
  */
-fdom.util.scripts = function(global) {
+util.scripts = function(global) {
   return global.document.getElementsByTagName('script');
 };
+
+module.exports = util;

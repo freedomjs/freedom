@@ -1,3 +1,5 @@
+/*jslint sloppy:true*/
+/*globals freedom, console */
 /**
  * Connections application logic.
  * Monitors the social API, to provide state information to the view about
@@ -8,6 +10,7 @@ var social;
 var view = freedom['core.view']();
 var users = {};    //Keep track of the roster
 var myClientState = null;
+var doLogin;
 
 /**
  * Relay messages from the social network to the view.
@@ -16,6 +19,13 @@ function onMsg(data) {
   view.postMessage({
     event: 'message',
     message: data
+  });
+}
+
+function sendUsers() {
+  view.postMessage({
+    event: 'user',
+    users: users
   });
 }
 
@@ -32,7 +42,7 @@ function onProfile(data) {
  * On newly online or offline clients, let's update the roster
  **/
 function onState(data) {
-  if (data.status == social.STATUS["OFFLINE"]) {
+  if (data.status === social.STATUS.OFFLINE) {
     if (users.hasOwnProperty(data.userId)) {
       delete users[data.userId];
     }
@@ -42,32 +52,21 @@ function onState(data) {
   sendUsers();
 
   // Handle my state separately
-  if (myClientState !== null && data.clientId == myClientState.clientId) {
+  if (myClientState !== null && data.clientId === myClientState.clientId) {
     view.postMessage({
       event: 'status',
-      online: data.status == social.STATUS["ONLINE"]
+      online: data.status === social.STATUS.ONLINE
     });
-    freedom.emit('height', data.status == social.STATUS["ONLINE"] ? 384 : 109);
-    if (data.status != social.STATUS["ONLINE"]) {
+    freedom().emit('height', data.status === social.STATUS.ONLINE ? 384 : 109);
+    if (data.status !== social.STATUS.ONLINE) {
       console.error('got status ' + data.status + ' from social');
       doLogin();
     }
   }
 }
 
-view.on('message', function(msg) {
-  console.warn('main got msg ' + msg);
-});
-
-function sendUsers() {
-  view.postMessage({
-    event: 'user',
-    users: users
-  });
-}
-
 /** LOGIN AT START **/
-var doLogin = function() {
+doLogin = function () {
   var s = freedom.socialprovider();
   if (social) {
     freedom.socialprovider.close(social);
@@ -83,24 +82,28 @@ var doLogin = function() {
     url: '',
     interactive: true,
     rememberLogin: false
-  }).then(function(ret) {
+  }).then(function (ret) {
     myClientState = ret;
     view.postMessage({
       event: 'status',
-      online: ret.status == social.STATUS["ONLINE"]
+      online: ret.status === social.STATUS.ONLINE
     });
-    freedom.emit('height', ret.status == social.STATUS["ONLINE"] ? 384 : 109);
-  }, function(err) {
+    freedom().emit('height', ret.status === social.STATUS.ONLINE ? 384 : 109);
+  }, function (err) {
     view.postMessage({
       event: 'status',
       online: err
     });
-    freedom.emit('height', 109);
+    freedom().emit('height', 109);
   });
 };
 doLogin();
 
+view.on('message', function (msg) {
+  console.warn('main got msg ' + msg);
+});
+
 /** SHOW VIEW AT START **/
-view.open('connections', {file: 'view.html'}).then(function() {
+view.open('connections', {file: 'view.html'}).then(function () {
   view.show();
 });

@@ -1,19 +1,16 @@
-/*globals fdom:true, Worker */
+/*globals Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.link = fdom.link || {};
+var Link = require('../link');
 
 /**
  * A port providing message transport between two freedom contexts via Worker.
  * @class Worker
- * @extends Port
+ * @extends Link
  * @uses handleEvents
  * @constructor
  */
-fdom.link.Worker = function(id) {
-  fdom.Link.call(this);
+var WorkerLink = function(id, resource) {
+  Link.call(this, id, resource);
   if (id) {
     this.id = id;
   }
@@ -24,7 +21,7 @@ fdom.link.Worker = function(id) {
  * @method start
  * @private
  */
-fdom.link.Worker.prototype.start = function() {
+WorkerLink.prototype.start = function() {
   if (this.config.moduleContext) {
     this.setupListener();
   } else {
@@ -37,7 +34,7 @@ fdom.link.Worker.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.link.Worker.prototype.stop = function() {
+WorkerLink.prototype.stop = function() {
   // Function is determined by setupListener or setupFrame as appropriate.
 };
 
@@ -46,7 +43,7 @@ fdom.link.Worker.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.link.Worker.prototype.toString = function() {
+WorkerLink.prototype.toString = function() {
   return "[Worker " + this.id + "]";
 };
 
@@ -55,7 +52,7 @@ fdom.link.Worker.prototype.toString = function() {
  * freedom.js context.
  * @method setupListener
  */
-fdom.link.Worker.prototype.setupListener = function() {
+WorkerLink.prototype.setupListener = function() {
   var onMsg = function(msg) {
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this);
@@ -66,32 +63,32 @@ fdom.link.Worker.prototype.setupListener = function() {
     delete this.obj;
   };
   this.emit('started');
+  this.obj.postMessage("Ready For Messages");
 };
 
 /**
  * Set up a worker with an isolated freedom.js context inside.
  * @method setupWorker
  */
-fdom.link.Worker.prototype.setupWorker = function() {
-  var worker, blob, self = this;
-  if (typeof (window.Blob) !== typeof (Function)) {
-    worker = new Worker(this.config.source);
-  } else {
-    blob = new window.Blob([this.config.src], {type: 'text/javascript'});
-    worker = new Worker(window.URL.createObjectURL(blob) + '#' + this.id);
-  }
+WorkerLink.prototype.setupWorker = function() {
+  var worker,
+    blob,
+    self = this;
+  worker = new Worker(this.config.source + '#' + this.id);
+
   worker.addEventListener('error', function(err) {
-    fdom.debug.error(self.toString(), err.message);
-  }, true);
+    this.onError(err);
+  }.bind(this), true);
   worker.addEventListener('message', function(worker, msg) {
     if (!this.obj) {
       this.obj = worker;
       this.emit('started');
+      return;
     }
     this.emitMessage(msg.data.flow, msg.data.message);
   }.bind(this, worker), true);
   this.stop = function() {
-    worker.stop();
+    worker.terminate();
     if (this.obj) {
       delete this.obj;
     }
@@ -105,13 +102,12 @@ fdom.link.Worker.prototype.setupWorker = function() {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Worker.prototype.deliverMessage = function(flow, message) {
+WorkerLink.prototype.deliverMessage = function(flow, message) {
   if (flow === 'control' && message.type === 'close' &&
       message.channel === 'control') {
     this.stop();
   } else {
     if (this.obj) {
-      //fdom.debug.log('message sent to worker: ', flow, message);
       this.obj.postMessage({
         flow: flow,
         message: message
@@ -121,4 +117,6 @@ fdom.link.Worker.prototype.deliverMessage = function(flow, message) {
     }
   }
 };
+
+module.exports = WorkerLink;
 

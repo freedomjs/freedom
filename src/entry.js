@@ -1,103 +1,104 @@
-/*globals fdom:true, Promise, document, location, console */
-/*jslint indent:2,sloppy:true */
+/*jslint indent:2,node:true */
+var PromiseCompat = require('es6-promise').Promise;
 
-/**
- * @module freedom
- */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
+var Api = require('./api');
+var Debug = require('./debug');
+var Hub = require('./hub');
+var Manager = require('./manager');
+var Policy = require('./policy');
+var ProxyBinder = require('./proxybinder');
+var Resource = require('./resource');
+var util = require('./util');
+var Bundle = require('./bundle');
 
-/**
- * External freedom Setup.  global.freedom is set to the value returned by
- * setup (see preamble.js and postamble.js for that mechanism).  As a result,
- * this is the primary entry function for the freedom library.
- * @for util
- * @method setup
- * @param {Object} global The window / frame / worker context freedom is in.
- * @param {String} freedom_src The textual code of freedom, for replication.
- * @param {Object} config Overriding config for freedom.js
- * @static
- */
-fdom.setup = function (global, freedom_src, config) {
-  fdom.debug = new fdom.port.Debug();
-
-  var hub = new fdom.Hub(),
-    site_cfg = {
-      'debug': 'warn',
-      'stayLocal': false,
-      'portType': 'Worker',
-      'moduleContext': (!config || typeof (config.isModule) === "undefined") ?
-          fdom.util.isModuleContext() :
-          config.isModule
-    },
-    manager = new fdom.port.Manager(hub),
-    external = new fdom.port.Proxy(fdom.proxy.EventInterface),
-    link;
-
-  manager.setup(external);
-
-  if (site_cfg.moduleContext) {
-    if (config) {
-      fdom.util.mixin(site_cfg, config, true);
-    }
-    site_cfg.global = global;
-    site_cfg.src = freedom_src;
-    link = new fdom.link[site_cfg.portType]();
-    manager.setup(link);
-    manager.createLink(external, 'default', link);
-
-    // Delay debug messages until delegation to the parent context is setup.
-    manager.once('delegate', manager.setup.bind(manager, fdom.debug));
+var freedomGlobal;
+var getGlobal = function () {
+  'use strict';
+  
+  // Node.js
+  if (typeof global !== 'undefined' && global.prototype === undefined) {
+    freedomGlobal = global;
+  // Browsers
   } else {
-    manager.setup(fdom.debug);
-    fdom.util.advertise(config ? config.advertise : undefined);
-
-    // Configure against data-manifest.
-    if (typeof global.document !== 'undefined') {
-      fdom.util.eachReverse(fdom.util.scripts(global), function (script) {
-        var manifest = script.getAttribute('data-manifest'),
-          source = script.src;
-        if (manifest) {
-          site_cfg.source = source;
-          site_cfg.manifest = manifest;
-          if (script.textContent.trim().length) {
-            try {
-              fdom.util.mixin(site_cfg, JSON.parse(script.textContent), true);
-            } catch (e) {
-              fdom.debug.error("Failed to parse configuration: " + e);
-            }
-          }
-          return true;
-        }
-      });
-    }
-
-    site_cfg.global = global;
-    site_cfg.src = freedom_src;
-    site_cfg.resources = fdom.resources;
-    if (config) {
-      fdom.util.mixin(site_cfg, config, true);
-    }
-
-    if (typeof location !== 'undefined') {
-      site_cfg.location = location.protocol + "//" + location.host + location.pathname;
-    }
-    site_cfg.policy = new fdom.Policy(manager, site_cfg);
-
-    fdom.resources.get(site_cfg.location, site_cfg.manifest).then(function (root_mod) {
-      site_cfg.policy.get([], root_mod)
-          .then(manager.createLink.bind(manager, external, 'default'));
-    }, function (err) {
-      fdom.debug.error('Failed to retrieve manifest: ' + err);
-    });
+    setTimeout(function () {
+      freedomGlobal = this;
+    }, 0);
   }
-  hub.emit('config', site_cfg);
-
-  // Enable console.log from worker contexts.
-  if (typeof global.console === 'undefined' || site_cfg.relayConsole) {
-    global.console = fdom.util.getLogger('Console');
-  }
-
-  return external.getInterface();
 };
+getGlobal();
+
+/**
+ * Create a new freedom context.
+ * @param {Object} context Information about the local context.
+ * @see {util/workerEntry.js}
+ * @param {String} manifest The manifest to load.
+ * @param {Object} config Configuration keys set by the user.
+ * @returns {Promise} A promise for the module defined in the manifest.
+ */
+var setup = function (context, manifest, config) {
+  'use strict';
+  var debug = new Debug(),
+    hub = new Hub(debug),
+    resource = new Resource(debug),
+    api = new Api(debug),
+    manager = new Manager(hub, resource, api),
+    binder = new ProxyBinder(manager),
+    policy,
+    site_cfg = {
+      'debug': 'log',
+      'manifest': manifest,
+      'moduleContext': (!context || typeof (context.isModule) === "undefined") ?
+          util.isModuleContext() :
+          context.isModule
+    },
+    link,
+    Port;
+  Bundle.register(context.providers, api);
+  resource.register(context.resolvers || []);
+
+
+  if (config) {
+    util.mixin(site_cfg, config, true);
+  }
+  site_cfg.global = freedomGlobal;
+  if (context) {
+    util.mixin(site_cfg, context, true);
+  }
+
+  return new PromiseCompat(function (resolve, reject) {
+    if (site_cfg.moduleContext) {
+      Port = site_cfg.portType;
+      link = new Port('Outbound', resource);
+      manager.setup(link);
+
+      // Delay debug messages until delegation to the parent context is setup.
+      manager.once('delegate', manager.setup.bind(manager, debug));
+    } else {
+      manager.setup(debug);
+      api.getCore('core.logger', debug).then(function (Logger) {
+        debug.setLogger(new Logger());
+      });
+
+      policy = new Policy(manager, resource, site_cfg);
+
+      resource.get(site_cfg.location, site_cfg.manifest).then(
+        function (root_manifest) {
+          return policy.get([], root_manifest);
+        }
+      ).then(function (root_module) {
+        manager.setup(root_module);
+        return binder.bindDefault(root_module, api, root_module.manifest).then(
+          function (info) {
+            return info.external;
+          }
+        );
+      }, function (err) {
+        debug.error('Failed to retrieve manifest: ' + err);
+      }).then(resolve, reject);
+    }
+
+    hub.emit('config', site_cfg);
+  });
+};
+
+module.exports = setup;

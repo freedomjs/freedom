@@ -1,4 +1,4 @@
-/*globals freedom:true */
+/*globals freedom:true, exports */
 /*jslint indent:2, white:true, sloppy:true, browser:true */
 
 /**
@@ -21,7 +21,7 @@ function LoopbackSocialProvider(dispatchEvent) {
   this.time = (new Date()).getTime();
   this.userId = 'Test User';      //My userId
   this.clientId = 'Test User.0';  //My clientId
-  this.social = freedom.social();
+  this.social = freedom();
 
   //Populate a fake roster
   this.users = {
@@ -191,5 +191,10 @@ LoopbackSocialProvider.prototype.err = function(code) {
 
 /** REGISTER PROVIDER **/
 if (typeof freedom !== 'undefined') {
-  freedom.social().provideAsynchronous(LoopbackSocialProvider);
+  freedom().provideAsynchronous(LoopbackSocialProvider);
+}
+
+if (typeof exports !== 'undefined') {
+  exports.provider = LoopbackSocialProvider;
+  exports.name = 'social';
 }

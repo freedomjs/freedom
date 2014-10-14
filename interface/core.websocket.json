@@ -1,0 +1,80 @@
+{
+  "name": "core.websocket",
+  "api": {
+    // Constructs new websocket. Errors in construction are passed on
+    // through the onError event.
+    "constructor": {"value": [
+      // URL to connect through
+      "string",
+      // Protocols
+      ["array", "string"]
+    ]},
+    // Send the data to the other side of this connection. Only one of
+    // the entries in the dictionary that is passed will be sent.
+    "send": {
+      "type": "method",
+      "value": [{
+        "text": "string",
+        "binary": "blob",
+        "buffer": "buffer"
+      }],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+    "getReadyState": {
+      "type": "method",
+      "value": [],
+      // 0 -> CONNECTING
+      // 1 -> OPEN
+      // 2 -> CLOSING
+      // 3 -> CLOSED
+      "ret": "number"
+    },
+    "getBufferedAmount": {"type": "method",
+                          "value": ["string"],
+                          "ret": "number"},
+    "close": {
+      "type": "method",
+      // The first argument is a status code from
+      // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
+      "value": ["number", "string"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+    "onMessage": {
+      "type": "event",
+      // The data will be stored in one of the keys,
+      // corresponding with the "type" received
+      "value": {
+        "text": "string",
+        "binary": "blob",
+        "buffer": "buffer"
+      }
+    },
+    "onOpen": {
+      "type": "event",
+      "value": []
+    },
+    "onError": {
+      "type": "event",
+      "value": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+    "onClose": {
+      "type": "event",
+      // "value"s given by WebSockets spec:
+      // http://www.w3.org/TR/websockets/#closeevent
+      "value": {
+        "code": "number",
+        "reason": "string",
+        "wasClean": "boolean"
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "core.oauth",
+  "api": {
+    /**
+     * An oAuth event has occured
+     * @return {String} The URL received by the oAuth provider.
+     **/
+    "oAuthEvent": {
+      "type": "event",
+      "value": "string"
+    },
+  
+    /**
+     * Express interest in initiating an oAuth flow.
+     *
+     * @method initiateOAuth
+     * @param {String[]} Valid oAuth redirect URLs for your application.
+     * @returns {{redirect:String, state:String}} A chosen redirect URI, and
+     *     state which will be monitored for oAuth redirection, if one is
+     *     available.
+     */
+    "initiateOAuth": {
+      "type": "method",
+      "value": [["array", "string"]],
+      "ret": {
+        "redirect": "string",
+        "state": "string"
+      },
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    }
+  }
+}

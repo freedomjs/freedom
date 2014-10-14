@@ -8,5 +8,6 @@
     "storage"
   ],
   "permissions": [
-  ]
+  ],
+  "default": "storage"
 }

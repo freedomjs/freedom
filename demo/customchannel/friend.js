@@ -1,9 +1,19 @@
+/*globals freedom, console*/
 var channels = [];
 var core = freedom.core();
 
-freedom.on('message', function(msg) {
-  if(msg.cmd === 'create') {
-    core.bindChannel(msg.chan).then(function(id, chan) {
+var instance = freedom();
+
+var handler = function (cid, chan, msg) {
+  'use strict';
+  instance.emit('message', 'channel ' + cid + ' sent ' + msg);
+  chan.emit('message', 'channel ' + cid + ' replies ' + msg);
+};
+
+instance.on('message', function (msg) {
+  'use strict';
+  if (msg.cmd === 'create') {
+    core.bindChannel(msg.chan).then(function (id, chan) {
       console.log('channel resolved: ' + id);
       channels[id] = chan;
       chan.on('message', handler.bind({}, id, chan));
@@ -12,8 +22,3 @@ freedom.on('message', function(msg) {
     delete channels[msg.id];
   }
 });
-
-var handler = function(cid, chan, msg) {
-  freedom.emit('message', 'channel ' + cid + ' sent ' + msg);
-  chan.emit('message', 'channel ' + cid + ' replies ' + msg);
-};

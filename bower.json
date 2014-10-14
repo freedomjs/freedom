@@ -1,7 +1,7 @@
 {
   "name": "freedom",
-  "version": "0.5.7",
-  "homepage": "http://freedomjs.com",
+  "version": "0.6.0-rc4",
+  "homepage": "http://freedomjs.org",
   "repository": {
     "type": "git",
     "url": "git://github.com/freedomjs/freedom.git"

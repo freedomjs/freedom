@@ -1,12 +1,25 @@
-describe('fdom.port.ModuleInternal', function() {
+var Api = require('../../src/api');
+var Debug = require('../../src/debug');
+var Hub = require('../../src/hub');
+var Manager = require('../../src/manager');
+var ModuleInternal = require('../../src/moduleinternal');
+
+var testUtil = require('../util');
+
+describe('ModuleInternal', function() {
   var app, manager, hub, global, loc;
   beforeEach(function() {
     global = {freedom: {}};
-    hub = new fdom.Hub();
-    manager = new fdom.port.Manager(hub);
-    app = new fdom.port.ModuleInternal(manager);
+    hub = new Hub(new Debug());
+    var resource = testUtil.setupResolvers();
+    var api = new Api();
+    api.set('core', {});
+    api.register('core', function () {});
+    manager = new Manager(hub, resource, api);
+    app = new ModuleInternal(manager);
     hub.emit('config', {
-      global: global
+      global: global,
+      location: 'relative://'
     });
     manager.setup(app);
 
@@ -16,7 +29,7 @@ describe('fdom.port.ModuleInternal', function() {
 });
 
   it('configures an app environment', function() {
-    var source = createTestPort('test');
+    var source = testUtil.createTestPort('test');
     manager.setup(source);
     manager.createLink(source, 'default', app, 'default');
 
@@ -40,49 +53,52 @@ describe('fdom.port.ModuleInternal', function() {
   });
 
   it('handles script loading and attachment', function(done) {
-    setupResolvers();
     global.document = document;
+    
+    var script = btoa('fileIncluded = true; callback();');
 
-    callback = function() {
+    window.callback = function() {
       expect(fileIncluded).toEqual(true);
       delete callback;
       done();
-    }
-    app.loadScripts(loc, ['relative://spec/helper/beacon.js', 'non_existing_file']);
+    } 
+    
+    app.loadScripts(loc, ['data:text/javascript;base64,' + script, 'non_existing_file']);
   });
 
   it('load scripts sequentially', function(done) {
-    setupResolvers();
     global.document = document;
 
     fileIncluded = false;
     fileIncluded0 = false;
 
-    callback0 = function() {
+    var script0 = btoa('fileIncluded0 = true; callback0();');
+    window.callback0 = function() {
       expect(fileIncluded0).toEqual(true);
       expect(fileIncluded).toEqual(false);
       delete callback0;
     };
 
-    callback = function() {
+    var script = btoa('fileIncluded = true; callback();');
+    window.callback = function() {
       expect(fileIncluded0).toEqual(true);
       expect(fileIncluded).toEqual(true);
       delete callback;
       done();
     };
 
-    app.loadScripts(loc, ['relative://spec/helper/beacon0.js',
-                          'relative://spec/helper/beacon.js',
+    app.loadScripts(loc, ['data:text/javascript;base64,' + script0,
+                          'data:text/javascript;base64,' + script,
                           'non_existing_file']);
   })
 
   it('exposes dependency apis', function(done) {
-    var source = createTestPort('test');
+    var source = testUtil.createTestPort('test');
     manager.setup(source);
     manager.createLink(source, 'default', app, 'default');
     source.on('onMessage', function(msg) {
       // Dependencies will be requested via 'createLink' messages. resolve those.
-      if (msg.channel && msg.name !== 'default') {
+      if (msg.channel && msg.type === 'createLink') {
         hub.onMessage(msg.channel, {
           type: 'channel announcement',
           channel: msg.reverse
@@ -115,16 +131,16 @@ describe('fdom.port.ModuleInternal', function() {
       },
       id: 'relative://spec/helper/manifest.json',
     });
+    hub.onMessage(source.messages[1][1].channel, {
+      type: 'manifest',
+      name: 'test',
+      manifest: {name: 'test manifest'}
+    });
 
-    callback = function() {
+    window.callback = function() {
+      delete callback;
       expect(global.freedom.manifest.name).toEqual('My Module Name');
       expect(global.freedom.test.api).toEqual('social');
-      delete callback;
-      hub.onMessage(source.messages[1][1].channel, {
-        type: 'manifest',
-        name: 'test',
-        manifest: {name: 'test manifest'}
-      });
       expect(global.freedom.test.manifest.name).toEqual('test manifest');
       done();
     };

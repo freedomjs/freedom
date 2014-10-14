@@ -1,24 +1,23 @@
-/*globals fdom:true */
-/*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
+/*jslint indent:2,sloppy:true,node:true */
+var util = require('./util');
 
 /**
  * Defines fdom.Hub, the core message hub between freedom modules.
  * Incomming messages from apps are sent to hub.onMessage()
  * @class Hub
+ * @param {Debug} debug Logger for debugging.
  * @constructor
  */
-fdom.Hub = function() {
+var Hub = function (debug) {
+  this.debug = debug;
   this.config = {};
   this.apps = {};
   this.routes = {};
   this.unbound = [];
 
-  fdom.util.handleEvents(this);
-  this.on('config', function(config) {
-    fdom.util.mixin(this.config, config);
+  util.handleEvents(this);
+  this.on('config', function (config) {
+    util.mixin(this.config, config);
   }.bind(this));
 };
 
@@ -28,15 +27,15 @@ fdom.Hub = function() {
  * @param {String} source The identifiying source of the message.
  * @param {Object} message The sent message.
  */
-fdom.Hub.prototype.onMessage = function(source, message) {
+Hub.prototype.onMessage = function (source, message) {
   var destination = this.routes[source], type;
   if (!destination || !destination.app) {
-    fdom.debug.warn("Message dropped from unregistered source " + source);
+    this.debug.warn("Message dropped from unregistered source " + source);
     return;
   }
 
-  if(!this.apps[destination.app]) {
-    fdom.debug.warn("Message dropped to destination " + destination.app);
+  if (!this.apps[destination.app]) {
+    this.debug.warn("Message dropped to destination " + destination.app);
     return;
   }
 
@@ -52,7 +51,7 @@ fdom.Hub.prototype.onMessage = function(source, message) {
         message.message.type === 'event') {
       type = 'event.' + message.message.name;
     }
-    fdom.debug.debug(this.apps[destination.source].toString() +
+    this.debug.debug(this.apps[destination.source].toString() +
         " -" + type + "-> " +
         this.apps[destination.app].toString() + "." + destination.flow);
   }
@@ -66,7 +65,7 @@ fdom.Hub.prototype.onMessage = function(source, message) {
  * @param {String} source The flow to retrieve.
  * @return {Port} The destination port.
  */
-fdom.Hub.prototype.getDestination = function(source) {
+Hub.prototype.getDestination = function (source) {
   var destination = this.routes[source];
   if (!destination) {
     return null;
@@ -80,12 +79,12 @@ fdom.Hub.prototype.getDestination = function(source) {
  * @param {Port} source The flow identifier to retrieve.
  * @return {Port} The source port.
  */
-fdom.Hub.prototype.getSource = function(source) {
+Hub.prototype.getSource = function (source) {
   if (!source) {
     return false;
   }
   if (!this.apps[source.id]) {
-    fdom.debug.warn("No registered source '" + source.id + "'");
+    this.debug.warn("No registered source '" + source.id + "'");
     return false;
   }
   return this.apps[source.id];
@@ -98,7 +97,7 @@ fdom.Hub.prototype.getSource = function(source) {
  * @param {Boolean} [force] Whether to override an existing port.
  * @return {Boolean} Whether the app was registered.
  */
-fdom.Hub.prototype.register = function(app, force) {
+Hub.prototype.register = function (app, force) {
   if (!this.apps[app.id] || force) {
     this.apps[app.id] = app;
     return true;
@@ -116,8 +115,8 @@ fdom.Hub.prototype.register = function(app, force) {
  * @param {Port} app The Port to deregister
  * @return {Boolean} Whether the app was deregistered.
  */
-fdom.Hub.prototype.deregister = function(app) {
-  if(!this.apps[app.id]) {
+Hub.prototype.deregister = function (app) {
+  if (!this.apps[app.id]) {
     return false;
   }
   delete this.apps[app.id];
@@ -133,13 +132,13 @@ fdom.Hub.prototype.deregister = function(app) {
  * @param {Boolean} quiet Whether messages on this route should be suppressed.
  * @return {String} A routing source identifier for sending messages.
  */
-fdom.Hub.prototype.install = function(source, destination, flow, quiet) {
+Hub.prototype.install = function (source, destination, flow, quiet) {
   source = this.getSource(source);
   if (!source) {
     return;
   }
   if (!destination) {
-    fdom.debug.warn("Unwilling to generate blackhole flow from " + source.id);
+    this.debug.warn("Unwilling to generate blackhole flow from " + source.id);
     return;
   }
 
@@ -164,7 +163,7 @@ fdom.Hub.prototype.install = function(source, destination, flow, quiet) {
  * @param {String} flow The route to uninstall.
  * @return {Boolean} Whether the route was able to be uninstalled.
  */
-fdom.Hub.prototype.uninstall = function(source, flow) {
+Hub.prototype.uninstall = function (source, flow) {
   source = this.getSource(source);
   if (!source) {
     return;
@@ -174,7 +173,7 @@ fdom.Hub.prototype.uninstall = function(source, flow) {
   if (!route) {
     return false;
   } else if (route.source !== source.id) {
-    fdom.debug.warn("Flow " + flow + " does not belong to port " + source.id);
+    this.debug.warn("Flow " + flow + " does not belong to port " + source.id);
     return false;
   }
 
@@ -191,6 +190,8 @@ fdom.Hub.prototype.uninstall = function(source, flow) {
  * @return {String} a routing source identifier.
  * @private
  */
-fdom.Hub.prototype.generateRoute = function() {
-  return fdom.util.getId();
+Hub.prototype.generateRoute = function () {
+  return util.getId();
 };
+
+module.exports = Hub;

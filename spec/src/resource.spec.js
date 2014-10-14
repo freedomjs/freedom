@@ -1,9 +1,12 @@
-describe("fdom.resources", function() {
-  var resources;
+var Debug = require('../../src/debug');
+var Resource = require('../../src/resource');
 
-  beforeEach(function() {  
-    resources = new Resource();
-    fdom.debug = new fdom.port.Debug();
+describe("Resource", function() {
+  var resources, debug;
+
+  beforeEach(function() {
+    debug = new Debug();
+    resources = new Resource(debug);
   });
 
   it("should resolve URLs", function(done) {
@@ -90,19 +93,19 @@ describe("fdom.resources", function() {
       expect(url).toContain("test://");
       deferred.resolve('Custom content!');
     };
-    spyOn(fdom.debug, 'warn');
+    spyOn(debug, 'warn');
     resources.addRetriever('http', retriever);
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
   });
 });
 
-describe('fdom.resources.httpResolver', function() {
+describe('resources.httpResolver', function() {
   var r, f, spy, resources;
 
   beforeEach(function() {
     resources = new Resource();
     r = spy = jasmine.createSpy('resolvedURL');
-    f = function() {};
+    f = jasmine.createSpy('rejectURL');
   });
 
   it("should resolve relative URLs", function() {
@@ -122,7 +125,7 @@ describe('fdom.resources.httpResolver', function() {
 
   it("should not resolve URLs without manifest", function() {
     resources.httpResolver(undefined, 'test.html', r, f);
-    expect(spy).toHaveBeenCalledWith(false);
+    expect(f).toHaveBeenCalled();
   });
 
   it("should remove relative paths", function() {

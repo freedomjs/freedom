@@ -1,15 +1,21 @@
-describe('fdom.Policy', function() {
+var Debug = require('../../src/debug');
+var Policy = require('../../src/policy');
+var Resource = require('../../src/resource');
+var util = require('../../src/util');
+
+describe('Policy', function() {
   var policy,
       manager;
   beforeEach(function() {
-    manager = {};
-    fdom.util.handleEvents(manager);
+    manager = {debug: new Debug()};
+    util.handleEvents(manager);
     manager.getPort = function(id) {
       return {
         id: id
       };
-    }
-    policy = new fdom.Policy(manager, {});
+    };
+    var rsrc = new Resource();
+    policy = new Policy(manager, rsrc, {});
   });
   
   it('Generates new modules when needed', function(done) {
@@ -51,7 +57,7 @@ describe('fdom.Policy', function() {
 
   it('Keeps track of running modules', function() {
     var port2 = {};
-    fdom.util.handleEvents(port2);
+    util.handleEvents(port2);
     policy.add(port2, {});
     port2.emit('moduleAdd', {lineage:['test'], id:'test'});
     expect(policy.isRunning(policy.runtimes[1], 'test', [], false)).toEqual('test');

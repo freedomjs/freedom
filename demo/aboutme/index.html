@@ -1,43 +1,59 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-  <title>About Me</title>
+  <title>About Me ~ freedom.js Demos</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-  <script type="text/javascript"
-      src="../../freedom.js"
-      data-manifest="manifest.json">
-  </script>
+  <link href='../style.css' rel='stylesheet' type='text/css' />
+
+  <!-- Load freedom.js -->
+  <script type="text/javascript" src="../../freedom.js"></script>
   <script type="text/javascript">
-  freedom.on('profile', function(data) {
-    document.getElementById("profilepic").src = data.picture;
-    if (data.link) {
-      var link = document.createElement('a');
-      link.href = data.link;
-      link.innerText = data.name;
-      document.getElementById("name").appendChild(link);
-    } else {
-      document.getElementById("name").appendChild(
-          document.createTextNode(data.name));
-    }
-    if (data.details) {
-      document.getElementById("subtitle").appendChild(
-          document.createTextNode(data.details));
-    }
-    document.getElementById("details").appendChild(
-        document.createTextNode(JSON.stringify(data)));
-    document.body.className = "loaded";
-  });
-  freedom.on('oAuth', function(url) {
-    document.getElementById('loginContainer').onclick = function() {
-      window.open(url);
-    };
-  });
+  freedom('manifest.json').then(function (instance) { start(instance()); });
+    
+  function start(aboutme) {
+    aboutme.on('profile', function(data) {
+      document.getElementById("profilepic").src = data.picture;
+      if (data.link) {
+        var link = document.createElement('a');
+        link.href = data.link;
+        link.innerText = data.name;
+        document.getElementById("name").appendChild(link);
+      } else {
+        document.getElementById("name").appendChild(
+            document.createTextNode(data.name));
+      }
+      if (typeof data.details === "string") {
+        document.getElementById("subtitle").appendChild(
+            document.createTextNode(data.details));
+      }
+      document.getElementById("details").appendChild(
+          document.createTextNode(JSON.stringify(data)));
+      document.body.className = "loaded";
+    });
+    aboutme.on('oAuth', function(url) {
+      document.getElementById('loginContainer').onclick = function() {
+        window.open(url);
+      };
+    });
+  }
   </script>
   <style type="text/css">
   #loginContainer {
-    position: absolute;
-    height: 100%;
-    width: 100%;
+    margin-left: 200px;
+    margin-top: 50px;
+
+    display: inline-block;
+    background: #dd4b39;
+    color: white;
+    width: 105px;
+    border-radius: 5px;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding-left: 10px;
+    padding-right: 35px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'Roboto',arial,sans-sarif;
   }
   body.loaded #loginContainer {
     display:none;
@@ -52,6 +68,7 @@
     display: inline-block;
     vertical-align: top;
     font-family: helvetica;
+    color: black;
   }
   #profilepic {
     max-width: 200px
@@ -62,16 +79,21 @@
   </style>
 </head>
 <body>
-  <div id="loginContainer">
-    Sign in with Google
-  </div>
-  <div id="profile">
-    <img id="profilepic" />
-    <div id="header">
-      <h1 id="name"></h1>
-      <h2 id="subtitle"></h2>
+  <header id='logo'>freedom.js</header>
+  <header><span class='triangle'>&#9654;</span> Demos</header>
+  <header><span class='triangle'>&#9654;</span> About Me</header>
+  <section>
+    <div id="loginContainer">
+      Sign in with Google
     </div>
-    <pre id="details"></pre>
-  </div>
+    <div id="profile">
+      <img id="profilepic" />
+      <div id="header">
+        <h1 id="name"></h1>
+        <h2 id="subtitle"></h2>
+      </div>
+      <pre id="details"></pre>
+    </div>
+  </section>
 </body>
 </html>

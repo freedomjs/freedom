@@ -1,17 +1,15 @@
+/*jslint node:true */
 var FILES = require('./Gruntfile').FILES;
-var karmaFiles = require('./Gruntfile').unGlob([].concat(
-    FILES.srcCore,
-    FILES.srcPlatform,
-    FILES.srcJasmineHelper,
-    FILES.specCoreUnit,
-    FILES.specPlatformUnit,
-    FILES.srcProvider,
-    FILES.specProviderUnit,
-    FILES.srcProviderIntegration,
-    FILES.specProviderIntegration
-  ));
 
-module.exports = function(config) {
+var locate_promises = function () {
+  'use strict';
+  var includer = require.resolve('es6-promise'),
+    base = includer.substr(0, includer.lastIndexOf('es6-promise'));
+  return base + 'es6-promise/dist/promise-1.0.0.js';
+};
+
+module.exports = function (config) {
+  'use strict';
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -23,10 +21,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     // Testing Providers for now
-    files: karmaFiles.include,
-
-    // list of files to exclude
-    exclude: karmaFiles.exclude,
+    files: [
+      require.resolve('es5-shim'),
+      locate_promises(),
+      'spec.js',
+      {pattern: 'spec/helper/frame.js', included: false}
+    ],
     
     // web server port
     port: 9876,
@@ -53,18 +53,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress', 'coverage', 'saucelabs', 'unicorn', 'story'],
-
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: [].concat(
-      FILES.srcCore, 
-      FILES.srcPlatform,
-      FILES.srcProvider
-    ).reduce(function(prev, curr, i, arr) {
-      prev[curr] = 'coverage';
-      return prev;
-    }, {}),
+    reporters: ['progress', 'html', 'coverage', 'saucelabs', 'unicorn', 'story'],
     
     // Coverage report options
     coverageReporter: {
@@ -75,6 +64,6 @@ module.exports = function(config) {
 
     // SauceLabs config that gets overwritten in Gruntfile.js
     sauceLabs: {},
-    customLaunchers: {},
+    customLaunchers: {}
   });
 };

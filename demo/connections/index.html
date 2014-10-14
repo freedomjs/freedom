@@ -5,25 +5,20 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
   <link href='../style.css' rel='stylesheet' type='text/css' />
 
-  <!-- Load FreeDOM and point it to the root module -->
-  <script type="text/javascript"
-      src="../../freedom.js"
-      data-manifest="manifest.json">
-    {
-      "stayLocal": true,
-      "debug": "debug"
-    }
-  </script>
+  <script type="text/javascript" src="../../freedom.js"></script>
+
   <script type="text/javascript">
-    freedom.on("height", function(h) {
-      document.getElementById("connections").style.height = h + 'px';
+    freedom('manifest.json').then(function (instance) {
+      instance().on("height", function(h) {
+        document.getElementById("connections").style.height = h + 'px';
+      });
     });
   </script>
 </head>
 <body>
   <header id='logo'>freedom.js</header>
-  <header><span id='triangle'>&#9654;</span> Demos</header>
-  <header><span id='triangle'>&#9654;</span> Connections</header>
+  <header><span class='triangle'>&#9654;</span> Demos</header>
+  <header><span class='triangle'>&#9654;</span> Connections</header>
   <section id="connections" class="lastChild">
     <span>freedom.js is loading.</span>
   </section>

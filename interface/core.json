@@ -1,0 +1,12 @@
+{
+  "name": "core",
+  "api": {
+    "createChannel": {"type": "method", "value": [], "ret": {
+      "channel": "proxy",
+      "identifier": "string"
+    }},
+    "bindChannel": {"type": "method", "value": ["string"], "ret": "proxy"},
+    "getId": {"type": "method", "value": [], "ret": ["array", "string"]},
+    "getLogger": {"type": "method", "value": ["string"], "ret": "proxy"}
+  }
+}

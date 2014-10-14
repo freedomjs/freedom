@@ -1,5 +1,7 @@
-/*globals fdom, localStorage */
-/*jslint indent:2,sloppy:true */
+/*globals localStorage */
+/*jslint indent:2,sloppy:true,node:true */
+var util = require('../../src/util');
+
 /**
  * A FreeDOM core.storage provider that depends on localStorage
  * Thus, this only works in the context of a webpage and has
@@ -13,7 +15,7 @@
  */
 var Storage_unprivileged = function (app, dispatchEvent) {
   this.app = app;
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 };
 
 /**
@@ -75,5 +77,5 @@ Storage_unprivileged.prototype.clear = function (continuation) {
   continuation();
 };
 
-/** REGISTER PROVIDER **/
-fdom.apis.register("core.storage", Storage_unprivileged);
+exports.provider = Storage_unprivileged;
+exports.name = 'core.storage';

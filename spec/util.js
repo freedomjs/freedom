@@ -1,4 +1,11 @@
-var createTestPort = function(id) {
+var Api = require('../src/api');
+var Bundle = require('../src/bundle');
+var Resource = require('../src/resource');
+var util = require('../src/util');
+var Frame = require('../src/link/frame');
+var PromiseCompat = require('es6-promise').Promise;
+
+exports.createTestPort = function(id) {
   var port = {
     id: id,
     messages: [],
@@ -48,12 +55,18 @@ var createTestPort = function(id) {
     
   };
 
-  fdom.util.handleEvents(port);
+  util.handleEvents(port);
 
   return port;
 };
 
-var mockIface = function(props, consts) {
+exports.createMockPolicy = function() {
+  return {
+    api: new Api()
+  };
+};
+
+exports.mockIface = function(props, consts) {
   var iface = {};
   props.forEach(function(p) {
     if (p[1] && p[1].then) {
@@ -62,7 +75,7 @@ var mockIface = function(props, consts) {
       }.bind({}, p[1]);
     } else {
       iface[p[0]] = function(r) {
-        return Promise.resolve(r);
+        return PromiseCompat.resolve(r);
       }.bind({}, p[1]);
     }
     spyOn(iface, p[0]).and.callThrough();
@@ -77,106 +90,77 @@ var mockIface = function(props, consts) {
   };
 };
 
-var createProxyFor = function(app, api) {
-  setupResolvers();
-  var global = {
-    document: document
-  };
-  fdom.debug = new fdom.port.Debug();
-
-  // Wrap the resolving subsystem to grab the child's 'freedom' object and promote it
-  // to window before the internal script is loaded. 
-  for(var i = 0; i < fdom.resources.resolvers.length; i++) {
-    var resolver = fdom.resources.resolvers[i];
-    fdom.resources.resolvers[i] = function(wrap, m, u, d) {
-      if (u.lastIndexOf(".js") === u.length - 3) {
-        window.freedom = global.freedom;
-      }
-      return wrap(m, u, d);
-    }.bind({}, resolver);
-  }
-  
-  var hub = new fdom.Hub(),
-      site_cfg = {
-        'debug': true,
-        'portType': 'Direct',
-        'moduleContext': false,
-        'manifest': app,
-        'resources': fdom.resources,
-        'global': global
-      },
-      manager = new fdom.port.Manager(hub),
-      proxy;
-  
-  if (api) {
-    proxy = new fdom.port.Proxy(fdom.proxy.ApiInterface.bind({}, fdom.apis.get(api).definition));
-  } else {
-    proxy = new fdom.port.Proxy(fdom.proxy.EventInterface);
-  }
-  manager.setup(proxy);
-  
-  var link = location.protocol + "//" + location.host + location.pathname;
-  fdom.resources.get(link, site_cfg.manifest).then(function(url) {
-    fdom.resources.getContents(url).then(function(manifest) {
-      var app = new fdom.port.Module(url, manifest, []);
-      manager.setup(app);
-      manager.createLink(proxy, 'default', app);
-    });
-  });
-  hub.emit('config', site_cfg);
-
-  return proxy.getProxyInterface();
+exports.getApis = function() {
+  var api = new Api();
+  Bundle.register([], api);
+  return api;
 };
 
-var fdom_src;
-var getFreedomSource = function(id) {
-  if(typeof fdom_src === 'undefined'){
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open("get", "freedom.js", false);
-      xhr.overrideMimeType("text/javascript; charset=utf-8");
-      xhr.send(null);
-      fdom_src = xhr.responseText;
-    } catch (err) { // Synchronous XHR wont work in Chrome App (Chrome Test Runner), so load from global var.
-      if (typeof jasmine.getGlobal().freedom_src !== 'undefined') {
-        fdom_src = jasmine.getGlobal().freedom_src;
-      } else {
-        throw "Could not load freedom source from XHR or global var. To work in a Chrome App, getFreedomSource() must be called from a jasmine test case or beforeEach()";
-      }
-    }
+// Setup resource loading for the test environment, which uses file:// urls.
+var specBase = null, extraResolve = function() {};
+(function findDefaultBase() {
+  if (typeof location === 'undefined') {
+    return;
   }
-  return fdom_src;
+  var loc = location.protocol + "//" + location.host + location.pathname;
+  var dirname = loc.substr(0, loc.lastIndexOf('/'));
+  specBase = dirname;
+})();
+
+/**
+ * Define where the relative resolver used by generic integration tests
+ * should map to, and provide a hook to register additional, implementation
+ * specific resolvers.
+ */
+exports.setSpecBase = function(base, resolvers) {
+  specBase = base;
+  if (resolvers) {
+    extraResolve = resolvers;
+  }
 }
 
-// Setup resource loading for the test environment, which uses file:// urls.
-function setupResolvers() { 
-  fdom.resources = new Resource();
-  fdom.resources.addResolver(function(manifest, url, resolve) {
+exports.getResolvers = function() {
+  var resolvers = [];
+  resolvers.push({'resolver': function(manifest, url, resolve, reject) {
     if (url.indexOf('relative://') === 0) {
-      var loc = location.protocol + "//" + location.host + location.pathname;
-      var dirname = loc.substr(0, loc.lastIndexOf('/'));
-      resolve(dirname + '/' + url.substr(11));
+      resolve(specBase + '/' + url.substr(11));
       return true;
     }
-    resolve(false);
-    return false;
-  });
-  fdom.resources.addResolver(function(manifest, url, resolve) {
-    if (manifest.indexOf('file://') === 0) {
+    reject();
+  }});
+  resolvers.push({'resolver': function(manifest, url, resolve, reject) {
+    if (manifest && manifest.indexOf('file://') === 0) {
       manifest = 'http' + manifest.substr(4);
-      fdom.resources.resolve(manifest, url).then(function(addr) {
+      rsrc.resolve(manifest, url).then(function(addr) {
         addr = 'file' + addr.substr(4);
         resolve(addr);
       });
       return true;
     }
-    resolve(false);
-    return false;
-  });
-  fdom.resources.addRetriever('file', fdom.resources.xhrRetriever);
+    reject();
+  }});
+  var rsrc = new Resource();
+  resolvers.push({'proto':'file', 'retriever': rsrc.xhrRetriever});
+  resolvers.push({'proto':'null', 'retriever': rsrc.xhrRetriever});
+  extraResolve(resolvers);
+  return resolvers;
 }
 
-function cleanupIframes() {
+exports.setupResolvers = function() { 
+  var rsrc = new Resource();
+  rsrc.register(exports.getResolvers());
+  return rsrc;
+}
+
+var activeContexts = [];
+exports.cleanupIframes = function() {
+  activeContexts.forEach(function(f) {
+    f.close();
+  });
+  activeContexts = [];
+  if (typeof document === 'undefined') {
+    return;
+  }
   var frames = document.getElementsByTagName('iframe');
   // frames is a live HTMLCollection, so it is modified each time an
   // element is removed.
@@ -185,34 +169,68 @@ function cleanupIframes() {
   }
 }
 
-function setupModule(manifest_url) {
-  var freedom_src = getFreedomSource();
-  var global = {console: {log: function(){}}, document: document};
-  setupResolvers();
+var coreProviders;
+exports.setCoreProviders = function(providers) {
+  coreProviders = providers;
+};
+var testPort = Frame;
+var testSource = "spec/helper/frame.js";
+var testDebug = 'debug';
+exports.setModuleStrategy = function(port, source, debug) {
+  testPort = port;
+  testSource = source;
+  testDebug = debug;
+};
 
-  var path = window.location.href;
-  var dir_idx = path.lastIndexOf('/');
-  var dir = path.substr(0, dir_idx) + '/';
-  return fdom.setup(global, undefined, {
-    manifest: manifest_url,
-    portType: "Frame",
-    inject: dir + "node_modules/es5-shim/es5-shim.js",
-    src: freedom_src
+exports.setupModule = function(manifest_url) {
+  var myGlobal = global, dir = '';
+  if (typeof document !== 'undefined') {
+    myGlobal = {
+      document: document
+    };
+  }
+
+  if (typeof window !== 'undefined') {  
+    var path = window.location.href,
+        dir_idx = path.lastIndexOf('/');
+    dir = path.substr(0, dir_idx) + '/';
+  }
+  var freedom = require('../src/entry')({
+      'global': myGlobal,
+      'isModule': false,
+      'providers': coreProviders,
+      'resolvers': exports.getResolvers(),
+      'portType': testPort,
+      'source': dir + testSource,
+      'inject': [
+        dir + "node_modules/es5-shim/es5-shim.js",
+        dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
+      ]
+    }, manifest_url, {
+      debug: testDebug
+    });
+  freedom.then(function(c) {
+    activeContexts.push(c);
   });
+  return freedom;
 }
 
-function providerFor(module, api) {
+exports.providerFor = function(module, api) {
   var manifest = {
     name: 'providers',
     app: {script: 'relative://spec/helper/providers.js'},
     dependencies: {undertest: {url: 'relative://' + module, api: api}}
   };
-  var freedom = setupModule('manifest://' + JSON.stringify(manifest));
-  var provider = new ProviderHelper(freedom);
-  provider.create = function(name) {
-    this.freedom.emit("create", {name: name, provider: 'undertest'});
-  };
-  return provider;
+  var freedom = exports.setupModule('manifest://' + JSON.stringify(manifest));
+  return freedom.then(function(chan) {
+    activeContexts.push(chan);
+    var inst = chan();
+    var provider = new ProviderHelper(inst);
+    provider.create = function(name) {
+      inst.emit("create", {name: name, provider: 'undertest'});
+    };
+    return provider;
+  });
 }
 
 function ProviderHelper(inFreedom) {
@@ -331,3 +349,4 @@ ProviderHelper.prototype.onInFromChannel = function(data) {
   this.chanCallbacks[data.chanId](data.message);
 };
 
+exports.ProviderHelper = ProviderHelper;

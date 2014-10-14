@@ -1,24 +1,21 @@
-var INTEGRATIONTEST;
-if (typeof INTEGRATIONTEST == 'undefined') {
-  INTEGRATIONTEST = {};
-}
-if (typeof INTEGRATIONTEST.social == 'undefined') {
-  INTEGRATIONTEST.social = {};
-}
+var testUtil = require('../../util');
 
-INTEGRATIONTEST.social.single = function(provider_url) {
+module.exports = function(provider_url, setup) {
   var helper;
-  var ERRCODE = fdom.apis.get("social").definition.ERRCODE.value;
+  var ERRCODE = testUtil.getApis().get("social").definition.ERRCODE.value;
 
   beforeEach(function(done) {
-    helper = providerFor(provider_url, 'social');
-    helper.create("s");
-    done();
+    setup();
+    testUtil.providerFor(provider_url, 'social').then(function(h) {
+      helper = h;
+      helper.create("s");
+      done();
+    });
   });
   
   afterEach(function(done) {
     helper.removeListeners("s");
-    cleanupIframes();
+    testUtil.cleanupIframes();
     done();
   });
 
@@ -106,7 +103,7 @@ INTEGRATIONTEST.social.single = function(provider_url) {
       expect(message.from.clientId).toEqual(myClientState.clientId);
       expect(message.message).toEqual(msg);
       ids[2] = helper.call("s", "logout", [], function(ret) {
-        expect(sendSpy.calls.count()).toEqual(1);
+        expect(sendSpy.calls.length || sendSpy.calls.count()).toEqual(1);
         done();
       });
     });

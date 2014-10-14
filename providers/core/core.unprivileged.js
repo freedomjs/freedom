@@ -1,17 +1,19 @@
-/*globals fdom:true */
-/*jslint indent:2,white:true,sloppy:true,sub:true */
-
+/*jslint indent:2,white:true,sloppy:true,node:true */
+var EventInterface = require('../../src/proxy/eventInterface');
+var Consumer = require('../../src/consumer');
+var util = require('../../src/util');
 
 /**
  * Core freedom services available to all modules.
- * Created by a local manager in response to a 'core' request.
+ * Created by the environment helper in response to a 'core' request.
  * @Class Core_unprivileged
  * @constructor
- * @param {Port.Manager} manager The manager this core is connected with.
+ * @param {Manager} manager The manager this core is connected with.
  * @private
  */
 var Core_unprivileged = function(manager, postMessage) {
   this.manager = manager;
+  this.debug = this.manager.debug;
 };
 
 Core_unprivileged.unboundChannels = {};
@@ -20,7 +22,7 @@ Core_unprivileged.contextId = undefined;
 
 /**
  * Create a custom channel.
- * Returns the structure {channel: fdom.proxy.Deferred, identifier: Object},
+ * Returns the structure {channel: Proxy, identifier: Object},
  * where the identifier can be 'redeemed' by another module or provider using
  * bind channel, at which point the deferred object will resolve with a channel
  * between the two endpoints.
@@ -28,12 +30,12 @@ Core_unprivileged.contextId = undefined;
  * @params {Function} continuation Method to call with the cosntructed structure.
  */
 Core_unprivileged.prototype.createChannel = function(continuation) {
-  var proxy = new fdom.port.Proxy(fdom.proxy.EventInterface),
-      id = fdom.util.getId(),
+  var proxy = new Consumer(EventInterface, this.manager.debug),
+      id = util.getId(),
       chan = this.getChannel(proxy);
   this.manager.setup(proxy);
 
-  if (this.manager.delegate && this.manager.toDelegate['core']) {
+  if (this.manager.delegate && this.manager.toDelegate.core) {
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -110,17 +112,17 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
   // when bindChannel is called directly, source will be undefined.
   // When it is propogated by onMessage, a source for binding will already exist.
   if (newSource) {
-    fdom.debug.debug('making local proxy for core binding');
-    source = new fdom.port.Proxy(fdom.proxy.EventInterface);
+    this.debug.debug('making local proxy for core binding');
+    source = new Consumer(EventInterface, this.debug);
     this.manager.setup(source);
   }
 
   // If this is a known identifier and is in the same context, binding is easy.
   if (toBind && toBind.local) {
-    fdom.debug.debug('Binding a channel to port on this hub:' + source);
+    this.debug.debug('Binding a channel to port on this hub:' + source);
     this.manager.createLink(source, identifier, toBind.proxy, 'default');
     delete Core_unprivileged.unboundChannels[identifier];
-    if (this.manager.delegate && this.manager.toDelegate['core']) {
+    if (this.manager.delegate && this.manager.toDelegate.core) {
       this.manager.emit(this.manager.delegate, {
         type: 'Delegation',
         request: 'handle',
@@ -132,7 +134,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       });
     }
   } else if (toBind && toBind.remote) {
-    fdom.debug.debug('Binding a channel into a module.');
+    this.debug.debug('Binding a channel into a module.');
     this.manager.createLink(
         source,
         newSource ? 'default' : identifier,
@@ -148,8 +150,8 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       }
     });
     delete Core_unprivileged.unboundChannels[identifier];
-  } else if (this.manager.delegate && this.manager.toDelegate['core']) {
-    fdom.debug.info('delegating channel bind for an unknown ID:' + identifier);
+  } else if (this.manager.delegate && this.manager.toDelegate.core) {
+    this.debug.info('delegating channel bind for an unknown ID:' + identifier);
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -169,8 +171,8 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
     delete Core_unprivileged.unboundChannels[identifier];
     return;
   } else {
-    fdom.debug.warn('Asked to bind unknown channel: ' + identifier);
-    fdom.debug.log(Core_unprivileged.unboundChannels);
+    this.debug.warn('Asked to bind unknown channel: ' + identifier);
+    this.debug.log(Core_unprivileged.unboundChannels);
     continuation();
     return;
   }
@@ -198,13 +200,13 @@ Core_unprivileged.prototype.getId = function(callback) {
 /**
  * Get a logger for logging to the freedom.js logger. Provides a
  * log object with an interface similar to the standard javascript console,
- * which logs via fdom.debug.
+ * which logs via debug.
  * @method getLogger
  * @param {String} name The name of the logger, used as its 'source'
  * @param {Function} callback The function to call with the logger.
  */
 Core_unprivileged.prototype.getLogger = function(name, callback) {
-  callback(fdom.util.getLogger(name));
+  callback(this.manager.debug.getLogger(name));
 };
 
 /**
@@ -217,4 +219,5 @@ Core_unprivileged.prototype.setId = function(id) {
   Core_unprivileged.contextId = id;
 };
 
-fdom.apis.register("core", Core_unprivileged);
+exports.provider = Core_unprivileged;
+exports.name = "core";

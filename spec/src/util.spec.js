@@ -1,9 +1,11 @@
+var util = require('../../src/util');
+
 describe("util", function() {
   it("iterates over an array", function() {
     var array = [1, 4, 9, 16];
     var sum = 0;
     var ids = [];
-    fdom.util.eachReverse(array, function(el, idx) {
+    util.eachReverse(array, function(el, idx) {
       sum += el;
       ids.push(idx);
     });
@@ -11,7 +13,7 @@ describe("util", function() {
     expect(sum).toEqual(30);
     expect(ids).toEqual([3, 2, 1, 0]);
 
-    fdom.util.eachReverse(false, function() {
+    util.eachReverse(false, function() {
       sum = 100;
     });
     expect(sum).toEqual(30);
@@ -20,7 +22,7 @@ describe("util", function() {
   it("stops iterating if needed", function() {
     var array = [1, 4, 9, 16];
     var sum = 0;
-    fdom.util.eachReverse(array, function(el) {
+    util.eachReverse(array, function(el) {
       sum += el;
       return el % 2 != 0;
     });
@@ -31,7 +33,7 @@ describe("util", function() {
     var obj = {};
     Object.defineProperty(obj, "testProp", {});
 
-    expect(fdom.util.hasProp(obj, "testProp")).toBeTruthy();
+    expect(util.hasProp(obj, "testProp")).toBeTruthy();
   });
 
   it("iterates properties", function() {
@@ -42,7 +44,7 @@ describe("util", function() {
     };
     var sum = 0;
     var props = [];
-    fdom.util.eachProp(obj, function(val, name) {
+    util.eachProp(obj, function(val, name) {
       sum += val;
       props.push(name);
     });
@@ -52,7 +54,7 @@ describe("util", function() {
     expect(props).toContain('c');
 
     sum = 0;
-    fdom.util.eachProp(obj, function(val, name) {
+    util.eachProp(obj, function(val, name) {
       sum += val;
       return name === 'b'
     });
@@ -68,13 +70,13 @@ describe("util", function() {
     });
 
     it("mixes Objects together", function() {
-      fdom.util.mixin(base, other);
+      util.mixin(base, other);
       expect(base.value).toEqual(1);
       expect(base.other).toEqual(2);
     });
 
     it("forcably mixes Objects together", function() {
-      fdom.util.mixin(base, other, true);
+      util.mixin(base, other, true);
       expect(base.value).toEqual(2);
       expect(base.other).toEqual(2);
     });
@@ -82,21 +84,21 @@ describe("util", function() {
     it("recursively mixes Objects together", function() {
       base.obj = {val: 1, mine: 3};
       other.obj = {val: 2};
-      fdom.util.mixin(base, other, true);
+      util.mixin(base, other, true);
       expect(base.obj.val).toEqual(2);
       expect(base.obj.mine).toBeUndefined();
     });
 
     it("handles degenerate mixins", function() {
-      var result = fdom.util.mixin(base, null, true);
+      var result = util.mixin(base, null, true);
       expect(result).toEqual({value: 1});
     });
   });
 
   describe("getId", function() {
     it("creates unique IDs", function() {
-      var id1 = fdom.util.getId();
-      var id2 = fdom.util.getId();
+      var id1 = util.getId();
+      var id2 = util.getId();
       expect(id1).not.toEqual(id2);
     });
   });
@@ -107,7 +109,7 @@ describe("util", function() {
     beforeEach(function() {
       object = {};
       cb = jasmine.createSpy('cb');
-      fdom.util.handleEvents(object);
+      util.handleEvents(object);
     });
 
     it("can execute events", function() {
@@ -172,14 +174,5 @@ describe("util", function() {
       object.emit('msg', 'yes');
       expect(cb).not.toHaveBeenCalled();
     })
-  });
-
-  describe("ModuleContext", function() {
-    it("Warns when source has been mangled", function() {
-      spyOn(fdom.debug, "error");
-      var resp = fdom.util.forceModuleContext("");
-      expect(fdom.debug.error).toHaveBeenCalled();
-      expect(resp).toBeUndefined();
-    });
   });
 });

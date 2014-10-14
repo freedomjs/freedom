@@ -1,0 +1,145 @@
+{
+  "name": "core.tcpsocket",
+  "api": {
+    // Sockets may be constructed bound to a pre-existing id, as in the case of
+    // interacting with a socket accpeted by a server.  If no Id is specified, a
+    // new socket will be created, which can be either connect'ed or listen'ed.
+    "constructor": {
+      "value": ["number"]
+    },
+  
+    // Get info about a socket.  Tells you whether the socket is active and
+    // available host information.
+    "getInfo": {
+      "type": "method",
+      "value": [],
+      "ret": {
+        "connected": "boolean",
+        "localAddress": "string",
+        "localPort": "number",
+        "peerAddress": "string",
+        "peerPort": "number"
+      }
+    },
+  
+    /** 
+     * error codes and default messages that may be returned on failures.
+     */
+    "ERRCODE": {"type": "constant", "value": {
+      /** GENERAL **/
+      "SUCCESS": "Success!",
+      // Unknown
+      "UNKNOWN": "Unknown error",
+      
+      // Socket is already connected
+      "ALREADY_CONNECTED": "Socket already connected",
+      // Invalid Argument, client error
+      "INVALID_ARGUMENT": "Invalid argument",
+      // Connection timed out.
+      "TIMED_OUT": "Timed out",
+      // Operation cannot complete because socket is not connected.
+      "NOT_CONNECTED": "Socket not connected",
+      // Socket reset because of change in network state.
+      "NETWORK_CHANGED": "Network changed",
+      // Connection closed
+      "CONNECTION_CLOSED": "Connection closed gracefully",
+      // Connection Reset
+      "CONNECTION_RESET": "Connection reset",
+      // Connection Refused
+      "CONNECTION_REFUSED": "Connection refused",
+      // Generic Failure
+      "CONNECTION_FAILED": "Connection failed"
+    }},
+    
+    // Close a socket. Will Fail if the socket is not connected or already
+    // closed.
+    "close": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Receive notification that the socket has disconnected.
+    "onDisconnect": {"type": "event", "value": {
+      "errcode": "string",
+      "message": "string"
+    }},
+  
+    // Connect to a host and port.
+    // Fails with an error if connection fails.
+    "connect": {
+      "type": "method",
+      "value": ["string", "number"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Upgrades a socket to TLS, expected to be invoked after connect.
+    "secure": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Prepares a socket for becoming secure after the next read event.
+    // See details at
+    // https://github.com/freedomjs/freedom/wiki/prepareSecure-API-Usage
+    // This should be called one read prior to calling .secure, e.g. in XMPP
+    // this should be called before sending "starttls", then after a "proceed"
+    // message is read .secure should be called.
+    "prepareSecure": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Write buffer data to a socket.
+    // Fails with an error if write fails.
+    "write": {
+      "type": "method",
+      "value": ["buffer"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Receive data on a connected socket.
+    "onData": {
+      "type": "event",
+      "value": {"data": "buffer"}
+    },
+  
+    // Listen as a server at a specified host and port.
+    // After calling listen the client should listen for 'onConnection' events.
+    // Fails with an error if errors occur while binding or listening.
+    "listen": {
+      "type": "method",
+      "value": ["string", "number"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Receive a connection.
+    // The socket parameter may be used to construct a new socket.
+    // Host and port information provide information about the remote peer.
+    "onConnection": {"type": "event", "value": {
+      "socket": "number",
+      "host": "string",
+      "port": "number"
+    }}
+  }
+}

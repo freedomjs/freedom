@@ -1,5 +1,6 @@
-/*globals fdom:true, console */
-/*jslint indent:2,white:true,sloppy:true */
+/*globals console */
+/*jslint indent:2,white:true,sloppy:true, node:true */
+var util = require('../../src/util');
 
 /**
  * A minimal provider implementing the core.echo interface for interaction with
@@ -10,10 +11,9 @@
  * @param {Module} mod The module creating this provider.
  */
 var Echo_unprivileged = function(mod, dispatchEvent) {
-  fdom.debug.log('Echo Created!');
   this.mod = mod;
   this.dispatchEvent = dispatchEvent;
-  fdom.util.handleEvents(this);
+  util.handleEvents(this);
 
   // The Core object for managing channels.
   this.mod.once('core', function(Core) {
@@ -71,4 +71,5 @@ Echo_unprivileged.prototype.send = function(str, continuation) {
   }
 };
 
-fdom.apis.register("core.echo", Echo_unprivileged);
+exports.provider = Echo_unprivileged;
+exports.name = "core.echo";

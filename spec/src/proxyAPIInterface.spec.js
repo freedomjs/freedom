@@ -1,4 +1,7 @@
-describe("fdom.proxy.APIInterface", function() {
+var ApiInterface = require('../../src/proxy/apiInterface');
+var Consumer = require('../../src/consumer');
+
+describe("proxy/APIInterface", function() {
   var emit, reg, api;
   beforeEach(function() {
         var iface = {
@@ -10,7 +13,7 @@ describe("fdom.proxy.APIInterface", function() {
     var onMsg = function(obj, r) {
       reg = r;
     };
-    api = new fdom.proxy.ApiInterface(iface, onMsg, emit);
+    api = new ApiInterface(iface, onMsg, emit);
   });
 
   it("Creates an object looking like an interface.", function(done) {
@@ -63,7 +66,8 @@ describe("fdom.proxy.APIInterface", function() {
       });
       done();
     };
-    var apimaker = fdom.proxy.ApiInterface.bind({}, iface, onMsg, callback);
+    var debug = {};
+    var apimaker = ApiInterface.bind({}, iface, onMsg, callback, debug);
     var api = new apimaker('my param');
   });
 
@@ -82,7 +86,8 @@ describe("fdom.proxy.APIInterface", function() {
       });
       done();
     };
-    var apimaker = fdom.proxy.ApiInterface.bind({}, iface, onMsg, callback);
+    var debug = {};
+    var apimaker = ApiInterface.bind({}, iface, onMsg, callback, debug);
     var api = new apimaker({'test':'hi'});
   });
 
@@ -124,7 +129,7 @@ afterEach(function() {
   }
 });
 
-describe("fdom.proxy.recursiveFreezeObject", function() {
+describe("Consumer.recursiveFreezeObject", function() {
   it("Freezes objects", function () {
     var obj = {
       a: 1,
@@ -132,7 +137,7 @@ describe("fdom.proxy.recursiveFreezeObject", function() {
         c: 2
       }
     };
-    var frozen = fdom.proxy.recursiveFreezeObject(obj);
+    var frozen = Consumer.recursiveFreezeObject(obj);
     frozen.a = 5;
     frozen.b = 5;
     frozen.c = 5;
@@ -141,7 +146,11 @@ describe("fdom.proxy.recursiveFreezeObject", function() {
   });
 });
 
-describe("fdom.proxy.conform", function() {
+describe("Consumer.conform", function() {
+  var debug = {
+    error: function() {}
+  };
+
   it("Conforms Simple values to templates", function() {
     var blob = null;
     if (typeof(Blob) === typeof(Function)) {
@@ -175,7 +184,7 @@ describe("fdom.proxy.conform", function() {
       'p10': ['test', 12],
       'p11': {'a': 'hi', 'b': 12}
     };
-    var conformed = fdom.proxy.conform(template, correct,
+    var conformed = Consumer.conform(template, correct,
                                        [blob, new ArrayBuffer(2)], false);
     correct['p5'] = conformed['p5'];
     correct['p6'] = conformed['p6'];
@@ -194,7 +203,7 @@ describe("fdom.proxy.conform", function() {
       'p11': []
     };
 
-    conformed = fdom.proxy.conform(template, incorrect, [0, blob, blob], false);
+    conformed = Consumer.conform(template, incorrect, [0, blob, blob], false);
     expect(conformed).toEqual({
       'p1': '12',
       'p2': 12,
@@ -209,36 +218,35 @@ describe("fdom.proxy.conform", function() {
   });
 
   it("conforms simple arguments", function() {
-    expect(fdom.proxy.conform("string", "mystring", [], false)).toEqual("mystring");
-    expect(fdom.proxy.conform("number", "mystring", [], false)).toEqual(jasmine.any(Number));
-    expect(fdom.proxy.conform("boolean", "mystring", [], false)).toEqual(false);
-    expect(fdom.proxy.conform("", "mystring", [], false)).toEqual(undefined);
-    expect(fdom.proxy.conform(["string", "number"], ["test", 0], [], false))
+    expect(Consumer.conform("string", "mystring", [], false, debug)).toEqual("mystring");
+    expect(Consumer.conform("number", "mystring", [], false, debug)).toEqual(jasmine.any(Number));
+    expect(Consumer.conform("boolean", "mystring", [], false, debug)).toEqual(false);
+    expect(Consumer.conform("", "mystring", [], false, debug)).toEqual(undefined);
+    expect(Consumer.conform(["string", "number"], ["test", 0], [], false, debug))
       .toEqual(["test", 0]);
-    expect(fdom.proxy.conform("number", 0, [], false)).toEqual(0);
+    expect(Consumer.conform("number", 0, [], false, debug)).toEqual(0);
   });
 
   it("conforms complex arguments", function() {
-    expect(fdom.proxy.conform({"key":"string"}, {"key":"good", "other":"bad"},[], false)).
+    expect(Consumer.conform({"key":"string"}, {"key":"good", "other":"bad"},[], false)).
         toEqual({"key":"good"});
-    expect(fdom.proxy.conform(["string"], ["test", 12],[], false)).toEqual(["test"]);
-    expect(fdom.proxy.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
-    expect(fdom.proxy.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
+    expect(Consumer.conform(["string"], ["test", 12],[], false)).toEqual(["test"]);
+    expect(Consumer.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
+    expect(Consumer.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
     //expect(fdom.proxy.conform.bind({}, "object", function() {},[], false)).toThrow();
-    expect(fdom.proxy.conform("object", function() {},[], false)).not.toBeDefined();
+    expect(Consumer.conform("object", function() {},[], false)).not.toBeDefined();
   });
 
   it("conforms nulls", function() {
-    expect(fdom.proxy.conform({"key": "string"}, {"key": null}, [], false)).
+    expect(Consumer.conform({"key": "string"}, {"key": null}, [], false)).
       toEqual({"key": null});
-    expect(fdom.proxy.conform("object", null, [], false)).toEqual(null);
-    expect(fdom.proxy.conform({"key": "string"}, {"key": undefined}, [], false)).
+    expect(Consumer.conform("object", null, [], false)).toEqual(null);
+    expect(Consumer.conform({"key": "string"}, {"key": undefined}, [], false)).
       toEqual({});
-    expect(fdom.proxy.conform(["string", "string", "string", "string"], 
+    expect(Consumer.conform(["string", "string", "string", "string"], 
                               [null, undefined, null, 0], [], false)).
       toEqual([null, undefined, null, "0"]);
-    expect(fdom.proxy.conform("object", undefined, [], false)).toEqual(undefined);
-  
+    expect(Consumer.conform("object", undefined, [], false)).toEqual(undefined);
   });
 
   it("conforms binary arguments", function() {
@@ -251,9 +259,9 @@ describe("fdom.proxy.conform", function() {
 
     var buffer = new ArrayBuffer(4);
     var externals = [];
-    expect(fdom.proxy.conform("buffer", buffer, externals, true)).toEqual(0);
+    expect(Consumer.conform("buffer", buffer, externals, true, debug)).toEqual(0);
     expect(externals.length).toEqual(1);
-    expect(fdom.proxy.conform("buffer", 0, ["string"], false)).toEqual(jasmine.any(ArrayBuffer));
-    expect(fdom.proxy.conform("buffer", 0, externals, false)).toEqual(buffer);
+    expect(Consumer.conform("buffer", 0, ["string"], false, debug)).toEqual(jasmine.any(ArrayBuffer));
+    expect(Consumer.conform("buffer", 0, externals, false, debug)).toEqual(buffer);
   });
 });

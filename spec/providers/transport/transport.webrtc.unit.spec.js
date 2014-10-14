@@ -1,7 +1,11 @@
+var testUtil = require('../../util');
+var util = require('../../../src/util');
+var Provider = require('../../../providers/transport/webrtc/transport.webrtc');
+
 describe("unit: transport.webrtc.json", function () {
   var transport, peerconnection, dispatchedEvents;
-  var sizeToBuffer = WebRTCTransportProvider.prototype._sizeToBuffer;
-  var bufferToSize = WebRTCTransportProvider.prototype._bufferToSize;
+  var sizeToBuffer = Provider.provider.prototype._sizeToBuffer;
+  var bufferToSize = Provider.provider.prototype._bufferToSize;
   function defineSlice(arrayBuffer) {
     arrayBuffer.slice = function(begin, end) {
       begin = (begin|0) || 0;
@@ -52,11 +56,11 @@ describe("unit: transport.webrtc.json", function () {
   beforeEach(function(done) {
     dispatchedEvents = {};
     freedom = {
-      core: mockIface([["getId", ["myId"]]]),
+      core: testUtil.mockIface([["getId", ["myId"]]]),
       // We can't use mockIface alone, we need to make peerconnection
       // an event target.
       "core.peerconnection": function() {
-        var iface = mockIface([
+        var iface = testUtil.mockIface([
           ["setup", undefined],
           ["send", undefined],
           ["openDataChannel", undefined],
@@ -68,7 +72,7 @@ describe("unit: transport.webrtc.json", function () {
         return peerconnection;
       }
     };
-    transport = new WebRTCTransportProvider();
+    transport = new Provider.provider();
     transport.dispatchEvent = function(event, data) {
       dispatchedEvents[event] = data;
     };
@@ -77,7 +81,7 @@ describe("unit: transport.webrtc.json", function () {
     function postSetup() {
       expect(peerconnection.setup).toHaveBeenCalledWith(undefined,
                                                        "unit-tests",
-                                                        WebRTCTransportProvider.stun_servers,
+                                                        Provider.provider.stun_servers,
                                                         false);
       done();
     }
@@ -85,8 +89,8 @@ describe("unit: transport.webrtc.json", function () {
 
   it("Sends data", function(done) {
     var tag = "test tag";
-    var firstMessage = fdom.util.str2ab("Hello World");
-    var secondMessage = fdom.util.str2ab("Wello Horld");
+    var firstMessage = util.str2ab("Hello World");
+    var secondMessage = util.str2ab("Wello Horld");
     spyOn(transport, "send").and.callThrough();
     transport.send(tag, firstMessage, firstSendCallback);
     function firstSendCallback() {
@@ -115,16 +119,16 @@ describe("unit: transport.webrtc.json", function () {
     }
   });
 
-function printBuffer(buffer) {
-  var test = new Uint8Array(buffer);
-  for (var i = 0; i < buffer.byteLength; i++) {
-       console.log(test[i]);
+  function printBuffer(buffer) {
+    var test = new Uint8Array(buffer);
+    for (var i = 0; i < buffer.byteLength; i++) {
+      console.log(test[i]);
+    }
   }
-}
 
   xit("fires on data event", function() {
     var tag = "test";
-    var data = fdom.util.str2ab("Hello World");
+    var data = util.str2ab("Hello World");
     var sizeAsBuffer = sizeToBuffer(data.byteLength);
     var toSend = new ArrayBuffer(data.byteLength + 8);
     defineSlice(toSend);
@@ -135,7 +139,7 @@ function printBuffer(buffer) {
                    buffer: toSend};
     transport.onData(message);
     console.info(dispatchedEvents.onData.data.byteLength);
-    console.info(fdom.util.ab2str(dispatchedEvents.onData.data));
+    console.info(util.ab2str(dispatchedEvents.onData.data));
     expect(dispatchedEvents.onData).toEqual({tag: tag,
                                              data: data});
   });

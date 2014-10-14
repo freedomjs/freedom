@@ -1,0 +1,84 @@
+{
+  "name": "core.peerconnection",
+  "api": {
+    // Setup the link to the peer and options for this peer connection.
+    "setup": {
+      "type": "method",
+      "value": [
+        // The freedom.js channel identifier used to setup a signalling chanel.
+        "string",
+        // The peerName, used debugging and console messages.
+        "string",
+        // The list of STUN servers to use.
+        // The format of a single entry is stun:HOST:PORT, where HOST
+        // and PORT are a stun server hostname and port, respectively.
+        ["array", "string"],
+        // Whether to immediately initiate a connection before fulfilling return
+        // promise.
+        "boolean"
+      ]
+    },
+  
+    // Send a message to the peer.
+    "send": {"type": "method", "value": [{
+      // Data channel id. If provided, will be used as the channel label.
+      // The behavior is undefined if the channel label doesn't exist.
+      "channelLabel": "string",
+      // One of the bellow should be defined; this is the data to send.
+      "text": "string",
+      "binary": "blob",
+      "buffer": "buffer"
+    }]},
+  
+    // Called when we get a message from the peer.
+    "onReceived": {"type": "event", "value": {
+      // The label/id of the data channel.
+      "channelLabel": "string",
+      // One the below will be specified.
+      "text": "string",
+      "binary": "blob",
+      "buffer": "buffer"
+    }},
+  
+    // Open the data channel with this label.
+    "openDataChannel": {"type": "method", "value": ["string"]},
+    // Close the data channel with this label.
+    "closeDataChannel": {"type": "method", "value": ["string"]},
+  
+    // A channel with this id has been opened.
+    "onOpenDataChannel": {"type": "event", "value": {"channelId": "string"}},
+    // The channale with this id has been closed.
+    "onCloseDataChannel": {"type": "event", "value": {"channelId": "string"}},
+  
+    // Returns the number of bytes that have queued using "send", but not
+    // yet sent out. Currently just exposes:
+    // http://www.w3.org/TR/webrtc/#widl-RTCDataChannel-bufferedAmount
+    "getBufferedAmount": {"type": "method",
+                          "value": ["string"],
+                          "ret": "number"},
+  
+    // Returns local SDP headers from createOffer.
+    "getInfo": {"type": "method", "value": [], "ret": "string"},
+  
+    "createOffer": {
+      "type": "method",
+      "value": [{
+        // Optional :RTCOfferOptions object.
+        "offerToReceiveVideo": "number",
+        "offerToReceiveAudio": "number",
+        "voiceActivityDetection": "boolean",
+        "iceRestart": "boolean"
+      }],
+      "ret": {
+        // Fulfills with a :RTCSessionDescription
+        "type": "string",  // Should always be "offer".
+        "sdp": "string"
+      }
+    },
+  
+    // Close the peer connection.
+    "close": {"type": "method", "value": []},
+    // The peer connection has been closed.
+    "onClose": {"type": "event", "value": {}}
+  }
+}

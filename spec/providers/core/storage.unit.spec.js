@@ -1,18 +1,12 @@
+var Provider = require('../../../providers/core/storage.localstorage');
+
 describe("core.storage unprivileged", function() {
   var provider;
   var TIMEOUT = 1000;
   
   beforeEach(function(done) {
-    if (typeof chrome !== "undefined" && 
-        typeof chrome.storage !== "undefined" &&
-        typeof chrome.storage.local !== "undefined") {
-      chrome.storage.local.clear();
-      provider = new Storage_chromeStorageLocal({});
-    } else {
-      localStorage.clear();
-      provider = new Storage_unprivileged({});
-    }
-    done();
+    provider = new Provider.provider({});
+    provider.clear(done);
   });
   
   it("Deals with Keys appropriately", function(done) {
@@ -64,6 +58,5 @@ describe("core.storage unprivileged", function() {
       done();
     }
     provider.set('myKey', 'myVal', callbackOne);
-    
   });
 });

@@ -2,11 +2,13 @@ var listeningFor = {};
 var providers = {"core": freedom.core()};
 var channels = {};
 
+var base = freedom();
+
 // action = {
 //  name: name to store provider under in "providers" object, 
 //  provider: name in manifest
 // }
-freedom.on("create", function(action) {
+base.on("create", function(action) {
   var name = action.name;
   var provider = action.provider;
   var constructorArguments = action.constructorArguments || [];
@@ -20,30 +22,30 @@ freedom.on("create", function(action) {
 //  name: name of provider in "providers" object, 
 //  method: method to call, 
 //  args: array of arguments to method}
-freedom.on("call", function(action){
+base.on("call", function(action){
   var p = providers[action.provider];
 	var promise = p[action.method].apply(null, action.args);
   promise.then(function(ret) {
-    freedom.emit("return", {
+    base.emit("return", {
       id: action.id,
       data: ret
     });
 	}, function(err) {
-    freedom.emit("error", {
+    base.emit("error", {
       id: action.id,
       data: err
     });
   });
 });
 
-freedom.on('listenForEvent', function(listenEventInfo) {
+base.on('listenForEvent', function(listenEventInfo) {
   var providerName = listenEventInfo.provider;
   var eventName = listenEventInfo.event;
   var provider = providers[providerName];
 
   if (!listeningFor[providerName][eventName]) {
     provider.on(listenEventInfo.event, function (eventPayload) { 
-      freedom.emit('eventFired', {provider: providerName,
+      base.emit('eventFired', {provider: providerName,
                                   event: eventName,
                                   eventPayload: eventPayload});
     });
@@ -51,17 +53,17 @@ freedom.on('listenForEvent', function(listenEventInfo) {
   }
 });
 
-freedom.on("createChannel", function() {
+base.on("createChannel", function() {
   //providers.core.createChannel().done(function(chan) {
   freedom.core().createChannel().then(function(chan) {
     channels[chan.identifier] = chan.channel;
     chan.channel.on("message", function(msg){
-      freedom.emit("inFromChannel", {
+      base.emit("inFromChannel", {
         chanId: chan.identifier,
         message: msg
       });
     });
-    freedom.emit("initChannel", chan.identifier);
+    base.emit("initChannel", chan.identifier);
   });
 });
 
@@ -69,6 +71,6 @@ freedom.on("createChannel", function() {
 //  chanId: channel identifier,
 //  message: message to send
 // }
-freedom.on("outToChannel", function(action) {
+base.on("outToChannel", function(action) {
   channels[action.chanId].emit("message", action.message);
 });

@@ -1,5 +1,5 @@
-/*globals fdom:true, console */
-/*jslint indent:2,white:true,sloppy:true */
+/*globals console */
+/*jslint indent:2,white:true,sloppy:true,node:true */
 
 /**
  * An oAuth meta-provider allowing multiple platform-dependant
@@ -23,7 +23,7 @@ OAuth.handlers = [];
  * @private
  */
 OAuth.register = function(handler) {
-  this.handlers.push(handler);
+  OAuth.handlers.push(handler);
 };
 
 /**
@@ -51,4 +51,6 @@ OAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   });
 };
 
-fdom.apis.register("core.oauth", OAuth);
+exports.register = OAuth.register;
+exports.provider = OAuth;
+exports.name = 'core.oauth';

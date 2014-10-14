@@ -11,5 +11,14 @@
       "url": "../../providers/storage/shared/storage.shared.json",
       "api": "storage"
     }
+  },
+  "provides": ["board"],
+  "default": "board",
+  "api": {
+    "board": {
+      "move": {"type": "method", "value": ["number"]},
+      "stats": {"type": "event", "value": {"win":"number", "lose":"number"}},
+      "update": {"type": "event", "value": ["array", "number"]}
+    }
   }
 }

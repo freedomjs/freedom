@@ -1,0 +1,256 @@
+/**
+ * SOCIAL API
+ *
+ * API for connecting to social networks and messaging of users.
+ * An instance of a social provider encapsulates a single user logging into
+ * a single network.
+ *
+ * This API distinguishes between a "user" and a "client". A client is a
+ * user's point of access to the social provider. Thus, a user that has
+ * multiple connections to a provider (e.g., on multiple devices or in multiple
+ * browsers) has multiple clients.
+ *
+ * The semantics of some properties are defined by the specific provider, e.g.:
+ * - Edges in the social network (who is on your roster)
+ * - Reliable message passing (or unreliable)
+ * - In-order message delivery (or out of order)
+ * - Persistent clientId - Whether your clientId changes between logins when
+ *    connecting from the same device
+ *
+ * A <client_state>, used in this API, is defined as:
+ * - Information related to a specific client of a user
+ * - Use cases: 
+ *   - Returned on changes for friends or my instance in 'onClientState'
+ *   - Returned in a global list from 'getClients'
+ * {
+ *   // Mandatory
+ *   'userId': 'string',      // Unique ID of user (e.g. alice@gmail.com)
+ *   'clientId': 'string',    // Unique ID of client
+ *                            // (e.g. alice@gmail.com/Android-23nadsv32f)
+ *   'status': 'string',      // Status of the client. 'STATUS' member.
+ *   'lastUpdated': 'number', // Timestamp of the last time client_state was updated
+ *   'lastSeen': 'number'     // Timestamp of the last seen time of this device.
+ *                            // Note: 'lastSeen' DOES NOT trigger an 'onClientState' event
+ * }
+ * 
+ * A <user_profile>, used in this API, is defined as:
+ * - Information related to a specific user (profile information)
+ * - Use cases:
+ *   - Returned on changes for friends or myself in 'onUserProfile'
+ *   - Returned in a global list from 'getUsers'
+ * {
+ *   // Mandatory
+ *   "userId": "string",    // Unique ID of user (e.g. alice@gmail.com)
+ *   "lastUpdated": "number"  // Timestamp of last change to the profile
+ *   // Optional
+ *   "name": "string",      // Name (e.g. Alice)
+ *   "url": "string",       // Homepage URL
+ *   "imageData": "string", // URI of a profile image.
+ * }
+ **/
+{
+  "name": "social",
+  "api": {
+    /** 
+     * error codes and default messages that may be returned on failures.
+     */
+    "ERRCODE": {"type": "constant", "value": {
+      /** GENERAL **/
+      "SUCCESS": "Success!",
+      // Unknown
+      "UNKNOWN": "Unknown error",
+      // User is currently offline
+      "OFFLINE": "User is currently offline",
+      // Improper parameters
+      "MALFORMEDPARAMETERS": "Parameters are malformed",
+  
+      /** LOGIN **/
+      // Error authenticating to the server (e.g. invalid credentials)
+      "LOGIN_BADCREDENTIALS": "Error authenticating with server",
+      // Error with connecting to the server
+      "LOGIN_FAILEDCONNECTION": "Error connecting to server",
+      // User is already logged in
+      "LOGIN_ALREADYONLINE": "User is already logged in",
+  
+      /** SENDMESSAGE **/
+      // Message sent to invalid destination (e.g. not in user's roster)
+      "SEND_INVALIDDESTINATION": "Message sent to an invalid destination"
+    }},
+    
+    /**
+     * List of possible statuses for <client_state>.status
+     **/
+    "STATUS": {"type": "constant", "value": {
+      // Not logged in
+      "OFFLINE": "OFFLINE",
+      // This client runs the same freedom.js app as you and is online
+      "ONLINE": "ONLINE",
+      // This client is online, but does not run the same app (chat client)
+      // (i.e. can be useful to invite others to your freedom.js app)
+      "ONLINE_WITH_OTHER_APP": "ONLINE_WITH_OTHER_APP"
+    }},
+  
+    /**
+     * Log into the network (See below for parameters)
+     * e.g. social.login(Object options)
+     *
+     * @method login
+     * @param {Object} loginOptions - See below
+     * @return {Object} <client_state>
+     **/
+    "login": {
+      "type": "method",
+      "value": [{
+        // Optional
+        "agent": "string",         // Name of the application
+        "version": "string",       // Version of application
+        "url": "string",           // URL of application
+        "interactive": "boolean",  // Allow user interaction from provider.
+                                   // If not set, interpreted as true.
+        "rememberLogin": "boolean" // Cache login credentials. If not set,
+                                   // interpreted as true.
+      }],
+      "ret": {                       // <client_state>, defined above.
+        "userId": "string",
+        "clientId": "string",
+        "status": "string",
+        "lastUpdated": "number",
+        "lastSeen": "number"
+      },
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    /**
+     * Clears cached credentials of the provider.
+     *
+     * @method clearCachedCredentials
+     * @return nothing
+     **/
+    "clearCachedCredentials": {"type": "method", "value": []},
+  
+    /**
+     * Get <client_state>s that have been observed.
+     * The provider implementation may act as a client, in which case its
+     * <client_state> will be in this list.
+     * getClients may not represent an entire roster, since it may not be
+     * enumerable.
+     * 
+     * @method getClients
+     * @return {Object} { 
+     *    "clientId1": <client_state>,
+     *    "clientId2": <client_state>,
+     *     ...
+     * } List of <client_state>s indexed by clientId
+     *   On failure, rejects with an error code.
+     **/
+    "getClients": {
+      "type": "method",
+      "value": [],
+      "ret": "object",
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    /**
+     * Get <user_profile>s that have been observed.
+     * The provider implementation may act as a client, in which case its
+     * <user_profile> will be in this list.
+     * getUsers may not represent an entire roster, since it may not be
+     * enumerable.
+     *
+     * @method getUsers
+     * @return {Object} { 
+     *    "userId1": <user_profile>,
+     *    "userId2": <user_profile>,
+     *     ...
+     * } List of <user_profile>s indexed by userId
+     *   On failure, rejects with an error code.
+     **/
+    "getUsers": {
+      "type": "method",
+      "value": [],
+      "ret": "object",
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    /** 
+     * Send a message.
+     * Destination may be a userId or a clientId. If it is a userId, all clients
+     * for that user should receive the message.
+     * 
+     * @method sendMessage
+     * @param {String} destination_id The userId or clientId to send to
+     * @param {String} message The message to send.
+     * @return nothing
+     *  On failure, rejects with an error code
+     **/
+    "sendMessage": {
+      "type": "method",
+      "value": ["string", "string"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    /**
+     * Log out of the network.
+     * 
+     * @method logout
+     * @return nothing
+     *  On failure, rejects with an error code
+     **/
+    "logout": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    /**
+     * Receive an incoming message.
+     **/
+    "onMessage": {"type": "event", "value": {
+      "from": {               // <client_state>, defined above.
+        "userId": "string",
+        "clientId": "string",
+        "status": "string",
+        "lastUpdated": "number",
+        "lastSeen": "number"
+      },
+      "message": "string"     // message contents
+    }},
+  
+    /**
+     * Receive a change to a <user_profile>.
+     **/
+    "onUserProfile": {"type": "event", "value": { // <user_profile>, defined above.
+      "userId": "string",
+      "lastUpdated": "number",
+      "name": "string",
+      "url": "string",
+      "imageData": "string"
+    }},
+  
+    /**
+     * Receive a change to a <client_state>.
+     **/
+    "onClientState": {"type": "event", "value": { // <client_state>, defined above.
+      "userId": "string",
+      "clientId": "string",
+      "status": "string",
+      "lastUpdated": "number",
+      "lastSeen": "number"
+    }}
+  }
+}

@@ -30,7 +30,7 @@ header {
   display: inline-block;
 }
 
-#triangle {
+.triangle {
   padding-left: 0.5em;
   font-size: 85%;
   color: #666;

@@ -1,19 +1,17 @@
-/*globals fdom:true */
-/*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
-fdom.link = fdom.link || {};
+/*jslint indent:2, white:true, node:true, sloppy:true */
+/*globals URL,webkitURL */
+var Link = require('../link');
+var util = require('../util');
 
 /**
  * A port providing message transport between two freedom contexts via iFrames.
- * @class link.Frame
+ * @class Frame
  * @extends Link
  * @uses handleEvents
  * @constructor
  */
-fdom.link.Frame = function() {
-  fdom.Link.call(this);
+var Frame = function(id, resource) {
+  Link.call(this, id, resource);
 };
 
 /**
@@ -21,7 +19,7 @@ fdom.link.Frame = function() {
  * @method start
  * @private
  */
-fdom.link.Frame.prototype.start = function() {
+Frame.prototype.start = function() {
   if (this.config.moduleContext) {
     this.config.global.DEBUG = true;
     this.setupListener();
@@ -37,7 +35,7 @@ fdom.link.Frame.prototype.start = function() {
  * @method stop
  * @private
  */
-fdom.link.Frame.prototype.stop = function() {
+Frame.prototype.stop = function() {
   // Function is determined by setupListener or setupFrame as appropriate.
 };
 
@@ -46,7 +44,7 @@ fdom.link.Frame.prototype.stop = function() {
  * @method toString
  * @return {String} the description of this port.
  */
-fdom.link.Frame.prototype.toString = function() {
+Frame.prototype.toString = function() {
   return "[Frame" + this.id + "]";
 };
 
@@ -55,7 +53,7 @@ fdom.link.Frame.prototype.toString = function() {
  * freedom.js context.
  * @method setupListener
  */
-fdom.link.Frame.prototype.setupListener = function() {
+Frame.prototype.setupListener = function() {
   var onMsg = function(msg) {
     if (msg.data.src !== 'in') {
       this.emitMessage(msg.data.flow, msg.data.message);
@@ -68,15 +66,44 @@ fdom.link.Frame.prototype.setupListener = function() {
     delete this.obj;
   };
   this.emit('started');
+  this.obj.postMessage("Ready For Messages", "*");
+};
+
+/**
+ * Get a URL of a blob object for inclusion in a frame.
+ * Polyfills implementations which don't have a current URL object, like
+ * phantomjs.
+ * @method getURL
+ */
+Frame.prototype.getURL = function(blob) {
+  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
+    return webkitURL.createObjectURL(blob);
+  } else {
+    return URL.createObjectURL(blob);
+  }
+};
+
+/**
+ * Deallocate the URL of a blob object.
+ * Polyfills implementations which don't have a current URL object, like
+ * phantomjs.
+ * @method getURL
+ */
+Frame.prototype.revokeURL = function(url) {
+  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
+    webkitURL.revokeObjectURL(url);
+  } else {
+    URL.revokeObjectURL(url);
+  }
 };
 
 /**
  * Set up an iFrame with an isolated freedom.js context inside.
  * @method setupFrame
  */
-fdom.link.Frame.prototype.setupFrame = function() {
+Frame.prototype.setupFrame = function() {
   var frame, onMsg;
-  frame = this.makeFrame(this.config.src, this.config.inject);
+  frame = this.makeFrame(this.config.source, this.config.inject);
   
   if (!document.body) {
     document.appendChild(document.createElement("body"));
@@ -99,6 +126,7 @@ fdom.link.Frame.prototype.setupFrame = function() {
     if (this.obj) {
       delete this.obj;
     }
+    this.revokeURL(frame.src);
     frame.src = "about:blank";
     document.body.removeChild(frame);
   };
@@ -111,25 +139,29 @@ fdom.link.Frame.prototype.setupFrame = function() {
  * painful enough that this mode of execution can be valuable for debugging.
  * @method makeFrame
  */
-fdom.link.Frame.prototype.makeFrame = function(src, inject) {
+Frame.prototype.makeFrame = function(src, inject) {
+  // TODO(willscott): add sandboxing protection.
   var frame = document.createElement('iframe'),
       extra = '',
       loader,
       blob;
-  // TODO(willscott): add sandboxing protection.
 
-  // TODO(willscott): survive name mangling.
-  src = src.replace('portType: "Worker"', 'portType: "Frame"');
   if (inject) {
-    extra = '<script src="' + inject + '" onerror="' +
-      'throw new Error(\'Injection of ' + inject +' Failed!\');' +
+    if (!inject.length) {
+      inject = [inject];
+    }
+    inject.forEach(function(script) {
+      extra += '<script src="' + script + '" onerror="' +
+      'throw new Error(\'Injection of ' + script +' Failed!\');' +
       '"></script>';
+    });
   }
   loader = '<html><meta http-equiv="Content-type" content="text/html;' +
-      'charset=UTF-8">' + extra + '<script src="' +
-      fdom.util.forceModuleContext(src) + '"></script></html>';
-  blob = fdom.util.getBlob(loader, 'text/html');
-  frame.src = fdom.util.getURL(blob);
+    'charset=UTF-8">' + extra + '<script src="' + src + '" onerror="' +
+    'throw new Error(\'Loading of ' + src +' Failed!\');' +
+    '"></script></html>';
+  blob = util.getBlob(loader, 'text/html');
+  frame.src = this.getURL(blob);
 
   return frame;
 };
@@ -141,7 +173,7 @@ fdom.link.Frame.prototype.makeFrame = function(src, inject) {
  * @param {String} flow the channel/flow of the message.
  * @param {Object} message The Message.
  */
-fdom.link.Frame.prototype.deliverMessage = function(flow, message) {
+Frame.prototype.deliverMessage = function(flow, message) {
   if (this.obj) {
     //fdom.debug.log('message sent to worker: ', flow, message);
     this.obj.postMessage({
@@ -153,4 +185,6 @@ fdom.link.Frame.prototype.deliverMessage = function(flow, message) {
     this.once('started', this.onMessage.bind(this, flow, message));
   }
 };
+
+module.exports = Frame;
 

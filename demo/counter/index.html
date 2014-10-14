@@ -5,39 +5,32 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
   <link href='../style.css' rel='stylesheet' type='text/css' />
 
-  <!-- Load FreeDOM and point it to the root module -->
-  <script type="text/javascript"
-      src="../../freedom.js"
-      data-manifest="manifest.json">
-    {
-      "stayLocal": true,
-      "debug": "log",
-      "strongIsolation": true
-    }
-  </script>
+  <!-- Load freedom.js -->
+  <script type="text/javascript" src="../../freedom.js"></script>
 
   <script type="text/javascript">
   // After loading freedom.js, the window is populated with a 'freedom'
   // object, which is used as a message passing channel to the root module
   window.onload = function() {
-    //Forward click events to the root FreeDOM module
-    document.getElementById('click').onclick = function() {
-      window.freedom.emit('click', 1);
-    }
-    //Display numbers from the root FreeDOM module
-    window.freedom.on('number', function(n) {
-      document.getElementById('count').innerHTML = n;
-    });
+    freedom("manifest.json", {
+      "debug": "log"
+    }).then(function(interface) {
+      var clicker = interface(0);
 
-    //Initialize the counter on start at 0
-    window.freedom.emit('click', 0);
+      //Send click events to the module.
+      document.getElementById('click').onclick = function() {
+        clicker.click(1).then(function (sum) {
+          document.getElementById('count').innerHTML = sum;
+        });
+      }
+    });
   }
   </script>
 </head>
 <body>
   <header id='logo'>freedom.js</header>
-  <header><span id='triangle'>&#9654;</span> Demos</header>
-  <header><span id='triangle'>&#9654;</span> Counter</header>
+  <header><span class='triangle'>&#9654;</span> Demos</header>
+  <header><span class='triangle'>&#9654;</span> Counter</header>
   <section>
     <p>The counter is currently <span id='count' class='freedomjs big'>0</span>.</p>
     <kbd><button id='click'>Increment</button></kbd>

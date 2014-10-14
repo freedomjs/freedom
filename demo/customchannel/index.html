@@ -3,51 +3,48 @@
 <head>
   <title>FreeDOM Sample</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-  <script type="text/javascript"
-      src="../../freedom.js"
-      data-manifest="manifest.json">
-{
-  "stayLocal": true,
-  "debug": "debug",
-  "strongIsolation": true
-}
-  </script>
-  <script type="text/javascript">
-	freedom.on('message', function(msg) {
-		document.getElementById('log').innerHTML += msg + '\r\n';
-	});
+  <script type="text/javascript" src="../../freedom.js"></script>
 
-	function mkbutton(m) {
-		var msger = document.createElement('button');
+  <script type="text/javascript">
+    freedom('manifest.json', {"debug": "debug"}).then(function(instance) {
+      start(instance());
+    });
+    
+    function start(channel) {
+	  channel.on('message', function(msg) {
+        document.getElementById('log').innerHTML += msg + '\r\n';
+	  });
+
+	  function mkbutton(m) {
+        var msger = document.createElement('button');
 		msger.innerHTML = 'Message ' + m;
-		msger.onclick = freedom.emit.bind({}, 'message', m);
+		msger.onclick = channel.emit.bind({}, 'message', m);
 		document.body.appendChild(msger);
 		var deleter = document.createElement('button');
 		deleter.innerHTML = 'Delete ' + m;
 		deleter.onclick = function(m) {
 			document.body.removeChild(msger);
 			document.body.removeChild(deleter);
-			freedom.emit('destroy', m);
+			channel.emit('destroy', m);
 		}.bind({}, m);
 		document.body.appendChild(deleter);
-	}
+	  }
 
-	var n = 0;
-	window.addEventListener('load', function() {
-		document.getElementById('create').addEventListener('click', function() {
-			var m = n;
-			n++;
-			mkbutton(m);
-			freedom.emit('create');
-		}, true);
+	  var n = 0;
+      document.getElementById('create').addEventListener('click', function() {
+        var m = n;
+		n++;
+		mkbutton(m);
+		channel.emit('create');
+      }, true);
 
-		document.getElementById('peer').addEventListener('click', function() {
-			var m = n;
-			n++;
-			mkbutton(m);
-			freedom.emit('peer');
-		}, true);
-	}, true);
+      document.getElementById('peer').addEventListener('click', function() {
+		var m = n;
+		n++;
+		mkbutton(m);
+		channel.emit('peer');
+      }, true);
+    }
   </script>
 </head>
 <body>

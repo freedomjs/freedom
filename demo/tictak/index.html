@@ -4,44 +4,40 @@
   <title>TicTak ~ freedom.js Demos</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
   <link href='../style.css' rel='stylesheet' type='text/css' />
-  <!-- Include freedom.js and point to the root module -->
-  <!-- Note that you can specify a JSON object of options to FreeDOM -->
-  <script type="text/javascript"
-      src="../../freedom.js"
-      data-manifest="manifest.json">
-{ "debug":"log" }
-  </script>
+  <!-- Include freedom.js -->
+  <script type="text/javascript" src="../../freedom.js"></script>
+
   <script type="text/javascript">
-  window.onload = function() {
-    // Once freedom.js has been included, the window object is populated
-    // with a 'freedom' object, which can be used to communicate with the backend
-    // Display stats updates in the window
-    window.freedom.on('stats', function(stats) {
-      var win = 0, lose = 0;
-      if (stats) {
-        win = stats.win || 0;
-        lose = stats.lose || 0;
+    // Load the runtime.
+    freedom('manifest.json').then(function(interface) {
+      var board = interface();
+
+      // These events are defined in the 'board' API in manifest.json,
+      // and sent in main.js by calling ```dispatchEvent('stats', value);```
+      board.on('stats', function(stats) {
+        var win = 0, lose = 0;
+        if (stats) {
+          win = stats.win || 0;
+          lose = stats.lose || 0;
+        }
+        document.getElementById('win').innerText = win;
+        document.getElementById('lose').innerText = lose;
+      });
+
+      board.on('update', function (state) {
+        for (var i = 0; i < state.length; i++) {
+          var realid = 'b' + (i + 1);
+          document.getElementById(realid).className = 'c' + state[i];
+          document.getElementById(realid).checked = state[i];
+        }
+      });
+
+      // Add onclick listeners to each tile to run code in the module.
+      var inputs = document.getElementsByTagName('input');
+      for (var i = 0; i < inputs.length; i ++) {
+        inputs[i].addEventListener('click', board.move.bind(board, i), true);
       }
-      document.getElementById('win').innerText = win;
-      document.getElementById('lose').innerText = lose;
     });
-    // Display the current state of the board
-    window.freedom.on('board', function(board) {
-      for (var id in board) {
-        var realid = 'b' + (parseInt(id) + 1);
-        document.getElementById(realid).className = 'c' + board[id];
-        document.getElementById(realid).checked = board[id];
-      }
-    });
-    // Add onclick listeners to each tile, which will
-    // send the user click actions to our backend
-    var inputs = document.getElementsByTagName('input');
-    for (var i = 0; i < inputs.length; i ++) {
-      inputs[i].addEventListener('click', function(j) {
-        window.freedom.emit('move', j);
-      }.bind(this, i), true);
-    }
-  }
   </script>
   <style type='text/css'>
   #win {color: rgb(100, 200, 100);}
@@ -71,8 +67,8 @@
 </head>
 <body>
   <header id='logo'>freedom.js</header>
-  <header><span id='triangle'>&#9654;</span> Demos</header>
-  <header><span id='triangle'>&#9654;</span> TicTak</header>
+  <header><span class='triangle'>&#9654;</span> Demos</header>
+  <header><span class='triangle'>&#9654;</span> TicTak</header>
   <section>
     <kbd>
       Win: <span id='win'>..</span> Lose: <span id='lose'>..</span>

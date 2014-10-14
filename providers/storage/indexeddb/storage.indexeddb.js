@@ -1,9 +1,12 @@
+/*jslint sloppy:true*/
+/*globals freedom,console,indexedDB, exports*/
 /**
  * Implementation of the Storage provider that uses indexedDB
  * Behavior:
  * - Namespace is shared with all instances of this provider.
  *   e.g. Both modules A and B use this storage provider. They'd be able to access the same keys
  **/
+//TODO(ryscheng): Move to core provider for indexDB. This is deprecated.
 
 function IndexedDBStorageProvider() {
   this.dbName = 'freedomjs';
@@ -19,86 +22,86 @@ function IndexedDBStorageProvider() {
   this.handle.initializing = true;
   this.handle.db = null;
   this.handle.version = 1;
-  this.handle.open = function() {
+  this.handle.open = function () {
     // console.log("storage.indexeddb: opening database");
     var req = indexedDB.open(this.dbName, this.handle.version);
-    req.onupgradeneeded = function(e) {
+    req.onupgradeneeded = function (e) {
       // console.log("storage.indexeddb.onupgradedneeded");
-      var db = e.target.result;
-      var store;
-      e.target.transaction.onerror = function(e) {
+      var db = e.target.result,
+        store;
+      e.target.transaction.onerror = function (e) {
         console.error(e.value);
       };
       if (!db.objectStoreNames.contains(this.storeName)) {
         store = db.createObjectStore(this.storeName, {
           keyPath: "key"
         });
-      } 
+      }
     }.bind(this);
-    req.onsuccess = function(e) {
+    req.onsuccess = function (e) {
       // console.log("storage.indexeddb: success opening database");
       this.handle.db = e.target.result;
       this.handle.initializing = false;
-      this._flushQueue();
+      this.flushQueue();
     }.bind(this);
-    req.onerror = function(e) {
+    req.onerror = function (e) {
       // console.log("storage.indexeddb: error opening database");
       console.error(e.value);
       this.handle.initializing = false;
-      this._flushQueue();
+      this.flushQueue();
     }.bind(this);
   }.bind(this);
   // console.log("IndexDB Storage Provider, running in worker " + self.location.href);
   this.handle.open();
 }
 
-IndexedDBStorageProvider.prototype.keys = function(continuation) {
+IndexedDBStorageProvider.prototype.keys = function (continuation) {
   //this.store.keys().then(continuation);
   if (this.handle.initializing) {
-    this._pushQueue("keys", null, null, continuation);
+    this.pushQueue("keys", null, null, continuation);
     return;
   } else if (this.handle.db === null) {
-    continuation(undefined, this._createError("OFFLINE"));
+    continuation(undefined, this.createError("OFFLINE"));
     return;
   }
 
   // console.log('storage.indexeddb.keys');
-  var transaction = this.handle.db.transaction([ this.storeName ] , "readonly" );
-  var store = transaction.objectStore(this.storeName);
-  var request = store.openCursor();
-  var retValue = [];
-  request.onerror = function(cont, e) {
-    cont(undefined, this._createError("UNKNOWN"));
+  var transaction = this.handle.db.transaction([this.storeName], "readonly"),
+    store = transaction.objectStore(this.storeName),
+    request = store.openCursor(),
+    retValue = [];
+  request.onerror = function (cont, e) {
+    cont(undefined, this.createError("UNKNOWN"));
   }.bind(this, continuation);
-  request.onsuccess = function(cont, retValue, e) {
+  request.onsuccess = function (cont, retValue, e) {
     var result = e.target.result;
-    if (result === null || typeof result == 'undefined') {
+    if (result === null || typeof result === 'undefined') {
       cont(retValue);
       return;
     }
     retValue.push(result.key);
-    result.continue();
+    result['continue']();
   }.bind(this, continuation, retValue);
 };
 
-IndexedDBStorageProvider.prototype.get = function(key, continuation) {
+IndexedDBStorageProvider.prototype.get = function (key, continuation) {
   //this.store.get(key).then(continuation);
   if (this.handle.initializing) {
-    this._pushQueue("get", key, null, continuation);
+    this.pushQueue("get", key, null, continuation);
     return;
   } else if (this.handle.db === null) {
-    continuation(undefined, this._createError("OFFLINE"));
+    continuation(undefined, this.createError("OFFLINE"));
     return;
   }
 
   // console.log('storage.indexeddb.get: ' + key);
-  var transaction = this.handle.db.transaction([ this.storeName ] , "readonly" );
-  var store = transaction.objectStore(this.storeName);
-  var request = store.get(key);
-  request.onerror = function(cont, e) {
-    cont(undefined, this._createError("UNKNOWN"));
+  var transaction = this.handle.db.transaction([this.storeName], "readonly"),
+    store = transaction.objectStore(this.storeName),
+    request = store.get(key);
+  request.onerror = function (cont, e) {
+    cont(undefined, this.createError("UNKNOWN"));
   }.bind(this, continuation);
-  request.onsuccess = function(cont, e) {
+  request.onsuccess = function (cont, e) {
     var retValue = e.target.result.value;
     /**
     if (retValue !== null && retValue.length) {
@@ -111,13 +114,13 @@ IndexedDBStorageProvider.prototype.get = function(key, continuation) {
   }.bind(this, continuation);
 };
 
-IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
+IndexedDBStorageProvider.prototype.set = function (key, value, continuation) {
   //this.store.set(key, value).then(continuation);
   if (this.handle.initializing) {
-    this._pushQueue("set", key, value, continuation);
+    this.pushQueue("set", key, value, continuation);
     return;
   } else if (this.handle.db === null) {
-    continuation(undefined, this._createError("OFFLINE"));
+    continuation(undefined, this.createError("OFFLINE"));
     return;
   }
 
@@ -129,35 +132,35 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
     console.log('storage.indexeddb.set: buffer value length ' + value.byteLength);
   }
   **/
-  var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
-  var store = transaction.objectStore(this.storeName);
-  var finishPut = function(continuation, key, value, retValue) {
-    var putRequest = store.put({
-      key: key,
-      value: value,
-      timestamp: new Date().getTime()
-    });
-    putRequest.onerror = function(cont, e) {
-      cont(undefined, this._createError("UNKNOWN"));
-    }.bind(this, continuation);
-    putRequest.onsuccess = function(cont, retValue, e) {
-      /**
-      if (retValue !== null && retValue.length) {
-        console.log("storage.indexeddb.set: return string length " + retValue.length);
-      } else if (retValue !== null && retValue.byteLength) {
-        console.log("storage.indexeddb.set: return string length " + retValue.byteLength);
-      }
-      **/
-      cont(retValue);
-    }.bind(this, continuation, retValue);
-  }.bind(this, continuation, key, value);
+  var transaction = this.handle.db.transaction([this.storeName], "readwrite"),
+    store = transaction.objectStore(this.storeName),
+    finishPut = function (continuation, key, value, retValue) {
+      var putRequest = store.put({
+        key: key,
+        value: value,
+        timestamp: new Date().getTime()
+      });
+      putRequest.onerror = function (cont, e) {
+        cont(undefined, this.createError("UNKNOWN"));
+      }.bind(this, continuation);
+      putRequest.onsuccess = function (cont, retValue, e) {
+        /**
+        if (retValue !== null && retValue.length) {
+          console.log("storage.indexeddb.set: return string length " + retValue.length);
+        } else if (retValue !== null && retValue.byteLength) {
+          console.log("storage.indexeddb.set: return string length " + retValue.byteLength);
+        }
+        **/
+        cont(retValue);
+      }.bind(this, continuation, retValue);
+    }.bind(this, continuation, key, value),
+    getRequest = store.get(key);
 
-  var getRequest = store.get(key);
-  getRequest.onerror = function(finishPut, e) {
+  getRequest.onerror = function (finishPut, e) {
     finishPut(null);
   }.bind(this, finishPut);
-  getRequest.onsuccess = function(finishPut, e) {
-    if (typeof e.target.result == 'undefined') {
+  getRequest.onsuccess = function (finishPut, e) {
+    if (typeof e.target.result === 'undefined') {
       finishPut(null);
     } else {
       finishPut(e.target.result.value);
@@ -166,41 +169,41 @@ IndexedDBStorageProvider.prototype.set = function(key, value, continuation) {
 
 };
 
-IndexedDBStorageProvider.prototype.remove = function(key, continuation) {
+IndexedDBStorageProvider.prototype.remove = function (key, continuation) {
   if (this.handle.initializing) {
-    this._pushQueue("remove", key, null, continuation);
+    this.pushQueue("remove", key, null, continuation);
     return;
   } else if (this.handle.db === null) {
-    continuation(undefined, this._createError("OFFLINE"));
+    continuation(undefined, this.createError("OFFLINE"));
     return;
   }
 
   // console.log('storage.indexeddb.remove: ' + key);
-  var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
-  var store = transaction.objectStore(this.storeName);
-  var finishRemove = function(continuation, key, retValue) {
-    var removeRequest = store.delete(key);
-    removeRequest.onerror = function(cont, e) {
-      cont(undefined, this._createError("UNKNOWN"));
-    }.bind(this, continuation);
-    removeRequest.onsuccess = function(cont, retValue, e) {
-      /**
-      if (retValue !== null && retValue.length) {
-        console.log("storage.indexeddb.remove: return string length " + retValue.length);
-      } else if (retValue !== null && retValue.byteLength) {
-        console.log("storage.indexeddb.remove: return string length " + retValue.byteLength);
-      }
-      **/
-      cont(retValue);
-    }.bind(this, continuation, retValue);
-  }.bind(this, continuation, key);
+  var transaction = this.handle.db.transaction([this.storeName], "readwrite"),
+    store = transaction.objectStore(this.storeName),
+    finishRemove = function (continuation, key, retValue) {
+      var removeRequest = store['delete'](key);
+      removeRequest.onerror = function (cont, e) {
+        cont(undefined, this.createError("UNKNOWN"));
+      }.bind(this, continuation);
+      removeRequest.onsuccess = function (cont, retValue, e) {
+        /**
+        if (retValue !== null && retValue.length) {
+          console.log("storage.indexeddb.remove: return string length " + retValue.length);
+        } else if (retValue !== null && retValue.byteLength) {
+          console.log("storage.indexeddb.remove: return string length " + retValue.byteLength);
+        }
+        **/
+        cont(retValue);
+      }.bind(this, continuation, retValue);
+    }.bind(this, continuation, key),
+    getRequest = store.get(key);
 
-  var getRequest = store.get(key);
-  getRequest.onerror = function(finishRemove, e) {
+  getRequest.onerror = function (finishRemove, e) {
     finishRemove(null);
   }.bind(this, finishRemove);
-  getRequest.onsuccess = function(finishRemove, e) {
-    if (typeof e.target.result == 'undefined') {
+  getRequest.onsuccess = function (finishRemove, e) {
+    if (typeof e.target.result === 'undefined') {
       finishRemove(null);
     } else {
       finishRemove(e.target.result.value);
@@ -209,23 +212,23 @@ IndexedDBStorageProvider.prototype.remove = function(key, continuation) {
 
 };
 
-IndexedDBStorageProvider.prototype.clear = function(continuation) {
+IndexedDBStorageProvider.prototype.clear = function (continuation) {
   //this.store.clear().then(continuation);
   if (this.handle.initializing) {
-    this._pushQueue("clear", null, null, continuation);
+    this.pushQueue("clear", null, null, continuation);
     return;
   } else if (this.handle.db === null) {
-    continuation(undefined, this._createError("OFFLINE"));
+    continuation(undefined, this.createError("OFFLINE"));
     return;
   }
   // console.log('storage.indexeddb.clear: clearing');
-  var transaction = this.handle.db.transaction([ this.storeName ] , "readwrite" );
-  var store = transaction.objectStore(this.storeName);
-  var request = store.clear();
-  request.onerror = function(cont, e) {
-    cont(undefined, this._createError("UNKNOWN"));
+  var transaction = this.handle.db.transaction([this.storeName], "readwrite"),
+    store = transaction.objectStore(this.storeName),
+    request = store.clear();
+  request.onerror = function (cont, e) {
+    cont(undefined, this.createError("UNKNOWN"));
   }.bind(this, continuation);
-  request.onsuccess = function(cont, e) {
+  request.onsuccess = function (cont, e) {
     cont();
   }.bind(this, continuation);
 };
@@ -233,7 +236,7 @@ IndexedDBStorageProvider.prototype.clear = function(continuation) {
 
 /** INTERNAL METHODS **/
 // Create an error message
-IndexedDBStorageProvider.prototype._createError = function(code) {
+IndexedDBStorageProvider.prototype.createError = function (code) {
   // console.log("Creating error: " + code);
   return {
     errcode: code,
@@ -242,7 +245,7 @@ IndexedDBStorageProvider.prototype._createError = function(code) {
 };
 
 //Insert call into queue
-IndexedDBStorageProvider.prototype._pushQueue = function(method, key, value, continuation) {
+IndexedDBStorageProvider.prototype.pushQueue = function (method, key, value, continuation) {
   // console.log("Pushing onto queue: " + method);
   this.queue.push({
     cmd: method,
@@ -253,7 +256,7 @@ IndexedDBStorageProvider.prototype._pushQueue = function(method, key, value, con
 };
 
 //Flush commands in queue
-IndexedDBStorageProvider.prototype._flushQueue = function() {
+IndexedDBStorageProvider.prototype.flushQueue = function () {
   var i, elt;
   for (i = 0; i < this.queue.length; i += 1) {
     elt = this.queue[i];
@@ -276,11 +279,12 @@ IndexedDBStorageProvider.prototype._flushQueue = function() {
 
 
 /** REGISTER PROVIDER **/
-if (typeof freedom !== 'undefined' &&
-    typeof freedom.storage !== 'undefined') {
-  freedom.storage().provideAsynchronous(IndexedDBStorageProvider);
+if (typeof freedom !== 'undefined') {
+  freedom().provideAsynchronous(IndexedDBStorageProvider);
 }
-if (typeof freedom !== 'undefined' &&
-    typeof freedom.storebuffer !== 'undefined') {
-  freedom.storebuffer().provideAsynchronous(IndexedDBStorageProvider);
+
+if (typeof exports !== 'undefined') {
+  exports.provider = IndexedDBStorageProvider;
+  exports.name = 'storage';
 }
+

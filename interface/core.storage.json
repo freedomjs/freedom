@@ -1,0 +1,10 @@
+{
+  "name": "core.storage",
+  "api": {
+    "keys": {"type": "method", "value": [], "ret": ["array", "string"]},
+    "get": {"type": "method", "value": ["string"], "ret": "string"},
+    "set": {"type": "method", "value": ["string", "string"], "ret": "string"},
+    "remove": {"type": "method", "value": ["string"], "ret": "string"},
+    "clear": {"type": "method", "value": []}
+  }
+}

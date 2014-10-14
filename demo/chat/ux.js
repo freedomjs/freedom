@@ -1,11 +1,17 @@
-/*
- * These functions provide interaction for the freedom.js chat demo.
+/*jslint sloppy:true */
+/*globals freedom, console*/
+
+/**
+ * Bind handlers on startup
  */
-window.onload = function() {
+function start(instance) {
+  var chatClient = instance(),
+    // If messages are going to a specific user, store that here.
+    activeBuddylistEntry,
+    buddylist,
+    input;
+
   document.getElementById('msg-input').focus();
-  // If messages are going to a specific user, store that here.
-  var activeBuddylistEntry;
-  var buddylist;
 
   function clearLog() {
     var log = document.getElementById('messagelist');
@@ -13,78 +19,83 @@ window.onload = function() {
   }
 
   function appendLog(elt) {
-    var log = document.getElementById('messagelist');
+    var log = document.getElementById('messagelist'),
+      br;
     //Trim old messages
     while (log.childNodes.length > 36) {
       log.removeChild(log.firstChild);
     }
     log.appendChild(elt);
-    var br = document.createElement('br');
+    br = document.createElement('br');
     log.appendChild(br);
     br.scrollIntoView();
   }
 
   function makeDisplayString(buddylistEntry) {
-    return buddylistEntry.name && buddylistEntry.name != buddylistEntry.userId ?
+    return buddylistEntry.name && buddylistEntry.name !== buddylistEntry.userId ?
         buddylistEntry.name + ' (' + buddylistEntry.userId + ')' :
         buddylistEntry.userId;
   }
 
   function redrawBuddylist() {
-    var onClick = function(buddylistEntry, child) {
+    var onClick = function (buddylistEntry, child) {
       console.log("Messages will be sent to: " + buddylistEntry.userId);
       activeBuddylistEntry = buddylistEntry;
       redrawBuddylist();
       document.getElementById('msg-input').focus();
-    };
+    },
+      buddylistDiv = document.getElementById('buddylist'),
+      userId,
+      child;
 
-    var buddylistDiv = document.getElementById('buddylist');
     // Remove all elements in there now
     buddylistDiv.innerHTML = "<b>Buddylist</b>";
 
     // Create a new element for each buddy
-    for (var userId in buddylist) {
-      var child = document.createElement('div');
-      if (activeBuddylistEntry == buddylist[userId]) {
-        child.innerHTML = "[" + makeDisplayString(buddylist[userId]) + "]";
-      } else {
-        child.innerHTML = makeDisplayString(buddylist[userId]);
+    for (userId in buddylist) {
+      if (buddylist.hasOwnProperty(userId)) {
+        child = document.createElement('div');
+        if (activeBuddylistEntry === buddylist[userId]) {
+          child.innerHTML = "[" + makeDisplayString(buddylist[userId]) + "]";
+        } else {
+          child.innerHTML = makeDisplayString(buddylist[userId]);
+        }
+        // If the user clicks on a buddy, change our current destination for messages
+        child.addEventListener('click', onClick.bind(this, buddylist[userId], child), true);
+        buddylistDiv.appendChild(child);
       }
-      // If the user clicks on a buddy, change our current destination for messages
-      child.addEventListener('click', onClick.bind(this, buddylist[userId], child), true);
-      buddylistDiv.appendChild(child);
     }
 
   }
   
   // on changes to the buddylist, redraw entire buddylist
-  window.freedom.on('recv-buddylist', function(val) {
+  chatClient.on('recv-buddylist', function (val) {
     buddylist = val;
     redrawBuddylist();
   });
 
   // On new messages, append it to our message log
-  window.freedom.on('recv-message', function(data) {
+  chatClient.on('recv-message', function (data) {
     // Show the name instead of the userId, if it's available.
-    var userId = data.from.userId;
-    var displayName = buddylist[userId].name || userId;
-    var message = displayName + ": " + data.message;
+    var userId = data.from.userId,
+      displayName = buddylist[userId].name || userId,
+      message = displayName + ": " + data.message;
     appendLog(document.createTextNode(message));
   });
   
   // On new messages, append it to our message log
-  window.freedom.on('recv-err', function(data) {
-    document.getElementById('uid').textContent = "Error: "+data.message;
+  chatClient.on('recv-err', function (data) {
+    document.getElementById('uid').textContent = "Error: " + data.message;
   });
 
   // Display our own userId when we get it
-  window.freedom.on('recv-uid', function(data) {
+  chatClient.on('recv-uid', function (data) {
     document.getElementById('uid').textContent = "Logged in as: " + data;
   });
 
   // Display the current status of our connection to the Social provider
-  window.freedom.on('recv-status', function(msg) {
-    if (msg && msg == 'online') {
+  chatClient.on('recv-status', function (msg) {
+    if (msg && msg === 'online') {
       document.getElementById('msg-input').disabled = false;
     } else {
       document.getElementById('msg-input').disabled = true;
@@ -96,16 +107,17 @@ window.onload = function() {
   });
 
   // Listen for the enter key and send messages on return
-  var input = document.getElementById('msg-input');
-  input.onkeydown = function(evt) {
-    if (evt.keyCode == 13) {
+  input = document.getElementById('msg-input');
+  input.onkeydown = function (evt) {
+    if (evt.keyCode === 13) {
       var text = input.value;
       input.value = "";
       appendLog(document.createTextNode("You: " + text));
-      window.freedom.emit('send-message',
-          {to: activeBuddylistEntry.userId, message: text});
+      chatClient.send(activeBuddylistEntry.userId, text);
     }
   };
+}
 
-  freedom.emit('boot');
+window.onload = function () {
+  freedom('manifest.json').then(start);
 };

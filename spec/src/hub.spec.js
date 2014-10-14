@@ -1,9 +1,12 @@
-describe("fdom.Hub", function() {
-  var hub;
+var Hub = require('../../src/hub');
+var Debug = require('../../src/debug');
+
+describe("Hub", function() {
+  var hub, debug;
 
   beforeEach(function() {
-    hub = new fdom.Hub();
-    fdom.debug = new fdom.port.Debug();
+    debug = new Debug();
+    hub = new Hub(debug);
   });
 
   it("routes messages", function() {
@@ -24,13 +27,13 @@ describe("fdom.Hub", function() {
     var app = {
       id: 'testApp'
     };
-    spyOn(fdom.debug, 'warn');
+    spyOn(debug, 'warn');
     hub.install(app, null, 'magic');
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
 
     hub.register(app);
     hub.install(app, null, 'magic');
-    expect(fdom.debug.warn.calls.count()).toEqual(2);
+    expect(debug.warn.calls.count()).toEqual(2);
     expect(hub.register(app)).toEqual(false);
 
     expect(hub.deregister(app)).toEqual(true);
@@ -62,16 +65,16 @@ describe("fdom.Hub", function() {
     hub.register(app);
     app.onMessage = jasmine.createSpy('cb');
 
-    spyOn(fdom.debug, 'warn');
+    spyOn(debug, 'warn');
     
     hub.onMessage('test', "testing");
 
     expect(app.onMessage).not.toHaveBeenCalled();
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
   });
 
   it("removes routes", function() {
-    spyOn(fdom.debug, 'warn');
+    spyOn(debug, 'warn');
     var app1 = {
       id: 'testApp'
     };
@@ -90,14 +93,14 @@ describe("fdom.Hub", function() {
 
     hub.uninstall(app1, route);
 
-    expect(fdom.debug.warn).not.toHaveBeenCalled();
+    expect(debug.warn).not.toHaveBeenCalled();
 
     hub.onMessage(route, msg);
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
   });
 
   it("Handles failures when removing routes", function() {
-    spyOn(fdom.debug, 'warn');
+    spyOn(debug, 'warn');
     var app1 = {
       id: 'testApp'
     };
@@ -110,10 +113,10 @@ describe("fdom.Hub", function() {
     var route = hub.install(app1, 'otherApp', 'testx');
     
     hub.uninstall(app2, route);
-    expect(fdom.debug.warn).toHaveBeenCalled();
+    expect(debug.warn).toHaveBeenCalled();
 
     hub.uninstall({id: null}, route);
-    expect(fdom.debug.warn.calls.count()).toEqual(2);
+    expect(debug.warn.calls.count()).toEqual(2);
 
     expect(hub.uninstall(app1, route+'fake')).toEqual(false);
 
@@ -122,7 +125,7 @@ describe("fdom.Hub", function() {
     expect(hub.getDestination(route+'fake')).toEqual(null);
 
     hub.onMessage(route, {test: true});
-    expect(fdom.debug.warn.calls.count()).toEqual(3);
+    expect(debug.warn.calls.count()).toEqual(3);
   });
 });
 

@@ -1,18 +1,23 @@
+var testUtil = require('../../util');
+var Provider = require('../../../providers/social/loopback/social.loopback');
+
 describe("unit: social.loopback.json", function () {
   var provider;
 
   beforeEach(function() {
     // Comment for more debugging messages.
     spyOn(console, 'log');
+    
+    var social = testUtil.getApis().get("social").definition;
 
-    freedom = {
-      social: mockIface([], [
-        ['STATUS', fdom.apis.get("social").definition.STATUS.value],
-        ['ERRCODE', fdom.apis.get("social").definition.ERRCODE.value]
+    freedom = function() {
+      return testUtil.mockIface([], [
+        ['STATUS', social.STATUS.value],
+        ['ERRCODE', social.ERRCODE.value]
       ])
     };
 
-    provider = new LoopbackSocialProvider(jasmine.createSpy('dispatchEvent'));
+    provider = new Provider.provider(jasmine.createSpy('dispatchEvent'));
   });
   
   afterEach(function() {

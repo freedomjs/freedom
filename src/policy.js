@@ -1,17 +1,23 @@
-/*globals fdom:true, XMLHttpRequest, Promise */
+/*globals XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
-if (typeof fdom === 'undefined') {
-  fdom = {};
-}
+var Module = require('./module');
+var util = require('./util');
 
 /**
  * The Policy registry for freedom.js.  Used to look up modules and provide
  * migration and coallesing of execution.
  * @Class Policy
+ * @param {Manager} manager The manager of the active runtime.
+ * @param {Resource} resource The resource loader of the active runtime.
+ * @param {Object} config The local config.
  * @constructor
  */
-fdom.Policy = function(manager, config) {
+var Policy = function(manager, resource, config) {
+  this.api = manager.api;
+  this.debug = manager.debug;
   this.location = config.location;
+  this.resource = resource;
+
   this.config = config;
   this.runtimes = [];
   this.policies = [];
@@ -26,7 +32,7 @@ fdom.Policy = function(manager, config) {
  * TODO: consider making static
  * @property defaultPolicy
  */
-fdom.Policy.prototype.defaultPolicy = {
+Policy.prototype.defaultPolicy = {
   background: false, // Can this runtime run 'background' modules?
   interactive: true // Is there a view associated with this runtime?
   // TODO: remaining runtime policy.
@@ -38,7 +44,7 @@ fdom.Policy.prototype.defaultPolicy = {
  * TODO: consider making static
  * @property defaultConstraints
  */
-fdom.Policy.prototype.defaultConstraints = {
+Policy.prototype.defaultConstraints = {
   isolation: "always", // values: always, app, never
   placement: "local" // values: local, stable, redundant
   // TODO: remaining constraints, express platform-specific dependencies.
@@ -52,7 +58,7 @@ fdom.Policy.prototype.defaultConstraints = {
  * @param {String} id The canonical ID of the module to get.
  * @returns {Promise} A promise for the local port towards the module.
  */
-fdom.Policy.prototype.get = function(lineage, id) {
+Policy.prototype.get = function(lineage, id) {
   return this.loadManifest(id).then(function(manifest) {
     var constraints = this.overlay(this.defaultConstraints, manifest.constraints),
         runtime = this.findDestination(lineage, id, constraints),
@@ -61,20 +67,20 @@ fdom.Policy.prototype.get = function(lineage, id) {
       portId = this.isRunning(runtime, id, lineage,
                              constraints.isolation !== 'never');
       if(constraints.isolation !== 'always' && portId) {
-        fdom.debug.info('Reused port ' + portId);
+        this.debug.info('Reused port ' + portId);
         return runtime.manager.getPort(portId);
       } else {
-        return new fdom.port.Module(id, manifest, lineage);
+        return new Module(id, manifest, lineage, this);
       }
     } else {
       // TODO: Create a port to go to the remote runtime.
-      fdom.debug.error('Unexpected location selected for module placement');
+      this.debug.error('Unexpected location selected for module placement');
       return false;
     }
   }.bind(this), function(err) {
-    fdom.debug.error('Policy Error Resolving ' + id, err);
+    this.debug.error('Policy Error Resolving ' + id, err);
     return false;
-  });
+  }.bind(this));
 };
 
 /**
@@ -86,7 +92,7 @@ fdom.Policy.prototype.get = function(lineage, id) {
  * @param {Object} constraints Constraints for the module.
  * @returns {Object} The element of this.runtimes where the module should run.
  */
-fdom.Policy.prototype.findDestination = function(lineage, id, constraints) {
+Policy.prototype.findDestination = function(lineage, id, constraints) {
   var i;
 
   // Step 1: if an instance already exists, the m
@@ -123,7 +129,7 @@ fdom.Policy.prototype.findDestination = function(lineage, id, constraints) {
  * @param {Boolean} fullMatch If the module needs to be in the same app.
  * @returns {String|Boolean} The Module id if it is running, or false if not.
  */
-fdom.Policy.prototype.isRunning = function(runtime, id, from, fullMatch) {
+Policy.prototype.isRunning = function(runtime, id, from, fullMatch) {
   var i = 0, j = 0, okay;
   for (i = 0; i < runtime.modules.length; i += 1) {
     if (fullMatch && runtime.modules[i].length === from.length + 1) {
@@ -154,13 +160,13 @@ fdom.Policy.prototype.isRunning = function(runtime, id, from, fullMatch) {
  * @param {String} manifest The canonical ID of the manifest
  * @returns {Promise} Promise for the json contents of the manifest.
  */
-fdom.Policy.prototype.loadManifest = function(manifest) {
-  return fdom.resources.getContents(manifest).then(function(data) {
+Policy.prototype.loadManifest = function(manifest) {
+  return this.resource.getContents(manifest).then(function(data) {
     var resp = {};
     try {
       return JSON.parse(data);
     } catch(err) {
-      fdom.debug.warn("Failed to load " + manifest + ": " + err);
+      this.debug.warn("Failed to load " + manifest + ": " + err);
       return {};
     }
   });
@@ -172,7 +178,7 @@ fdom.Policy.prototype.loadManifest = function(manifest) {
  * @param {fdom.port} port The port to use for module lifetime info
  * @param {Object} policy The policy of the runtime.
  */
-fdom.Policy.prototype.add = function(port, policy) {
+Policy.prototype.add = function(port, policy) {
   var runtime = {
     manager: port,
     modules: []
@@ -196,7 +202,7 @@ fdom.Policy.prototype.add = function(port, policy) {
         return;
       }
     }
-    fdom.debug.warn('Unknown module to remove: ', info.id);
+    this.debug.warn('Unknown module to remove: ', info.id);
   }.bind(this, runtime));
 };
 
@@ -209,12 +215,14 @@ fdom.Policy.prototype.add = function(port, policy) {
  * @param {Object} overlay The superceeding object
  * @returns {Object} A new object with base parameters when not set in overlay.
  */
-fdom.Policy.prototype.overlay = function(base, overlay) {
+Policy.prototype.overlay = function(base, overlay) {
   var ret = {};
 
-  fdom.util.mixin(ret, base);
+  util.mixin(ret, base);
   if (overlay) {
-    fdom.util.mixin(ret, overlay, true);
+    util.mixin(ret, overlay, true);
   }
   return ret;
 };
+
+module.exports = Policy;
