@@ -1,3 +1,4 @@
+/*globals freedom*/
 /**
  * Backend module of the TicTakToe game
  * The interface between the frontend page
@@ -9,6 +10,7 @@
 var currentBoard;
 
 var Board = function (dispatchEvent) {
+  'use strict';
   this.dispatchEvent = dispatchEvent;
   currentBoard = this;
 
@@ -22,6 +24,7 @@ var Board = function (dispatchEvent) {
 
 // This is called by the front end.
 Board.prototype.move = function (spot) {
+  'use strict';
   if (this.playerMove && this.state[spot] === 0) {
     this.state[spot] = 1;
     this.checkWin();
@@ -34,6 +37,7 @@ Board.prototype.move = function (spot) {
 };
 
 Board.prototype.loadStats = function () {
+  'use strict';
   this.store.get('stats').then(function (value) {
     var numericScore;
     try {
@@ -51,6 +55,7 @@ Board.prototype.loadStats = function () {
 };
 
 Board.prototype.finishGame = function () {
+  'use strict';
   this.state = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   this.playerMove = true;
 
@@ -59,6 +64,7 @@ Board.prototype.finishGame = function () {
 };
 
 Board.prototype.aiMove = function () {
+  'use strict';
   if (this.playerMove) {
     return;
   }
@@ -71,10 +77,14 @@ Board.prototype.aiMove = function () {
     return;
   }
   // Counter.
-  var sets = "012,345,678,036,147,258,048,246".split(",");
-  for (var s = 0; s < sets.length; s++) {
-    var set = sets[s].split("");
-    for (var p = 0; p < 3; p++) {
+  var sets = ["012", "345", "678", "036", "147", "258", "048", "246"],
+    s,
+    set,
+    p,
+    m;
+  for (s = 0; s < sets.length; s += 1) {
+    set = sets[s].split("");
+    for (p = 0; p < 3; p += 1) {
       if (this.state[set[p === 0 ? 1 : 0]] === 1 &&
           this.state[set[p !== 2 ? 2 : 1]] === 1 &&
           this.state[set[p]] === 0) {
@@ -87,9 +97,9 @@ Board.prototype.aiMove = function () {
   }
   
   // Random move.
-  while(!this.playerMove) {
-    var m = Math.floor(Math.random() * 9);
-    if(this.state[m] === 0) {
+  while (!this.playerMove) {
+    m = Math.floor(Math.random() * 9);
+    if (this.state[m] === 0) {
       this.state[m] = 2;
       this.checkWin();
       this.playerMove = true;
@@ -100,9 +110,14 @@ Board.prototype.aiMove = function () {
 
 // Check for game completion
 Board.prototype.checkWin = function () {
-  var sets = "012,345,678,036,147,258,048,246".split(",");
-  for (var s = 0; s < sets.length; s++) {
-    var set = sets[s].split("");
+  'use strict';
+  var sets = ["012", "345", "678", "036", "147", "258", "048", "246"],
+    s,
+    set,
+    open = 0,
+    i;
+  for (s = 0; s < sets.length; s += 1) {
+    set = sets[s].split("");
     if (this.state[set[0]] === this.state[set[1]] &&
         this.state[set[1]] === this.state[set[2]]) {
       if (this.state[set[2]] === 1) {
@@ -118,8 +133,7 @@ Board.prototype.checkWin = function () {
       }
     }
   }
-  var open = 0;
-  for (var i = 0; i < 9; i++) {
+  for (i = 0; i < 9; i += 1) {
     if (this.state[i] === 0) {
       open = 1;
     }

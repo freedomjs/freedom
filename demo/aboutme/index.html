@@ -8,7 +8,7 @@
   <!-- Load freedom.js -->
   <script type="text/javascript" src="../../freedom.js"></script>
   <script type="text/javascript">
-  freedom('manifest.json').then(function (app) { start(app()); });
+  freedom('manifest.json').then(function (instance) { start(instance()); });
     
   function start(aboutme) {
     aboutme.on('profile', function(data) {

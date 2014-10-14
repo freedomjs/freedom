@@ -1,18 +1,22 @@
+/*jslint sloppy:true */
+/*globals freedom */
 var friend = freedom.friend();
 var core = freedom.core();
 
 var channels = {};
 var id = 0;
 
-var external = freedom();
-external.on('create', function() {
+var instance = freedom();
+instance.on('create', function () {
   var thisid = id;
   id += 1;
 
-  external.emit('message', 'creating custom channel ' + thisid);
-  core.createChannel().then(function(id, cinfo) {
+  instance.emit('message', 'creating custom channel ' + thisid);
+  core.createChannel().then(function (id, cinfo) {
     channels[id] = cinfo.channel;
-    channels[id].on('message', function(msg) {external.emit('message', msg);});
+    channels[id].on('message', function (msg) {
+      instance.emit('message', msg);
+    });
     friend.emit('message', {
       cmd: 'create',
       id: id,
@@ -21,8 +25,8 @@ external.on('create', function() {
   }.bind(this, thisid));
 });
 
-external.on('destroy', function(id) {
-  external.emit('message', 'destroying channel ' + id);
+instance.on('destroy', function (id) {
+  instance.emit('message', 'destroying channel ' + id);
   channels[id].close();
   delete channels[id];
   friend.emit('message', {
@@ -31,33 +35,33 @@ external.on('destroy', function(id) {
   });
 });
 
-external.on('message', function(id) {
-  external.emit('message', 'sending message to ' + id);
+instance.on('message', function (id) {
+  instance.emit('message', 'sending message to ' + id);
   channels[id].emit('message', 'Message to chan ' + id);
 });
 
-external.on('peer', function() {
+instance.on('peer', function () {
   var thisid = id;
-  id++;
-  core.createChannel().then(function(cinfo) {
+  id += 1;
+  core.createChannel().then(function (cinfo) {
     var peer = freedom['core.echo']();
-    peer.on('message', function(str) { 
-      external.emit('message', "from provider: " + JSON.stringify(str));
+    peer.on('message', function (str) {
+      instance.emit('message', "from provider: " + JSON.stringify(str));
     });
     
     channels[thisid] = cinfo.channel;
-    channels[thisid].on('message', function(m) {
-      external.emit('message', "from custom: " + JSON.stringify(m));
+    channels[thisid].on('message', function (m) {
+      instance.emit('message', "from custom: " + JSON.stringify(m));
     });
-    channels[thisid].onClose(function() {
-      external['core.echo'].close(peer);
+    channels[thisid].onClose(function () {
+      freedom['core.echo'].close(peer);
     });
  
     peer.setup(cinfo.identifier);
   });
 });
 
-friend.on('message', function(str) {
-  external.emit('message', str);
+friend.on('message', function (str) {
+  instance.emit('message', str);
 });
 

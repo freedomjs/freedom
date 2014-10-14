@@ -1,8 +1,10 @@
+/*jslint sloppy:true*/
+/*globals freedom,console,FileReaderSync,exports*/
 /*
  * Peer 2 Peer transport provider.
  *
  */
-var WebRTCTransportProvider = function(dispatchEvent) {
+var WebRTCTransportProvider = function (dispatchEvent) {
   this.dispatchEvent = dispatchEvent;
   this.name = null;
   this._setup = false;
@@ -201,11 +203,11 @@ WebRTCTransportProvider.prototype.onData = function(msg) {
   } else if (msg.binary) {
     if (typeof FileReaderSync === 'undefined') {
       var fileReader = new FileReader();
-      fileReader.onload = function(handleData, channelLabel) {
+      fileReader.onload = (function(handleData, channelLabel) {
         return function(e) {
           handleData(channelLabel, e.target.result);
         };
-      }(this._handleData.bind(this), msg.channelLabel);
+      }(this._handleData.bind(this), msg.channelLabel));
       fileReader.readAsArrayBuffer(msg.binary);
     } else {
       var fileReaderSync = new FileReaderSync();
@@ -272,7 +274,9 @@ WebRTCTransportProvider.prototype._sizeToBuffer = function(size) {
   var buffer = new ArrayBuffer(8);
   var view = new Uint8Array(buffer);
   for (var index = 0; index < 8; index++) {
-    var currentByte = size & 0xff;
+    /*jslint bitwise:true*/
+    var currentByte = (size & 0xff);
+    /*jslint bitwise:false*/
     view [ index ] = currentByte;
     size = (size - currentByte) / 256 ;
   }

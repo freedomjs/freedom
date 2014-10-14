@@ -6,8 +6,8 @@
   <script type="text/javascript" src="../../freedom.js"></script>
 
   <script type="text/javascript">
-    freedom('manifest.json', {"debug": "debug"}).then(function(app) {
-      start(app());
+    freedom('manifest.json', {"debug": "debug"}).then(function(instance) {
+      start(instance());
     });
     
     function start(channel) {

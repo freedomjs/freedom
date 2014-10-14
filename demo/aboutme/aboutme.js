@@ -9,7 +9,7 @@ var registeredRedirectURIs = [
 ];
 
 var oauth = freedom['core.oauth']();
-var external = freedom();
+var instance = freedom();
 
 var buildURL = function (obj) {
   var url = "https://accounts.google.com/o/oauth2/auth?" +
@@ -18,7 +18,7 @@ var buildURL = function (obj) {
       "scope=" + encodeURIComponent("https://www.googleapis.com/auth/userinfo.profile") + "&" +
       "redirect_uri=" + encodeURIComponent(obj.redirect) + "&" +
       "state=" + encodeURIComponent(obj.state);
-  external.emit("oAuth", url);
+  instance.emit("oAuth", url);
 };
 
 oauth.on('oAuthEvent', function (url) {
@@ -49,11 +49,11 @@ var onProfile = function(resp) {
   if (resp.name) {
     resp.details = "Speaks: " + resp.locale + ", Gender: " + resp.gender;
   }
-  external.emit('profile', resp);
+  instance.emit('profile', resp);
 };
 
 oauth.initiateOAuth(registeredRedirectURIs).then(buildURL, function (msg) {
-  external.emit('profile', {
+  instance.emit('profile', {
     name: 'oAuth Error',
     details: msg
   });

@@ -53,11 +53,6 @@
     "rhino"         : false,
     "wsh"           : false,
     
-    "nomen"         : false,
-    "onevar"        : false,
-    "passfail"      : false,
-    "white"         : false,
- 
     "maxerr"        : 100,
     "predef"        : [
     ],

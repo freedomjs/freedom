@@ -8,8 +8,8 @@
   <script type="text/javascript" src="../../freedom.js"></script>
 
   <script type="text/javascript">
-    freedom('manifest.json').then(function (app) {
-      app().on("height", function(h) {
+    freedom('manifest.json').then(function (instance) {
+      instance().on("height", function(h) {
         document.getElementById("connections").style.height = h + 'px';
       });
     });

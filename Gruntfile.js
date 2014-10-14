@@ -123,14 +123,11 @@ module.exports = function (grunt) {
     jshint: {
       beforeconcat: {
         files: { src: FILES.srcCore.concat(FILES.srcPlatform) },
-        options: {
-          jshintrc: true
-        }
       },
       providers: FILES.srcProvider,
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],
       options: {
-        '-W069': true
+        jshintrc: true
       }
     },
     browserify: {

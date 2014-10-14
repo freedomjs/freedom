@@ -1,3 +1,5 @@
+/*jslint sloppy:true */
+/*globals freedom */
 /**
  * Chat demo backend.
  * Because the Social API provides message passing primitives,
@@ -38,7 +40,7 @@ Chat.prototype.boot = function () {
   }).then(function (ret) {
     this.myClientState = ret;
     logger.log("onLogin", this.myClientState);
-    if (ret.status === this.social.STATUS["ONLINE"]) {
+    if (ret.status === this.social.STATUS.ONLINE) {
       this.dispatchEvent('recv-uid', ret.clientId);
       this.dispatchEvent('recv-status', "online");
     } else {
@@ -74,7 +76,7 @@ Chat.prototype.boot = function () {
   **/
   this.social.on('onClientState', function (data) {
     logger.debug("Roster Change", data);
-    if (data.status === this.social.STATUS["OFFLINE"]) {
+    if (data.status === this.social.STATUS.OFFLINE) {
       if (this.clientList.hasOwnProperty(data.clientId)) {
         delete this.clientList[data.clientId];
       }
@@ -83,7 +85,7 @@ Chat.prototype.boot = function () {
     }
     //If mine, send to the page
     if (this.myClientState !== null && data.clientId === this.myClientState.clientId) {
-      if (data.status === this.social.STATUS["ONLINE"]) {
+      if (data.status === this.social.STATUS.ONLINE) {
         this.dispatchEvent('recv-status', "online");
       } else {
         this.dispatchEvent('recv-status', "offline");
@@ -94,13 +96,15 @@ Chat.prototype.boot = function () {
   }.bind(this));
 };
 
-Chat.prototype.updateBuddyList = function() {
+Chat.prototype.updateBuddyList = function () {
   // Iterate over our roster and send over user profiles where there is at least 1 client online
-  var buddylist = {};
-  for (var k in this.clientList) {
-    var userId = this.clientList[k].userId;
-    if (userId in this.userList) {
-      buddylist[userId] = this.userList[userId];
+  var buddylist = {}, k, userId;
+  for (k in this.clientList) {
+    if (this.clientList.hasOwnProperty(k)) {
+      userId = this.clientList[k].userId;
+      if (this.userList[userId]) {
+        buddylist[userId] = this.userList[userId];
+      }
     }
   }
   this.dispatchEvent('recv-buddylist', buddylist);
