@@ -1,0 +1,139 @@
+{
+  "name": "core.rtcpeerconnection",
+  // API follows http://w3c.github.io/webrtc-pc/
+  "api": {
+    // Arguments: iceServers, iceTransports, peerIdentity
+    // Deviation from spec: iceServers, and iceServers.urls when specified must
+    // be an array, even if only 1 is specified.
+    "constructor": {
+      "value": [["array", {
+        "urls": ["array", "string"],
+        "username": "string",
+        "credential": "string"
+      }], "string", "string"]
+    },
+
+    // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCOfferOptions
+    "createOffer": {"type": "method", "value": [{
+      "iceRestart": "boolean",
+      "offerToReceiveAudio": "number",
+      "offerToReceiveVideo": "number",
+      "voiceActivityDetection": "boolean"
+    }], "ret": {
+      "type": "string",
+      "sdp": "string"
+    }},
+    "createAnswer": {"type": "method", "value": [], "ret": {
+      "type": "string",
+      "sdp": "string"
+    }},
+
+    // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCSessionDescription
+    "setLocalDescription": {"type": "method", "value": [{
+      "type": "string",
+      "sdp": "string"
+    }]},
+    "getLocalDescription": {"type": "method", "value": [], "ret": {
+      "type": "string",
+      "sdp": "string"
+    }},
+    "setRemoteDescription": {"type": "method", "value": [{
+      "type": "string",
+      "sdp": "string"
+    }], "ret": {}},
+    "getRemoteDescription": {"type": "method", "value": [], "ret": {
+      "type": "string",
+      "sdp": "string"
+    }},
+
+    // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCSignalingState
+    "getSignalingState": {"type": "method", "value": [], "ret": "string"},
+
+    // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCConfiguration
+    // Deviation from spec matches that of constructor.
+    "updateIce": {"type": "method", "value": [["array", {
+        "urls": ["array", "string"],
+        "username": "string",
+        "credential": "string"
+      }], "string", "string"], "ret": {}},
+
+    // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCIceCandidate
+    "addIceCandidate": {"type": "method", "value": [{
+      "candidate": "string",
+      "sdpMid": "string",
+      "sdpMLineIndex": "number"
+    }], "ret": {}},
+
+    "getIceGatheringState": {"type": "method", "value": [], "ret": "string"},
+    "getIceConnectionState": {"type": "method", "value": [], "ret": "string"},
+
+    "getConfiguration": {"type": "method", "value": [], "ret": {
+      "iceServers": ["array", {
+        "urls": ["array", "string"],
+        "username": "string",
+        "credential": "string"
+      }],
+      "iceTransports": "string",
+      "peerIdentity": "string"
+    }},
+
+    // Numbers for stream API are IDs with which to make core.mediastream.
+    "getLocalStreams": {"type": "method", "value": [], "ret": ["array", "number"]},
+    "getRemoteStreams": {"type": "method", "value": [], "ret": ["array", "number"]},
+    "getStreamById": {"type": "method", "value": ["string"], "ret": "number"},
+    "addStream": {"type": "method", "value": ["number"], "ret": {}},
+    "removeStream": {"type": "method", "value": ["number"], "ret": {}},
+
+    "close": {"type": "method", "value": [], "ret": {}},
+
+    // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCDataChannelInit
+    // Note: Numbers are IDs used to create core.datachannel objects.
+    "createDataChannel": {"type": "method", "value": ["string", {
+      "ordered": "boolean",
+      "maxPacketLifeTime": "number",
+      "maxRetransmits": "number",
+      "protocol": "string",
+      "negotiated": "boolean",
+      "id": "number"
+    }], "ret": "number"},
+    "ondatachannel": {"type": "event", "value": {
+      "channel": "number"
+    }},
+
+    //TODO: Support DTMF Extension.
+    //"createDTMFSender": {},
+
+    //per http://w3c.github.io/webrtc-pc/#idl-def-RTCStatsCallback
+    //Number if sepecified represents a core.mediastreamtrack.
+    //Returned object is a serialization of the RTCStatsReport.
+    "getStats": {"type": "method", "value": ["number"], "ret":"object"},
+
+    //TODO: Support Identity Extension.
+    /*
+    "setIdentityProvider": {},
+    "getIdentityAssertion": {},
+    "getPeerIdentity": {},
+    "onidentityresult": {"type": "event", "value": []},
+    "onpeeridentity":{"type": "event", "value": []},
+    "onidpassertionerror":{"type": "event", "value": []},
+    "onidpvalidationerror":{"type": "event", "value": []},
+    */
+
+    "onnegotiationneeded": {"type": "event", "value": []},
+    "onicecandidate": {"type": "event", "value": {
+      "candidate": {
+        "candidate": "string",
+        "sdpMid": "string",
+        "sdpMLineIndex": "number"
+      }
+    }},
+    "onsignalingstatechange": {"type": "event", "value": []},
+    "onaddstream": {"type": "event", "value": {
+      "stream": "number"
+    }},
+    "onremovestream": {"type": "event", "value": {
+      "stream": "number"
+    }},
+    "oniceconnectionstatechange": {"type": "event", "value": []}
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "core.rtcdatachannel",
+  // API follows http://w3c.github.io/webrtc-pc/
+  "api": {
+
+    "constructor": {
+      // Numeric ID retreaved from core.rtcpeerconnection.createDataChannel
+      "value": ["number"]
+    },
+
+    "getLabel": {"type": "method", "value": [], "ret": "string"},
+    "getOrdered": {"type": "method", "value": [], "ret": "boolean"},
+    "getMaxPacketLifeTime": {"type": "method", "value": [], "ret": "number"},
+    "getMaxRetransmits": {"type": "method", "value": [], "ret": "number"},
+    "getProtocol": {"type": "method", "value": [], "ret": "string"},
+    "getNegotiated": {"type": "method", "value": [], "ret": "boolean"},
+    "getId": {"type": "method", "value": [], "ret": "number"},
+    "getReadyState": {"type": "method", "value": [], "ret": "string"},
+    "getBufferedAmount": {"type": "method", "value": [], "ret": "number"},
+
+    "onopen": {"type": "event", "value": []},
+    "onerror": {"type": "event", "value": []},
+    "onclose": {"type": "event", "value": []},
+    "close": {"type": "method", "value": []},
+    "onmessage": {"type": "event", "value": {
+      "text": "string",
+      "binary": "buffer"
+    }},
+    "getBinaryType": {"type": "method", "value": [], "ret": "string"},
+    "setBinaryType": {"type": "method", "value": ["string"]},
+    "send": {"type": "method", "value": ["string"]},
+    "sendBuffer": {"type": "method", "value": ["buffer"]}
+  }
+}
