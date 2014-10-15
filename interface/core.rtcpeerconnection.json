@@ -96,6 +96,7 @@
       "negotiated": "boolean",
       "id": "number"
     }], "ret": "number"},
+    //Note: only reports channels opened by the remote peer.
     "ondatachannel": {"type": "event", "value": {
       "channel": "number"
     }},

@@ -5,6 +5,7 @@
 
     "constructor": {
       // Numeric ID retreaved from core.rtcpeerconnection.createDataChannel
+      // or from an ondatachannel event.
       "value": ["number"]
     },
 
@@ -29,6 +30,7 @@
     "getBinaryType": {"type": "method", "value": [], "ret": "string"},
     "setBinaryType": {"type": "method", "value": ["string"]},
     "send": {"type": "method", "value": ["string"]},
+    // Note: renamed from 'send' to handle the overloaded type.
     "sendBuffer": {"type": "method", "value": ["buffer"]}
   }
 }
