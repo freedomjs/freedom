@@ -113,6 +113,7 @@ var setup = function (context, manifest, config) {
         return iface.external;
       }, function (err) {
         debug.error('Failed to retrieve manifest: ' + err);
+        throw err;
       }).then(resolve, reject);
     }
 
