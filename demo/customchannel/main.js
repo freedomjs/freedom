@@ -1,6 +1,7 @@
 /*jslint sloppy:true */
 /*globals freedom */
 var friend = freedom.friend();
+var af = freedom.altfriend();
 var core = freedom.core();
 
 var channels = {};
@@ -38,6 +39,12 @@ instance.on('destroy', function (id) {
 instance.on('message', function (id) {
   instance.emit('message', 'sending message to ' + id);
   channels[id].emit('message', 'Message to chan ' + id);
+});
+
+instance.on('alternative', function (q) {
+  af.testMethod(q).then(function (answer) {
+    instance.emit('message', 'got: ' + answer);
+  });
 });
 
 instance.on('peer', function () {

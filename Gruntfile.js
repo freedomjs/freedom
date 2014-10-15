@@ -122,7 +122,7 @@ module.exports = function (grunt) {
     },
     jshint: {
       beforeconcat: {
-        files: { src: FILES.srcCore.concat(FILES.srcPlatform) },
+        files: { src: FILES.srcCore.concat(FILES.srcPlatform) }
       },
       providers: FILES.srcProvider,
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],

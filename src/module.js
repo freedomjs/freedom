@@ -1,4 +1,4 @@
-/*jslint indent:2,white:true,node:true,sloppy:true */
+/*jslint indent:2,node:true,sloppy:true */
 var util = require('./util');
 var Provider = require('./provider');
 
@@ -11,7 +11,7 @@ var Provider = require('./provider');
  * @param {Policy} Policy The policy loader for dependencies.
  * @constructor
  */
-var Module = function(manifestURL, manifest, creator, policy) {
+var Module = function (manifestURL, manifest, creator, policy) {
   this.api = policy.api;
   this.policy = policy;
   this.resource = policy.resource;
@@ -40,7 +40,7 @@ var Module = function(manifestURL, manifest, creator, policy) {
  * @param {String} flow The origin of the message.
  * @param {Object} message The message received.
  */
-Module.prototype.onMessage = function(flow, message) {
+Module.prototype.onMessage = function (flow, message) {
   if (flow === 'control') {
     if (message.type === 'setup') {
       this.controlChannel = message.channel;
@@ -52,14 +52,20 @@ Module.prototype.onMessage = function(flow, message) {
       this.start();
       return;
     } else if (message.type === 'createLink' && message.channel) {
+      this.debug.debug(this + 'got create link for ' + message.name);
       this.externalPortMap[message.name] = message.channel;
       if (this.internalPortMap[message.name] === undefined) {
         this.internalPortMap[message.name] = false;
       }
-      this.emit(message.channel, {
+      var msg = {
         type: 'default channel announcement',
         channel: message.reverse
-      });
+      };
+      if (this.manifest.dependencies &&
+          this.manifest.dependencies[message.name]) {
+        msg.api = this.manifest.dependencies[message.name].api;
+      }
+      this.emit(message.channel, msg);
       return;
     } else if (message.core) {
       this.core = new message.core();
@@ -76,30 +82,31 @@ Module.prototype.onMessage = function(flow, message) {
     }
   } else {
     if ((this.externalPortMap[flow] === false ||
-        !this.externalPortMap[flow])&& message.channel) {
-      //console.log('handling channel announcement for ' + flow);
+        !this.externalPortMap[flow]) && message.channel) {
+      this.debug.debug(this + 'handling channel announcement for ' + flow);
       this.externalPortMap[flow] = message.channel;
       if (this.internalPortMap[flow] === undefined) {
         this.internalPortMap[flow] = false;
 
         // New incoming connection attempts should get routed to modInternal.
         if (this.manifest.provides && this.modInternal) {
-          console.warn('conn req sent');
           this.port.onMessage(this.modInternal, {
             type: 'Connection',
-            channel: flow
+            channel: flow,
+            api: message.api
           });
         } else if (this.manifest.provides) {
-          this.once('modInternal', function(flow) {
-            this.port.onMessage(this.modInternal,{
+          this.once('modInternal', function (flow, api) {
+            this.port.onMessage(this.modInternal, {
               type: 'Connection',
-              channel: flow
+              channel: flow,
+              api: api
             });
-          }.bind(this, flow));
+          }.bind(this, flow, message.api));
         // First connection retains legacy mapping as 'default'.
         } else if (!this.externalPortMap['default'] && message.channel) {
           this.externalPortMap['default'] = message.channel;
-          this.once('internalChannelReady', function(flow) {
+          this.once('internalChannelReady', function (flow) {
             this.internalPortMap[flow] = this.internalPortMap['default'];
           }.bind(this, flow));
         }
@@ -129,9 +136,9 @@ Module.prototype.onMessage = function(flow, message) {
  * @returns {Boolean} Whether the flow was successfully deregistered.
  * @private
  */
-Module.prototype.deregisterFlow = function(flow, internal) {
+Module.prototype.deregisterFlow = function (flow, internal) {
   var key,
-      map = internal ? this.internalPortMap : this.externalPortMap;
+    map = internal ? this.internalPortMap : this.externalPortMap;
   // TODO: this is inefficient, but seems less confusing than a 3rd
   // reverse lookup map.
   for (key in map) {
@@ -173,7 +180,7 @@ Module.prototype.deregisterFlow = function(flow, internal) {
  * @method start
  * @private
  */
-Module.prototype.start = function() {
+Module.prototype.start = function () {
   var Port;
   if (this.started || this.port) {
     return false;
@@ -184,7 +191,7 @@ Module.prototype.start = function() {
     this.port = new Port(this.manifest.name, this.resource);
     // Listen to all port messages.
     this.port.on(this.emitMessage.bind(this));
-    this.port.addErrorHandler(function(err) {
+    this.port.addErrorHandler(function (err) {
       this.debug.warn('Module Failed', err);
       this.stop();
     }.bind(this));
@@ -220,7 +227,7 @@ Module.prototype.start = function() {
  * @method stop
  * @private
  */
-Module.prototype.stop = function() {
+Module.prototype.stop = function () {
   if (!this.started) {
     return;
   }
@@ -241,8 +248,8 @@ Module.prototype.stop = function() {
  * @method toString
  * @return {String} The description of this Port.
  */
-Module.prototype.toString = function() {
-  return "[Module " + this.manifest.name +"]";
+Module.prototype.toString = function () {
+  return "[Module " + this.manifest.name + "]";
 };
 
 /**
@@ -253,7 +260,7 @@ Module.prototype.toString = function() {
  * @param {Object} message The message to send.
  * @private
  */
-Module.prototype.emitMessage = function(name, message) {
+Module.prototype.emitMessage = function (name, message) {
   if (this.internalPortMap[name] === false && message.channel) {
     this.internalPortMap[name] = message.channel;
     this.emit('internalChannelReady');
@@ -300,13 +307,13 @@ Module.prototype.emitMessage = function(name, message) {
     this.started = true;
     this.emit('start');
   } else if (name === 'ModInternal' && message.type === 'resolve') {
-    this.resource.get(this.manifestId, message.data).then(function(id, data) {
+    this.resource.get(this.manifestId, message.data).then(function (id, data) {
       this.port.onMessage(this.modInternal, {
         type: 'resolve response',
         id: id,
         data: data
       });
-    }.bind(this, message.id), function() {
+    }.bind(this, message.id), function () {
       this.debug.warn('Error Resolving URL for Module.');
     }.bind(this));
   } else {
@@ -320,12 +327,12 @@ Module.prototype.emitMessage = function(name, message) {
  * @method loadLinks
  * @private
  */
-Module.prototype.loadLinks = function() {
+Module.prototype.loadLinks = function () {
   var i, channels = ['default'], name, dep,
-      finishLink = function(dep, name, provider) {
-        var style = this.api.getInterfaceStyle(name);
-        dep.getInterface()[style](provider);
-      };
+    finishLink = function (dep, name, provider) {
+      var style = this.api.getInterfaceStyle(name);
+      dep.getInterface()[style](provider);
+    };
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
       name = this.manifest.permissions[i];
@@ -345,13 +352,13 @@ Module.prototype.loadLinks = function() {
     }
   }
   if (this.manifest.dependencies) {
-    util.eachProp(this.manifest.dependencies, function(desc, name) {
+    util.eachProp(this.manifest.dependencies, function (desc, name) {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
         this.dependantChannels.push(name);
       }
       this.resource.get(this.manifestId, desc.url).then(function (url) {
-        this.policy.get(this.lineage, url).then(function(dep) {
+        this.policy.get(this.lineage, url).then(function (dep) {
           this.emit(this.controlChannel, {
             type: 'Link to ' + name,
             request: 'link',
@@ -377,7 +384,7 @@ Module.prototype.loadLinks = function() {
  * @param {String} dep The dependency
  * @param {Object} manifest The manifest of the dependency
  */
-Module.prototype.updateEnv = function(dep, manifest) {
+Module.prototype.updateEnv = function (dep, manifest) {
   if (!manifest) {
     return;
   }
@@ -390,7 +397,7 @@ Module.prototype.updateEnv = function(dep, manifest) {
 
   try {
     data = JSON.parse(manifest);
-  } catch(e) {
+  } catch (e) {
     this.debug.error("Could not parse environmental manifest: " + e);
     return;
   }

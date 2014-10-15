@@ -122,4 +122,4 @@ Logger_console.prototype.error = function (source, msg, continuation) {
 
 /** REGISTER PROVIDER **/
 exports.provider = Logger_console;
-exports.name = 'core.logger';
+exports.name = 'core.console';

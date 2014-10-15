@@ -3,6 +3,7 @@ var channels = [];
 var core = freedom.core();
 
 var instance = freedom();
+var alt = freedom.alternative();
 
 var handler = function (cid, chan, msg) {
   'use strict';
@@ -22,3 +23,14 @@ instance.on('message', function (msg) {
     delete channels[msg.id];
   }
 });
+
+var AltIface = function () {
+  'use strict';
+};
+
+AltIface.prototype.testMethod = function (query) {
+  'use strict';
+  return 'answer ' + query;
+};
+
+alt.provideSynchronous(AltIface);

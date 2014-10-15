@@ -21,6 +21,7 @@ var ModuleInternal = function (manager) {
   this.binder = new ProxyBinder(this.manager);
   this.api = this.manager.api;
   this.manifests = {};
+  this.providers = {};
   
   this.id = 'ModuleInternal';
   this.pendingPorts = 0;
@@ -66,7 +67,10 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
     this.updateManifest(message.name, message.manifest);
   } else if (flow === 'default' && message.type === 'Connection') {
     // Multiple connections can be made to the default provider.
-    if (this.defaultPort) {
+    if (message.api && this.providers[message.api]) {
+      this.manager.createLink(this.providers[message.api], message.channel,
+                             this.port, message.channel);
+    } else if (this.defaultPort) {
       this.manager.createLink(this.defaultPort, message.channel,
                               this.port, message.channel);
     } else {
@@ -114,12 +118,17 @@ ModuleInternal.prototype.generateEnv = function (manifest, items) {
  * Attach a proxy to the externally visible namespace.
  * @method attach
  * @param {String} name The name of the proxy.
+ * @param {Boolean} provides If this proxy is a provider.
  * @param {ProxyInterface} proxy The proxy to attach.
  * @param {String} api The API the proxy implements.
  * @private.
  */
-ModuleInternal.prototype.attach = function (name, proxy) {
+ModuleInternal.prototype.attach = function (name, provides, proxy) {
   var exp = this.config.global.freedom;
+  
+  if (provides) {
+    this.providers[name] = proxy.port;
+  }
 
   if (!exp[name]) {
     exp[name] = proxy.external;
@@ -158,7 +167,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
         definition.definition = msg.manifest.api[item.api];
       }
       this.binder.getExternal(this.port, item.name, definition).then(
-        this.attach.bind(this, item.name)
+        this.attach.bind(this, item.name, false)
       );
     }.bind(this),
     promise = new PromiseCompat(function (resolve, reject) {
@@ -166,10 +175,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
     }.bind(this));
 
   for (i = 0; i < items.length; i += 1) {
-    if (items[i].provides && !items[i].def) {
-      this.debug.error('Module ' + this.appId + ' not loaded');
-      this.debug.error('Unknown provider: ' + items[i].name);
-    } else if (items[i].api && !items[i].def) {
+    if (items[i].api && !items[i].def) {
       if (this.manifests[items[i].name]) {
         onManifest(items[i], {
           manifest: this.manifests[items[i].name]
@@ -180,7 +186,8 @@ ModuleInternal.prototype.loadLinks = function (items) {
       }
     } else {
       this.binder.getExternal(this.port, items[i].name, items[i].def).then(
-        this.attach.bind(this, items[i].name)
+        this.attach.bind(this, items[i].name, items[i].def &&
+                         items[i].def.provides)
       );
     }
     this.pendingPorts += 1;
@@ -219,7 +226,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
     name: 'core',
     definition: core
   }).then(
-    this.attach.bind(this, 'core')
+    this.attach.bind(this, 'core', false)
   );
 
 
@@ -307,7 +314,13 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
           definition: manifest.api[obj.name],
           provides: true
         };
+      } else {
+        this.debug.warn('Module will not provide "' + obj.name +
+          '", since no declaration can be found.');
+        /*jslint continue:true*/
+        continue;
       }
+      /*jslint continue:false*/
       if (seen.indexOf(obj.name) < 0) {
         proxies.push(obj);
         seen.push(obj.name);

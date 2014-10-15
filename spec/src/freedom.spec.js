@@ -5,7 +5,7 @@ describe("freedom", function() {
   beforeEach(function() {
     testUtil.setCoreProviders([
       require('../../providers/core/core.unprivileged'),
-      require('../../providers/core/logger.console')
+      require('../../providers/core/console.unprivileged')
     ]);
     freedom = testUtil.setupModule("relative://spec/helper/manifest.json");
   });

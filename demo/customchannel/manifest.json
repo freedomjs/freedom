@@ -7,6 +7,10 @@
   "dependencies": {
     "friend": {
       "url": "friend.json"
+    },
+    "altfriend": {
+      "url": "friend.json",
+      "api": "alternative"
     }
   },
   "permissions": [

@@ -1,0 +1,18 @@
+{
+  "name": "Advanced Logging Client",
+  "description": "Logging Demo Client",
+  "app": {
+    "script": "main.js",
+    "index": "index.html",
+    "static": [ 
+      "../style.css",
+      "page.js"
+    ]
+  },
+  "dependencies": {
+    "logger": {
+      "url": "logger.json",
+      "api": "loggingbackchannel"
+    }
+  }
+}

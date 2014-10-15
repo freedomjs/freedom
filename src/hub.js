@@ -39,7 +39,8 @@ Hub.prototype.onMessage = function (source, message) {
     return;
   }
 
-  if (!message.quiet && !destination.quiet) {
+  // The firehose tracing all internal freedom.js messages.
+  if (!message.quiet && !destination.quiet && this.config && this.config.trace) {
     type = message.type;
     if (message.type === 'message' && message.message &&
         message.message.action === 'method') {

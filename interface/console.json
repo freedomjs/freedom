@@ -1,5 +1,5 @@
 {
-  "name": "core.logger",
+  "name": "console",
   "api": {
     // Log(source, message)
     "log": {"type": "method", "value": ["string", "string"]},

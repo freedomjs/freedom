@@ -1,5 +1,6 @@
 var Api = require('../src/api');
 var Bundle = require('../src/bundle');
+var Debug = require('../src/debug');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 var Frame = require('../src/link/frame');
@@ -62,7 +63,8 @@ exports.createTestPort = function(id) {
 
 exports.createMockPolicy = function() {
   return {
-    api: new Api()
+    api: new Api(),
+    debug: new Debug()
   };
 };
 
