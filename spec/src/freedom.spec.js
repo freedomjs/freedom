@@ -42,6 +42,10 @@ describe("freedom", function() {
       var app = iface();
       app.on('log', function(value) {
         var log = JSON.parse(value);
+        if (log.length < 2) {
+          app.emit('get-log');
+          return;
+        }
         expect(log[0][2]).toEqual('log Msg');
         expect(log[1][2]).toEqual('another Log');
         expect(log[1][0] - log[0][0]).toBeGreaterThan(-1);

@@ -70,7 +70,8 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
     if (message.api && this.providers[message.api]) {
       this.manager.createLink(this.providers[message.api], message.channel,
                              this.port, message.channel);
-    } else if (this.defaultPort) {
+    } else if (this.defaultPort &&
+               (message.api === this.defaultPort.api || !message.api)) {
       this.manager.createLink(this.defaultPort, message.channel,
                               this.port, message.channel);
     } else {
@@ -100,6 +101,7 @@ ModuleInternal.prototype.generateEnv = function (manifest, items) {
   return this.binder.bindDefault(this.port, this.api, manifest, true).then(
     function (binding) {
       var i = 0;
+      binding.port.api = binding.external.api;
       this.defaultPort = binding.port;
       if (binding.external.api) {
         for (i = 0; i < items.length; i += 1) {
