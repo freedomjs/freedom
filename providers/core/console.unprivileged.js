@@ -35,7 +35,8 @@ Logger_console.level = {
  */
 Logger_console.prototype.print = function (severity, source, msg) {
   var arr = msg;
-  if (typeof this.console === 'undefined') {
+  if (typeof this.console === 'undefined' ||
+      this.console.freedom === true) {
     return;
   }
   if (typeof arr === 'string') {

@@ -8,7 +8,11 @@
       "child": { "url": "child.json" },
       "log": {
         "url": "logger.json",
-        "api": "log"
+        "api": "console"
+      },
+      "getlog": {
+        "url": "logger.json",
+        "api": "getLogs"
       }
   }
 }

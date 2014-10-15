@@ -79,7 +79,7 @@ Policy.prototype.get = function(lineage, id) {
     }
   }.bind(this), function(err) {
     this.debug.error('Policy Error Resolving ' + id, err);
-    return false;
+    throw(err);
   }.bind(this));
 };
 
@@ -166,10 +166,10 @@ Policy.prototype.loadManifest = function(manifest) {
     try {
       return JSON.parse(data);
     } catch(err) {
-      this.debug.warn("Failed to load " + manifest + ": " + err);
-      return {};
+      this.debug.error("Failed to load " + manifest + ": " + err);
+      throw new Error("No Manifest Available");
     }
-  });
+  }.bind(this));
 };
 
 /**

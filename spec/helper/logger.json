@@ -4,22 +4,16 @@
   "app": {
     "script": "logger.js"
   },
+  "constraints": {
+    "isolation": "never"
+  },
   "provides": [
-    "log"
+    "console", "getLogs"
   ],
-  "default": "log",
+  "default": "console",
   "api": {
-    "log": {
-      "log": {
-        "type": "method",
-        "value": ["string"],
-        "ret": []
-      },
-      "getLog": {
-        "type": "method",
-        "value": [],
-        "ret": "string"
-      }
+    "getLogs": {
+      "get": {"type": "method", "value":[], "ret": "string"}
     }
   }
 }

@@ -359,6 +359,7 @@ Module.prototype.loadLinks = function () {
       }
       this.resource.get(this.manifestId, desc.url).then(function (url) {
         this.policy.get(this.lineage, url).then(function (dep) {
+          this.updateEnv(name, dep.manifest);
           this.emit(this.controlChannel, {
             type: 'Link to ' + name,
             request: 'link',
@@ -366,8 +367,9 @@ Module.prototype.loadLinks = function () {
             overrideDest: name + '.' + this.id,
             to: dep
           });
+        }.bind(this), function (err) {
+          this.debug.warn('failed to load dep: ', name, err);
         }.bind(this));
-        this.resource.getContents(url).then(this.updateEnv.bind(this, name));
       }.bind(this));
     }.bind(this));
   }
@@ -393,22 +395,15 @@ Module.prototype.updateEnv = function (dep, manifest) {
     return;
   }
   
-  var data, metadata;
-
-  try {
-    data = JSON.parse(manifest);
-  } catch (e) {
-    this.debug.error("Could not parse environmental manifest: " + e);
-    return;
-  }
+  var metadata;
 
   // Decide if/what other properties should be exported.
   // Keep in sync with ModuleInternal.updateEnv
   metadata = {
-    name: data.name,
-    icon: data.icon,
-    description: data.description,
-    api: data.api
+    name: manifest.name,
+    icon: manifest.icon,
+    description: manifest.description,
+    api: manifest.api
   };
   
   this.port.onMessage(this.modInternal, {

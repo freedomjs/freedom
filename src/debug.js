@@ -10,7 +10,6 @@ var util = require('./util');
 var Debug = function (logger) {
   this.id = 'debug';
   this.emitChannel = false;
-  this.console = null;
   this.config = false;
   util.handleEvents(this);
 };
@@ -50,9 +49,6 @@ Debug.prototype.onMessage = function (source, message) {
     this.config = message.config;
     if (!this.config.global.console) {
       this.config.global.console = this.getLogger('Console');
-      this.console = this;
-    } else {
-      this.console = message.config.global.console;
     }
     this.emit('ready');
   }
@@ -113,18 +109,16 @@ Debug.prototype.print = function (message) {
   }
 
   var args, arr = [], i = 0;
-  if (this.console !== this) {
-    args = JSON.parse(message.msg);
-    if (typeof args === "string") {
-      arr.push(args);
-    } else {
-      while (args[i] !== undefined) {
-        arr.push(args[i]);
-        i += 1;
-      }
+  args = JSON.parse(message.msg);
+  if (typeof args === "string") {
+    arr.push(args);
+  } else {
+    while (args[i] !== undefined) {
+      arr.push(args[i]);
+      i += 1;
     }
-    this.logger[message.severity].call(this.logger, message.source, arr, function () {});
   }
+  this.logger[message.severity].call(this.logger, message.source, arr, function () {});
 };
 
 /**
@@ -179,6 +173,7 @@ Debug.prototype.getLogger = function (name) {
     this.format(severity, source, args);
   },
     logger = {
+      freedom: true,
       debug: log.bind(this, 'debug', name),
       info: log.bind(this, 'info', name),
       log: log.bind(this, 'log', name),
