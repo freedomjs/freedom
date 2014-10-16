@@ -5,7 +5,7 @@ describe("freedom", function() {
   beforeEach(function() {
     testUtil.setCoreProviders([
       require('../../providers/core/core.unprivileged'),
-      require('../../providers/core/logger.console')
+      require('../../providers/core/console.unprivileged')
     ]);
     freedom = testUtil.setupModule("relative://spec/helper/manifest.json");
   });
@@ -42,8 +42,12 @@ describe("freedom", function() {
       var app = iface();
       app.on('log', function(value) {
         var log = JSON.parse(value);
-        expect(log[0][1]).toEqual('log Msg');
-        expect(log[1][1]).toEqual('another Log');
+        if (log.length < 2) {
+          app.emit('get-log');
+          return;
+        }
+        expect(log[0][2]).toEqual('log Msg');
+        expect(log[1][2]).toEqual('another Log');
         expect(log[1][0] - log[0][0]).toBeGreaterThan(-1);
         done();
       });
@@ -51,5 +55,35 @@ describe("freedom", function() {
       app.emit('do-log', 'another Log');
       app.emit('get-log');
     });
+  });
+});
+
+describe("freedom instances", function() {
+  var freedom;
+  beforeEach(function() {
+    testUtil.setCoreProviders([
+      require('../../providers/core/core.unprivileged'),
+      require('../../providers/core/console.unprivileged')
+    ]);
+  });
+
+  it("Supports custom loggers", function(done) {
+    freedom = testUtil.setupModule("relative://spec/helper/manifest.json", {
+      logger: "relative://spec/helper/logger.json"
+    });
+    freedom.then(function (iface) {
+      var app = iface();
+      app.on('log', function(value) {
+        var log = JSON.parse(value);
+        expect(log.length).toBeGreaterThan(0);
+        done();
+      });
+      app.emit('get-log');
+    });
+  });
+  
+  afterEach(function() {
+    testUtil.cleanupIframes();
+    freedom = null;
   });
 });

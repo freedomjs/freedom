@@ -1,5 +1,7 @@
+
 var child = freedom.child();
 var log = freedom.log();
+var getlog = freedom.getlog();
 
 var app = freedom();
 
@@ -22,7 +24,7 @@ app.on('do-log', function(value) {
 });
 
 app.on('get-log', function() {
-  log.getLog().then(function(output) {
+  getlog.get().then(function(output) {
     app.emit('log', output);
   });
 });

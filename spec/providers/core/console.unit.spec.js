@@ -1,7 +1,7 @@
 var testUtil = require('../../util');
-var Logger = require('../../../providers/core/logger.console');
+var Console_unpriv = require('../../../providers/core/console.unprivileged');
 
-describe("providers/core/Logger_console", function() {
+describe("providers/core/Console_unprivileged", function() {
   var app, logger, console;
 
   beforeEach(function() {
@@ -14,19 +14,19 @@ describe("providers/core/Logger_console", function() {
     console = app.config.global.console;
     
     app.controlChannel = 'control';
-    logger = new Logger.provider(app);
+    logger = new Console_unpriv.provider(app);
   });
 
   it("Prints messages at correct levels", function() {
     logger.level = 'debug';
-    Object.keys(Logger.provider.level).forEach(function(level) {
+    Object.keys(Console_unpriv.provider.level).forEach(function(level) {
       console[level] = jasmine.createSpy(level);
       logger[level]('test', 'MyMsg', function() {});
       expect(console[level]).toHaveBeenCalled();
     });
 
     logger.level = 'warn';
-    Object.keys(Logger.provider.level).forEach(function(level) {
+    Object.keys(Console_unpriv.provider.level).forEach(function(level) {
       console[level] = jasmine.createSpy(level);
       logger[level]('test', 'MyMsg', function() {});
       if (level === 'warn' || level === 'error') {

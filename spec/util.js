@@ -1,5 +1,6 @@
 var Api = require('../src/api');
 var Bundle = require('../src/bundle');
+var Debug = require('../src/debug');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 var Frame = require('../src/link/frame');
@@ -62,7 +63,8 @@ exports.createTestPort = function(id) {
 
 exports.createMockPolicy = function() {
   return {
-    api: new Api()
+    api: new Api(),
+    debug: new Debug()
   };
 };
 
@@ -182,12 +184,15 @@ exports.setModuleStrategy = function(port, source, debug) {
   testDebug = debug;
 };
 
-exports.setupModule = function(manifest_url) {
+exports.setupModule = function(manifest_url, options) {
   var myGlobal = global, dir = '';
   if (typeof document !== 'undefined') {
     myGlobal = {
       document: document
     };
+  }
+  if (!options) {
+    options = {};
   }
 
   if (typeof window !== 'undefined') {  
@@ -206,9 +211,7 @@ exports.setupModule = function(manifest_url) {
         dir + "node_modules/es5-shim/es5-shim.js",
         dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
       ]
-    }, manifest_url, {
-      debug: testDebug
-    });
+    }, manifest_url, options);
   freedom.then(function(c) {
     activeContexts.push(c);
   });

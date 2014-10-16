@@ -1,3 +1,4 @@
+/*jslint node:true*/
 /**
  * Gruntfile for freedom.js
  *
@@ -40,13 +41,6 @@ var FILES = {
   specPlatformUnit: [
     'spec/providers/core/**/*.spec.js'
   ],
-  srcProvider: [
-    'providers/oauth/*.js',
-    'providers/social/websocket-server/*.js',
-    'providers/social/loopback/*.js',
-    'providers/storage/**/*.js',
-    'providers/transport/**/*.js'
-  ],
   specProviderUnit: [
     'spec/providers/social/**/*.unit.spec.js',
     'spec/providers/storage/**/*.unit.spec.js',
@@ -83,6 +77,7 @@ var CUSTOM_LAUNCHER = {
 };
 
 module.exports = function (grunt) {
+  'use strict';
   /**
    * GRUNT CONFIG
    **/
@@ -122,9 +117,10 @@ module.exports = function (grunt) {
     },
     jshint: {
       beforeconcat: {
-        files: { src: FILES.srcCore.concat(FILES.srcPlatform) },
+        files: { src: FILES.srcCore.concat(FILES.srcPlatform) }
       },
-      providers: FILES.srcProvider,
+      grunt: ['Gruntfile.js'],
+      providers: ['providers/**/*.js'],
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],
       options: {
         jshintrc: true
@@ -210,7 +206,7 @@ module.exports = function (grunt) {
       }
     },
     connect: {
-      default: {
+      freedom: {
         options: {
           port: 8000,
           keepalive: false
@@ -298,20 +294,20 @@ module.exports = function (grunt) {
   grunt.registerTask('unit', [
     'browserify:frame',
     'browserify:jasmine_unit',
-    'connect:default',
+    'connect:freedom',
     'karma:phantom'
   ]);
   grunt.registerTask('test', [
     'jshint',
     'browserify:frame',
     'browserify:jasmine_full',
-    'connect:default',
+    'connect:freedom',
     'karma:browsers'
   ]);
   grunt.registerTask('debug', [
     'prepare_watch',
     'build',
-    'connect:default',
+    'connect:freedom',
     'browserify:jasmine_full',
     'karma:browsers'
   ]);
@@ -327,7 +323,7 @@ module.exports = function (grunt) {
       grunt.registerTask('ci', [
         'browserify:frame',
         'browserify:jasmine_coverage',
-        'connect:default',
+        'connect:freedom',
         'karma:phantom',
         'gitinfo',
         'karma:saucelabs',
@@ -337,7 +333,7 @@ module.exports = function (grunt) {
       grunt.registerTask('ci', [
         'browserify:frame',
         'browserify:jasmine_unit',
-        'connect:default',
+        'connect:freedom',
         'karma:phantom'
       ]);
     }
@@ -345,7 +341,7 @@ module.exports = function (grunt) {
     grunt.registerTask('ci', [
       'browserify:frame',
       'browserify:jasmine_unit',
-      'connect:default',
+      'connect:freedom',
       'karma:phantom',
       'gitinfo',
       'karma:saucelabs'

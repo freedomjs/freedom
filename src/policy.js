@@ -1,5 +1,6 @@
 /*globals XMLHttpRequest */
 /*jslint indent:2,white:true,node:true,sloppy:true */
+var PromiseCompat = require('es6-promise').Promise;
 var Module = require('./module');
 var util = require('./util');
 
@@ -21,6 +22,8 @@ var Policy = function(manager, resource, config) {
   this.config = config;
   this.runtimes = [];
   this.policies = [];
+  this.pending = {};
+  util.handleEvents(this);
 
   this.add(manager, config.policy);
   this.runtimes[0].local = true;
@@ -59,6 +62,19 @@ Policy.prototype.defaultConstraints = {
  * @returns {Promise} A promise for the local port towards the module.
  */
 Policy.prototype.get = function(lineage, id) {
+  
+  // Make sure that a module isn't getting located twice at the same time.
+  // This is resolved by delaying if it until we see it in a 'moduleAdd' event.
+  if (this.pending[id]) {
+    return new PromiseCompat(function (resolve, reject) {
+      this.once('placed', function(l, i) {
+        this.get(l, i).then(resolve, reject);
+      }.bind(this, lineage, id));
+    }.bind(this));
+  } else {
+    this.pending[id] = true;
+  }
+
   return this.loadManifest(id).then(function(manifest) {
     var constraints = this.overlay(this.defaultConstraints, manifest.constraints),
         runtime = this.findDestination(lineage, id, constraints),
@@ -68,6 +84,8 @@ Policy.prototype.get = function(lineage, id) {
                              constraints.isolation !== 'never');
       if(constraints.isolation !== 'always' && portId) {
         this.debug.info('Reused port ' + portId);
+        delete this.pending[id];
+        this.emit('placed');
         return runtime.manager.getPort(portId);
       } else {
         return new Module(id, manifest, lineage, this);
@@ -79,7 +97,7 @@ Policy.prototype.get = function(lineage, id) {
     }
   }.bind(this), function(err) {
     this.debug.error('Policy Error Resolving ' + id, err);
-    return false;
+    throw(err);
   }.bind(this));
 };
 
@@ -166,10 +184,10 @@ Policy.prototype.loadManifest = function(manifest) {
     try {
       return JSON.parse(data);
     } catch(err) {
-      this.debug.warn("Failed to load " + manifest + ": " + err);
-      return {};
+      this.debug.error("Failed to load " + manifest + ": " + err);
+      throw new Error("No Manifest Available");
     }
-  });
+  }.bind(this));
 };
 
 /**
@@ -187,12 +205,18 @@ Policy.prototype.add = function(port, policy) {
   this.policies.push(this.overlay(this.defaultPolicy, policy));
 
   port.on('moduleAdd', function(runtime, info) {
-    var lineage = info.lineage;
+    var lineage = [];
+    lineage = lineage.concat(info.lineage);
     lineage[0] = info.id;
     runtime.modules.push(lineage);
+    if (this.pending[info.lineage[0]]) {
+      delete this.pending[info.lineage[0]];
+      this.emit('placed');
+    }
   }.bind(this, runtime));
   port.on('moduleRemove', function(runtime, info) {
-    var lineage = info.lineage, i, modFingerprint;
+    var lineage = [], i, modFingerprint;
+    lineage = lineage.concat(info.lineage);
     lineage[0] = info.id;
     modFingerprint = lineage.toString();
 

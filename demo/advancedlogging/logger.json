@@ -1,0 +1,17 @@
+{
+  "name": "Advanced Logger",
+  "description": "Logger that reports messages on a backchannel.",
+  "app": {
+    "script": "logger.js"
+  },
+  "constraints": {
+    "isolation": "never"
+  },
+  "provides": ["console", "loggingbackchannel"],
+  "default": "console",
+  "api": {
+    "loggingbackchannel": {
+      "msg": {"type": "event", "value": "string"}
+    }
+  }
+}

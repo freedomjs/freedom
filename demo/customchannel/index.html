@@ -7,7 +7,8 @@
 
   <script type="text/javascript">
     freedom('manifest.json', {"debug": "debug"}).then(function(instance) {
-      start(instance());
+      window.activeConnection = instance();
+      start(window.activeConnection);
     });
     
     function start(channel) {

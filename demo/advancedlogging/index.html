@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang='en-US'>
 <head>
-  <title>Chat ~ freedom.js Demos</title>
+  <title>Advanced Logging ~ freedom.js Demos</title>
   <meta http-equiv='Content-Type' content='text/html;charset=utf-8' />
   <link href='../style.css' rel='stylesheet' type='text/css' />
   <!-- Include freedom.js -->
   <script type='text/javascript' src='../../freedom.js'></script>
-  <script type='text/javascript' src='ux.js'></script>
+  <script type='text/javascript' src='page.js'></script>
 
   <style type='text/css'>
   section {border: 1px solid black; position:relative; display: inline-block; vertical-align:top;}
@@ -20,14 +20,11 @@
 <body>
   <header id='logo'>freedom.js</header>
   <header><span class='triangle'>&#9654;</span> Demos</header>
-  <header><span class='triangle'>&#9654;</span> Chat</header>
+  <header><span class='triangle'>&#9654;</span> Advanced Logging</header>
   <div style='clear:both; height:15px;'></div>
   <section>
-    <div id='messagelist' class='text'></div>
-    <div id='uid'>Logging In</div>
-    <input id='msg-input' type='text' placeholder='Type message here'/>
-  </section>
-  <section id='buddylist'>
+    <div id='log' class='text'></div>
+    <input id='msg-input' type='text' placeholder='Add log message here'/>
   </section>
 </body>
 </html>

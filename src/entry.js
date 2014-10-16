@@ -75,25 +75,46 @@ var setup = function (context, manifest, config) {
       manager.once('delegate', manager.setup.bind(manager, debug));
     } else {
       manager.setup(debug);
-      api.getCore('core.logger', debug).then(function (Logger) {
-        debug.setLogger(new Logger());
-      });
-
       policy = new Policy(manager, resource, site_cfg);
 
-      resource.get(site_cfg.location, site_cfg.manifest).then(
-        function (root_manifest) {
-          return policy.get([], root_manifest);
-        }
-      ).then(function (root_module) {
-        manager.setup(root_module);
-        return binder.bindDefault(root_module, api, root_module.manifest).then(
-          function (info) {
-            return info.external;
+      var fallbackLogger, getIface;
+      fallbackLogger = function (message) {
+        api.getCore('core.console', debug).then(function (Logger) {
+          debug.setLogger(new Logger());
+          if (message) {
+            debug.error(message);
           }
-        );
+        });
+      };
+      getIface = function (manifest) {
+        return resource.get(site_cfg.location, manifest).then(
+          function (canonical_manifest) {
+            return policy.get([], canonical_manifest);
+          }
+        ).then(function (instance) {
+          manager.setup(instance);
+          return binder.bindDefault(instance, api, instance.manifest);
+        });
+      };
+
+      if (site_cfg.logger) {
+        getIface(site_cfg.logger).then(function (iface) {
+          if (iface.external.api !== 'console') {
+            fallbackLogger("Unwilling to use logger with unknown API:",
+              iface.external.api);
+          } else {
+            debug.setLogger(iface.external());
+          }
+        }, fallbackLogger);
+      } else {
+        fallbackLogger();
+      }
+
+      getIface(site_cfg.manifest).then(function (iface) {
+        return iface.external;
       }, function (err) {
         debug.error('Failed to retrieve manifest: ' + err);
+        throw err;
       }).then(resolve, reject);
     }
 
