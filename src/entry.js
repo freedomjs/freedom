@@ -77,24 +77,25 @@ var setup = function (context, manifest, config) {
       manager.setup(debug);
       policy = new Policy(manager, resource, site_cfg);
 
-      var fallbackLogger = function (message) {
+      var fallbackLogger, getIface;
+      fallbackLogger = function (message) {
         api.getCore('core.console', debug).then(function (Logger) {
           debug.setLogger(new Logger());
           if (message) {
             debug.error(message);
           }
         });
-      },
-        getIface = function (manifest) {
-          return resource.get(site_cfg.location, manifest).then(
-            function (canonical_manifest) {
-              return policy.get([], canonical_manifest);
-            }
-          ).then(function (instance) {
-            manager.setup(instance);
-            return binder.bindDefault(instance, api, instance.manifest);
-          });
-        };
+      };
+      getIface = function (manifest) {
+        return resource.get(site_cfg.location, manifest).then(
+          function (canonical_manifest) {
+            return policy.get([], canonical_manifest);
+          }
+        ).then(function (instance) {
+          manager.setup(instance);
+          return binder.bindDefault(instance, api, instance.manifest);
+        });
+      };
 
       if (site_cfg.logger) {
         getIface(site_cfg.logger).then(function (iface) {
