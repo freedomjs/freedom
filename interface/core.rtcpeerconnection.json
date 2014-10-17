@@ -15,24 +15,22 @@
         }],
         "iceTransports": "string",
         "peerIdentity": "string"
-      }, {
-        "iceRestart": "boolean",
-        "offerToReceiveAudio": "number",
-        "offerToReceiveVideo": "number",
-        "voiceActivityDetection": "boolean",
-        "DtlsSrtpKeyAgreement": "boolean",
-        "RtpDataChannels": "boolean"
       }]
     },
 
     // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCOfferOptions
     "createOffer": {"type": "method", "value": [{
-      "iceRestart": "boolean",
-      "offerToReceiveAudio": "number",
-      "offerToReceiveVideo": "number",
-      "voiceActivityDetection": "boolean",
-      "DtlsSrtpKeyAgreement": "boolean",
-      "RtpDataChannels": "boolean"
+      "mandatory": {
+        "OfferToReceiveAudio": "number",
+        "OfferToReceiveVideo": "number"
+      }, "optional": ["array",{
+        "OfferToReceiveAudio": "number",
+        "OfferToReceiveVideo": "number",
+        "IceRestart": "boolean",
+        "VoiceActivityDetection": "boolean",
+        "DtlsSrtpKeyAgreement": "boolean",
+        "RtpDataChannels": "boolean"
+      }]
     }], "ret": {
       "type": "string",
       "sdp": "string"
