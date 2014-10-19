@@ -90,11 +90,11 @@
     }},
 
     // Numbers for stream API are IDs with which to make core.mediastream.
-    "getLocalStreams": {"type": "method", "value": [], "ret": ["array", "number"]},
-    "getRemoteStreams": {"type": "method", "value": [], "ret": ["array", "number"]},
-    "getStreamById": {"type": "method", "value": ["string"], "ret": "number"},
-    "addStream": {"type": "method", "value": ["number"], "ret": {}},
-    "removeStream": {"type": "method", "value": ["number"], "ret": {}},
+    "getLocalStreams": {"type": "method", "value": [], "ret": ["array", "string"]},
+    "getRemoteStreams": {"type": "method", "value": [], "ret": ["array", "string"]},
+    "getStreamById": {"type": "method", "value": ["string"], "ret": "string"},
+    "addStream": {"type": "method", "value": ["string"], "ret": {}},
+    "removeStream": {"type": "method", "value": ["string"], "ret": {}},
 
     "close": {"type": "method", "value": [], "ret": {}},
 
@@ -107,10 +107,10 @@
       "protocol": "string",
       "negotiated": "boolean",
       "id": "number"
-    }], "ret": "number"},
+    }], "ret": "string"},
     //Note: only reports channels opened by the remote peer.
     "ondatachannel": {"type": "event", "value": {
-      "channel": "number"
+      "channel": "string"
     }},
 
     //TODO: Support DTMF Extension.
@@ -119,7 +119,7 @@
     //per http://w3c.github.io/webrtc-pc/#idl-def-RTCStatsCallback
     //Number if sepecified represents a core.mediastreamtrack.
     //Returned object is a serialization of the RTCStatsReport.
-    "getStats": {"type": "method", "value": ["number"], "ret":"object"},
+    "getStats": {"type": "method", "value": ["string"], "ret":"object"},
 
     //TODO: Support Identity Extension.
     /*

@@ -6,7 +6,7 @@
     "constructor": {
       // Numeric ID retreaved from core.rtcpeerconnection.createDataChannel
       // or from an ondatachannel event.
-      "value": ["number"]
+      "value": ["string"]
     },
 
     "getLabel": {"type": "method", "value": [], "ret": "string"},

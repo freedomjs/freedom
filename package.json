@@ -44,7 +44,8 @@
     "karma-phantomjs-launcher": "~0.1.4",
     "karma-sauce-launcher": "~0.2.8",
     "karma-story-reporter": "^0.2.2",
-    "karma-unicorn-reporter": "^0.1.4"
+    "karma-unicorn-reporter": "^0.1.4",
+    "webrtc-adapter": "0.0.3"
   },
   "scripts": {
     "test": "grunt ci --verbose",

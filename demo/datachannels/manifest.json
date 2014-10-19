@@ -1,0 +1,50 @@
+{
+  "name": "DataChannel Demo",
+  "description": "DataChannel Playground freedom.js application",
+  "app": {
+    "script": "chat.js",
+    "index": "index.html",
+    "static": [ "../style.css" ]
+  },
+  "permissions": ["core.rtcpeerconnection", "core.rtcdatachannel"],
+  "provides": ["chat"],
+  "default": "chat",
+  "api": {
+    "chat": {
+      "constructor": {
+        "value": ["string"]
+      },
+      "initiate": {
+        "type": "method",
+        "value": ["object"],
+        "ret": "object"
+      },
+      "respond": {
+        "type": "method",
+        "value": ["object"],
+        "ret": "object"
+      },
+      "finish": {
+        "type": "method",
+        "value": ["object"]
+      },
+      "openChannel": {
+        "type": "method",
+        "value": [],
+        "ret": "string"
+      },
+      "send": {
+        "type": "method",
+        "value": ["string"]
+      },
+      "message": {
+        "type": "event",
+        "value": "string"
+      },
+      "ice": {
+        "type": "event",
+        "value": "string"
+      }
+    }
+  }
+}
