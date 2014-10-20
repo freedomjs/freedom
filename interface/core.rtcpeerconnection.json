@@ -4,8 +4,7 @@
   "api": {
     // Arguments: iceServers, iceTransports, peerIdentity
     // Deviation from spec: iceServers, and iceServers.urls when specified must
-    // be an array, even if only 1 is specified. Additionally, a second
-    // argument of initial 
+    // be an array, even if only 1 is specified.
     "constructor": {
       "value": [{
         "iceServers": ["array", {
