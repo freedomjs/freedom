@@ -1,6 +1,9 @@
 var Api = require('../src/api');
+var ApiInterface = require('../src/proxy/apiInterface');
 var Bundle = require('../src/bundle');
+var Consumer = require('../src/consumer');
 var Debug = require('../src/debug');
+var Provider = require('../src/provider');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 var Frame = require('../src/link/frame');
@@ -217,6 +220,21 @@ exports.setupModule = function(manifest_url, options) {
   });
   return freedom;
 }
+
+exports.directProviderFor = function (mod, api) {
+  var debug = new Debug();
+  var provider = new Provider(api, debug);
+  provider.getProxyInterface()().provideAsynchronous(mod);
+  var iface = ApiInterface.bind(ApiInterface, api);
+  var consumer = new Consumer(iface, debug);
+
+  // Create a link between them.
+  provider.on('default', consumer.onMessage.bind(consumer, 'default'));
+  consumer.on('default', provider.onMessage.bind(provider, 'default'));
+  provider.onMessage('control', {channel: 'default', reverse: 'default', name: 'default'});
+
+  return consumer.getProxyInterface();
+};
 
 exports.providerFor = function(module, api) {
   var manifest = {

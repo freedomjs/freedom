@@ -29,7 +29,7 @@ RTCPeerConnectionAdapter.prototype.manageEvents = function (attach) {
     if (attach) {
       this[event] = this[event].bind(this);
       this.connection[event] = this[event];
-    } else {
+    } else if (this.connection) {
       delete this.connection[event];
     }
   }.bind(this));
@@ -127,10 +127,19 @@ RTCPeerConnectionAdapter.prototype.removeStream = function (id, callback) {
 };
 
 RTCPeerConnectionAdapter.prototype.close = function (callback) {
+  if (!this.connection) {
+    return callback();
+  }
   this.manageEvents(false);
-  this.connection.close();
-  delete this.connection;
-  callback();
+  try {
+    this.connection.close();
+    callback();
+  } catch (e) {
+    callback(undefined, {
+      errcode: e.name,
+      message: e.message
+    });
+  }
 };
 
 RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChannelDict, callback) {
@@ -171,7 +180,6 @@ RTCPeerConnectionAdapter.prototype.onicecandidate = function (event) {
 };
   
 RTCPeerConnectionAdapter.prototype.onsignalingstatechange = function (event) {
-  console.warn('on signalling state change', this.connection.signalingState);
   this.dispatchEvent('onsignalingstatechange', event.message);
 };
   

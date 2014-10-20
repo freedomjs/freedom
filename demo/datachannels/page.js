@@ -17,7 +17,6 @@ var negotiateState = function (text, button, channel) {
       }.bind({}, state));
       state.at = 2;
     } else if (state.at === 1) {
-      console.warn('called respond');
       channel.respond(state.text.value).then(function (state, answer) {
         state.text.value = JSON.stringify(answer);
         state.at = 3;

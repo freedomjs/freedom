@@ -23,7 +23,7 @@ var Chat = function (dispatchEvents, name) {
       }
       this.dispatchEvent('message', '<small style="color:lightgray">Ice Candidate Produced</small>');
     } else if (type === 'ondatachannel') {
-      this.dispatchEvent('message', '<small style="color:gray">OnDataChannel</small>');
+      this.dispatchEvent('message', '<small style="color:blue">Data Channel Ready [Recipient]</small>');
       this.channel = freedom['core.rtcdatachannel'](msg.channel);
       this.channel.on(this.onDataChannelMsg.bind(this));
     } else {
@@ -33,7 +33,7 @@ var Chat = function (dispatchEvents, name) {
 };
 
 Chat.prototype.onDataChannelMsg = function (type, msg) {
-  if (type === 'onopen') {
+  if (type === 'onopen' || type === 'onclose') {
     this.dispatchEvent('message', '<small style="color:blue">Data Channel Ready</small>');
   } else if (type === 'onmessage') {
     this.dispatchEvent('message', '<strong style="color:blue">' + msg.text + '</strong>');

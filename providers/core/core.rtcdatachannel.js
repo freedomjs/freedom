@@ -98,17 +98,19 @@ RTCDataChannelAdapter.prototype.sendBuffer = function (buffer, callback) {
 };
 
 RTCDataChannelAdapter.prototype.close = function (callback) {
+  if (!this.channel) {
+    return callback();
+  }
+  this.manageEvents(false);
   this.channel.close();
   callback();
 };
 
 RTCDataChannelAdapter.prototype.onopen = function (event) {
-  console.log('dc onopen');
   this.dispatchEvent('onopen', event.message);
 };
 
 RTCDataChannelAdapter.prototype.onerror = function (event) {
-  console.log('dc onerror');
   this.dispatchEvent('onerror', {
     errcode: event.type,
     message: event.message
@@ -116,12 +118,10 @@ RTCDataChannelAdapter.prototype.onerror = function (event) {
 };
 
 RTCDataChannelAdapter.prototype.onclose = function (event) {
-  console.log('dc onclose');
   this.dispatchEvent('onclose', event.message);
 };
 
 RTCDataChannelAdapter.prototype.onmessage = function (event) {
-  console.log('dc onmessage');
   if (typeof event.data === 'string') {
     this.dispatchEvent('onmessage', {text: event.data});
   } else {

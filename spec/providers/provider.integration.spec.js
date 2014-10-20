@@ -27,3 +27,7 @@ describe("integration: storebuffer.indexeddb.json",
 
 describe("integration: transport.webrtc.json",
     require('./transport/transport.integration.src').bind(this, "/providers/transport/webrtc/transport.webrtc.json", setup));
+describe("integration: core.rtcpeerconnection",
+    require('./coreIntegration/rtcpeerconnection.integration.src').bind(this,
+    require('../../providers/core/core.rtcpeerconnection'),
+    require('../../providers/core/core.rtcdatachannel'), setup));
