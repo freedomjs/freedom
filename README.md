@@ -6,8 +6,8 @@ freedom.js
 
 freedom.js is a framework for building peer-to-peer (P2P) web apps. 
 freedom.js makes it easy to quickly create social interactive applications that 
-instantly work in modern web browsers, Chrome packaged apps, Firefox extensions 
-(coming soon), node.js, and native mobile apps (coming soon). Because freedom.js
+instantly work in modern web browsers, Chrome packaged apps, Firefox extensions, 
+node.js, and native mobile apps. Because freedom.js
 apps are just JavaScript, they can be distributed as packages on an app store or
 hosted on static web servers. We're bringing peer-to-peer back, baby.
 

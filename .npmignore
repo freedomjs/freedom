@@ -3,6 +3,7 @@
 /spec/helper/frame.js
 
 ### Auto-generated
+tools/freedomjs
 tools/doc
 tools/coverage*.json
 tools/lcov.info
