@@ -254,6 +254,20 @@ module.exports = function (grunt) {
         abortIfDirty: true
       }
     },
+    prompt: {
+      tagMessage: {
+        options: {
+          questions: [
+            {
+              config: 'bump.options.tagMessage',
+              type: 'input',
+              message: 'Enter a git tag message:',
+              default: 'v%VERSION%',
+            }
+          ]
+        }
+      }
+    },
     shell: {
       options: {},
       publishWebsite: {
@@ -274,6 +288,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
+  grunt.loadNpmTasks('grunt-prompt');
   grunt.loadNpmTasks('grunt-shell');
   
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
@@ -369,12 +384,12 @@ module.exports = function (grunt) {
     }
     grunt.task.run([
       'default',
+      'prompt:tagMessage',
       'bump:' + arg,
       'npm-publish',
       'website'
     ]);
   });
-
 
   grunt.registerTask('default', ['build', 'unit']);
 };

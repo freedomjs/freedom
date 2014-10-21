@@ -22,11 +22,11 @@ Use freedom.js
 If you want a built version of freedom.js into your website, grab a copy from our CDN:
 
 Websites: 
-* [freedom.latest.js](http://freedomjs.org/release/master/freedom.latest.js) (unstable)
-* [freedom.v0.5.0.js](http://freedomjs.org/release/v0.5/freedom.v0.5.0.js) (stable)
+* [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
+* [freedom.v0.6.1.js](http://freedomjs.org/dist/v0.6.1/freedom.v0.6.1.js) (stable)
 
 Chrome Apps:
-* [freedom-for-chrome.latest.js](http://freedomjs.org/release/freedom-chrome/freedom.latest.js) (unstable)
+* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-chrome/freedom-for-chrome.latest.js) (unstable)
 
 freedom and freedom-for-chrome also exist as npm packages
     ```npm install freedom```
