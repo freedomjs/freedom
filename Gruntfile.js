@@ -64,7 +64,7 @@ var CUSTOM_LAUNCHER = {
     base: 'SauceLabs',
     browserName: 'chrome',
     version: 'beta',
-    platform: 'OS X 10.9'
+    platform: 'OS X 10.8'
   },
   sauce_chrome_win: {
     base: 'SauceLabs',
