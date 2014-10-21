@@ -5,6 +5,7 @@
 ### Auto-generated
 tools/freedomjs
 tools/doc
+tools/coverage/
 tools/coverage*.json
 tools/lcov.info
 lcov.info
@@ -12,9 +13,8 @@ node_modules
 
 ### Scrap
 .*.swp
-providers/social/websocket-server/server/tornado
-_SpecRunner.html
 sauce_connect.log*
+npm-debug.log
 .grunt/
 
 ### Chrome Test Runner temp files

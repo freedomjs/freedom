@@ -18,6 +18,7 @@ node_modules
 ### Scrap
 .*.swp
 sauce_connect.log*
+npm-debug.log
 .grunt/
 
 ### Chrome Test Runner temp files

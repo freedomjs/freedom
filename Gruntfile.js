@@ -235,7 +235,7 @@ module.exports = function (grunt) {
     gitinfo: {},
     bump: {
       options: {
-        files: ['package.json'],
+        files: ['package.json', 'bower.json'],
         commit: true,
         commitMessage: 'Release v%VERSION%',
         commitFiles: ['package.json'],
