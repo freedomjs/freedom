@@ -1,6 +1,9 @@
 var Api = require('../src/api');
+var ApiInterface = require('../src/proxy/apiInterface');
 var Bundle = require('../src/bundle');
+var Consumer = require('../src/consumer');
 var Debug = require('../src/debug');
+var Provider = require('../src/provider');
 var Resource = require('../src/resource');
 var util = require('../src/util');
 var Frame = require('../src/link/frame');
@@ -184,12 +187,15 @@ exports.setModuleStrategy = function(port, source, debug) {
   testDebug = debug;
 };
 
-exports.setupModule = function(manifest_url) {
+exports.setupModule = function(manifest_url, options) {
   var myGlobal = global, dir = '';
   if (typeof document !== 'undefined') {
     myGlobal = {
       document: document
     };
+  }
+  if (!options) {
+    options = {};
   }
 
   if (typeof window !== 'undefined') {  
@@ -208,14 +214,27 @@ exports.setupModule = function(manifest_url) {
         dir + "node_modules/es5-shim/es5-shim.js",
         dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
       ]
-    }, manifest_url, {
-      debug: testDebug
-    });
+    }, manifest_url, options);
   freedom.then(function(c) {
     activeContexts.push(c);
   });
   return freedom;
 }
+
+exports.directProviderFor = function (mod, api) {
+  var debug = new Debug();
+  var provider = new Provider(api, debug);
+  provider.getProxyInterface()().provideAsynchronous(mod);
+  var iface = ApiInterface.bind(ApiInterface, api);
+  var consumer = new Consumer(iface, debug);
+
+  // Create a link between them.
+  provider.on('default', consumer.onMessage.bind(consumer, 'default'));
+  consumer.on('default', provider.onMessage.bind(provider, 'default'));
+  provider.onMessage('control', {channel: 'default', reverse: 'default', name: 'default'});
+
+  return consumer.getProxyInterface();
+};
 
 exports.providerFor = function(module, api) {
   var manifest = {

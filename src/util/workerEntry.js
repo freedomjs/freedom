@@ -3,6 +3,8 @@ var providers = [
   require('../../providers/core/echo.unprivileged'),
   require('../../providers/core/console.unprivileged'),
   require('../../providers/core/peerconnection.unprivileged'),
+  require('../../providers/core/core.rtcpeerconnection'),
+  require('../../providers/core/core.rtcdatachannel'),
   require('../../providers/core/storage.localstorage'),
   require('../../providers/core/view.unprivileged'),
   require('../../providers/core/websocket.unprivileged')

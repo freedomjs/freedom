@@ -26,7 +26,7 @@ describe('Policy', function() {
     };
     var manifestURL = "manifest://" + JSON.stringify(manifest);
     policy.get([], manifestURL).then(function(mod) {
-      manager.emit('moduleAdd', {lineage:[mod.id], id:mod.id});
+      manager.emit('moduleAdd', {lineage:[manifestURL], id:mod.id});
       policy.get([], manifestURL).then(function(mod2) {
         expect(mod2.id).toEqual(mod.id);
         done();
