@@ -136,8 +136,8 @@ module.exports = function (grunt) {
         },
         options: {
           postBundleCB: function (err, src, next) {
-            next(err, require('fs').readFileSync('src/util/header.txt') + 
-                      grunt.template.process('/** Version: <%= pkg.version %> **/\n' ) + 
+            next(err, require('fs').readFileSync('src/util/header.txt') +
+                      grunt.template.process('/** Version: <%= pkg.version %> **/\n') +
                       src);
           }
         }
@@ -257,7 +257,7 @@ module.exports = function (grunt) {
     shell: {
       options: {},
       publishWebsite: {
-        command: 'bash tools/publishWebsite.sh' 
+        command: 'bash tools/publishWebsite.sh'
       }
     }
   });
