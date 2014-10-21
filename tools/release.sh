@@ -22,8 +22,8 @@ ln -s freedom.$TAG.min.js tools/freedomjs/dist/freedom/$TAG/freedom.min.js
 ln -s freedom.$TAG.min.js.map tools/freedomjs/dist/freedom/$TAG/freedom.min.js.map
 
 # Copy docs
-mkdir -p tools/freedomjs/dist/freedom/$TAG/doc
-rm -rf tools/freedomjs/docs/freedom/$TAG/doc/*
+mkdir -p tools/freedomjs/dist/freedom/$TAG
+rm -rf tools/freedomjs/docs/freedom/$TAG/doc
 cp -r tools/doc tools/freedomjs/docs/freedom/$TAG/doc
 
 # Copy demos

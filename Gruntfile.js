@@ -137,9 +137,7 @@ module.exports = function (grunt) {
         options: {
           postBundleCB: function (err, src, next) {
             next(err, require('fs').readFileSync('src/util/header.txt') + 
-                      '/** Version:' + 
-                      require('./package.json').version +
-                      ' **/\n' + 
+                      grunt.template.process('/** Version: <%= pkg.version %> **/\n' ) + 
                       src);
           }
         }
