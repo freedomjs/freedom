@@ -20,12 +20,30 @@ providers.push(oauth);
 
 
 if (typeof window !== 'undefined') {
-  var scripts = window.document.getElementsByTagName('script');
+  var script;
+  if (window.document.currentScript) {
+    // New browser API
+    script = window.document.currentScript.src;
+  } else if (document.readyState !== "complete" &&
+             document.readyState !== "loaded") {
+    // Included in HTML or through document.write
+    script = window.document.getElementsByTagName('script');
+    script = script[script.length - 1].src;
+  } else {
+    // Loaded through dom manipulation or async.
+    script = document.querySelector(
+      "script[src*='freedom.js'],script[src*='freedom-']"
+    );
+    if (script.length !== 1) {
+      console.error("Could not determine freedom.js script tag.");
+    }
+    script = script[0].src;
+  }
   window.freedom = require('../entry').bind({}, {
     location: window.location.href,
     portType: require('../link/worker'),
     // Works in Chrome
-    source: scripts[scripts.length - 1].src,
+    source: script,
     providers: providers
   });
 } else {
