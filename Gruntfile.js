@@ -23,6 +23,9 @@
  *  - Lint, compile, and unit test freedom.js on phantom.js
  *  - Run all tests on saucelabs.com
  *  - Report coverage to coveralls.io
+ * release
+ *  - Bump npm package patch version, tag the commit, and publish to npm
+ *  - Compile YUIdocs and publish docs, demos, and dist to website
  **/
 
 var FILES = {
@@ -133,7 +136,9 @@ module.exports = function (grunt) {
         },
         options: {
           postBundleCB: function (err, src, next) {
-            next(err, require('fs').readFileSync('src/util/header.txt') + src);
+            next(err, require('fs').readFileSync('src/util/header.txt') + 
+                      grunt.template.process('/** Version: <%= pkg.version %> **/\n' ) + 
+                      src);
           }
         }
       },
@@ -248,8 +253,13 @@ module.exports = function (grunt) {
         // if the workspace is dirty, abort publishing (to avoid publishing local changes)
         abortIfDirty: true
       }
+    },
+    shell: {
+      options: {},
+      publishWebsite: {
+        command: 'bash tools/publishWebsite.sh' 
+      }
     }
-
   });
 
   // Load tasks.
@@ -264,6 +274,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
+  grunt.loadNpmTasks('grunt-shell');
   
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
     function () {
@@ -315,6 +326,10 @@ module.exports = function (grunt) {
     'browserify:freedom',
     'connect:demo'
   ]);
+  grunt.registerTask('website', [
+    'yuidoc',
+    'shell:publishWebsite'
+  ]);
 
   if (process.env.TRAVIS_JOB_NUMBER) {
     var jobParts = process.env.TRAVIS_JOB_NUMBER.split('.');
@@ -355,7 +370,8 @@ module.exports = function (grunt) {
     grunt.task.run([
       'default',
       'bump:' + arg,
-      'npm-publish'
+      'npm-publish',
+      'website'
     ]);
   });
 
