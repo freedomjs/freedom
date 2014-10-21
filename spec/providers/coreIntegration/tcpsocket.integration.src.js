@@ -66,10 +66,8 @@ module.exports = function(provider, setup) {
   });
 
   it("Gives error when connecting to invalid domain", function(done) {
-    socket.connect('www.domainexistsbecausesomeonepaidmoneytobreakourtests.gov')
-      .then(function() {
-        throw new Error("Request to bad domain should not succeed");
-      }, function(err) {
+    socket.connect('www.domainexistsbecausesomeonepaidmoneytobreakourtests.gov', 80,
+      function(success, err) {
         expect(err.errcode).toBe('CONNECTION_FAILED');
         done();
       });
