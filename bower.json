@@ -1,6 +1,6 @@
 {
   "name": "freedom",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "homepage": "http://freedomjs.org",
   "repository": {
     "type": "git",
@@ -8,7 +8,7 @@
   },
   "authors": [
     "Will Scott <willscott@gmail.com> (https://wills.co.tt)",
-    "Raymond Cheng <ryscheng@cs.washington.edu>"
+    "Raymond Cheng <ryscheng@cs.washington.edu> (http://raymondcheng.net)"
   ],
   "description": "Embracing a Distributed Web",
   "main": "freedom.js",
