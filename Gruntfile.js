@@ -256,8 +256,8 @@ module.exports = function (grunt) {
     },
     shell: {
       options: {},
-      releaseScript: {
-        command: 'bash tools/release.sh' 
+      publishWebsite: {
+        command: 'bash tools/publishWebsite.sh' 
       }
     }
   });
@@ -328,7 +328,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('website', [
     'yuidoc',
-    'shell:releaseScript'
+    'shell:publishWebsite'
   ]);
 
   if (process.env.TRAVIS_JOB_NUMBER) {
