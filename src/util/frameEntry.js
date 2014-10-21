@@ -1,3 +1,4 @@
+/*jslint node:true*/
 // This alternative entry point can be used to build the contents of an iFrame,
 // when using the frame link of freedom (specifically for unit testing since
 // phantomJS doesn't support web workers.).

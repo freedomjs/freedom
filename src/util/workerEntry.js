@@ -1,3 +1,5 @@
+/*jslint node:true*/
+
 var providers = [
   require('../../providers/core/core.unprivileged'),
   require('../../providers/core/echo.unprivileged'),
@@ -18,11 +20,12 @@ providers.push(oauth);
 
 
 if (typeof window !== 'undefined') {
+  var scripts = window.document.getElementsByTagName('script');
   window.freedom = require('../entry').bind({}, {
     location: window.location.href,
     portType: require('../link/worker'),
     // Works in Chrome
-    source: window.document.head.lastChild.src,
+    source: scripts[scripts.length - 1].src,
     providers: providers
   });
 } else {
