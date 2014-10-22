@@ -12,7 +12,6 @@ var util = require('../util');
  */
 var Frame = function(id, resource) {
   Link.call(this, id, resource);
-  this.getDocument();
 };
 
 /**
@@ -24,6 +23,10 @@ var Frame = function(id, resource) {
  */
 Frame.prototype.getDocument = function () {
   this.document = document;
+  if (!this.document.body) {
+    this.document.appendChild(this.document.createElement("body"));
+  }
+  this.root = document.body;
 };
 
 /**
@@ -115,12 +118,10 @@ Frame.prototype.revokeURL = function(url) {
  */
 Frame.prototype.setupFrame = function() {
   var frame, onMsg;
+  this.getDocument();
   frame = this.makeFrame(this.config.source, this.config.inject);
   
-  if (!this.document.body) {
-    this.document.appendChild(this.document.createElement("body"));
-  }
-  this.document.body.appendChild(frame);
+  this.root.appendChild(frame);
 
   onMsg = function(frame, msg) {
     if (!this.obj) {
@@ -140,7 +141,7 @@ Frame.prototype.setupFrame = function() {
     }
     this.revokeURL(frame.src);
     frame.src = "about:blank";
-    this.document.body.removeChild(frame);
+    this.root.removeChild(frame);
   };
 };
 
