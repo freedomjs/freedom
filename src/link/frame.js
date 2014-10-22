@@ -12,6 +12,18 @@ var util = require('../util');
  */
 var Frame = function(id, resource) {
   Link.call(this, id, resource);
+  this.getDocument();
+};
+
+/**
+ * Get the document to use for the frame. This allows overrides in downstream
+ * links that want to essentially make an iFrame, but need to do it in another
+ * context.
+ * @method getDocument
+ * @protected
+ */
+Frame.prototype.getDocument = function () {
+  this.document = document;
 };
 
 /**
@@ -105,10 +117,10 @@ Frame.prototype.setupFrame = function() {
   var frame, onMsg;
   frame = this.makeFrame(this.config.source, this.config.inject);
   
-  if (!document.body) {
-    document.appendChild(document.createElement("body"));
+  if (!this.document.body) {
+    this.document.appendChild(this.document.createElement("body"));
   }
-  document.body.appendChild(frame);
+  this.document.body.appendChild(frame);
 
   onMsg = function(frame, msg) {
     if (!this.obj) {
@@ -128,7 +140,7 @@ Frame.prototype.setupFrame = function() {
     }
     this.revokeURL(frame.src);
     frame.src = "about:blank";
-    document.body.removeChild(frame);
+    this.document.body.removeChild(frame);
   };
 };
 
@@ -141,7 +153,7 @@ Frame.prototype.setupFrame = function() {
  */
 Frame.prototype.makeFrame = function(src, inject) {
   // TODO(willscott): add sandboxing protection.
-  var frame = document.createElement('iframe'),
+  var frame = this.document.createElement('iframe'),
       extra = '',
       loader,
       blob;
