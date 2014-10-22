@@ -12,6 +12,7 @@ var util = require('../util');
  */
 var Frame = function(id, resource) {
   Link.call(this, id, resource);
+  this.getDocument();
 };
 
 /**
