@@ -147,8 +147,8 @@ RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChan
   callback(id);
 };
 
-RTCPeerConnectionAdapter.prototype.getStats = function (callback) {
-  this.connection.getStats(callback, callback.bind(this, undefined));
+RTCPeerConnectionAdapter.prototype.getStats = function (selector, callback) {
+  this.connection.getStats(selector, callback, callback.bind(this, undefined));
 };
 
 RTCPeerConnectionAdapter.prototype.ondatachannel = function (event) {
