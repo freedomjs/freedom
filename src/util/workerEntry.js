@@ -18,8 +18,8 @@ require('../../providers/oauth/oauth.remotepageauth').register(oauth);
 
 providers.push(oauth);
 
-
-if (typeof window !== 'undefined') {
+function getFreedomScript() {
+  'use strict';
   var script;
   if (window.document.currentScript) {
     // New browser API
@@ -39,11 +39,14 @@ if (typeof window !== 'undefined') {
     }
     script = script[0].src;
   }
+  return script;
+}
+
+if (typeof window !== 'undefined') {
   window.freedom = require('../entry').bind({}, {
     location: window.location.href,
     portType: require('../link/worker'),
-    // Works in Chrome
-    source: script,
+    source: getFreedomScript(),
     providers: providers
   });
 } else {

@@ -56,6 +56,6 @@ describe("core.view", function() {
     var onOpen = function() {
       provider.show(onShow);
     };
-    provider.open('myview', {'code': '<script>window.addEventListener("message", function(m) {m.source.postMessage(m.data, "*");}, true);</script>'}, onOpen);
+    provider.open('myview', {'code': '<html><head><script>window.addEventListener("message", function(m) {m.source.postMessage(m.data, "*");}, true);</script></head></html>'}, onOpen);
   });
 });

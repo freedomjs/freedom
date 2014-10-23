@@ -8,7 +8,7 @@
  * supplemented in platform-dependent repositories.
  *
  */
-var OAuth = function(mod, dispatchEvent) {
+var OAuth = function (mod, dispatchEvent) {
   this.mod = mod;
   this.dispatchEvent = dispatchEvent;
 };
@@ -22,8 +22,17 @@ OAuth.handlers = [];
  * @param {Function(String[], OAuth)} handler
  * @private
  */
-OAuth.register = function(handler) {
+OAuth.register = function (handler) {
   OAuth.handlers.push(handler);
+};
+
+/**
+ * Reset the oAuth handler registrations.
+ * @method reset
+ * @private
+ */
+OAuth.reset = function () {
+  OAuth.handlers = [];
 };
 
 /**
@@ -31,13 +40,13 @@ OAuth.register = function(handler) {
  * oAuth provider to begin monitoring for redirection.
  *
  * @method initiateOAuth
- * @param {String[]} redirectURIs oAuth redirection URIs registered with the
+ * @param {string[]} redirectURIs oAuth redirection URIs registered with the
  *     provider.
  * @param {Function} continuation Function to call when sending is complete.
  * @returns {{redirect:String, state:String}} The chosen redirect URI, and
  *     State to pass to the URI on completion of oAuth.
  */
-OAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
+OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
   var promise, i;
   for (i = 0; i < OAuth.handlers.length; i += 1) {
     promise = OAuth.handlers[i](redirectURIs, this);
@@ -52,5 +61,6 @@ OAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
 };
 
 exports.register = OAuth.register;
+exports.reset = OAuth.reset;
 exports.provider = OAuth;
 exports.name = 'core.oauth';
