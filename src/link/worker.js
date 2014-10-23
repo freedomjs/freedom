@@ -64,6 +64,26 @@ WorkerLink.prototype.setupListener = function() {
   };
   this.emit('started');
   this.obj.postMessage("Ready For Messages");
+  // Whitelist for allowed globals, mask all others
+  var whitelist = ['Infinity', 'Array', 'ArrayBuffer', 'Boolean', 'DataView',
+                   'Date', 'Error', 'Float32Array', 'Float64Array', 'Int8Array',
+                   'Int16Array', 'Int32Array', 'JSON', 'Math', 'NaN', 'Number',
+                   'Object', 'Promise', 'RangeError', 'RegExp', 'String',
+                   'SyntaxError', 'URIError', 'Uint8Array', 'Uint8ClampedArray',
+                   'Uint16Array', 'Uint32Array', 'console', 'decodeURI',
+                   'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
+                   'escape', 'isFinite', 'isNaN', 'parseFloat', 'parseInt',
+                   'undefined', 'unescape'];
+  // This loops over *all* properties, enumerable and not
+  Object.getOwnPropertyNames(this.obj).forEach(function(val, idx, array) {
+    if (whitelist.indexOf(val) === -1) {
+      console.log(val);
+      // Below should mask properties but currently causes silent failure
+      //Object.defineProperty(this.obj, val, {value:undefined});
+    }
+  });
+  // TODO: putting this here breaks the demos, but we do need it somewhere
+  //Object.freeze(this.obj);
 };
 
 /**
@@ -119,4 +139,3 @@ WorkerLink.prototype.deliverMessage = function(flow, message) {
 };
 
 module.exports = WorkerLink;
-
