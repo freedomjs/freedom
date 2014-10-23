@@ -57,7 +57,7 @@ module.exports = function (pc, dc, setup) {
     onClose.and.callFake(function () {
       // TODO: Firefox doesn't yet close remote data channels.
       if (onClose.calls.count() === 2 ||
-         navigator.userAgent.indexOf("Firefox") < 0) {
+         navigator.userAgent.indexOf("Firefox") > 0) {
         alice.close();
         bob.close();
         done();
@@ -98,5 +98,59 @@ module.exports = function (pc, dc, setup) {
         return alice.setRemoteDescription(answer);
       });
     });
+  });
+
+  it("getStats works", function (done) {
+    var alice, bob;
+
+    alice = peercon();
+    alice.on('onicecandidate', function (msg) {
+      msg.candidate && bob.addIceCandidate(msg.candidate);
+    });
+    bob = peercon();
+    bob.on('onicecandidate', function (msg) {
+      msg.candidate && alice.addIceCandidate(msg.candidate);
+    });
+
+    var onError = function(e) { throw e; };
+
+    bob.on('oniceconnectionstatechange', function () {
+      bob.getIceConnectionState().then(function (state) {
+        if (state === 'connected' || state === 'completed') {
+          bob.getStats(null).then(function (stats) {
+            // This is the actual test, whether getStats returns a valid stats object.
+            var numberOfReports = 0;
+            for (var id in stats) {
+              expect(stats[id].id).toEqual(id);
+              expect(stats[id].type).toBeDefined();
+              expect(stats[id].timestamp).toBeDefined();
+              ++numberOfReports;
+            }
+            expect(numberOfReports).toBeGreaterThan(0);
+
+            alice.close();
+            bob.close();
+            done();
+          }, onError);
+        }
+      });
+    });
+
+    // We have to create a data channel because otherwise there is no
+    // audio, video, or data, so CreateOffer fails (at least in Firefox).
+    alice.createDataChannel('channel').then(function (id) {
+      alice.createOffer().then(function (offer) {
+        return alice.setLocalDescription(offer).then(function () {return offer; });
+      }).then(function (offer) {
+        return bob.setRemoteDescription(offer);
+      }).then(function () {
+        return bob.createAnswer();
+      }).then(function (answer) {
+        return bob.setLocalDescription(answer).then(function () {return answer; });
+      }).then(function (answer) {
+        return alice.setRemoteDescription(answer);
+      });
+    });
+
   });
 };
