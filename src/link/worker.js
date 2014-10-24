@@ -1,7 +1,5 @@
 /*globals Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
-/*jshint -W089 */
-
 var Link = require('../link');
 
 /**
