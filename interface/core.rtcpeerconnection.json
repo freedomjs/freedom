@@ -19,17 +19,10 @@
 
     // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCOfferOptions
     "createOffer": {"type": "method", "value": [{
-      "mandatory": {
-        "OfferToReceiveAudio": "number",
-        "OfferToReceiveVideo": "number"
-      }, "optional": ["array",{
-        "OfferToReceiveAudio": "number",
-        "OfferToReceiveVideo": "number",
-        "IceRestart": "boolean",
-        "VoiceActivityDetection": "boolean",
-        "DtlsSrtpKeyAgreement": "boolean",
-        "RtpDataChannels": "boolean"
-      }]
+      "offerToReceiveAudio": "number",
+      "offerToReceiveVideo": "number",
+      "iceRestart": "boolean",
+      "voiceActivityDetection": "boolean"
     }], "ret": {
       "type": "string",
       "sdp": "string"
