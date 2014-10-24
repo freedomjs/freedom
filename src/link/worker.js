@@ -1,5 +1,7 @@
 /*globals Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
+/*jshint -W089 */
+
 var Link = require('../link');
 
 /**
@@ -63,27 +65,24 @@ WorkerLink.prototype.setupListener = function() {
     delete this.obj;
   };
   this.emit('started');
-  this.obj.postMessage("Ready For Messages");
+  this.obj.postMessage('Ready For Messages');
   // Whitelist for allowed globals, mask all others
-  var whitelist = ['Infinity', 'Array', 'ArrayBuffer', 'Boolean', 'DataView',
-                   'Date', 'Error', 'Float32Array', 'Float64Array', 'Int8Array',
-                   'Int16Array', 'Int32Array', 'JSON', 'Math', 'NaN', 'Number',
-                   'Object', 'Promise', 'RangeError', 'RegExp', 'String',
-                   'SyntaxError', 'URIError', 'Uint8Array', 'Uint8ClampedArray',
-                   'Uint16Array', 'Uint32Array', 'console', 'decodeURI',
-                   'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
-                   'escape', 'isFinite', 'isNaN', 'parseFloat', 'parseInt',
-                   'undefined', 'unescape'];
+  var whitelist = ['Array', 'ArrayBuffer', 'Boolean', 'DataView', 'Date',
+                   'Error', 'Float32Array', 'Float64Array', 'Infinity',
+                   'Int16Array', 'Int32Array', 'Int8Array', 'Intl', 'JSON',
+                   'Math', 'NaN', 'Number', 'Object', 'Promise', 'RangeError',
+                   'RegExp', 'String', 'SyntaxError', 'URIError', 'Uint16Array',
+                   'Uint32Array', 'Uint8Array', 'Uint8ClampedArray', 'console',
+                   'decodeURI', 'decodeURIComponent', 'encodeURI',
+                   'encodeURIComponent', 'escape', 'isFinite', 'isNaN',
+                   'parseFloat', 'parseInt', 'undefined', 'unescape'];
   // This loops over *all* properties, enumerable and not
   Object.getOwnPropertyNames(this.obj).forEach(function(val, idx, array) {
     if (whitelist.indexOf(val) === -1) {
-      console.log(val);
-      // Below should mask properties but currently causes silent failure
-      //Object.defineProperty(this.obj, val, {value:undefined});
+      Object.defineProperty(this, val, {value:undefined});
     }
   });
-  // TODO: putting this here breaks the demos, but we do need it somewhere
-  //Object.freeze(this.obj);
+  Object.freeze(this);
 };
 
 /**
