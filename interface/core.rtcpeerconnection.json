@@ -54,12 +54,15 @@
     "getSignalingState": {"type": "method", "value": [], "ret": "string"},
 
     // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCConfiguration
-    // Deviation from spec matches that of constructor.
-    "updateIce": {"type": "method", "value": [["array", {
-        "urls": ["array", "string"],
-        "username": "string",
-        "credential": "string"
-      }], "string", "string"], "ret": {}},
+    "updateIce": {"type": "method", "value": [{
+        "iceServers": ["array", {
+          "urls": ["array", "string"],
+          "username": "string",
+          "credential": "string"
+        }],
+        "iceTransports": "string",
+        "peerIdentity": "string"
+      }], "ret": {}},
 
     // Per http://w3c.github.io/webrtc-pc/#idl-def-RTCIceCandidate
     "addIceCandidate": {"type": "method", "value": [{
