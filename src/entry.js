@@ -56,7 +56,6 @@ var setup = function (context, manifest, config) {
   Bundle.register(context.providers, api);
   resource.register(context.resolvers || []);
 
-
   if (config) {
     util.mixin(site_cfg, config, true);
   }
@@ -77,6 +76,16 @@ var setup = function (context, manifest, config) {
       manager.setup(debug);
       policy = new Policy(manager, resource, site_cfg);
 
+      // Register user-supplied oAuth and view interfaces.
+      if (typeof site_cfg.oauth === 'function') {
+        context.providers.forEach(function (provider) {
+          if (provider.name === 'core.oauth') {
+            provider.register(site_cfg.oauth);
+          }
+        });
+      }
+
+      // Define how to load a root module.
       var fallbackLogger, getIface;
       fallbackLogger = function (message) {
         api.getCore('core.console', debug).then(function (Logger) {
@@ -97,6 +106,7 @@ var setup = function (context, manifest, config) {
         });
       };
 
+      // Load appropriate Logger.
       if (site_cfg.logger) {
         getIface(site_cfg.logger).then(function (iface) {
           if (iface.external.api !== 'console') {
@@ -110,6 +120,7 @@ var setup = function (context, manifest, config) {
         fallbackLogger();
       }
 
+      // Load root module.
       getIface(site_cfg.manifest).then(function (iface) {
         return iface.external;
       }, function (err) {

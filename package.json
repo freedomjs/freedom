@@ -1,7 +1,7 @@
 {
   "name": "freedom",
   "description": "Embracing a distributed web",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "homepage": "http://freedomjs.org",
   "bugs": {
     "url": "http://github.com/freedomjs/freedom/issues",
@@ -47,7 +47,7 @@
     "karma-sauce-launcher": "~0.2.8",
     "karma-story-reporter": "^0.2.2",
     "karma-unicorn-reporter": "^0.1.4",
-    "webrtc-adapter": "0.0.3"
+    "webrtc-adapter": "0.0.4"
   },
   "scripts": {
     "test": "grunt ci --verbose",
