@@ -71,6 +71,8 @@
       "LOGIN_FAILEDCONNECTION": "Error connecting to server",
       // User is already logged in
       "LOGIN_ALREADYONLINE": "User is already logged in",
+      // OAuth Error
+      "LOGIN_OAUTHERROR": "OAuth Error",
   
       /** SENDMESSAGE **/
       // Message sent to invalid destination (e.g. not in user's roster)

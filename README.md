@@ -23,13 +23,20 @@ If you want a built version of freedom.js into your website, grab a copy from ou
 
 Websites: 
 * [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
-* [freedom.v0.6.1.js](http://freedomjs.org/dist/v0.6.1/freedom.v0.6.1.js) (stable)
+* [freedom.v0.6.1.js](http://freedomjs.org/dist/freedom/v0.6.1/freedom.v0.6.1.js) (stable)
 
 Chrome Apps:
-* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-chrome/freedom-for-chrome.latest.js) (unstable)
+* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
+* [freedom-for-chrome.v0.4.1.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.1.js) (stable)
+
+Firefox Extensions:
+* [freedom-for-firefox.latest.js](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.js) (unstable)
+* [freedom-for-firefox.v0.5.0.js](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.5.0.js) (stable)
 
 freedom and freedom-for-chrome also exist as npm packages
+
     ```npm install freedom```
+
     ```npm install freedom-for-chrome```
 
 To track progress of freedom.js for other platforms, check out these other repositories:
