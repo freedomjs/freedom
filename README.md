@@ -30,8 +30,8 @@ Chrome Apps:
 * [freedom-for-chrome.v0.4.1.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.1.js) (stable)
 
 Firefox Extensions:
-* [freedom-for-firefox.latest.js](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.js) (unstable)
-* [freedom-for-firefox.v0.5.0.js](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.5.0.js) (stable)
+* [freedom-for-firefox.latest.js](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
+* [freedom-for-firefox.v0.5.0.js](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.5.0.jsm) (stable)
 
 freedom and freedom-for-chrome also exist as npm packages
 
