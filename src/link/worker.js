@@ -73,14 +73,17 @@ WorkerLink.prototype.setupListener = function() {
                    'Uint32Array', 'Uint8Array', 'Uint8ClampedArray', 'console',
                    'decodeURI', 'decodeURIComponent', 'encodeURI',
                    'encodeURIComponent', 'escape', 'isFinite', 'isNaN',
-                   'parseFloat', 'parseInt', 'undefined', 'unescape'];
+                   'parseFloat', 'parseInt', 'undefined', 'unescape',
+                   // freedom-specific properties
+                   'postMessage'];
   // This loops over *all* properties, enumerable and not
   Object.getOwnPropertyNames(this.obj).forEach(function(val, idx, array) {
     if (whitelist.indexOf(val) === -1) {
-      Object.defineProperty(this, val, {value:undefined});
+      Object.defineProperty(this.obj, val, {value:undefined});
     }
-  });
-  Object.freeze(this);
+  }.bind(this));
+  // TODO: find right way/place to freeze webworker scope
+  //Object.freeze(this.obj);
 };
 
 /**
