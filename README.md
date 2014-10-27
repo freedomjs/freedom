@@ -35,9 +35,8 @@ Firefox Extensions:
 
 freedom and freedom-for-chrome also exist as npm packages
 
-    ```npm install freedom```
-
-    ```npm install freedom-for-chrome```
+    npm install freedom
+    npm install freedom-for-chrome
 
 To track progress of freedom.js for other platforms, check out these other repositories:
 * [freedom-for-chrome](https://github.com/freedomjs/freedom-for-chrome) - Chrome Packaged Apps
