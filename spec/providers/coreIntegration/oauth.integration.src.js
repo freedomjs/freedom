@@ -23,6 +23,7 @@ module.exports = function (oa, pageauths, setup) {
   it("Generates a token", function (done) {
     var o = oauth();
     o.on('oAuthEvent', function (url) {
+      console.log(url);
       expect(url).toEqual(jasmine.any(String));
       var query = url.substr(url.indexOf('#') + 1);
       var params = {};
@@ -46,7 +47,12 @@ module.exports = function (oa, pageauths, setup) {
         "redirect_uri=" + encodeURIComponent(obj.redirect) + "&" +
         "state=" + encodeURIComponent(obj.state);
       console.log(url);
-      window.open(url);
+      // Cheating a little bit to avoid going through Google. 
+      // Just call the redirect URL directly e.g.
+      // https://willscott.github.io/freedom-oauth-relay/oauth-relay.html#state=freedom.oauth.redirect.handler0.05948500754311681&access_token=ya29.rADhKXAGx0fJfB0Vx5ibQUSmMvcK9GYVZBLId42Tvn9-aQEBD5HEsbKh-5Kj_D-j09wD5axgoIkadA&token_type=Bearer&expires_in=3600
+      window.open(obj.redirect+"#state="+encodeURIComponent(obj.state)+
+                  "&access_token=thisisanaccesstoken");
+      //window.open(url);
     }, function (err) {
       expect(err).toBeUndefined();
     });
