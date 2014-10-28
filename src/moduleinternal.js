@@ -22,7 +22,7 @@ var ModuleInternal = function (manager) {
   this.api = this.manager.api;
   this.manifests = {};
   this.providers = {};
-  
+
   this.id = 'ModuleInternal';
   this.pendingPorts = 0;
   this.requests = {};
@@ -86,7 +86,7 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
  * @return {String} a description of this Port.
  */
 ModuleInternal.prototype.toString = function () {
-  return "[Environment Helper]";
+  return '[Environment Helper]';
 };
 
 /**
@@ -127,7 +127,7 @@ ModuleInternal.prototype.generateEnv = function (manifest, items) {
  */
 ModuleInternal.prototype.attach = function (name, provides, proxy) {
   var exp = this.config.global.freedom;
-  
+
   if (provides) {
     this.providers[name] = proxy.port;
   }
@@ -194,7 +194,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
     }
     this.pendingPorts += 1;
   }
-  
+
   // Allow resolution of files by parent.
   this.manager.resource.addResolver(function (manifest, url, resolve) {
     var id = util.getId();
@@ -223,7 +223,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
     name: 'core',
     to: provider
   });
-  
+
   this.binder.getExternal(provider, 'default', {
     name: 'core',
     definition: core
@@ -270,7 +270,7 @@ ModuleInternal.prototype.updateManifest = function (name, manifest) {
  */
 ModuleInternal.prototype.mapProxies = function (manifest) {
   var proxies = [], seen = ['core'], i, obj;
-  
+
   if (manifest.permissions) {
     for (i = 0; i < manifest.permissions.length; i += 1) {
       obj = {
@@ -284,7 +284,7 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
       }
     }
   }
-  
+
   if (manifest.dependencies) {
     util.eachProp(manifest.dependencies, function (desc, name) {
       obj = {
@@ -300,7 +300,7 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
       }
     }.bind(this));
   }
-  
+
   if (manifest.provides) {
     for (i = 0; i < manifest.provides.length; i += 1) {
       obj = {
@@ -360,7 +360,7 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
   load = function (next) {
     if (next === scripts_count) {
       this.emit(this.externalChannel, {
-        type: "ready"
+        type: 'ready'
       });
       return;
     }
@@ -379,8 +379,6 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
     }.bind(this));
   }.bind(this);
 
-
-
   if (!this.config.global.importScripts) {
     importer = function (url, resolve, reject) {
       var script = this.config.global.document.createElement('script');
@@ -398,7 +396,7 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
  * @method tryLoad
  * @private
  * @param {Function} importer The actual import function
- * @param {String[]} urls The resoved URLs to load.
+ * @param {String} url The resolved URL to load.
  * @returns {Promise} completion of load
  */
 ModuleInternal.prototype.tryLoad = function (importer, url) {
@@ -406,9 +404,9 @@ ModuleInternal.prototype.tryLoad = function (importer, url) {
     return val;
   }, function (e) {
     this.debug.warn(e.stack);
-    this.debug.error("Error loading " + url, e);
-    this.debug.error("If the stack trace is not useful, see https://" +
-        "github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors");
+    this.debug.error('Error loading ' + url, e);
+    this.debug.error('If the stack trace is not useful, see https://' +
+        'github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors');
   }.bind(this));
 };
 
