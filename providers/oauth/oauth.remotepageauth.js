@@ -32,7 +32,11 @@ function monitorFrame(src, oAuth) {
     window.addEventListener('message', function (frame, msg) {
       if (msg.data && msg.data.key && msg.data.url && listeners[msg.data.key]) {
         listeners[msg.data.key](msg.data.url);
-        document.body.removeChild(frame);
+        try {
+          document.body.removeChild(frame);
+        } catch (e) {
+          console.warn(e);
+        }
       }
     }.bind({}, frame), false);
   });

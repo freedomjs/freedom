@@ -23,20 +23,27 @@ If you want a built version of freedom.js into your website, grab a copy from ou
 
 Websites: 
 * [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
-* [freedom.v0.6.1.js](http://freedomjs.org/dist/v0.6.1/freedom.v0.6.1.js) (stable)
+* [freedom.v0.6.1.js](http://freedomjs.org/dist/freedom/v0.6.1/freedom.v0.6.1.js) (stable)
 
 Chrome Apps:
-* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-chrome/freedom-for-chrome.latest.js) (unstable)
+* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
+* [freedom-for-chrome.v0.4.1.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.1.js) (stable)
 
-freedom and freedom-for-chrome also exist as npm packages
-    ```npm install freedom```
-    ```npm install freedom-for-chrome```
+Firefox Extensions:
+* [freedom-for-firefox.latest.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
+* [freedom-for-firefox.v0.5.0.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.5.0.jsm) (stable)
+
+freedom, freedom-for-node, freedom-for-chrome, and freedom-for-firefox also exist as npm packages
+
+    npm install freedom
+    npm install freedom-for-node
+    npm install freedom-for-chrome
+    npm install freedom-for-firefox
 
 To track progress of freedom.js for other platforms, check out these other repositories:
+* [freedom-for-node](https://github.com/freedomjs/freedom-for-node) - Node.js apps
 * [freedom-for-chrome](https://github.com/freedomjs/freedom-for-chrome) - Chrome Packaged Apps
 * [freedom-for-firefox](https://github.com/freedomjs/freedom-for-firefox) - Firefox extensions
-* [freedom-for-node](https://github.com/freedomjs/freedom-for-node) - Node.js apps
-* [freedom-for-cordova](https://github.com/freedomjs/freedom-for-cordova) - Apache Cordova for mobile
 
 More documentation for building freedom.js, and including it in your project is
 on our GitHub [wiki](https://github.com/freedomjs/freedom/wiki).
