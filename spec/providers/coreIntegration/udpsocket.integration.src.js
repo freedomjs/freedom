@@ -1,4 +1,4 @@
-var testUtil = require('../../util');
+var testUtil = require("../../util");
 
 module.exports = function(provider, setup) {
   var socket, serverDispatchEvent;
@@ -9,7 +9,7 @@ module.exports = function(provider, setup) {
     socket = new provider.provider(undefined, serverDispatchEvent);
   });
 
-  it('does stuff', function (done) {
+  it('Connects and sends/receives data', function (done) {
     // Currently a copy of 'receives data' unit test from firefox, change it
     const sendString = "Hello World",
           sendBuffer = str2ab(sendString),
@@ -17,8 +17,7 @@ module.exports = function(provider, setup) {
           sendingSocket = new provider.provider(undefined, clientDispatchEvent),
           sendContinuation = jasmine.createSpy("sendContinuation"),
           bindContinuation = jasmine.createSpy("bindContinuation"),
-          destroyContinuation1 = jasmine.createSpy("destroyContinuation"),
-          destroyContinuation2 = jasmine.createSpy("destroyContinuation");
+          destroyContinuation = jasmine.createSpy("destroyContinuation");
     // Set up connections
     socket.bind("localhost", listenPort, bindContinuation);
     expect(bindContinuation).toHaveBeenCalledWith(0);
@@ -29,7 +28,7 @@ module.exports = function(provider, setup) {
     // Check socket state
     const listenState = {"localAddress": "localhost", "localPort": listenPort},
           sendState = {"localAddress": "localhost", "localPort": sendPort};
-    var stateSpy = jasmine.createSpy("state");
+    const stateSpy = jasmine.createSpy("state");
     socket.getInfo(stateSpy);
     expect(stateSpy).toHaveBeenCalledWith(listenState);
     sendingSocket.getInfo(stateSpy);
@@ -48,10 +47,9 @@ module.exports = function(provider, setup) {
                          listenPort, sendContinuation);
     expect(sendContinuation).toHaveBeenCalled();
 
-    sendingSocket.destroy(destroyContinuation1);
-    socket.destroy(destroyContinuation2);
-    expect(destroyContinuation1).toHaveBeenCalled();
-    expect(destroyContinuation2).toHaveBeenCalled();
+    sendingSocket.destroy(destroyContinuation);
+    socket.destroy(destroyContinuation);
+    expect(destroyContinuation.calls.count()).toEqual(2);
   });
 
   function str2ab(str) {
