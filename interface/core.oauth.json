@@ -2,30 +2,40 @@
   "name": "core.oauth",
   "api": {
     /**
-     * An oAuth event has occured
-     * @return {String} The URL received by the oAuth provider.
+     * Let the platform choose the redirect URI
+     * @param chooseRedirectUri
+     * @param {String[]} Valid oAuth redirect URIs for your application
+     * @return {{redirect: String, state: String}} A chosen redirect URI and
+     *   state which will be monitored for oAuth redirection if available
      **/
-    "oAuthEvent": {
-      "type": "event",
-      "value": "string"
-    },
-  
-    /**
-     * Express interest in initiating an oAuth flow.
-     *
-     * @method initiateOAuth
-     * @param {String[]} Valid oAuth redirect URLs for your application.
-     * @returns {{redirect:String, state:String}} A chosen redirect URI, and
-     *     state which will be monitored for oAuth redirection, if one is
-     *     available.
-     */
-    "initiateOAuth": {
+    "chooseRedirectUri": {
       "type": "method",
       "value": [["array", "string"]],
       "ret": {
         "redirect": "string",
         "state": "string"
       },
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+    "oAuthEvent": {
+      "type": "event",
+      "value": "string"
+    },
+  
+    /**
+     * Begin the oAuth client-side flow
+     *
+     * @method initiateAuthFlow
+     * @param {String} The URL that initiates the auth flow.
+     * @return {String} responseUrl - containing the access token
+     */
+    "initiateOAuth": {
+      "type": "method",
+      "value": "string",
+      "ret": "string",
       "err": {
         "errcode": "string",
         "message": "string"
