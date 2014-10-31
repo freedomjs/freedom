@@ -90,7 +90,7 @@ ModuleInternal.prototype.toString = function () {
 };
 
 /**
- * Generate an externaly visisble namespace
+ * Generate an externally visisble namespace
  * @method generateEnv
  * @param {Object} manifest The manifest of the module.
  * @param {Object[]} items Other interfaces to load.
@@ -401,6 +401,7 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
  */
 ModuleInternal.prototype.tryLoad = function (importer, url) {
   return new PromiseCompat(importer.bind({}, url)).then(function (val) {
+    Object.seal(this);
     return val;
   }, function (e) {
     this.debug.warn(e.stack);
