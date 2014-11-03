@@ -212,7 +212,7 @@ module.exports = function (grunt) {
     },
     codeclimate: {
       options: {
-        file: 'tools/coverage/PhantomJS**/lcov.info',
+        file: 'unset: use `grunt prepare_codeclimate` to set.',
         token: process.env.CODECLIMATETOKEN || 'unknown'
       }
     },
@@ -317,6 +317,20 @@ module.exports = function (grunt) {
         }
       });
     });
+  grunt.registerTask('prepare_codeclimate', 'Run codeclimate with correct lcov.',
+    function () {
+      var file = require("glob").sync("tools/coverage/PhantomJS**/lcov.info");
+      if (file.length !== 1) {
+        return grunt.log.error("lcov file not present or distinguishable for code climate");
+      }
+      grunt.config.merge({
+        codeclimate: {
+          options: {
+            file: file[0]
+          }
+        }
+      });
+    });
   
   // Default tasks.
   grunt.registerTask('build', [
@@ -365,6 +379,7 @@ module.exports = function (grunt) {
         'gitinfo',
         'karma:saucelabs',
         'coveralls:report',
+        'prepare_codeclimate',
         'codeclimate'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
