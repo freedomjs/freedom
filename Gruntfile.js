@@ -210,6 +210,12 @@ module.exports = function (grunt) {
         src: 'tools/coverage/PhantomJS**/*lcov.info'
       }
     },
+    codeclimate: {
+      options: {
+        file: 'tools/coverage/PhantomJS**/lcov.info'
+        token: process.env.CODECLIMATETOKEN || 'unknown'
+      }
+    },
     connect: {
       freedom: {
         options: {
@@ -279,6 +285,7 @@ module.exports = function (grunt) {
   // Load tasks.
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-bump');
+  grunt.loadNpmTasks('grunt-codeclimate');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
@@ -357,7 +364,8 @@ module.exports = function (grunt) {
         'karma:phantom',
         'gitinfo',
         'karma:saucelabs',
-        'coveralls:report'
+        'coveralls:report',
+        'codeclimate'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
