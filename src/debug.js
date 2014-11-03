@@ -48,7 +48,11 @@ Debug.prototype.onMessage = function (source, message) {
     this.emitChannel = message.channel;
     this.config = message.config;
     if (!this.config.global.console) {
-      this.config.global.console = this.getLogger('Console');
+      if (typeof console !== 'undefined') {
+        this.config.global.console = console;
+      } else {
+        this.config.global.console = this.getLogger('Console');
+      }
     }
     this.emit('ready');
   }
