@@ -1,46 +1,60 @@
 /*jslint indent:2,browser:true, node:true */
 var PromiseCompat = require('es6-promise').Promise;
 
-var oAuthRedirectId = 'freedom.oauth.redirect.handler',
-  listeners = {};
+var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
+function RemotePageAuth() {
+  this.listeners = {};
+}
 
-/**
- * Listen for messages from a relay iframe.
- */
-function monitorFrame(src, oAuth) {
-  'use strict';
-  return new PromiseCompat(function (resolve, reject) {
-    var frame = global.document.createElement('iframe'),
-      state = oAuthRedirectId + Math.random();
-    frame.src = src;
+RemotePageAuth.prototype.initiateOAuth = function(redirectURIs) {
+  if (typeof global !== 'undefined' && global && global.document) {
+    // TODO: remove restriction on URL pattern match.
+    if ((redirectURIs[i].indexOf('http://') === 0 ||
+         redirectURIs[i].indexOf('https://') === 0) &&
+        redirectURIs[i].indexOf('oauth-relay.html') > 0) {
+      return PromiseCompat.resolve({
+        redirect: redirectURIs[i],
+        state: oAuthRedirectId + Math.random()
+      });
+      //promises.push(monitorFrame(redirectURIs[i], instance));
+    }
+  }
+  return false;
+};
+
+RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj) {
+  var promise = new PromiseCompat(function (resolve, reject) {
+    var frame = global.document.createElement('iframe');
+    frame.src = stateObj.redirect;
     frame.style.display = 'none';
 
     global.document.body.appendChild(frame);
     frame.addEventListener('load', function () {
-      resolve({
-        redirect: src,
-        state: state
-      });
-      listeners[state] = function (url) {
-        this.dispatchEvent("oAuthEvent", url);
+      window.open(authUrl);
+      this.listeners[stateObj.state] = function (url) {
+        resolve(url);
+        //this.dispatchEvent("oAuthEvent", url);
       }.bind(oAuth);
 
-      frame.contentWindow.postMessage(state, '*');
-    });
+      frame.contentWindow.postMessage(stateObj.state, '*');
+    }.bind(this));
 
     window.addEventListener('message', function (frame, msg) {
       if (msg.data && msg.data.key && msg.data.url && listeners[msg.data.key]) {
-        listeners[msg.data.key](msg.data.url);
+        this.listeners[msg.data.key](msg.data.url);
         try {
           document.body.removeChild(frame);
         } catch (e) {
           console.warn(e);
         }
       }
-    }.bind({}, frame), false);
+    }.bind(this, frame), false);
   });
-}
+
+  //Direct the user to the oAuth flow
+  return promise;
+};
 
 /**
  * If we have a local domain, and freedom.js is loaded at startup, we can use
@@ -48,22 +62,5 @@ function monitorFrame(src, oAuth) {
  */
 exports.register = function (OAuth) {
   'use strict';
-  if (typeof global !== 'undefined' && global && global.document) {
-    OAuth.register(function (redirectURIs, instance) {
-      var promises = [], i;
-      for (i = 0; i < redirectURIs.length; i += 1) {
-        // TODO: remove restriction on URL pattern match.
-        if ((redirectURIs[i].indexOf('http://') === 0 ||
-             redirectURIs[i].indexOf('https://') === 0) &&
-            redirectURIs[i].indexOf('oauth-relay.html') > 0) {
-          promises.push(monitorFrame(redirectURIs[i], instance));
-        }
-      }
-      if (promises.length) {
-        return PromiseCompat.race(promises);
-      } else {
-        return false;
-      }
-    });
-  }
+  OAuth.register(new RemotePageAuth());
 };

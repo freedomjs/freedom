@@ -36,9 +36,9 @@ describe("integration: core.rtcpeerconnection",
 // core.oauth
 describe("integration: core.oauth",
     require("./coreIntegration/oauth.integration.src").bind(this,
-    require("../../providers/core/oauth"), 
+    require("../../providers/core/core.oauth"), 
     [
-      require("../../providers/oauth/oauth.pageauth"),
+      require("../../providers/oauth/oauth.localpageauth"),
       require("../../providers/oauth/oauth.remotepageauth"),
     ],
     setup));

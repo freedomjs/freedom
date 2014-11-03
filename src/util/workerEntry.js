@@ -12,8 +12,8 @@ var providers = [
   require('../../providers/core/websocket.unprivileged')
 ];
 
-var oauth = require('../../providers/core/oauth');
-require('../../providers/oauth/oauth.pageauth').register(oauth);
+var oauth = require('../../providers/core/core.oauth');
+require('../../providers/oauth/oauth.localpageauth').register(oauth);
 require('../../providers/oauth/oauth.remotepageauth').register(oauth);
 
 providers.push(oauth);

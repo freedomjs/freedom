@@ -4,7 +4,7 @@
 // Note: relays matching 'oauth-relay.html' can be cloned from
 // https://github.com/willscott/freedom-oauth-relay
 var registeredRedirectURIs = [
-  "http://localhost:8000/demo/aboutme/",
+  //"http://localhost:8000/demo/aboutme/",
   "https://willscott.github.io/freedom-oauth-relay/oauth-relay.html"
 ];
 
@@ -52,6 +52,7 @@ var onProfile = function(resp) {
   instance.emit('profile', resp);
 };
 
+oauth.
 oauth.initiateOAuth(registeredRedirectURIs).then(buildURL, function (msg) {
   instance.emit('profile', {
     name: 'oAuth Error',

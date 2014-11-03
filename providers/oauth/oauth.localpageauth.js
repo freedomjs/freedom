@@ -1,21 +1,7 @@
 /*jslint indent:2,browser:true, node:true */
 var PromiseCompat = require('es6-promise').Promise;
 
-var oAuthRedirectId = 'freedom.oauth.redirect.handler',
-  listeners = {};
-
-/**
- * Handler for storage events, which relays them to waiting clients.
- * @param {String} state State provided by the  
- */
-function storageListener(state, client, msg) {
-  'use strict';
-  if (msg.url.indexOf(state) > -1) {
-    client.dispatchEvent("oAuthEvent", msg.url);
-    window.removeEventListener("storage", listeners[state], false);
-    delete listeners[state];
-  }
-}
+var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
 /**
  * If there is redirection back to the page, and oAuthRedirectID is set,
@@ -28,12 +14,11 @@ if (typeof window !== 'undefined' && window && window.location &&
   window.close();
 }
 
-/**
- * If we have a local domain, and freedom.js is loaded at startup, we can use
- * the local page as a redirect URI.
- */
-exports.register = function (OAuth) {
-  'use strict';
+var LocalPageAuth = function() {
+  this.listeners = {};
+}
+
+RemotePageAuth.prototype.initiateOAuth = function(redirectURIs) {
   if (typeof window !== 'undefined' && window && window.addEventListener) {
     var here = window.location.protocol + "//" + window.location.host +
         window.location.pathname;
@@ -51,4 +36,30 @@ exports.register = function (OAuth) {
       });
     }, true);
   }
+  
+  return false;
+};
+RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj) {
+};
+
+/**
+ * Handler for storage events, which relays them to waiting clients.
+ * @param {String} state State provided by the  
+ */
+function storageListener(state, client, msg) {
+  'use strict';
+  if (msg.url.indexOf(state) > -1) {
+    client.dispatchEvent("oAuthEvent", msg.url);
+    window.removeEventListener("storage", listeners[state], false);
+    delete listeners[state];
+  }
+}
+
+/**
+ * If we have a local domain, and freedom.js is loaded at startup, we can use
+ * the local page as a redirect URI.
+ */
+exports.register = function (OAuth) {
+  'use strict';
+  OAuth.register(new LocalPageAuth());
 };

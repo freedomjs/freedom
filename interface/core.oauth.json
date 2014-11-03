@@ -2,13 +2,13 @@
   "name": "core.oauth",
   "api": {
     /**
-     * Let the platform choose the redirect URI
-     * @param chooseRedirectUri
+     * Begins the oAuth process. Let the platform choose the redirect URI
+     * @param initiateOAuth
      * @param {String[]} Valid oAuth redirect URIs for your application
      * @return {{redirect: String, state: String}} A chosen redirect URI and
      *   state which will be monitored for oAuth redirection if available
      **/
-    "chooseRedirectUri": {
+    "initiateOAuth": {
       "type": "method",
       "value": [["array", "string"]],
       "ret": {
@@ -20,21 +20,21 @@
         "message": "string"
       }
     },
-    "oAuthEvent": {
-      "type": "event",
-      "value": "string"
-    },
   
     /**
-     * Begin the oAuth client-side flow
+     * oAuth client-side flow - launch the provided URL
      *
      * @method initiateAuthFlow
      * @param {String} The URL that initiates the auth flow.
+     * @param {Object.<string, string>} The return value from chooseRedirectUri
      * @return {String} responseUrl - containing the access token
      */
-    "initiateOAuth": {
+    "launchAuthFlow": {
       "type": "method",
-      "value": "string",
+      "value": ["string", {
+        "redirect": "string",
+        "state": "string"
+      }],
       "ret": "string",
       "err": {
         "errcode": "string",
