@@ -212,7 +212,7 @@ module.exports = function (grunt) {
     },
     codeclimate: {
       options: {
-        file: 'tools/coverage/PhantomJS**/lcov.info'
+        file: 'tools/coverage/PhantomJS**/lcov.info',
         token: process.env.CODECLIMATETOKEN || 'unknown'
       }
     },
