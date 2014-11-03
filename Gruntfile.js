@@ -317,7 +317,7 @@ module.exports = function (grunt) {
         }
       });
     });
-  grunt.registerTask('prepare_codeclimate', 'Run codeclimate with correct lcov.',
+  grunt.registerTask('dynamic_codeclimate', 'Run codeclimate with correct lcov.',
     function () {
       var file = require("glob").sync("tools/coverage/PhantomJS**/lcov.info");
       if (file.length !== 1) {
@@ -330,6 +330,7 @@ module.exports = function (grunt) {
           }
         }
       });
+      grunt.task.run('codeclimate');
     });
   
   // Default tasks.
@@ -379,8 +380,7 @@ module.exports = function (grunt) {
         'gitinfo',
         'karma:saucelabs',
         'coveralls:report',
-        'prepare_codeclimate',
-        'codeclimate'
+        'dynamic_codeclimate'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
