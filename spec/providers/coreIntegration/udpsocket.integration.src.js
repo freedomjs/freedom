@@ -1,5 +1,3 @@
-var testUtil = require("../../util");
-
 module.exports = function(provider, setup) {
   var socket, serverDispatchEvent;
   const listenPort = 8082, sendPort = 8083;
@@ -9,7 +7,7 @@ module.exports = function(provider, setup) {
     socket = new provider.provider(undefined, serverDispatchEvent);
   });
 
-  it('Connects and sends/receives data', function (done) {
+  it("Connects, has state, and sends/receives data", function (done) {
     // Currently a copy of 'receives data' unit test from firefox, change it
     const sendString = "Hello World",
           sendBuffer = str2ab(sendString),
@@ -17,23 +15,41 @@ module.exports = function(provider, setup) {
           sendingSocket = new provider.provider(undefined, clientDispatchEvent),
           sendContinuation = jasmine.createSpy("sendContinuation"),
           bindContinuation = jasmine.createSpy("bindContinuation"),
+          stateContinuation = jasmine.createSpy("stateContinuation"),
           destroyContinuation = jasmine.createSpy("destroyContinuation");
     // Set up connections
-    socket.bind("localhost", listenPort, bindContinuation);
-    expect(bindContinuation).toHaveBeenCalledWith(0);
-    sendingSocket.bind("localhost", sendPort, bindContinuation);
-    expect(bindContinuation.calls.count()).toEqual(2);
-    expect(bindContinuation.calls.mostRecent().args[0]).toEqual(0);
+    socket.bind("127.0.0.1", listenPort, bindContinuation);
+    setTimeout(function() {
+      expect(bindContinuation).toHaveBeenCalledWith(0);
+      done();
+    }, 500);
+    sendingSocket.bind("127.0.0.1", sendPort, bindContinuation);
+    setTimeout(function() {
+      expect(bindContinuation.calls.count()).toEqual(2);
+      expect(bindContinuation.calls.mostRecent().args[0]).toEqual(0);
+      done();
+    }, 500);
 
     // Check socket state
-    const listenState = {"localAddress": "localhost", "localPort": listenPort},
-          sendState = {"localAddress": "localhost", "localPort": sendPort};
-    const stateSpy = jasmine.createSpy("state");
-    socket.getInfo(stateSpy);
-    expect(stateSpy).toHaveBeenCalledWith(listenState);
-    sendingSocket.getInfo(stateSpy);
-    expect(stateSpy).toHaveBeenCalledWith(sendState);
-    expect(stateSpy.calls.count()).toEqual(2);
+    const listenState = {"localAddress": "127.0.0.1", "localPort": listenPort},
+          sendState = {"localAddress": "127.0.0.1", "localPort": sendPort};
+    setTimeout(function() {
+      socket.getInfo(stateContinuation);
+      setTimeout(function() {
+        expect(stateContinuation).toHaveBeenCalledWith(listenState);
+        done();
+      }, 250);
+      done();
+    }, 250);
+    setTimeout(function() {
+      sendingSocket.getInfo(stateContinuation);
+      setTimeout(function() {
+        expect(stateContinuation).toHaveBeenCalledWith(sendState);
+        expect(stateContinuation.calls.count()).toEqual(2);
+        done();
+      }, 250);
+      done();
+    }, 250);
 
     // Check data sending
     serverDispatchEvent.and.callFake(function fakeDispatchEvent(event, data) {
@@ -43,13 +59,20 @@ module.exports = function(provider, setup) {
       expect(data.data).toEqual(sendBuffer);
       done();
     });
-    sendingSocket.sendTo(sendBuffer, "localhost",
+    sendingSocket.sendTo(sendBuffer, "127.0.0.1",
                          listenPort, sendContinuation);
-    expect(sendContinuation).toHaveBeenCalled();
-
+    setTimeout(function() {
+      socket.getInfo(stateContinuation);
+      expect(sendContinuation).toHaveBeenCalled();
+      done();
+    }, 500);
     sendingSocket.destroy(destroyContinuation);
     socket.destroy(destroyContinuation);
-    expect(destroyContinuation.calls.count()).toEqual(2);
+    setTimeout(function() {
+      socket.getInfo(stateContinuation);
+      expect(destroyContinuation.calls.count()).toEqual(2);
+      done();
+    }, 500);
   });
 
   function str2ab(str) {
