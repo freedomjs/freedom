@@ -268,7 +268,7 @@ module.exports = function (grunt) {
               config: 'bump.options.tagMessage',
               type: 'input',
               message: 'Enter a git tag message:',
-              default: 'v%VERSION%',
+              default: 'v%VERSION%'
             }
           ]
         }
@@ -326,7 +326,8 @@ module.exports = function (grunt) {
       grunt.config.merge({
         codeclimate: {
           options: {
-            file: file[0]
+            file: file[0],
+            token: process.env.CODECLIMATETOKEN
           }
         }
       });
