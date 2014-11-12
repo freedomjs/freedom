@@ -8,22 +8,38 @@
  * supplemented in platform-dependent repositories.
  *
  */
-var OAuth = function (mod, dispatchEvent) {
+var OAuth = function (handlers, mod, dispatchEvent) {
+  this.handlers = handlers;
   this.mod = mod;
   this.dispatchEvent = dispatchEvent;
 };
 
-OAuth.handlers = [];
-
 /**
- * Register an oAuth handler.
+ * Register oAuth handlers.
+ * This method should be called before provider is used, and binds the current
+ * oAuth provider to be associated with registered handlers. This is used so
+ * that handlers which are registered by the user apply only the the freedom()
+ * setup call they are associated with, while still being registered across
+ * multiple instances of OAuth providers.
  *
  * @method register
- * @param {Function(String[], OAuth)} handler
+ * @param {[Function(onAvailable)]} handlers
  * @private
  */
-OAuth.register = function (handler) {
-  OAuth.handlers.push(handler);
+OAuth.register = function (handlers) {
+  var i,
+      boundHandlers = [],
+      addHandler = function (h) {
+        boundHandlers.push(h);
+      };
+  if (!handlers || !handlers.length) {
+    return OAuth.reset();
+  }
+
+  for (i = 0; i < handlers.length; i += 1) {
+    handlers[i](addHandler);
+  }
+  exports.provider = OAuth.bind(this, boundHandlers);
 };
 
 /**
@@ -32,7 +48,7 @@ OAuth.register = function (handler) {
  * @private
  */
 OAuth.reset = function () {
-  OAuth.handlers = [];
+  exports.provider = OAuth.bind(this, []);
 };
 
 /**
@@ -48,8 +64,8 @@ OAuth.reset = function () {
  */
 OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
   var promise, i;
-  for (i = 0; i < OAuth.handlers.length; i += 1) {
-    promise = OAuth.handlers[i](redirectURIs, this);
+  for (i = 0; i < this.handlers.length; i += 1) {
+    promise = this.handlers[i](redirectURIs, this);
     if (promise) {
       return promise.then(continuation);
     }
@@ -62,5 +78,5 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
 
 exports.register = OAuth.register;
 exports.reset = OAuth.reset;
-exports.provider = OAuth;
+exports.provider = OAuth.bind(this, []);
 exports.name = 'core.oauth';

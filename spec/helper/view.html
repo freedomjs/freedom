@@ -1,0 +1,12 @@
+<html>
+  <head>
+    <script type="text/javascript">
+      window.addEventListener("message", function (msg) {
+        msg.source.postMessage("Echo: " + msg.data, "*");
+      }, true);
+    </script>
+  </head>
+  <body>
+    Example view for unit tests.
+  </body>
+</html>

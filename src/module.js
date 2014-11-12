@@ -231,6 +231,7 @@ Module.prototype.stop = function () {
   if (!this.started) {
     return;
   }
+  this.emit('close');
   if (this.port) {
     this.port.off();
     this.port.onMessage('control', {

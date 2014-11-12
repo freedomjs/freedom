@@ -38,7 +38,7 @@ describe("integration: core.oauth",
     require("./coreIntegration/oauth.integration.src").bind(this,
     require("../../providers/core/oauth"), 
     [
-      require("../../providers/oauth/oauth.pageauth"),
-      require("../../providers/oauth/oauth.remotepageauth"),
+      require("../../providers/oauth/oauth.pageauth").register,
+      require("../../providers/oauth/oauth.remotepageauth").register,
     ],
     setup));

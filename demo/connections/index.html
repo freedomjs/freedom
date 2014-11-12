@@ -6,21 +6,58 @@
   <link href='../style.css' rel='stylesheet' type='text/css' />
 
   <script type="text/javascript" src="../../freedom.js"></script>
+  <script type="text/javascript" src="heightCustomViewProvider.js"></script>
 
   <script type="text/javascript">
-    freedom('manifest.json').then(function (instance) {
-      instance().on("height", function(h) {
-        document.getElementById("connections").style.height = h + 'px';
+    var customView, instance;
+    
+    var heightView = function() {
+    };
+    
+    function loadConnections () {
+      if (instance) {
+        instance.close();
+        delete instance;
+      }
+
+      var freedomPromise;
+      if (customView) {
+        freedomPromise = freedom('manifest.json', {view: HeightView});
+      } else {
+        freedomPromise = freedom('manifest.json');
+      }
+      freedomPromise.then(function (session) {
+        instance = session;
+        session();
       });
-    });
+    }
+
+    function updateUX (state) {
+      customView = state;
+      document.getElementById('toggleon').style.background = customView ? 'gray' : 'white';
+      document.getElementById('toggleoff').style.background = !customView ? 'gray' : 'white';
+  
+      loadConnections();
+    }
+    
+    window.addEventListener('load', function () {
+      document.getElementById('toggleon').addEventListener('click', updateUX.bind({}, true), true);
+      document.getElementById('toggleoff').addEventListener('click', updateUX.bind({}, false), true);
+      updateUX(false);
+    }, true);
   </script>
 </head>
 <body>
   <header id='logo'>freedom.js</header>
   <header><span class='triangle'>&#9654;</span> Demos</header>
   <header><span class='triangle'>&#9654;</span> Connections</header>
+  <section id="Toggle">
+    Toggle Height-Aware Provider: [<span id='toggleon'>on</span>, <span id='toggleoff'>off</span>]
+  </section>
   <section id="connections" class="lastChild">
-    <span>freedom.js is loading.</span>
+  </section>
+  <section id="Postscript">
+    A height-aware provider can integrate views to be more aware of their context.
   </section>
 </body>
 </html>

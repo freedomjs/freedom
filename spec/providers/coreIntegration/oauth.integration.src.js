@@ -10,9 +10,8 @@ module.exports = function (oa, pageauths, setup) {
 
   beforeEach(function () {
     setup();
-    for (var i=0; i<pageauths.length; i++) {
-      pageauths[i].register(oa);
-    }
+    console.error('calling register w/ ', pageauths);
+    oa.register(pageauths);
     oauth = testUtil.directProviderFor(oa.provider.bind(oa.provider, {}), testUtil.getApis().get(oa.name).definition);
   });
 
