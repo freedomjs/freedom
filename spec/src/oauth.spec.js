@@ -1,4 +1,4 @@
-var oAuth = require('../../providers/core/oauth');
+var oAuth = require('../../providers/core/core.oauth');
 var PromiseCompat = require('es6-promise').Promise;
 var setup = require('../../src/entry');
 

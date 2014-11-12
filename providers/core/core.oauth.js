@@ -53,17 +53,21 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
   for (i = 0; i < OAuth.providers.length; i += 1) {
     promise = OAuth.providers[i].initiateOAuth(redirectURIs, this);
     if (promise) {
-      promise.then(function(result) {
-        this.handlers[result.state] = OAuth.providers[i];
-        continuation(result);
-      });
-      return;
+      break;
     }
   }
-  continuation(null, {
-    'errcode': 'UNKNOWN',
-    'message': 'No requested redirects can be handled.'
-  });
+  if (promise) {
+    promise.then(function(result) {
+      this.handlers[result.state] = OAuth.providers[i];
+      continuation(result);
+    });
+  } else {
+    continuation(null, {
+      'errcode': 'UNKNOWN',
+      'message': 'No requested redirects can be handled.'
+    });
+  }
+  return;
 };
 
 /**
@@ -74,7 +78,7 @@ OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
     continuation(undefined, {
       'errcode': 'UNKNOWN',
       'message': 'You must begin the oAuth flow with initiateOAuth first'
-    })
+    });
     return;
   }
 
