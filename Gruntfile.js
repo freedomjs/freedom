@@ -325,13 +325,16 @@ module.exports = function (grunt) {
       }
       grunt.config.merge({
         codeclimate: {
-          options: {
-            file: file[0],
-            token: process.env.CODECLIMATETOKEN
+          default: {
+            src: file[0],
+            options: {
+              file: file[0],
+              token: process.env.CODECLIMATETOKEN
+            }
           }
         }
       });
-      grunt.task.run('codeclimate');
+      grunt.task.run('codeclimate:default');
     });
   
   // Default tasks.
