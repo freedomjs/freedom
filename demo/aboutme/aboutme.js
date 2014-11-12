@@ -4,7 +4,7 @@
 // Note: relays matching 'oauth-relay.html' can be cloned from
 // https://github.com/willscott/freedom-oauth-relay
 var registeredRedirectURIs = [
-  //"http://localhost:8000/demo/aboutme/",
+  "http://localhost:8000/demo/aboutme/",
   "https://willscott.github.io/freedom-oauth-relay/oauth-relay.html"
 ];
 
@@ -12,6 +12,7 @@ var oauth = freedom['core.oauth']();
 var instance = freedom();
 
 instance.on('start', function() {
+  console.log('Starting oAuth');
   oauth.initiateOAuth(registeredRedirectURIs).then(function (obj) {
     var url = "https://accounts.google.com/o/oauth2/auth?" +
         "client_id=513137528418-i52cg29ug3qjiqta1ttcvrguhrjjq2so.apps.googleusercontent.com&" +
@@ -19,9 +20,13 @@ instance.on('start', function() {
         "scope=" + encodeURIComponent("https://www.googleapis.com/auth/userinfo.profile") + "&" +
         "redirect_uri=" + encodeURIComponent(obj.redirect) + "&" +
         "state=" + encodeURIComponent(obj.state);
+    console.log(obj);
+    console.log('URL to display:');
+    console.log(url);
     return oauth.launchAuthFlow(url, obj);
     //instance.emit("oAuth", url);
   }).then(function(responseUrl) {
+    console.log('Got response URL:');
     console.log(responseUrl);
     var query = responseUrl.substr(responseUrl.indexOf('#') + 1),
       param,
@@ -45,6 +50,7 @@ instance.on('start', function() {
                   "access_token=" + params.access_token);
     return;
   }).catch(function (msg) {
+    console.error(msg);
     instance.emit('profile', {
       name: 'oAuth Error',
       details: msg
@@ -60,3 +66,5 @@ var onProfile = function(resp) {
   }
   instance.emit('profile', resp);
 };
+
+console.log('freedom.js module initialized');

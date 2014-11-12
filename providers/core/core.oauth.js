@@ -50,23 +50,21 @@ OAuth.reset = function () {
  */
 OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
   var promise, i;
+  var successCallback = function(result) {
+    this.handlers[result.state] = OAuth.providers[i];
+    continuation(result);
+  }.bind(this);
+
   for (i = 0; i < OAuth.providers.length; i += 1) {
-    promise = OAuth.providers[i].initiateOAuth(redirectURIs, this);
-    if (promise) {
-      break;
+    if (OAuth.providers[i].initiateOAuth(redirectURIs, successCallback)) {
+      return;
     }
   }
-  if (promise) {
-    promise.then(function(result) {
-      this.handlers[result.state] = OAuth.providers[i];
-      continuation(result);
-    });
-  } else {
-    continuation(null, {
-      'errcode': 'UNKNOWN',
-      'message': 'No requested redirects can be handled.'
-    });
-  }
+  //If here, we have no compatible providers
+  continuation(null, {
+    'errcode': 'UNKNOWN',
+    'message': 'No requested redirects can be handled.'
+  });
   return;
 };
 
@@ -82,7 +80,7 @@ OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
     return;
   }
 
-  this.handlers[stateObj.state].launchAuthFlow(authUrl, stateObj).then(continuation);
+  this.handlers[stateObj.state].launchAuthFlow(authUrl, stateObj, continuation);
 };
 
 exports.register = OAuth.register;

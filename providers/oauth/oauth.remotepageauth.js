@@ -15,7 +15,7 @@ function RemotePageAuth() {
  * @return {{redirect: String, state: String}} A chosen redirect URI and
  *    state which will be monitored for oAuth redirection if available
  **/
-RemotePageAuth.prototype.initiateOAuth = function(redirectURIs) {
+RemotePageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   "use strict";
   if (typeof global !== 'undefined' && global && global.document) {
     for (var i=0; i<redirectURIs.length; i++) {
@@ -23,10 +23,11 @@ RemotePageAuth.prototype.initiateOAuth = function(redirectURIs) {
       if ((redirectURIs[i].indexOf('http://') === 0 ||
           redirectURIs[i].indexOf('https://') === 0) &&
           redirectURIs[i].indexOf('oauth-relay.html') > 0) {
-        return PromiseCompat.resolve({
+        continuation({
           redirect: redirectURIs[i],
           state: oAuthRedirectId + Math.random()
         });
+        return true;
         //promises.push(monitorFrame(redirectURIs[i], instance));
       }
     }
@@ -42,38 +43,34 @@ RemotePageAuth.prototype.initiateOAuth = function(redirectURIs) {
  * @param {Object.<string, string>} stateObj The return value from chooseRedirectUri
  * @return {String} responseUrl - containing the access token
  */
-RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj) {
+RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
   "use strict";
-  var promise = new PromiseCompat(function (resolve, reject) {
-    var frame = global.document.createElement('iframe');
-    frame.src = stateObj.redirect;
-    frame.style.display = 'none';
+  var frame = global.document.createElement('iframe');
+  frame.src = stateObj.redirect;
+  frame.style.display = 'none';
 
-    global.document.body.appendChild(frame);
-    frame.addEventListener('load', function () {
-      window.open(authUrl);
-      this.listeners[stateObj.state] = function (url) {
-        resolve(url);
-        //this.dispatchEvent("oAuthEvent", url);
-      };//.bind(oAuth);
+  global.document.body.appendChild(frame);
+  frame.addEventListener('load', function () {
+    window.open(authUrl);
+    this.listeners[stateObj.state] = function (url) {
+      continuation(url);
+      //this.dispatchEvent("oAuthEvent", url);
+    };//.bind(oAuth);
 
-      frame.contentWindow.postMessage(stateObj.state, '*');
-    }.bind(this));
+    frame.contentWindow.postMessage(stateObj.state, '*');
+  }.bind(this));
 
-    window.addEventListener('message', function (frame, msg) {
-      if (msg.data && msg.data.key && msg.data.url && this.listeners[msg.data.key]) {
-        this.listeners[msg.data.key](msg.data.url);
-        try {
-          document.body.removeChild(frame);
-        } catch (e) {
-          console.warn(e);
-        }
+  window.addEventListener('message', function (frame, msg) {
+    if (msg.data && msg.data.key && msg.data.url && this.listeners[msg.data.key]) {
+      this.listeners[msg.data.key](msg.data.url);
+      try {
+        document.body.removeChild(frame);
+      } catch (e) {
+        console.warn(e);
       }
-    }.bind(this, frame), false);
-  });
+    }
+  }.bind(this, frame), false);
 
-  //Direct the user to the oAuth flow
-  return promise;
 };
 
 /**

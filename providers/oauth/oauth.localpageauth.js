@@ -27,16 +27,17 @@ var LocalPageAuth = function() {
  * @return {{redirect: String, state: String}} A chosen redirect URI and
  *    state which will be monitored for oAuth redirection if available
  **/
-LocalPageAuth.prototype.initiateOAuth = function(redirectURIs) {
+LocalPageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   "use strict";
   if (typeof window !== 'undefined' && window && window.addEventListener) {
     var here = window.location.protocol + "//" + window.location.host +
         window.location.pathname;
     if (redirectURIs.indexOf(here) > -1) {
-      return PromiseCompat.resolve({
+      continuation({
         redirect: here,
         state: oAuthRedirectId + Math.random()
       });
+      return true;
     }
   } 
  
@@ -51,38 +52,34 @@ LocalPageAuth.prototype.initiateOAuth = function(redirectURIs) {
  * @param {Object.<string, string>} stateObj The return value from initiateOAuth
  * @return {String} responseUrl containing the access token
  */
-LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj) {
+LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
   "use strict";
-  var promise = new PromiseCompat(function (resolve, reject) {
-    window.addEventListener('load', function () {
-      // Add the storage listener
-      var listener = this.storageListener.bind(this, resolve, reject, stateObj);
-      this.listeners[stateObj.state] = listener;
-      window.addEventListener("storage", listener, false);
-      // Start 'er up
-      window.open(authUrl);
-    }.bind(this), true);
-  }.bind(this));
- 
-  return promise;
+  //window.addEventListener('load', function () {
+    // Add the storage listener
+    var listener = this.storageListener.bind(this, continuation, stateObj);
+    this.listeners[stateObj.state] = listener;
+    window.addEventListener("storage", listener, false);
+    // Start 'er up
+    window.open(authUrl);
+  //}.bind(this), true);
+
 };
 
 /**
  * Handler for storage events, which relays them to waiting clients.
  * For the schema of the storage msg, see:
  * http://tutorials.jenkov.com/html5/local-storage.html#storage-events
- * @param {Function} resolve function to call to resolve promise
- * @param {Function} reject function to call to reject promise
+ * @param {Function} continuation function to call with result
  * @param {Object.<string, string>} stateObj the return value from initiateOAuth
  * @param {Object} msg storage event
  */
-LocalPageAuth.prototype.storageListener = function(resolve, reject, stateObj, msg) {
+LocalPageAuth.prototype.storageListener = function(continuation, stateObj, msg) {
   'use strict';
   if (msg.url.indexOf(stateObj.state) > -1) {
     //client.dispatchEvent("oAuthEvent", msg.url);
     window.removeEventListener("storage", this.listeners[stateObj.state], false);
     delete this.listeners[stateObj.state];
-    resolve(msg.url);
+    continuation(msg.url);
   }
 };
 
