@@ -135,11 +135,8 @@ module.exports = function (grunt) {
           'freedom.js': ['src/util/workerEntry.js']
         },
         options: {
-          postBundleCB: function (err, src, next) {
-            next(err, require('fs').readFileSync('src/util/header.txt') +
-                      grunt.template.process('/** Version: <%= pkg.version %> **/\n') +
-                      src);
-          }
+          banner: require('fs').readFileSync('src/util/header.txt') +
+              '/** Version: <%= pkg.version %> **/\n'
         }
       },
       frame: {
