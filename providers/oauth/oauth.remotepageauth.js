@@ -46,10 +46,10 @@ function monitorFrame(src, oAuth) {
  * If we have a local domain, and freedom.js is loaded at startup, we can use
  * the local page as a redirect URI.
  */
-exports.register = function (OAuth) {
+exports.register = function (oAuth) {
   'use strict';
   if (typeof global !== 'undefined' && global && global.document) {
-    OAuth.register(function (redirectURIs, instance) {
+    oAuth(function (redirectURIs, instance) {
       var promises = [], i;
       for (i = 0; i < redirectURIs.length; i += 1) {
         // TODO: remove restriction on URL pattern match.

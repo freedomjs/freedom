@@ -32,14 +32,14 @@ if (typeof window !== 'undefined' && window && window.location &&
  * If we have a local domain, and freedom.js is loaded at startup, we can use
  * the local page as a redirect URI.
  */
-exports.register = function (OAuth) {
+exports.register = function (oAuth) {
   'use strict';
   if (typeof window !== 'undefined' && window && window.addEventListener) {
     var here = window.location.protocol + "//" + window.location.host +
         window.location.pathname;
 
     window.addEventListener('load', function () {
-      OAuth.register(function (uris, provider) {
+      oAuth(function (uris, provider) {
         if (uris.indexOf(here) > -1) {
           var id = oAuthRedirectId + Math.random(),
             listener = storageListener.bind({}, id, provider);
