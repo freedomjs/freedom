@@ -79,5 +79,5 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuati
  */
 exports.register = function (OAuth) {
   'use strict';
-  OAuth.register(new RemotePageAuth());
+  OAuth.register(RemotePageAuth);
 };

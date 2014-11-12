@@ -89,5 +89,5 @@ LocalPageAuth.prototype.storageListener = function(continuation, stateObj, msg) 
  */
 exports.register = function (OAuth) {
   'use strict';
-  OAuth.register(new LocalPageAuth());
+  OAuth.register(LocalPageAuth);
 };

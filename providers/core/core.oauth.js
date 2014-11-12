@@ -24,8 +24,9 @@ OAuth.providers = [];
  * @param {Function(String[], OAuth)} provider
  * @private
  */
-OAuth.register = function (provider) {
-  OAuth.providers.push(provider);
+OAuth.register = function (Provider) {
+  //OAuth.providers.push(provider);
+  OAuth.providers.push(new Provider());
 };
 
 /**
