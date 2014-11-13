@@ -54,11 +54,12 @@ OAuth.reset = function () {
  * oAuth provider to begin monitoring for redirection.
  *
  * @method initiateOAuth
- * @param {string[]} redirectURIs oAuth redirection URIs registered with the
+ * @param {string[]} redirectURIs - oAuth redirection URIs registered with the
  *     provider.
- * @param {Function} continuation Function to call when sending is complete.
- * @returns {{redirect:String, state:String}} The chosen redirect URI, and
- *     State to pass to the URI on completion of oAuth.
+ * @param {Function} continuation - Function to call when complete
+ *    Expected to see a value of schema: {{redirect:String, state:String}}
+ *    where 'redirect' is the chosen redirect URI
+ *    and 'state' is the state to pass to the URI on completion of oAuth
  */
 OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
   var promise, i;
@@ -81,8 +82,15 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
 };
 
 /**
- * Continue the client-side auth flow by launching the appropriate UI
- **/
+ * oAuth client-side flow - launch the provided URL
+ * This must be called after initiateOAuth with the returned state object
+ *
+ * @method launchAuthFlow
+ * @param {String} authUrl - The URL that initiates the auth flow.
+ * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
+ * @param {Function} continuation - Function to call when complete
+ *    Expected to see a String value that is the response Url containing the access token
+ */
 OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
   if (!this.ongoing.hasOwnProperty(stateObj.state)) {
     continuation(undefined, {

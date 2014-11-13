@@ -2,8 +2,10 @@
   "name": "core.oauth",
   "api": {
     /**
-     * Begins the oAuth process. Let the platform choose the redirect URI
-     * @param initiateOAuth
+     * Indicate the intention to initiate an oAuth flow, allowing an appropriate
+     * oAuth provider to begin monitoring for redirection.
+     * 
+     * @method initiateOAuth
      * @param {String[]} Valid oAuth redirect URIs for your application
      * @return {{redirect: String, state: String}} A chosen redirect URI and
      *   state which will be monitored for oAuth redirection if available
@@ -23,10 +25,11 @@
   
     /**
      * oAuth client-side flow - launch the provided URL
+     * This must be called after initiateOAuth with the returned state object
      *
-     * @method initiateAuthFlow
+     * @method launchAuthFlow
      * @param {String} The URL that initiates the auth flow.
-     * @param {Object.<string, string>} The return value from chooseRedirectUri
+     * @param {Object.<string, string>} The return value from initiateOAuth
      * @return {String} responseUrl - containing the access token
      */
     "launchAuthFlow": {

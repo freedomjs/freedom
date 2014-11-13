@@ -9,12 +9,18 @@ function RemotePageAuth() {
 }
 
 /**
- * Begins the oAuth process. Let the platform choose the redirect URI
- * @param initiateOAuth
- * @param {String[]} Valid oAuth redirect URIs for your application
- * @return {{redirect: String, state: String}} A chosen redirect URI and
- *    state which will be monitored for oAuth redirection if available
- **/
+ * Indicate the intention to initiate an oAuth flow, allowing an appropriate
+ * oAuth provider to begin monitoring for redirection.
+ *
+ * @method initiateOAuth
+ * @param {string[]} redirectURIs - oAuth redirection URIs registered with the
+ *     provider.
+ * @param {Function} continuation - Function to call when complete
+ *    Expected to see a value of schema: {{redirect:String, state:String}}
+ *    where 'redirect' is the chosen redirect URI
+ *    and 'state' is the state to pass to the URI on completion of oAuth
+ * @return {Boolean} true if can handle, false otherwise
+ */
 RemotePageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   "use strict";
   if (typeof global !== 'undefined' && global && global.document) {
@@ -37,11 +43,13 @@ RemotePageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
 
 /**
  * oAuth client-side flow - launch the provided URL
+ * This must be called after initiateOAuth with the returned state object
  *
- * @method initiateAuthFlow
- * @param {String} authUrl The URL that initiates the auth flow.
- * @param {Object.<string, string>} stateObj The return value from chooseRedirectUri
- * @return {String} responseUrl - containing the access token
+ * @method launchAuthFlow
+ * @param {String} authUrl - The URL that initiates the auth flow.
+ * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
+ * @param {Function} continuation - Function to call when complete
+ *    Expected to see a String value that is the response Url containing the access token
  */
 RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
   "use strict";
