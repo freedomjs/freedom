@@ -4,6 +4,9 @@
     /**
      * Indicate the intention to initiate an oAuth flow, allowing an appropriate
      * oAuth provider to begin monitoring for redirection.
+     * This will generate a token, which must be passed to the single subsequent call
+     * to launchAuthFlow. 
+     * 
      * 
      * @method initiateOAuth
      * @param {String[]} Valid oAuth redirect URIs for your application
