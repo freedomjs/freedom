@@ -2,23 +2,17 @@
   "name": "core.oauth",
   "api": {
     /**
-     * An oAuth event has occured
-     * @return {String} The URL received by the oAuth provider.
-     **/
-    "oAuthEvent": {
-      "type": "event",
-      "value": "string"
-    },
-  
-    /**
-     * Express interest in initiating an oAuth flow.
-     *
+     * Indicate the intention to initiate an oAuth flow, allowing an appropriate
+     * oAuth provider to begin monitoring for redirection.
+     * This will generate a token, which must be passed to the single subsequent call
+     * to launchAuthFlow. 
+     * 
+     * 
      * @method initiateOAuth
-     * @param {String[]} Valid oAuth redirect URLs for your application.
-     * @returns {{redirect:String, state:String}} A chosen redirect URI, and
-     *     state which will be monitored for oAuth redirection, if one is
-     *     available.
-     */
+     * @param {String[]} Valid oAuth redirect URIs for your application
+     * @return {{redirect: String, state: String}} A chosen redirect URI and
+     *   state which will be monitored for oAuth redirection if available
+     **/
     "initiateOAuth": {
       "type": "method",
       "value": [["array", "string"]],
@@ -26,6 +20,28 @@
         "redirect": "string",
         "state": "string"
       },
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    /**
+     * oAuth client-side flow - launch the provided URL
+     * This must be called after initiateOAuth with the returned state object
+     *
+     * @method launchAuthFlow
+     * @param {String} The URL that initiates the auth flow.
+     * @param {Object.<string, string>} The return value from initiateOAuth
+     * @return {String} responseUrl - containing the access token
+     */
+    "launchAuthFlow": {
+      "type": "method",
+      "value": ["string", {
+        "redirect": "string",
+        "state": "string"
+      }],
+      "ret": "string",
       "err": {
         "errcode": "string",
         "message": "string"

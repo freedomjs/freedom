@@ -11,6 +11,9 @@
   freedom('manifest.json').then(function (instance) { start(instance()); });
     
   function start(aboutme) {
+    document.getElementById('loginContainer').onclick = function() {
+    	aboutme.emit('start', '');
+    };
     aboutme.on('profile', function(data) {
       document.getElementById("profilepic").src = data.picture;
       if (data.link) {
@@ -29,11 +32,6 @@
       document.getElementById("details").appendChild(
           document.createTextNode(JSON.stringify(data)));
       document.body.className = "loaded";
-    });
-    aboutme.on('oAuth', function(url) {
-      document.getElementById('loginContainer').onclick = function() {
-        window.open(url);
-      };
     });
   }
   </script>

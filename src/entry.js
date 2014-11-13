@@ -53,8 +53,6 @@ var setup = function (context, manifest, config) {
     },
     link,
     Port;
-  Bundle.register(context.providers, api);
-  resource.register(context.resolvers || []);
 
   if (config) {
     util.mixin(site_cfg, config, true);
@@ -63,6 +61,23 @@ var setup = function (context, manifest, config) {
   if (context) {
     util.mixin(site_cfg, context, true);
   }
+
+  // Register user-supplied extensions.
+  // For example the 'core.oauth' provider defines a register function,
+  // which enables site_cfg.oauth to be registered with it.
+  context.providers.forEach(function (provider) {
+    if (provider.name.indexOf('core.') === 0 &&
+        typeof provider.register === 'function') {
+      provider.register(
+        (typeof site_cfg[provider.name.substr(5)] !== 'undefined') ?
+            site_cfg[provider.name.substr(5)] :
+            undefined
+      );
+    }
+  });
+  
+  Bundle.register(context.providers, api);
+  resource.register(context.resolvers || []);
 
   return new PromiseCompat(function (resolve, reject) {
     if (site_cfg.moduleContext) {
@@ -75,15 +90,6 @@ var setup = function (context, manifest, config) {
     } else {
       manager.setup(debug);
       policy = new Policy(manager, resource, site_cfg);
-
-      // Register user-supplied oAuth and view interfaces.
-      if (typeof site_cfg.oauth === 'function') {
-        context.providers.forEach(function (provider) {
-          if (provider.name === 'core.oauth') {
-            provider.register(site_cfg.oauth);
-          }
-        });
-      }
 
       // Define how to load a root module.
       var fallbackLogger, getIface;

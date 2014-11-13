@@ -319,15 +319,19 @@ module.exports = function (grunt) {
       if (file.length !== 1) {
         return grunt.log.error("lcov file not present or distinguishable for code climate");
       }
+      require('fs').renameSync(file[0], "tools/coverage/lcov.info");
       grunt.config.merge({
         codeclimate: {
-          options: {
-            file: file[0],
-            token: process.env.CODECLIMATETOKEN
+          report: {
+            src: "tools/coverage/lcov.info",
+            options: {
+              file: "tools/coverage/lcov.info",
+              token: process.env.CODECLIMATETOKEN
+            }
           }
         }
       });
-      grunt.task.run('codeclimate');
+      grunt.task.run('codeclimate:report');
     });
   
   // Default tasks.
@@ -351,10 +355,10 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('debug', [
     'prepare_watch',
-    'build',
-    'connect:freedom',
+    'jshint',
     'browserify:frame',
     'browserify:jasmine_full',
+    'connect:freedom',
     'karma:browsers'
   ]);
   grunt.registerTask('demo', [

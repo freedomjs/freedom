@@ -1,61 +1,76 @@
-var View = require('../../../providers/core/view.unprivileged');
+var View = require('../../../providers/core/core.view');
+var PromiseCompat = require('es6-promise').Promise;
+var testUtil = require('../../util');
+var util = require('../../../src/util');
 
-describe("core.view", function() {
-  var provider, app, el;
+describe("core.view", function () {
+  var provider, app, el, de;
 
-  beforeEach(function() {
+  beforeEach(function () {
     app = {
       config: {
         global: window
       },
+      
+      resource: testUtil.setupResolvers(),
       manifestId: 'myApp',
       manifest: {
         views: {}
       }
     };
-    provider = new View.provider(app);
+    de = jasmine.createSpy('dispatchEvents');
+    util.handleEvents(app);
+    provider = new View.provider(app, de);
  
     el = document.createElement('div');
     el.id = 'myview';
     document.body.appendChild(el);
   });
 
-  afterEach(function() {
+  afterEach(function () {
     document.body.removeChild(el);
     delete el;
   });
 
-  it("Places objects and cleans up.", function() {
-    app.manifest.views['myview'] = true;
+  it("Places objects and cleans up.", function (done) {
+    app.manifest.views['myview'] = {
+      main: "relative://spec/helper/view.html",
+      files: []
+    };
 
     var cb = jasmine.createSpy('cb');
-    provider.open('myview', {'code': ''}, cb);
-    expect(cb).toHaveBeenCalled();
+    provider.show('myview', function () {
+      expect(el.children.length).not.toBe(0);
 
-    expect(el.children.length).not.toBe(0);
-
-    provider.close(cb);
-    expect(el.innerHTML).toBe("");
+      provider.close(cb);
+      expect(el.innerHTML).toBe("");
+      expect(cb).toHaveBeenCalled();
+      done();
+    });
   });
 
-  // TODO: Understand phantom security model better.
-  xit("Roundtrips messages", function(done) {
-    app.manifest.views['myview'] = true;
-
-    provider.dispatchEvent = jasmine.createSpy('de');
-    provider.dispatchEvent.and.callFake(function() {
-      expect(provider.dispatchEvent).toHaveBeenCalledWith('message', 'msg');
+  it("Roundtrips messages", function (done) {
+    app.manifest.views['myview'] = {
+      main: "relative://spec/helper/view.html",
+      files: []
+    };
+    
+    var onPost = function (ret, err) {
+      expect(err).toEqual(undefined);
+    };
+    
+    var onMessage = function (type, data) {
+      expect(type).toEqual('message');
+      expect(data).toEqual('Echo: TEST');
       provider.close(done);
-    });
-    var sendMsg = function() {
-      provider.postMessage('msg', function() {});
-    }
-    var onShow = function() {
-      setTimeout(sendMsg, 0);
     };
-    var onOpen = function() {
-      provider.show(onShow);
+    
+    var onShow = function (ret, err) {
+      expect(err).toEqual(undefined);
+      de.and.callFake(onMessage);
+      provider.postMessage('TEST', onPost);
     };
-    provider.open('myview', {'code': '<html><head><script>window.addEventListener("message", function(m) {m.source.postMessage(m.data, "*");}, true);</script></head></html>'}, onOpen);
+
+    provider.show('myview', onShow);
   });
 });
