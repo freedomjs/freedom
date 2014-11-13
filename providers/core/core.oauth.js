@@ -24,22 +24,18 @@ var OAuth = function (handlers, mod, dispatchEvent) {
  * multiple instances of OAuth providers.
  *
  * @method register
- * @param {[Function(onAvailable)]} handlers
+ * @param {[constructor]} handlers
  * @private
  */
 OAuth.register = function (handlers) {
   var i,
-      boundHandlers = [],
-      addHandler = function (H) {
-        boundHandlers.push(new H());
-      };
+      boundHandlers = [];
   if (!handlers || !handlers.length) {
-    console.error('core.oauth: missing bound handlers');
     return OAuth.reset();
   }
 
   for (i = 0; i < handlers.length; i += 1) {
-    handlers[i](addHandler);
+    boundHandlers.push(new handlers[i]());
   }
   exports.provider = OAuth.bind(this, boundHandlers);
 };
@@ -71,7 +67,6 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
     continuation(result);
   }.bind(this);
 
-  console.log(this.handlers);
   for (i = 0; i < this.handlers.length; i += 1) {
     if (this.handlers[i].initiateOAuth(redirectURIs, successCallback)) {
       return;
