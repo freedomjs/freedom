@@ -15,7 +15,7 @@
     freedom("manifest.json", {
       "debug": "log"
     }).then(function(interface) {
-      var clicker = interface(0);
+      var clicker = new interface(0);
 
       //Send click events to the module.
       document.getElementById('click').onclick = function() {

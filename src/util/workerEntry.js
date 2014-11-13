@@ -8,15 +8,10 @@ var providers = [
   require('../../providers/core/core.rtcpeerconnection'),
   require('../../providers/core/core.rtcdatachannel'),
   require('../../providers/core/storage.localstorage'),
-  require('../../providers/core/view.unprivileged'),
+  require('../../providers/core/core.view'),
+  require('../../providers/core/core.oauth'),
   require('../../providers/core/websocket.unprivileged')
 ];
-
-var oauth = require('../../providers/core/core.oauth');
-require('../../providers/oauth/oauth.localpageauth').register(oauth);
-require('../../providers/oauth/oauth.remotepageauth').register(oauth);
-
-providers.push(oauth);
 
 function getFreedomScript() {
   'use strict';
@@ -47,7 +42,11 @@ if (typeof window !== 'undefined') {
     location: window.location.href,
     portType: require('../link/worker'),
     source: getFreedomScript(),
-    providers: providers
+    providers: providers,
+    oauth: [
+      require('../../providers/oauth/oauth.localpageauth'),
+      require('../../providers/oauth/oauth.remotepageauth')
+    ]
   });
 } else {
   require('../entry')({

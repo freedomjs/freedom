@@ -8,25 +8,39 @@
  * supplemented in platform-dependent repositories.
  *
  */
-var OAuth = function (mod, dispatchEvent) {
+var OAuth = function (handlers, mod, dispatchEvent) {
+  this.handlers = handlers;
   this.mod = mod;
   this.dispatchEvent = dispatchEvent;
-  this.handlers = {};
+  this.ongoing = {};
 };
 
-// List of all available oAuth providers
-OAuth.providers = [];
-
 /**
- * Register an oAuth provider.
+ * Register oAuth handlers.
+ * This method should be called before provider is used, and binds the current
+ * oAuth provider to be associated with registered handlers. This is used so
+ * that handlers which are registered by the user apply only the the freedom()
+ * setup call they are associated with, while still being registered across
+ * multiple instances of OAuth providers.
  *
  * @method register
- * @param {Function(String[], OAuth)} provider
+ * @param {[Function(onAvailable)]} handlers
  * @private
  */
-OAuth.register = function (Provider) {
-  //OAuth.providers.push(provider);
-  OAuth.providers.push(new Provider());
+OAuth.register = function (handlers) {
+  var i,
+      boundHandlers = [],
+      addHandler = function (H) {
+        boundHandlers.push(new H());
+      };
+  if (!handlers || !handlers.length) {
+    return OAuth.reset();
+  }
+
+  for (i = 0; i < handlers.length; i += 1) {
+    handlers[i](addHandler);
+  }
+  exports.provider = OAuth.bind(this, boundHandlers);
 };
 
 /**
@@ -35,7 +49,7 @@ OAuth.register = function (Provider) {
  * @private
  */
 OAuth.reset = function () {
-  OAuth.providers = [];
+  exports.provider = OAuth.bind(this, []);
 };
 
 /**
@@ -52,12 +66,13 @@ OAuth.reset = function () {
 OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
   var promise, i;
   var successCallback = function(result) {
-    this.handlers[result.state] = OAuth.providers[i];
+    this.ongoing[result.state] = this.handlers[i];
     continuation(result);
   }.bind(this);
 
-  for (i = 0; i < OAuth.providers.length; i += 1) {
-    if (OAuth.providers[i].initiateOAuth(redirectURIs, successCallback)) {
+  console.log(this.handlers);
+  for (i = 0; i < this.handlers.length; i += 1) {
+    if (this.handlers[i].initiateOAuth(redirectURIs, successCallback)) {
       return;
     }
   }
@@ -73,7 +88,7 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
  * Continue the client-side auth flow by launching the appropriate UI
  **/
 OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
-  if (!this.handlers.hasOwnProperty(stateObj.state)) {
+  if (!this.ongoing.hasOwnProperty(stateObj.state)) {
     continuation(undefined, {
       'errcode': 'UNKNOWN',
       'message': 'You must begin the oAuth flow with initiateOAuth first'
@@ -81,10 +96,10 @@ OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
     return;
   }
 
-  this.handlers[stateObj.state].launchAuthFlow(authUrl, stateObj, continuation);
+  this.ongoing[stateObj.state].launchAuthFlow(authUrl, stateObj, continuation);
 };
 
 exports.register = OAuth.register;
 exports.reset = OAuth.reset;
-exports.provider = OAuth;
+exports.provider = OAuth.bind(this, []);
 exports.name = 'core.oauth';

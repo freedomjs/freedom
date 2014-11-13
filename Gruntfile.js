@@ -210,6 +210,12 @@ module.exports = function (grunt) {
         src: 'tools/coverage/PhantomJS**/*lcov.info'
       }
     },
+    codeclimate: {
+      options: {
+        file: 'unset: use `grunt prepare_codeclimate` to set.',
+        token: process.env.CODECLIMATETOKEN || 'unknown'
+      }
+    },
     connect: {
       freedom: {
         options: {
@@ -238,7 +244,7 @@ module.exports = function (grunt) {
         files: ['package.json', 'bower.json'],
         commit: true,
         commitMessage: 'Release v%VERSION%',
-        commitFiles: ['package.json'],
+        commitFiles: ['package.json', 'bower.json'],
         createTag: true,
         tagName: 'v%VERSION%',
         tagMessage: 'Version %VERSION%',
@@ -262,7 +268,7 @@ module.exports = function (grunt) {
               config: 'bump.options.tagMessage',
               type: 'input',
               message: 'Enter a git tag message:',
-              default: 'v%VERSION%',
+              default: 'v%VERSION%'
             }
           ]
         }
@@ -279,6 +285,7 @@ module.exports = function (grunt) {
   // Load tasks.
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-bump');
+  grunt.loadNpmTasks('grunt-codeclimate-reporter');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
@@ -309,6 +316,26 @@ module.exports = function (grunt) {
           }
         }
       });
+    });
+  grunt.registerTask('dynamic_codeclimate', 'Run codeclimate with correct lcov.',
+    function () {
+      var file = require("glob").sync("tools/coverage/PhantomJS**/lcov.info");
+      if (file.length !== 1) {
+        return grunt.log.error("lcov file not present or distinguishable for code climate");
+      }
+      require('fs').renameSync(file[0], "tools/coverage/lcov.info");
+      grunt.config.merge({
+        codeclimate: {
+          report: {
+            src: "tools/coverage/lcov.info",
+            options: {
+              file: "tools/coverage/lcov.info",
+              token: process.env.CODECLIMATETOKEN
+            }
+          }
+        }
+      });
+      grunt.task.run('codeclimate:report');
     });
   
   // Default tasks.
@@ -357,7 +384,8 @@ module.exports = function (grunt) {
         'karma:phantom',
         'gitinfo',
         'karma:saucelabs',
-        'coveralls:report'
+        'coveralls:report',
+        'dynamic_codeclimate'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [

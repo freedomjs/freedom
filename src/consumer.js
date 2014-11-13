@@ -92,6 +92,37 @@ Consumer.prototype.getInterface = function () {
 };
 
 /**
+ * Attach an 'onEvent' listener to an interface, allowing external consumers
+ * to either listen to channel state, or register callbacks on lifetime events
+ * of individual instances of the interface.
+ * @method getListener
+ * @parma {String} name The event to listen to.
+ * @private
+ */
+Consumer.prototype.getListener = function (name) {
+  return function (instance, handler) {
+    // Listen to the channel directly.
+    if (typeof instance === 'function' && handler === undefined) {
+      this.once(name, instance);
+      return;
+    }
+
+    // Listen to a specific instance.
+    var handlers = name + 'Handlers';
+    util.eachProp(this.ifaces, function (candidate, id) {
+      if (candidate === instance) {
+        if (this[handlers][id]) {
+          this[handlers][id].push(handler);
+        } else {
+          this[handlers][id] = [handler];
+        }
+        return true;
+      }
+    }.bind(this));
+  }.bind(this);
+};
+
+/**
  * Create a function that can be used to get interfaces from this api consumer
  * from a user-visible point.
  * @method getProxyInterface
@@ -124,42 +155,9 @@ Consumer.prototype.getProxyInterface = function () {
     }
   }.bind(this);
 
-  func.onClose = function (iface, handler) {
-    if (typeof iface === 'function' && handler === undefined) {
-      // Add an on-channel-closed handler.
-      this.once('close', iface);
-      return;
-    }
+  func.onClose = this.getListener('close');
+  func.onError = this.getListener('error');
 
-    util.eachProp(this.ifaces, function (candidate, id) {
-      if (candidate === iface) {
-        if (this.closeHandlers[id]) {
-          this.closeHandlers[id].push(handler);
-        } else {
-          this.closeHandlers[id] = [handler];
-        }
-        return true;
-      }
-    }.bind(this));
-  }.bind(this);
-
-  func.onError = function (iface, handler) {
-    if (typeof iface === 'function' && handler === undefined) {
-      this.on('error', iface);
-      return;
-    }
-    util.eachProp(this.ifaces, function (candidate, id) {
-      if (candidate === iface) {
-        if (this.errorHandlers[id]) {
-          this.errorHandlers[id].push(handler);
-        } else {
-          this.errorHandlers[id] = [handler];
-        }
-        return true;
-      }
-    }.bind(this));
-  }.bind(this);
-  
   return func;
 };
 

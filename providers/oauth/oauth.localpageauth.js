@@ -87,7 +87,7 @@ LocalPageAuth.prototype.storageListener = function(continuation, stateObj, msg) 
  * If we have a local domain, and freedom.js is loaded at startup, we can use
  * the local page as a redirect URI.
  */
-exports.register = function (OAuth) {
+module.exports = function (oAuth) {
   'use strict';
-  OAuth.register(LocalPageAuth);
+  oAuth(LocalPageAuth);
 };

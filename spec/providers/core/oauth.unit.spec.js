@@ -1,7 +1,8 @@
 var oAuth = require('../../providers/core/core.oauth');
+var setup = require('../../../src/entry');
 var PromiseCompat = require('es6-promise').Promise;
-var setup = require('../../src/entry');
 
+<<<<<<< HEAD:spec/src/oauth.spec.js
 function MockProvider() {
   return PromiseCompat.resolve('Return Value');
 }
@@ -16,6 +17,12 @@ MockProvider.prototype.initiateOAuth = function(redirectURIs, cont) {
 
 MockProvider.prototype.launchAuthFlow = function(authUrl, stateObj, cont) {
   cont("Response Url");
+=======
+var mockProvider = function (list) {
+  list(function(url, auth) {
+    return PromiseCompat.resolve('Return Value');
+  });
+>>>>>>> 0.6-views:spec/providers/core/oauth.unit.spec.js
 };
 
 describe('oAuth', function () {
@@ -28,6 +35,7 @@ describe('oAuth', function () {
     done();
   });
 
+<<<<<<< HEAD:spec/src/oauth.spec.js
   it("oauth: Delegates to registered handlers", function (done) {
     var de = jasmine.createSpy('de'),
       cb = jasmine.createSpy('cb');
@@ -44,6 +52,15 @@ describe('oAuth', function () {
 
     var callbackTwo = function(respUrl) {
       expect(stateObj).toEqual(jasmine.any(String));
+=======
+    oAuth.register([mockProvider]);
+    authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], cb);
+    expect(cb).toHaveBeenCalledWith(null, jasmine.objectContaining({errcode: 'UNKNOWN'}));
+
+    authProvider = new oAuth.provider({}, de);
+    authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], function (ret) {
+      expect(ret).toEqual('Return Value');
+>>>>>>> 0.6-views:spec/providers/core/oauth.unit.spec.js
       done();
     };
 
@@ -51,21 +68,30 @@ describe('oAuth', function () {
   });
 
   it("Supports user-provided oAuth handlers", function (done) {
+<<<<<<< HEAD:spec/src/oauth.spec.js
     var provider = jasmine.createSpy('oAuth CB').and.callFake(MockProvider);
+=======
+    var spy = jasmine.createSpy('oAuth CB');
+    var provider = function(list) {
+      list(function(url, auth) {
+        spy(url);
+        return PromiseCompat.resolve('Return Value');
+      });
+    };
+>>>>>>> 0.6-views:spec/providers/core/oauth.unit.spec.js
     var freedom = setup({
       providers: [oAuth]
     }, '', {
-      oauth: provider
+      oauth: [provider]
     });
     
     freedom.catch(function () {
       var de = jasmine.createSpy('de'),
         cb = jasmine.createSpy('cb');
       var authProvider = new oAuth.provider({}, de);
-      authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], cb).then(function () {
-        expect(provider).toHaveBeenCalled();
-        expect(cb.calls.count()).toEqual(1);
-        expect(cb).toHaveBeenCalledWith('Return Value');
+      authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], function (ret, err) {
+        expect(spy).toHaveBeenCalled();
+        expect(ret).toEqual('Return Value');
         done();
       });
     });
