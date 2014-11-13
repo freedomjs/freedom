@@ -101,6 +101,7 @@ OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
   }
 
   this.ongoing[stateObj.state].launchAuthFlow(authUrl, stateObj, continuation);
+  delete this.ongoing[stateObj.state];
 };
 
 exports.register = OAuth.register;
