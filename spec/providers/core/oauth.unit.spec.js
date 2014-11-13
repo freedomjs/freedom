@@ -16,6 +16,7 @@ MockProvider.prototype.initiateOAuth = function(redirectURIs, cont) {
 
 MockProvider.prototype.launchAuthFlow = function(authUrl, stateObj, cont) {
   cont("Response Url");
+  return true;
 };
 
 describe('oAuth', function () {

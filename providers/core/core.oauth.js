@@ -34,6 +34,7 @@ OAuth.register = function (handlers) {
         boundHandlers.push(new H());
       };
   if (!handlers || !handlers.length) {
+    console.error('core.oauth: missing bound handlers');
     return OAuth.reset();
   }
 

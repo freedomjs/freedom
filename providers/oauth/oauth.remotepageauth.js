@@ -77,7 +77,4 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuati
  * If we have a local domain, and freedom.js is loaded at startup, we can use
  * the local page as a redirect URI.
  */
-module.exports = function (oAuth) {
-  'use strict';
-  oAuth(RemotePageAuth);
-};
+module.exports = RemotePageAuth;
