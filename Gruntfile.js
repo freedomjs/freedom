@@ -172,8 +172,7 @@ module.exports = function (grunt) {
             FILES.specPlatformUnit,
             FILES.specProviderUnit,
             FILES.specProviderIntegration
-          ),
-          'spec/helper/frame.js': ['src/util/frameEntry.js']
+          )
         }
       },
       options: {
@@ -354,6 +353,7 @@ module.exports = function (grunt) {
     'prepare_watch',
     'build',
     'connect:freedom',
+    'browserify:frame',
     'browserify:jasmine_full',
     'karma:browsers'
   ]);
