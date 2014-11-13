@@ -34,7 +34,6 @@ RemotePageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
           state: oAuthRedirectId + Math.random()
         });
         return true;
-        //promises.push(monitorFrame(redirectURIs[i], instance));
       }
     }
   }
@@ -59,11 +58,8 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuati
 
   global.document.body.appendChild(frame);
   frame.addEventListener('load', function () {
+    this.listeners[stateObj.state] = continuation;
     window.open(authUrl);
-    this.listeners[stateObj.state] = function (url) {
-      continuation(url);
-      //this.dispatchEvent("oAuthEvent", url);
-    };//.bind(oAuth);
 
     frame.contentWindow.postMessage(stateObj.state, '*');
   }.bind(this));
@@ -71,6 +67,7 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuati
   window.addEventListener('message', function (frame, msg) {
     if (msg.data && msg.data.key && msg.data.url && this.listeners[msg.data.key]) {
       this.listeners[msg.data.key](msg.data.url);
+      delete this.listeners[msg.data.key];
       try {
         document.body.removeChild(frame);
       } catch (e) {
@@ -78,7 +75,6 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuati
       }
     }
   }.bind(this, frame), false);
-
 };
 
 /**

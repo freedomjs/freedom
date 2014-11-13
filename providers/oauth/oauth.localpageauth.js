@@ -45,8 +45,8 @@ LocalPageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
       });
       return true;
     }
-  } 
- 
+  }
+
   return false;
 };
 
@@ -84,7 +84,6 @@ LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuatio
 LocalPageAuth.prototype.storageListener = function(continuation, stateObj, msg) {
   'use strict';
   if (msg.url.indexOf(stateObj.state) > -1) {
-    //client.dispatchEvent("oAuthEvent", msg.url);
     window.removeEventListener("storage", this.listeners[stateObj.state], false);
     delete this.listeners[stateObj.state];
     continuation(msg.url);
