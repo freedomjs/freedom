@@ -24,6 +24,28 @@ var Core_View = function (provider, caller, dispatchEvent) {
   util.handleEvents(this);
 };
 
+/**
+ * The is the default provider for core.view, unless overridden by context or
+ * a user supplied provider. The interface is documented at:
+ * https://github.com/freedomjs/freedom/wiki/freedom.js-Views
+ *
+ * Generally, a view provider consists of 3 methods:
+ * onOpen is called when a view should be shown.
+ *     id - is a unique identifier for this view, used on subsequent calls
+ *          for communication and to eventually close the view.
+ *     name - is the name of the view (as defined in the manifest),
+ *            in order to place it appropriately.
+ *     page - is the resolved URL to open.
+ *     resources - is an array of resolved URLs which are referenced.
+ *     postMessage - is a function to call when messages are emitted
+ *                   by the window in which the view is opened.
+ * onOpen returns a promise that completes when the view is loaded.
+ * onMessage is called to send a message to an open view.
+ *     id - is the unique identifier for the open view.
+ *     message - is the message to postMessage to the view's window.
+ * onClose is called to close a view.
+ *     id - is the unique identifier for the view.
+ */
 Core_View.provider = {
   listener: undefined,
   active: {},
@@ -44,7 +66,9 @@ Core_View.provider = {
       }.bind(this);
       window.addEventListener('message', this.listener, true);
     }
-    
+
+    // Views open by default in an element with their ID, or fill the page
+    // otherwise.
     if (document.getElementById(name)) {
       container = document.getElementById(name);
     }
