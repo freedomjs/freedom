@@ -9,12 +9,12 @@
   <script type="text/javascript" src="heightCustomViewProvider.js"></script>
 
   <script type="text/javascript">
-    var customView, instance;
+    var customView, activeModule;
     
     function loadConnections () {
-      if (instance) {
-        instance.close();
-        delete instance;
+      if (activeModule) {
+        activeModule.close();
+        delete activeFreedom;
       }
 
       var freedomPromise;
@@ -23,9 +23,9 @@
       } else {
         freedomPromise = freedom('manifest.json');
       }
-      freedomPromise.then(function (session) {
-        instance = session;
-        session();
+      freedomPromise.then(function (constructor) {
+        activeModule = constructor;
+        new constructor();
       });
     }
 
