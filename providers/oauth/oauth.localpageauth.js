@@ -11,6 +11,7 @@ var loadedOnStartup = false;
 if (typeof window !== 'undefined' && window && window.location &&
     window.addEventListener) {
   window.addEventListener('load', function () {
+    "use strict";
     loadedOnStartup = true;
   }, true);
 
