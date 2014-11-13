@@ -359,9 +359,10 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('debug', [
     'prepare_watch',
-    'build',
-    'connect:freedom',
+    'jshint',
+    'browserify:frame',
     'browserify:jasmine_full',
+    'connect:freedom',
     'karma:browsers'
   ]);
   grunt.registerTask('demo', [

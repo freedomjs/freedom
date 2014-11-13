@@ -1,8 +1,7 @@
-var oAuth = require('../../providers/core/core.oauth');
+var oAuth = require('../../../providers/core/core.oauth');
 var setup = require('../../../src/entry');
 var PromiseCompat = require('es6-promise').Promise;
 
-<<<<<<< HEAD:spec/src/oauth.spec.js
 function MockProvider() {
   return PromiseCompat.resolve('Return Value');
 }
@@ -17,12 +16,6 @@ MockProvider.prototype.initiateOAuth = function(redirectURIs, cont) {
 
 MockProvider.prototype.launchAuthFlow = function(authUrl, stateObj, cont) {
   cont("Response Url");
-=======
-var mockProvider = function (list) {
-  list(function(url, auth) {
-    return PromiseCompat.resolve('Return Value');
-  });
->>>>>>> 0.6-views:spec/providers/core/oauth.unit.spec.js
 };
 
 describe('oAuth', function () {
@@ -35,12 +28,11 @@ describe('oAuth', function () {
     done();
   });
 
-<<<<<<< HEAD:spec/src/oauth.spec.js
   it("oauth: Delegates to registered handlers", function (done) {
     var de = jasmine.createSpy('de'),
       cb = jasmine.createSpy('cb');
     var authProvider = new oAuth.provider({}, de);
-    oAuth.register(MockProvider);
+    oAuth.register([MockProvider]);
 
     var callbackOne = function(stateObj) {
       expect(stateObj).toEqual(jasmine.objectContaining({
@@ -52,21 +44,13 @@ describe('oAuth', function () {
 
     var callbackTwo = function(respUrl) {
       expect(stateObj).toEqual(jasmine.any(String));
-=======
-    oAuth.register([mockProvider]);
-    authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], cb);
-    expect(cb).toHaveBeenCalledWith(null, jasmine.objectContaining({errcode: 'UNKNOWN'}));
-
-    authProvider = new oAuth.provider({}, de);
-    authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], function (ret) {
-      expect(ret).toEqual('Return Value');
->>>>>>> 0.6-views:spec/providers/core/oauth.unit.spec.js
       done();
     };
 
     authProvider.initiateOAuth(['http://localhost/oAuthRedirect'], callbackOne);
   });
 
+/**
   it("Supports user-provided oAuth handlers", function (done) {
 <<<<<<< HEAD:spec/src/oauth.spec.js
     var provider = jasmine.createSpy('oAuth CB').and.callFake(MockProvider);
@@ -96,6 +80,7 @@ describe('oAuth', function () {
       });
     });
   });
+**/
   
   afterEach(function () {
     oAuth.reset();
