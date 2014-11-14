@@ -25,7 +25,7 @@
     "close": {"type": "method", "value": []},
     "onmessage": {"type": "event", "value": {
       "text": "string",
-      "binary": "buffer"
+      "buffer": "buffer"
     }},
     "getBinaryType": {"type": "method", "value": [], "ret": "string"},
     "setBinaryType": {"type": "method", "value": ["string"]},
