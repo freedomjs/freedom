@@ -3,16 +3,24 @@ var PromiseCompat = require('es6-promise').Promise;
 
 var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
+var loadedOnStartup = false;
 /**
  * If there is redirection back to the page, and oAuthRedirectID is set,
  * then report the auth and close the window.
  */
 if (typeof window !== 'undefined' && window && window.location &&
-    window.localStorage &&
-    window.location.href.indexOf(oAuthRedirectId) > 0) {
-  // This will trigger a 'storage' event on the window. See storageListener
-  window.localStorage.setItem(oAuthRedirectId, new Date());
-  window.close();
+    window.addEventListener) {
+  window.addEventListener('load', function () {
+    "use strict";
+    loadedOnStartup = true;
+  }, true);
+
+  if (window.localStorage &&
+      window.location.href.indexOf(oAuthRedirectId) > 0) {
+    // This will trigger a 'storage' event on the window. See storageListener
+    window.localStorage.setItem(oAuthRedirectId, new Date());
+    window.close();
+  }
 }
 
 var LocalPageAuth = function() {
@@ -35,7 +43,7 @@ var LocalPageAuth = function() {
  */
 LocalPageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
   "use strict";
-  if (typeof window !== 'undefined' && window && window.addEventListener) {
+  if (typeof window !== 'undefined' && window && loadedOnStartup) {
     var here = window.location.protocol + "//" + window.location.host +
         window.location.pathname;
     if (redirectURIs.indexOf(here) > -1) {
@@ -62,15 +70,11 @@ LocalPageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
  */
 LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
   "use strict";
-  //window.addEventListener('load', function () {
-    // Add the storage listener
-    var listener = this.storageListener.bind(this, continuation, stateObj);
-    this.listeners[stateObj.state] = listener;
-    window.addEventListener("storage", listener, false);
-    // Start 'er up
-    window.open(authUrl);
-  //}.bind(this), true);
-
+  var listener = this.storageListener.bind(this, continuation, stateObj);
+  this.listeners[stateObj.state] = listener;
+  window.addEventListener("storage", listener, false);
+  // Start 'er up
+  window.open(authUrl);
 };
 
 /**
