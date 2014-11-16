@@ -34,11 +34,15 @@ describe("integration: core.rtcpeerconnection",
     require("../../providers/core/core.rtcdatachannel"), setup));
 
 // core.oauth
-describe("integration: core.oauth",
+describe("integration: core.oauth - localpageauth",
     require("./coreIntegration/oauth.integration.src").bind(this,
     require("../../providers/core/core.oauth"), 
-    [
-      require("../../providers/oauth/oauth.localpageauth"),
-      require("../../providers/oauth/oauth.remotepageauth"),
-    ],
+    [ require("../../providers/oauth/oauth.localpageauth") ],
+    [ "http://localhost:9876/", "http://localhost:9876/debug.html", "http://localhost:9876/context.html" ],
+    setup));
+describe("integration: core.oauth - remotepageauth",
+    require("./coreIntegration/oauth.integration.src").bind(this,
+    require("../../providers/core/core.oauth"),
+    [ require("../../providers/oauth/oauth.remotepageauth") ],
+    [ "https://willscott.github.io/freedom-oauth-relay/oauth-relay.html" ],
     setup));

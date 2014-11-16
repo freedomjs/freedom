@@ -1,11 +1,8 @@
 var testUtil = require('../../util');
 
-module.exports = function (oa, pageauths, setup) {
+module.exports = function (oa, pageauths, redirectURIs, setup) {
   'use strict';
   var oauth;
-  var registeredRedirectURIs = [
-    "https://willscott.github.io/freedom-oauth-relay/oauth-relay.html"
-  ];
   var clientId = "513137528418-i52cg29ug3qjiqta1ttcvrguhrjjq2so.apps.googleusercontent.com";
 
   beforeEach(function () {
@@ -21,7 +18,7 @@ module.exports = function (oa, pageauths, setup) {
   it("Generates a token", function (done) {
     var o = oauth();
     
-    o.initiateOAuth(registeredRedirectURIs).then(function(obj) {
+    o.initiateOAuth(redirectURIs).then(function(obj) {
       // Cheating a little bit to avoid going through Google. 
       // Just call the redirect URL directly e.g.
       // https://willscott.github.io/freedom-oauth-relay/oauth-relay.html#state=freedom.oauth.redirect.handler0.05948500754311681&access_token=ya29.rADhKXAGx0fJfB0Vx5ibQUSmMvcK9GYVZBLId42Tvn9-aQEBD5HEsbKh-5Kj_D-j09wD5axgoIkadA&token_type=Bearer&expires_in=3600
