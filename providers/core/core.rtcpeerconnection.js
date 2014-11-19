@@ -157,7 +157,6 @@ RTCPeerConnectionAdapter.prototype.ondatachannel = function (event) {
 };
 
 RTCPeerConnectionAdapter.prototype.onnegotiationneeded = function (event) {
-  console.warn('on negotiation eeded');
   this.dispatchEvent('onnegotiationneeded', event.message);
 };
 
