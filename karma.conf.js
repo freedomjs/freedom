@@ -20,7 +20,7 @@ module.exports = function (config) {
       require.resolve('es5-shim'),
       require.resolve('es6-promise'),
       'spec.js',
-      {pattern: 'spec/helper/frame.js', included: false}
+      {pattern: 'tools/freedom.frame.js', included: false}
     ],
     
     // web server port
