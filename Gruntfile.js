@@ -180,10 +180,11 @@ module.exports = function (grunt) {
     },
     concat: {
       options: {
-        sourceMap: true
+        sourceMap: true,
+        banner: require('fs').readFileSync('src/util/header.txt').toString()
       },
       dist: {
-        src: ['src/util/header.txt', 'tools/freedom.worker.js'],
+        src: 'tools/freedom.worker.js',
         dest: 'freedom.js'
       }
     },
