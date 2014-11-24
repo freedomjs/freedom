@@ -179,7 +179,7 @@ exports.setCoreProviders = function(providers) {
   coreProviders = providers;
 };
 var testPort = Frame;
-var testSource = "spec/helper/frame.js";
+var testSource = "tools/freedom.frame.js";
 var testDebug = 'debug';
 exports.setModuleStrategy = function(port, source, debug) {
   testPort = port;

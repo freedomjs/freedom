@@ -1,6 +1,6 @@
 ### Built files
 /spec.js
-/spec/helper/frame.js
+/tools/freedom.*.js
 
 ### Auto-generated
 tools/freedomjs
