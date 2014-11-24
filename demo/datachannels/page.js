@@ -41,9 +41,9 @@ var negotiateState = function (text, button, channel) {
 window.onload = function () {
   freedom("manifest.json", {
     "debug": "info"
-  }).then(function (constructor) {
-    var alice = constructor('Alice'),
-      bob = constructor('Bob'),
+  }).then(function (DataChannel) {
+    var alice = new DataChannel('Alice'),
+      bob = new DataChannel('Bob'),
       append;
 
     append = function (msg) {

@@ -14,7 +14,7 @@
     function loadConnections () {
       if (activeModule) {
         activeModule.close();
-        delete activeFreedom;
+        delete activeModule;
       }
 
       var freedomPromise;
@@ -23,9 +23,9 @@
       } else {
         freedomPromise = freedom('manifest.json');
       }
-      freedomPromise.then(function (constructor) {
-        activeModule = constructor;
-        new constructor();
+      freedomPromise.then(function (Connections) {
+        activeModule = Connections;
+        var connections = new Connections();
       });
     }
 

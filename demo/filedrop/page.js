@@ -258,7 +258,7 @@ window.onload = function () {
   };
 
   // Start freedom.
-  freedom('manifest.json').then(function (instance) {
-    initialize(instance());
+  freedom('manifest.json').then(function (FileDrop) {
+    initialize(new FileDrop());
   });
 };

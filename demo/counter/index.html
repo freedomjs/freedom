@@ -11,20 +11,22 @@
   <script type="text/javascript">
   // After loading freedom.js, the window is populated with a 'freedom'
   // object, which is used as a message passing channel to the root module
+  var start = function(Counter) {
+    var counter = new Counter(0);
+
+    //Send click events to the module.
+    document.getElementById('click').onclick = function() {
+      counter.click(1).then(function (sum) {
+        document.getElementById('count').innerHTML = sum;
+      });
+    }
+  };
+
   window.onload = function() {
     freedom("manifest.json", {
       "debug": "log"
-    }).then(function(interface) {
-      var clicker = new interface(0);
-
-      //Send click events to the module.
-      document.getElementById('click').onclick = function() {
-        clicker.click(1).then(function (sum) {
-          document.getElementById('count').innerHTML = sum;
-        });
-      }
-    });
-  }
+    }).then(start);
+  };
   </script>
 </head>
 <body>

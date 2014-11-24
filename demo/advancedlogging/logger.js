@@ -1,6 +1,5 @@
 /*globals freedom*/
-var log = [],
-  backchannel = freedom.loggingbackchannel();
+var log = [];
 
 var record = function (level, source, message) {
   'use strict';
@@ -61,4 +60,4 @@ var BackLogger = function (dispatchEvent) {
 };
 
 freedom().provideSynchronous(Logger);
-backchannel.provideSynchronous(BackLogger);
+freedom.loggingbackchannel().provideSynchronous(BackLogger);

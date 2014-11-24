@@ -3,7 +3,6 @@ var channels = [];
 var core = freedom.core();
 
 var instance = freedom();
-var alt = freedom.alternative();
 
 var handler = function (cid, chan, msg) {
   'use strict';
@@ -24,6 +23,7 @@ instance.on('message', function (msg) {
   }
 });
 
+// Also provide an interface with an explicit API.
 var AltIface = function () {
   'use strict';
 };
@@ -33,4 +33,4 @@ AltIface.prototype.testMethod = function (query) {
   return 'answer ' + query;
 };
 
-alt.provideSynchronous(AltIface);
+freedom.alternative().provideSynchronous(AltIface);
