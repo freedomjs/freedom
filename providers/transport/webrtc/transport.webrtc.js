@@ -3,7 +3,9 @@
 
 // For use in unit testing
 if (typeof Promise === 'undefined' && typeof require === 'function') {
+  /*jslint -W079 */
   var Promise = require('es6-promise').Promise;
+  /*jslint +W079 */
 }
 
 
