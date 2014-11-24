@@ -1,8 +1,15 @@
-Counter
+Data Channels
 ======
 
-Counter is a simple hello world example, which creates a single root FreeDOM module
-that implements a counter.
-This demo shows you how to interact with FreeDOM modules using a message-passing interface.
-User actions are forwarded from the page to the counter module.
-The aggregate count is sent from the counter module back to the outer page.
+This is a simple example of how to build a peer-to-peer application using a
+freedom.js module structure. This example is allows you to copy-and-paste
+between two active WebRTC clients, and start up a local connection between
+the two. The same process should work to establish a direct connection between
+two remote computers.
+
+The WebRTC connection process is somewhat involved, as this demonstration
+shows, and we recommend the use of the built-in freedom.js transport interface
+to achieve the same functionality with the connection setup work already done
+for you. However, if you need explicit control over the webRTC communication,
+in order to do key management, extract the video channel of the same
+connection, or otherwise - you will need to handle the complexity yourself.

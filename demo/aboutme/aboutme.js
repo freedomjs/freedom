@@ -9,9 +9,9 @@ var registeredRedirectURIs = [
 ];
 
 var oauth = freedom['core.oauth']();
-var instance = freedom();
+var page = freedom();
 
-instance.on('start', function() {
+page.on('start', function() {
   oauth.initiateOAuth(registeredRedirectURIs).then(function (obj) {
     var url = "https://accounts.google.com/o/oauth2/auth?" +
         "client_id=513137528418-i52cg29ug3qjiqta1ttcvrguhrjjq2so.apps.googleusercontent.com&" +
@@ -44,7 +44,7 @@ instance.on('start', function() {
                   "access_token=" + params.access_token);
     return;
   }).catch(function (msg) {
-    instance.emit('profile', {
+    page.emit('profile', {
       name: 'oAuth Error',
       details: msg
     });
@@ -57,6 +57,6 @@ var onProfile = function(resp) {
   if (resp.name) {
     resp.details = "Speaks: " + resp.locale + ", Gender: " + resp.gender;
   }
-  instance.emit('profile', resp);
+  page.emit('profile', resp);
 };
 

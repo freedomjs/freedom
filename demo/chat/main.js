@@ -9,8 +9,12 @@
  *
  **/
 
+// Create a logger for this module.
+// TODO: allow loggers to be made synchronously.
 var logger;
-freedom.core().getLogger('[Chat Backend]').then(function (log) { logger = log; });
+freedom.core().getLogger('[Chat Backend]').then(function (log) {
+  logger = log;
+});
 
 var Chat = function (dispatchEvent) {
   this.dispatchEvent = dispatchEvent;

@@ -6,12 +6,8 @@
   <script type="text/javascript" src="../../freedom.js"></script>
 
   <script type="text/javascript">
-    freedom('manifest.json', {"debug": "debug"}).then(function(instance) {
-      window.activeConnection = instance();
-      start(window.activeConnection);
-    });
-    
-    function start(channel) {
+    function start(CustomChannel) {
+      var channel = new CustomChannel();
 	  channel.on('message', function(msg) {
         document.getElementById('log').innerHTML += msg + '\r\n';
 	  });
@@ -46,6 +42,9 @@
 		channel.emit('peer');
       }, true);
     }
+
+    freedom('manifest.json', {"debug": "debug"}).then(start);
+
   </script>
 </head>
 <body>
