@@ -1,13 +1,6 @@
 /*jslint node:true */
 var FILES = require('./Gruntfile').FILES;
 
-var locate_promises = function () {
-  'use strict';
-  var includer = require.resolve('es6-promise'),
-    base = includer.substr(0, includer.lastIndexOf('es6-promise'));
-  return base + 'es6-promise/dist/promise-1.0.0.js';
-};
-
 module.exports = function (config) {
   'use strict';
   config.set({
@@ -25,9 +18,9 @@ module.exports = function (config) {
     // Testing Providers for now
     files: [
       require.resolve('es5-shim'),
-      locate_promises(),
+      require.resolve('es6-promise'),
       'spec.js',
-      {pattern: 'spec/helper/frame.js', included: false}
+      {pattern: 'tools/freedom.frame.js', included: false}
     ],
     
     // web server port

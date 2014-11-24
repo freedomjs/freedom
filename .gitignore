@@ -3,8 +3,8 @@
 /freedom.js.map
 /freedom.min.js
 /freedom.min.js.map
+/tools/freedom.*.js
 /spec.js
-/spec/helper/frame.js
 
 ### Auto-generated
 tools/freedomjs

@@ -132,16 +132,12 @@ module.exports = function (grunt) {
     browserify: {
       freedom: {
         files: {
-          'freedom.js': ['src/util/workerEntry.js']
-        },
-        options: {
-          banner: require('fs').readFileSync('src/util/header.txt') +
-              '/** Version: <%= pkg.version %> **/\n'
+          'tools/freedom.worker.js': ['src/util/workerEntry.js']
         }
       },
       frame: {
         files: {
-          'spec/helper/frame.js': ['src/util/frameEntry.js']
+          'tools/freedom.frame.js': ['src/util/frameEntry.js']
         }
       },
       jasmine_unit: {
@@ -182,14 +178,24 @@ module.exports = function (grunt) {
         }
       }
     },
-    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'spec/helper/frame.js'],
-    "extract_sourcemap": {
-      freedom: {
-        files: {
-          "./": ["freedom.js"]
-        }
+    concat: {
+      options: {
+        sourceMap: true,
+        banner: require('fs').readFileSync('src/util/header.txt').toString()
+      },
+      dist: {
+        src: 'tools/freedom.worker.js',
+        dest: 'freedom.js'
       }
     },
+    clean: [
+      'freedom.js',
+      'freedom.js.map',
+      'freedom.min.js',
+      'freedom.min.js.map',
+      'spec.js',
+      'tools/freedom.worker.js',
+      'tools/freedom.frame.js'],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -286,8 +292,8 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-coveralls');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-extract-sourcemap');
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
@@ -338,7 +344,7 @@ module.exports = function (grunt) {
   grunt.registerTask('build', [
     'jshint',
     'browserify:freedom',
-    'extract_sourcemap'
+    'concat'
   ]);
   grunt.registerTask('unit', [
     'browserify:frame',

@@ -16,5 +16,6 @@
  * limitations under the License.
  * @license apache2.0
  * @see https://freedomjs.org
+ * @version <%= pkg.version %>
  */
  

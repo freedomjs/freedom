@@ -179,7 +179,7 @@ exports.setCoreProviders = function(providers) {
   coreProviders = providers;
 };
 var testPort = Frame;
-var testSource = "spec/helper/frame.js";
+var testSource = "tools/freedom.frame.js";
 var testDebug = 'debug';
 exports.setModuleStrategy = function(port, source, debug) {
   testPort = port;
@@ -203,6 +203,7 @@ exports.setupModule = function(manifest_url, options) {
         dir_idx = path.lastIndexOf('/');
     dir = path.substr(0, dir_idx) + '/';
   }
+  //TODO: hardcoding of deps. is bad.
   var freedom = require('../src/entry')({
       'global': myGlobal,
       'isModule': false,
@@ -212,7 +213,7 @@ exports.setupModule = function(manifest_url, options) {
       'source': dir + testSource,
       'inject': [
         dir + "node_modules/es5-shim/es5-shim.js",
-        dir + "node_modules/es6-promise/dist/promise-1.0.0.js"
+        dir + "node_modules/es6-promise/dist/es6-promise.js"
       ]
     }, manifest_url, options);
   freedom.then(function(c) {
