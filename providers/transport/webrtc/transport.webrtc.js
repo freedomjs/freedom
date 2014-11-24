@@ -1,5 +1,12 @@
-/*jslint sloppy:true*/
+/*jslint sloppy:true, node:true*/
 /*globals freedom,console,FileReaderSync,exports*/
+
+// For use in unit testing
+if (typeof Promise === 'undefined' && typeof require === 'function') {
+  var Promise = require('es6-promise').Promise;
+}
+
+
 /*
  * Peer 2 Peer transport provider.
  *
