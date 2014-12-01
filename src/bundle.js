@@ -20,6 +20,19 @@ var Bundle = function () {
   }.bind(this));
 };
 
+/**
+ * Create a static instantiation of the bundle precompiled with found
+ * interfaces. This returns a string of a valid implementation of this
+ * file that can be used as a replacement for 
+ */
+exports.toStatic = function () {
+  'use strict';
+  var bundle = new Bundle();
+  return "var Bundle = function() { this.interfaces =" +
+    JSON.stringify(bundle.interfaces) + ";\n" +
+    "};\n" +
+    "exports.register = " + exports.register.toString() + ";";
+};
 
 /**
  * Populate an API registry with provided providers, and with known API

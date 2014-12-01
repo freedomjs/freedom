@@ -4,6 +4,7 @@
 /freedom.min.js
 /freedom.min.js.map
 /tools/freedom.*.js
+/tools/bundle.*.js
 /spec.js
 
 ### Auto-generated
