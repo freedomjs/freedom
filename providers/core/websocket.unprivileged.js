@@ -170,7 +170,7 @@ WS.prototype.onClose = function (event) {
 
 exports.provider = WS;
 exports.name = 'core.websocket';
-exports.setSocket = function(impl, isNode) {
+exports.setSocket = function (impl, isNode) {
   WSHandle = impl;
   nodeStyle = isNode;
 };

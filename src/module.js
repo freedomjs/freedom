@@ -331,8 +331,14 @@ Module.prototype.emitMessage = function (name, message) {
 Module.prototype.loadLinks = function () {
   var i, channels = ['default'], name, dep,
     finishLink = function (dep, name, provider) {
-      var style = this.api.getInterfaceStyle(name);
-      dep.getInterface()[style](provider);
+      var style = this.api.getInterfaceStyle(name),
+        iface;
+      if (style === 'unprivilegedPromise') {
+        iface = dep.getInterface();
+        iface.providePromises(provider.bind({}, iface));
+      } else {
+        dep.getInterface()[style](provider);
+      }
     };
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {

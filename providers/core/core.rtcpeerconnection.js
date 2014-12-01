@@ -7,9 +7,14 @@ var RTCIceCandidate = adapter.RTCIceCandidate;
 
 var DataChannel = require('./core.rtcdatachannel');
 
-var RTCPeerConnectionAdapter = function (app, dispatchEvent, configuration) {
+var RTCPeerConnectionAdapter = function (provider, dispatchEvent, configuration) {
   this.dispatchEvent = dispatchEvent;
-  this.connection = new RTCPeerConnection(configuration);
+  try {
+    this.connection = new RTCPeerConnection(configuration);
+  } catch (e) {
+    provider.close(this);
+    return;
+  }
 
   this.events = [
     'ondatachannel',
@@ -195,7 +200,8 @@ RTCPeerConnectionAdapter.prototype.onremovestream = function (event) {
 RTCPeerConnectionAdapter.prototype.oniceconnectionstatechange = function (event) {
   this.dispatchEvent('oniceconnectionstatechange', event.message);
 };
-  
+
 
 exports.name = "core.rtcpeerconnection";
 exports.provider = RTCPeerConnectionAdapter;
+exports.style = "unprivilegedPromise";

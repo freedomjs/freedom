@@ -60,8 +60,12 @@ Api.prototype.register = function(name, constructor, style) {
 
   if (this.waiters[name]) {
     for (i = 0; i < this.waiters[name].length; i += 1) {
-      this.waiters[name][i].resolve(constructor.bind({},
-          this.waiters[name][i].from));
+      if (style === 'unprivilegedPromise') {
+        this.waiters[name][i].resolve(constructor);
+      } else {
+        this.waiters[name][i].resolve(constructor.bind({},
+            this.waiters[name][i].from));
+      }
     }
     delete this.waiters[name];
   }
@@ -79,7 +83,11 @@ Api.prototype.getCore = function(name, from) {
   return new PromiseCompat(function(resolve, reject) {
     if (this.apis[name]) {
       if (this.providers[name]) {
-        resolve(this.providers[name].constructor.bind({}, from));
+        if (this.providers[name].style === 'unprivilegedPromise') {
+          resolve(this.providers[name].constructor);
+        } else {
+          resolve(this.providers[name].constructor.bind({}, from));
+        }
       } else {
         if (!this.waiters[name]) {
           this.waiters[name] = [];
