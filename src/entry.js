@@ -66,13 +66,18 @@ var setup = function (context, manifest, config) {
   // For example the 'core.oauth' provider defines a register function,
   // which enables site_cfg.oauth to be registered with it.
   context.providers.forEach(function (provider) {
+    var name;
     if (provider.name.indexOf('core.') === 0 &&
         typeof provider.register === 'function') {
-      provider.register(
-        (typeof site_cfg[provider.name.substr(5)] !== 'undefined') ?
-            site_cfg[provider.name.substr(5)] :
-            undefined
-      );
+      name = provider.name.substr(5);
+      // Invert priority and prefer user config over local context for these.
+      if (config[name]) {
+        provider.register(config[name]);
+      } else if (site_cfg[name]) {
+        provider.register(site_cfg[name]);
+      } else {
+        provider.register(undefined);
+      }
     }
   });
   
