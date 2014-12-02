@@ -75,7 +75,7 @@ Api.prototype.register = function(name, constructor, style) {
  * Get a core API connected to a given FreeDOM module.
  * @method getCore
  * @param {String} name the API to retrieve.
- * @param {port.App} from The instantiating App.
+ * @param {Module} from The instantiating App.
  * @returns {Promise} A promise of a fdom.App look-alike matching
  * a local API definition.
  */
@@ -106,21 +106,22 @@ Api.prototype.getCore = function(name, from) {
 };
 
 /**
- * Get the style in which a core API is written.
- * This method is guaranteed to know the style of a provider returned from
- * a previous getCore call, and so does not use promises.
- * @method getInterfaceStyle
- * @param {String} name The name of the provider.
- * @returns {String} The coding style, as used by
- *   fdom.port.Provider.prototype.getInterface.
+ * Configure a {Provider} to provide a named core api on behalf of a
+ * given port.
+ * @param {String} name The name of the provider
+ * @param {Provider} provider The provider that will provide the named api
+ * @param {Module} from The module requesting the core provider.
  */
-Api.prototype.getInterfaceStyle = function(name) {
-  if (this.providers[name]) {
-    return this.providers[name].style;
-  } else {
-    this.debug.warn('Api.getInterfaceStyle for unknown provider: ' + name);
-    return undefined;
-  }
+Api.prototype.provideCore = function (name, provider, from) {
+  return this.getCore(name, from).then(function (inst) {
+    var style = this.providers[name].style,
+      iface = provider.getProxyInterface();
+    if (style === 'unprivilegedPromise') {
+      iface().providePromises(inst.bind({}, iface));
+    } else {
+      iface()[style](inst);
+    }
+  }.bind(this));
 };
 
 /**

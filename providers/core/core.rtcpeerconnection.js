@@ -1,6 +1,7 @@
 /*jslint indent:2,sloppy:true, node:true */
 
 var adapter = require('webrtc-adapter');
+var PromiseCompat = require('es6-promise').Promise;
 var RTCPeerConnection = adapter.RTCPeerConnection;
 var RTCSessionDescription = adapter.RTCSessionDescription;
 var RTCIceCandidate = adapter.RTCIceCandidate;
@@ -12,7 +13,10 @@ var RTCPeerConnectionAdapter = function (provider, dispatchEvent, configuration)
   try {
     this.connection = new RTCPeerConnection(configuration);
   } catch (e) {
-    provider.close(this);
+    // Note: You can't ask the provider to close you synchronously, since
+    // the constructor has not yet returned, so there's no 'this' that
+    // the provider can know about yet.
+    setTimeout(provider.close.bind(provider, this), 0);
     return;
   }
 
@@ -40,120 +44,132 @@ RTCPeerConnectionAdapter.prototype.manageEvents = function (attach) {
   }.bind(this));
 };
 
-RTCPeerConnectionAdapter.prototype.createOffer = function (constraints, callback) {
-  this.connection.createOffer(callback, callback.bind({}, undefined), constraints);
+RTCPeerConnectionAdapter.prototype.createOffer = function (constraints) {
+  return new PromiseCompat(function (resolve, reject) {
+    this.connection.createOffer(resolve, reject, constraints);
+  }.bind(this));
 };
 
-RTCPeerConnectionAdapter.prototype.createAnswer = function (callback) {
-  this.connection.createAnswer(callback, callback.bind({}, undefined));
+RTCPeerConnectionAdapter.prototype.createAnswer = function () {
+  return new PromiseCompat(function (resolve, reject) {
+    this.connection.createAnswer(resolve, reject);
+  }.bind(this));
 };
 
-RTCPeerConnectionAdapter.prototype.setLocalDescription = function (description, callback) {
-  this.connection.setLocalDescription(new RTCSessionDescription(description),
-    callback,
-    callback.bind({}, undefined));
+RTCPeerConnectionAdapter.prototype.setLocalDescription = function (description) {
+  return new PromiseCompat(function (resolve, reject) {
+    this.connection.setLocalDescription(new RTCSessionDescription(description),
+      resolve,
+      reject);
+  }.bind(this));
 };
 
-RTCPeerConnectionAdapter.prototype.getLocalDescription = function (callback) {
-  callback(this.connection.localDescription);
+RTCPeerConnectionAdapter.prototype.getLocalDescription = function () {
+  return PromiseCompat.resolve(this.connection.localDescription);
 };
 
-RTCPeerConnectionAdapter.prototype.setRemoteDescription = function (description, callback) {
-  this.connection.setRemoteDescription(new RTCSessionDescription(description),
-    callback,
-    callback.bind({}, undefined));
+RTCPeerConnectionAdapter.prototype.setRemoteDescription = function (description) {
+  return new PromiseCompat(function (resolve, reject) {
+    this.connection.setRemoteDescription(new RTCSessionDescription(description),
+      resolve,
+      reject);
+  }.bind(this));
 };
 
-RTCPeerConnectionAdapter.prototype.getRemoteDescription = function (callback) {
-  callback(this.connection.remoteDescription);
+RTCPeerConnectionAdapter.prototype.getRemoteDescription = function () {
+  return PromiseCompat.resolve(this.connection.remoteDescription);
 };
 
-RTCPeerConnectionAdapter.prototype.getSignalingState = function (callback) {
-  callback(this.connection.signalingState);
+RTCPeerConnectionAdapter.prototype.getSignalingState = function () {
+  return PromiseCompat.resolve(this.connection.signalingState);
 };
 
-RTCPeerConnectionAdapter.prototype.updateIce = function (configuration, callback) {
+RTCPeerConnectionAdapter.prototype.updateIce = function (configuration) {
   this.connection.updateIce(configuration);
-  callback();
+  return PromiseCompat.resolve();
 };
 
-RTCPeerConnectionAdapter.prototype.addIceCandidate = function (candidate, callback) {
-  this.connection.addIceCandidate(new RTCIceCandidate(candidate),
-    callback,
-    callback.bind({}, undefined));
+RTCPeerConnectionAdapter.prototype.addIceCandidate = function (candidate) {
+  return new PromiseCompat(function (resolve, reject) {
+    this.connection.addIceCandidate(new RTCIceCandidate(candidate),
+      resolve,
+      reject);
+  }.bind(this));
 };
 
-RTCPeerConnectionAdapter.prototype.getIceGatheringState = function (callback) {
-  callback(this.connection.iceGatheringState);
+RTCPeerConnectionAdapter.prototype.getIceGatheringState = function () {
+  return PromiseCompat.resolve(this.connection.iceGatheringState);
 };
 
-RTCPeerConnectionAdapter.prototype.getIceConnectionState = function (callback) {
-  callback(this.connection.iceConnectionState);
+RTCPeerConnectionAdapter.prototype.getIceConnectionState = function () {
+  return PromiseCompat.resolve(this.connection.iceConnectionState);
 };
 
-RTCPeerConnectionAdapter.prototype.getConfiguration = function (callback) {
+RTCPeerConnectionAdapter.prototype.getConfiguration = function () {
   var configuration = this.connection.getConfiguration();
-  callback(configuration);
+  return PromiseCompat.resolve(configuration);
 };
 
-RTCPeerConnectionAdapter.prototype.getLocalStreams = function (callback) {
-  callback(undefined, {
+RTCPeerConnectionAdapter.prototype.getLocalStreams = function () {
+  return PromiseCompat.reject({
     errcode: -1,
     message: "Not Implemented"
   });
 };
 
-RTCPeerConnectionAdapter.prototype.getRemoteStreams = function (callback) {
-  callback(undefined, {
+RTCPeerConnectionAdapter.prototype.getRemoteStreams = function () {
+  return PromiseCompat.reject({
     errcode: -1,
     message: "Not Implemented"
   });
 };
 
-RTCPeerConnectionAdapter.prototype.getStreamById = function (id, callback) {
-  callback(undefined, {
+RTCPeerConnectionAdapter.prototype.getStreamById = function (id) {
+  return PromiseCompat.reject({
     errcode: -1,
     message: "Not Implemented"
   });
 };
 
-RTCPeerConnectionAdapter.prototype.addStream = function (id, callback) {
-  callback(undefined, {
+RTCPeerConnectionAdapter.prototype.addStream = function (id) {
+  return PromiseCompat.reject({
     errcode: -1,
     message: "Not Implemented"
   });
 };
 
-RTCPeerConnectionAdapter.prototype.removeStream = function (id, callback) {
-  callback(undefined, {
+RTCPeerConnectionAdapter.prototype.removeStream = function (id) {
+  return PromiseCompat.reject({
     errcode: -1,
     message: "Not Implemented"
   });
 };
 
-RTCPeerConnectionAdapter.prototype.close = function (callback) {
+RTCPeerConnectionAdapter.prototype.close = function () {
   if (!this.connection) {
-    return callback();
+    return PromiseCompat.resolve();
   }
   this.manageEvents(false);
   try {
     this.connection.close();
-    callback();
+    return PromiseCompat.resolve();
   } catch (e) {
-    callback(undefined, {
+    return PromiseCompat.reject({
       errcode: e.name,
       message: e.message
     });
   }
 };
 
-RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChannelDict, callback) {
+RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChannelDict) {
   var id = DataChannel.allocate(this.connection.createDataChannel(label, dataChannelDict));
-  callback(id);
+  return PromiseCompat.resolve(id);
 };
 
-RTCPeerConnectionAdapter.prototype.getStats = function (selector, callback) {
-  this.connection.getStats(selector, callback, callback.bind(this, undefined));
+RTCPeerConnectionAdapter.prototype.getStats = function (selector) {
+  return new PromiseCompat(function (resolve, reject) {
+    this.connection.getStats(selector, resolve, reject);
+  }.bind(this));
 };
 
 RTCPeerConnectionAdapter.prototype.ondatachannel = function (event) {

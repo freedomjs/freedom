@@ -43,11 +43,41 @@ describe("Api", function() {
 
     api.set('customCore', provider);
     api.register('customCore', provider, 'providePromises');
-    var channel = api.getCore('customCore', 12);
-    channel.then(function(prov) {
-      var obj = new prov();
-      expect(api.getInterfaceStyle('customCore')).toEqual('providePromises');
-      expect(obj.arg).toEqual(12);
+    var provideSpy = jasmine.createSpy('providePromises');
+    var mockProvider = {
+      getProxyInterface: function () {
+        mockProviderInterface = {
+          providePromises: provideSpy
+        };
+        return function() {return mockProviderInterface;};
+      }
+    };
+    api.provideCore('customCore', mockProvider).then(function() {
+      expect(provideSpy).toHaveBeenCalled();
+      done();
+    });
+  });
+
+  it("should provide core providers that can close themselves", function(done) {
+    var provider = function(arg) { this.arg = arg };
+
+    api.set('customCore', provider);
+    api.register('customCore', provider, 'unprivilegedPromise');
+    var provideSpy = jasmine.createSpy('providePromises');
+    var mockProviderInterface;
+    var mockProvider = {
+      getProxyInterface: function () {
+        mockProviderInterface = {
+          providePromises: provideSpy
+        };
+        return function() {return mockProviderInterface;};
+      }
+    };
+    api.provideCore('customCore', mockProvider).then(function() {
+      expect(provideSpy).toHaveBeenCalled();
+      var boundObject = provideSpy.calls.first().args[0];
+      var obj = new boundObject();
+      expect(obj.arg()).toEqual(mockProviderInterface);
       done();
     });
   });
