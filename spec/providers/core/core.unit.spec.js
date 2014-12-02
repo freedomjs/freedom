@@ -2,7 +2,8 @@ var Debug = require('../../../src/debug');
 var Hub = require('../../../src/hub');
 var Resource = require('../../../src/resource');
 var Api = require('../../../src/api');
-var Bundle = require('../../../src/bundle');
+//Note: This virtual module is a browserify alias of the compiled src/bundle.js
+var Bundle = require('freedomjs-interface-bundle');
 var Manager = require('../../../src/manager');
 var Core = require('../../../providers/core/core.unprivileged');
 var testUtil = require('../../util');

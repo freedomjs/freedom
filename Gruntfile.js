@@ -174,7 +174,9 @@ module.exports = function (grunt) {
         browserifyOptions: {
           debug: true
         },
-        alias: ['./tools/bundle.compiled.js:./bundle']
+        alias: [
+          './tools/bundle.compiled.js:freedomjs-interface-bundle'
+        ]
       }
     },
     concat: {
