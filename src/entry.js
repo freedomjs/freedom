@@ -9,7 +9,6 @@ var Policy = require('./policy');
 var ProxyBinder = require('./proxybinder');
 var Resource = require('./resource');
 var util = require('./util');
-//Note: This virtual module is a browserify alias of the compiled src/bundle.js
 var Bundle = require('./bundle');
 
 var freedomGlobal;

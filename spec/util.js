@@ -1,6 +1,5 @@
 var Api = require('../src/api');
 var ApiInterface = require('../src/proxy/apiInterface');
-//Note: This virtual module is a browserify alias of the compiled src/bundle.js
 var Bundle = require('../src/bundle');
 var Consumer = require('../src/consumer');
 var Debug = require('../src/debug');
