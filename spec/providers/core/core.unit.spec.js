@@ -68,7 +68,8 @@ describe("Core Provider Channels", function() {
       source = testUtil.createTestPort('test');
     Bundle.register([{
       'name': 'core',
-      'provider': Core.provider
+      'provider': Core.provider,
+      'flags': {module: true}
     }], api);
 
     hub.emit('config', {

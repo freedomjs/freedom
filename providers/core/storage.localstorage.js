@@ -11,10 +11,9 @@ var util = require('../../src/util');
  * @Class Storage_unprivileged
  * @constructor
  * @private
- * @param {App} app The application creating this provider.
+ * @param {Object} cap Capabilities for the provider
  */
-var Storage_unprivileged = function (app, dispatchEvent) {
-  this.app = app;
+var Storage_unprivileged = function (cap, dispatchEvent) {
   util.handleEvents(this);
 };
 

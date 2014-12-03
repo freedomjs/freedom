@@ -7,7 +7,7 @@ module.exports = function (pc, dc, setup) {
     setup();
     var pcProvider = {
       provide: function(iface) {
-        iface().providePromises(pc.provider.bind(pc.provider, iface));
+        iface().providePromises(pc.provider.bind(pc.provider, {provider:iface}));
       }
     };
     peercon = testUtil.directProviderFor(pcProvider, testUtil.getApis().get(pc.name).definition);

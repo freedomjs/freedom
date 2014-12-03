@@ -341,7 +341,7 @@ Manager.prototype.getCore = function (cb) {
     cb(this.core);
   } else {
     this.api.getCore('core', this).then(function (core) {
-      this.core = core;
+      this.core = core.inst;
       cb(this.core);
     }.bind(this));
   }

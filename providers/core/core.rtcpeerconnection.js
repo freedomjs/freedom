@@ -8,7 +8,7 @@ var RTCIceCandidate = adapter.RTCIceCandidate;
 
 var DataChannel = require('./core.rtcdatachannel');
 
-var RTCPeerConnectionAdapter = function (provider, dispatchEvent, configuration) {
+var RTCPeerConnectionAdapter = function (cap, dispatchEvent, configuration) {
   this.dispatchEvent = dispatchEvent;
   try {
     this.connection = new RTCPeerConnection(configuration);
@@ -16,7 +16,7 @@ var RTCPeerConnectionAdapter = function (provider, dispatchEvent, configuration)
     // Note: You can't ask the provider to close you synchronously, since
     // the constructor has not yet returned, so there's no 'this' that
     // the provider can know about yet.
-    setTimeout(provider.close.bind(provider, this), 0);
+    setTimeout(cap.provider.close.bind(cap.provider, this), 0);
     return;
   }
 
@@ -220,4 +220,5 @@ RTCPeerConnectionAdapter.prototype.oniceconnectionstatechange = function (event)
 
 exports.name = "core.rtcpeerconnection";
 exports.provider = RTCPeerConnectionAdapter;
-exports.style = "unprivilegedPromise";
+exports.style = "providePromises";
+exports.flags = {provider: true};

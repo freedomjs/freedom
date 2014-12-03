@@ -49,23 +49,31 @@ Api.prototype.set = function(name, definition) {
  * @param {String?} style The style the provider is written in. Valid styles
  *   are documented in fdom.port.Provider.prototype.getInterface. Defaults to
  *   provideAsynchronous
+ * @param {Object?} flags Prefixed arguments needed by the core provider.
+ *   valid keys are 'module', 'provider', and 'config'.
  */
-Api.prototype.register = function(name, constructor, style) {
-  var i;
+Api.prototype.register = function(name, constructor, style, flags) {
+  var i,
+    args;
 
   this.providers[name] = {
     constructor: constructor,
-    style: style || 'provideAsynchronous'
+    style: style || 'provideAsynchronous',
+    flags: flags || {}
   };
 
   if (this.waiters[name]) {
     for (i = 0; i < this.waiters[name].length; i += 1) {
-      if (style === 'unprivilegedPromise') {
-        this.waiters[name][i].resolve(constructor);
-      } else {
-        this.waiters[name][i].resolve(constructor.bind({},
-            this.waiters[name][i].from));
+      args = {};
+      if (flags.module) {
+        args.module = this.waiters[name][i].from;
+      } else if (flags.config) {
+        args.config = this.waiters[name][i].from.config;
       }
+      this.waiters[name][i].resolve({
+        args: args,
+        inst: constructor.bind({}, args)
+      });
     }
     delete this.waiters[name];
   }
@@ -76,18 +84,23 @@ Api.prototype.register = function(name, constructor, style) {
  * @method getCore
  * @param {String} name the API to retrieve.
  * @param {Module} from The instantiating App.
- * @returns {Promise} A promise of a fdom.App look-alike matching
- * a local API definition.
+ * @returns {Promise} A promise of a fdom.App look-alike (and argument object),
+ * matching a local API definition.
  */
 Api.prototype.getCore = function(name, from) {
   return new PromiseCompat(function(resolve, reject) {
     if (this.apis[name]) {
       if (this.providers[name]) {
-        if (this.providers[name].style === 'unprivilegedPromise') {
-          resolve(this.providers[name].constructor);
-        } else {
-          resolve(this.providers[name].constructor.bind({}, from));
+        var args = {};
+        if (this.providers[name].flags.module) {
+          args.module = from;
+        } else if (this.providers[name].flags.config) {
+          args.config = from.config;
         }
+        resolve({
+          args: args,
+          inst: this.providers[name].constructor.bind({}, args)
+        });
       } else {
         if (!this.waiters[name]) {
           this.waiters[name] = [];
@@ -113,14 +126,13 @@ Api.prototype.getCore = function(name, from) {
  * @param {Module} from The module requesting the core provider.
  */
 Api.prototype.provideCore = function (name, provider, from) {
-  return this.getCore(name, from).then(function (inst) {
-    var style = this.providers[name].style,
+  return this.getCore(name, from).then(function (core) {
+    var flags = this.providers[name].flags,
       iface = provider.getProxyInterface();
-    if (style === 'unprivilegedPromise') {
-      iface().providePromises(inst.bind({}, iface));
-    } else {
-      iface()[style](inst);
+    if (flags.provider) {
+      core.args.provider = iface;
     }
+    iface()[this.providers[name].style](core.inst);
   }.bind(this));
 };
 

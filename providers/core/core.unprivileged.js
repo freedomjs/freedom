@@ -12,7 +12,7 @@ var util = require('../../src/util');
  * @private
  */
 var Core_unprivileged = function(manager, postMessage) {
-  this.manager = manager;
+  this.manager = manager.module;
   this.debug = this.manager.debug;
 };
 
@@ -221,3 +221,4 @@ Core_unprivileged.prototype.setId = function(id) {
 
 exports.provider = Core_unprivileged;
 exports.name = "core";
+exports.flags = {module: true};
