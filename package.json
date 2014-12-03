@@ -36,7 +36,6 @@
     "grunt-npm": "0.0.2",
     "grunt-prompt": "^1.2.1",
     "grunt-shell": "^1.1.1",
-    "include-folder": "^0.7.0",
     "istanbul": "~0.3.0",
     "karma": "~0.12.21",
     "karma-chrome-launcher": "~0.1.3",

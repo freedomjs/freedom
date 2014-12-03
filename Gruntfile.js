@@ -118,6 +118,13 @@ module.exports = function (grunt) {
         customLaunchers: CUSTOM_LAUNCHER
       }
     },
+    'create-interface-bundle': {
+      freedom: {
+        files: {
+          'tools/bundle.compiled.js': ['interface/*.json']
+        }
+      }
+    },
     jshint: {
       beforeconcat: {
         files: { src: FILES.srcCore.concat(FILES.srcPlatform) }
@@ -300,12 +307,8 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
   grunt.loadNpmTasks('grunt-shell');
+  grunt.loadTasks('task');
 
-  grunt.registerTask('bundle', 'Prepare freedom.js interface bundle.',
-    function () {
-      var bundle = require('./src/bundle');
-      require('fs').writeFileSync('tools/bundle.compiled.js', bundle.toStatic());
-    });
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
     function () {
       grunt.config.merge({
@@ -349,12 +352,12 @@ module.exports = function (grunt) {
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
-    'bundle',
+    'create-interface-bundle',
     'browserify:freedom',
     'concat'
   ]);
   grunt.registerTask('unit', [
-    'bundle',
+    'create-interface-bundle',
     'browserify:frame',
     'browserify:jasmine_unit',
     'connect:freedom',
@@ -362,7 +365,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('test', [
     'jshint',
-    'bundle',
+    'create-interface-bundle',
     'browserify:frame',
     'browserify:jasmine_full',
     'connect:freedom',
@@ -371,7 +374,7 @@ module.exports = function (grunt) {
   grunt.registerTask('debug', [
     'prepare_watch',
     'jshint',
-    'bundle',
+    'create-interface-bundle',
     'browserify:frame',
     'browserify:jasmine_full',
     'connect:freedom',
@@ -391,7 +394,7 @@ module.exports = function (grunt) {
     //When run from Travis from jobs *.1
     if (jobParts.length > 1 && jobParts[1] === '1') {
       grunt.registerTask('ci', [
-        'bundle',
+        'build',
         'browserify:frame',
         'browserify:jasmine_coverage',
         'connect:freedom',
@@ -403,7 +406,7 @@ module.exports = function (grunt) {
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
-        'bundle',
+        'build',
         'browserify:frame',
         'browserify:jasmine_unit',
         'connect:freedom',
@@ -412,7 +415,7 @@ module.exports = function (grunt) {
     }
   } else {  //When run from command-line
     grunt.registerTask('ci', [
-      'bundle',
+      'build',
       'browserify:frame',
       'browserify:jasmine_unit',
       'connect:freedom',
