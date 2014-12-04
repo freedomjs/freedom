@@ -307,7 +307,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
   grunt.loadNpmTasks('grunt-shell');
-  grunt.loadTasks('task');
+  grunt.loadTasks('tasks');
 
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
     function () {
