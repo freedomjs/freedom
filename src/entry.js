@@ -99,8 +99,8 @@ var setup = function (context, manifest, config) {
       // Define how to load a root module.
       var fallbackLogger, getIface;
       fallbackLogger = function (message) {
-        api.getCore('core.console', debug).then(function (Logger) {
-          debug.setLogger(new Logger());
+        api.getCore('core.console', debug).then(function (provider) {
+          debug.setLogger(new provider.inst());
           if (message) {
             debug.error(message);
           }
