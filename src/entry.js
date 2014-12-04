@@ -71,7 +71,7 @@ var setup = function (context, manifest, config) {
         typeof provider.register === 'function') {
       name = provider.name.substr(5);
       // Invert priority and prefer user config over local context for these.
-      if (config[name]) {
+      if (config && config[name]) {
         provider.register(config[name]);
       } else if (site_cfg[name]) {
         provider.register(site_cfg[name]);
