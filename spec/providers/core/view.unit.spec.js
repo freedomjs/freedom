@@ -20,7 +20,7 @@ describe("core.view", function () {
     };
     de = jasmine.createSpy('dispatchEvents');
     util.handleEvents(app);
-    provider = new View.provider(app, de);
+    provider = new View.provider({module:app, provider:{onClose:function() {}}}, de);
  
     el = document.createElement('div');
     el.id = 'myview';

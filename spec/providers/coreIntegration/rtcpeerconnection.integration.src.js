@@ -5,7 +5,12 @@ module.exports = function (pc, dc, setup) {
   var peercon, datachan;
   beforeEach(function () {
     setup();
-    peercon = testUtil.directProviderFor(pc.provider.bind(pc.provider, {}), testUtil.getApis().get(pc.name).definition);
+    var pcProvider = {
+      provide: function(iface) {
+        iface().providePromises(pc.provider.bind(pc.provider, {provider:iface}));
+      }
+    };
+    peercon = testUtil.directProviderFor(pcProvider, testUtil.getApis().get(pc.name).definition);
     datachan = testUtil.directProviderFor(dc.provider.bind(dc.provider, {}), testUtil.getApis().get(dc.name).definition);
   });
 
@@ -152,5 +157,16 @@ module.exports = function (pc, dc, setup) {
       });
     });
 
+  });
+
+  it("Signals 'onClose' when created with incorrect parameters", function (done) {
+    var badPeer = peercon({
+      iceServers: [
+        {url: '-invalid-url-'}
+      ]
+    });
+    peercon.onClose(badPeer, function () {
+      done();
+    });
   });
 };

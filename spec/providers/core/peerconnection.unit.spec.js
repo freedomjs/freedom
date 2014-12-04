@@ -91,7 +91,7 @@ describe("providers/core/peerconnection", function() {
       emit: function() {
       }
     };
-    peerconnection = new PeerConnection.provider(portApp,
+    peerconnection = new PeerConnection.provider({module:portApp},
                                         undefined,
                                         MockRTCPeerConnection,
                                         MockRTCSessionDescription,

@@ -29,11 +29,11 @@ describe("Api", function() {
     var provider = function(arg) { this.arg = arg };
 
     api.set('customCore', provider);
-    api.register('customCore', provider);
+    api.register('customCore', provider, 'style', {module: true});
     var channel = api.getCore('customCore', 12);
     channel.then(function(prov) {
-      var obj = new prov();
-      expect(obj.arg).toEqual(12);
+      var obj = new prov.inst();
+      expect(obj.arg.module).toEqual(12);
       done();
     });
   });
@@ -43,11 +43,41 @@ describe("Api", function() {
 
     api.set('customCore', provider);
     api.register('customCore', provider, 'providePromises');
-    var channel = api.getCore('customCore', 12);
-    channel.then(function(prov) {
-      var obj = new prov();
-      expect(api.getInterfaceStyle('customCore')).toEqual('providePromises');
-      expect(obj.arg).toEqual(12);
+    var provideSpy = jasmine.createSpy('providePromises');
+    var mockProvider = {
+      getProxyInterface: function () {
+        mockProviderInterface = {
+          providePromises: provideSpy
+        };
+        return function() {return mockProviderInterface;};
+      }
+    };
+    api.provideCore('customCore', mockProvider).then(function() {
+      expect(provideSpy).toHaveBeenCalled();
+      done();
+    });
+  });
+
+  it("should provide core providers that can close themselves", function(done) {
+    var provider = function(arg) { this.arg = arg };
+
+    api.set('customCore', provider);
+    api.register('customCore', provider, 'providePromises', {provider: true});
+    var provideSpy = jasmine.createSpy('providePromises');
+    var mockProviderInterface;
+    var mockProvider = {
+      getProxyInterface: function () {
+        mockProviderInterface = {
+          providePromises: provideSpy
+        };
+        return function() {return mockProviderInterface;};
+      }
+    };
+    api.provideCore('customCore', mockProvider).then(function() {
+      expect(provideSpy).toHaveBeenCalled();
+      var boundObject = provideSpy.calls.first().args[0];
+      var obj = new boundObject();
+      expect(obj.arg.provider()).toEqual(mockProviderInterface);
       done();
     });
   });
@@ -60,14 +90,14 @@ describe("Api", function() {
 
     var arg = 0;
     channel.then(function(prov) {
-      var mine = new prov();
+      var mine = new prov.inst();
       arg = mine.arg;
-      expect(arg).toEqual(12);
+      expect(arg.module).toEqual(12);
       done();
     });
 
     expect(arg).toEqual(0);
     
-    api.register('customCore', provider);
+    api.register('customCore', provider, undefined, {module:true});
   });
 });

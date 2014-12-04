@@ -7,11 +7,11 @@ var util = require('../../src/util');
  * @Class Logger_console
  * @constructor
  * @private
- * @param {App} app The application creating this provider, in practice unset.
+ * @param {config: Object} cap Capabilities - console requires global config.
  */
-var Logger_console = function (app) {
-  this.level = (app.config && app.config.debug) || 'log';
-  this.console = (app.config && app.config.global.console);
+var Logger_console = function (cap) {
+  this.level = (cap.config && cap.config.debug) || 'log';
+  this.console = (cap.config && cap.config.global.console);
   util.handleEvents(this);
 };
 
@@ -124,3 +124,4 @@ Logger_console.prototype.error = function (source, msg, continuation) {
 /** REGISTER PROVIDER **/
 exports.provider = Logger_console;
 exports.name = 'core.console';
+exports.flags = {config: true};

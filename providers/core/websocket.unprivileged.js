@@ -7,13 +7,13 @@ var nodeStyle = false;
 /**
  * A WebSocket core provider
  *
- * @param {port.Module} module The Module requesting this provider
+ * @param {Object} cap Capabilities for the provider
  * @param {Function} dispatchEvent Function to dispatch events.
  * @param {String} url The Remote URL to connect with.
  * @param {String[]} protocols SubProtocols to open.
  * @param {WebSocket?} socket An alternative socket class to use.
  */
-var WS = function (module, dispatchEvent, url, protocols, socket) {
+var WS = function (cap, dispatchEvent, url, protocols, socket) {
   var WSImplementation = null,
     error;
   this.isNode = nodeStyle;
@@ -170,7 +170,7 @@ WS.prototype.onClose = function (event) {
 
 exports.provider = WS;
 exports.name = 'core.websocket';
-exports.setSocket = function(impl, isNode) {
+exports.setSocket = function (impl, isNode) {
   WSHandle = impl;
   nodeStyle = isNode;
 };

@@ -8,10 +8,10 @@ var util = require('../../src/util');
  * channel implementation.
  * @Class Echo_unprivileged
  * @constructor
- * @param {Module} mod The module creating this provider.
+ * @param {module:Module} cap The module creating this provider.
  */
-var Echo_unprivileged = function(mod, dispatchEvent) {
-  this.mod = mod;
+var Echo_unprivileged = function(cap, dispatchEvent) {
+  this.mod = cap.module;
   this.dispatchEvent = dispatchEvent;
   util.handleEvents(this);
 
@@ -73,3 +73,4 @@ Echo_unprivileged.prototype.send = function(str, continuation) {
 
 exports.provider = Echo_unprivileged;
 exports.name = "core.echo";
+exports.flags = {module: true};

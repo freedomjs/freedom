@@ -9,7 +9,7 @@ describe("providers/core/Echo_Unprivileged", function() {
   beforeEach(function() {
     app = testUtil.createTestPort('test');
     app.controlChannel = 'control';
-    echo = new Echo.provider(app, app.emit.bind(app));
+    echo = new Echo.provider({module:app}, app.emit.bind(app));
   });
 
   it("Needs core", function() {

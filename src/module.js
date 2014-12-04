@@ -329,11 +329,8 @@ Module.prototype.emitMessage = function (name, message) {
  * @private
  */
 Module.prototype.loadLinks = function () {
-  var i, channels = ['default'], name, dep,
-    finishLink = function (dep, name, provider) {
-      var style = this.api.getInterfaceStyle(name);
-      dep.getInterface()[style](provider);
-    };
+  var i, channels = ['default'], name, dep;
+
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
       name = this.manifest.permissions[i];
@@ -341,7 +338,7 @@ Module.prototype.loadLinks = function () {
         channels.push(name);
         this.dependantChannels.push(name);
         dep = new Provider(this.api.get(name).definition, this.debug);
-        this.api.getCore(name, this).then(finishLink.bind(this, dep, name));
+        this.api.provideCore(name, dep, this);
 
         this.emit(this.controlChannel, {
           type: 'Core Link to ' + name,

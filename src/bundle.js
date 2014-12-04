@@ -25,7 +25,10 @@ exports.register = function (providers, registry) {
 
   providers.forEach(function (provider) {
     if (provider.name) {
-      registry.register(provider.name, provider.provider, provider.style);
+      registry.register(provider.name,
+                        provider.provider,
+                        provider.style,
+                        provider.flags);
     }
   });
 };

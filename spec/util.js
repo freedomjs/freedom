@@ -225,7 +225,11 @@ exports.setupModule = function(manifest_url, options) {
 exports.directProviderFor = function (mod, api) {
   var debug = new Debug();
   var provider = new Provider(api, debug);
-  provider.getProxyInterface()().provideAsynchronous(mod);
+  if (typeof mod === 'function') {
+    provider.getProxyInterface()().provideAsynchronous(mod);
+  } else if (mod.provide) {
+    mod.provide(provider.getProxyInterface());
+  }
   var iface = ApiInterface.bind(ApiInterface, api);
   var consumer = new Consumer(iface, debug);
 

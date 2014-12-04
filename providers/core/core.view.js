@@ -13,14 +13,18 @@ var PromiseCompat = require('es6-promise').Promise;
  * @constructor
  * @private
  * @param {View Provider} provider
- * @param {port.Module} caller The module creating this provider.
+ * @param {provider:Provider,module:Module} cap The instantiator of the view.
  * @param {Function} dispatchEvent Function to call to emit events.
  */
-var Core_View = function (provider, caller, dispatchEvent) {
+var Core_View = function (provider, cap, dispatchEvent) {
   this.provider = provider;
   this.dispatchEvent = dispatchEvent;
-  this.module = caller;
-  this.module.once('close', this.close.bind(this, function () {}));
+  setTimeout(cap.provider.onClose.bind(
+    cap.provider,
+    this,
+    this.close.bind(this, function () {})
+  ), 0);
+  this.module = cap.module;
   util.handleEvents(this);
 };
 
@@ -231,3 +235,4 @@ Core_View.register = function (PageProvider) {
 exports.provider = Core_View.bind(this, Core_View.provider);
 exports.name = 'core.view';
 exports.register = Core_View.register;
+exports.flags = {provider: true, module: true};

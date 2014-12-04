@@ -8,9 +8,8 @@
  * supplemented in platform-dependent repositories.
  *
  */
-var OAuth = function (handlers, mod, dispatchEvent) {
+var OAuth = function (handlers, cap, dispatchEvent) {
   this.handlers = handlers;
-  this.mod = mod;
   this.dispatchEvent = dispatchEvent;
   this.ongoing = {};
 };
@@ -62,8 +61,8 @@ OAuth.reset = function () {
  *    and 'state' is the state to pass to the URI on completion of oAuth
  */
 OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
-  var promise, i;
-  var successCallback = function(result) {
+  var promise, i, successCallback;
+  successCallback = function(result) {
     this.ongoing[result.state] = this.handlers[i];
     continuation(result);
   }.bind(this);
