@@ -67,7 +67,8 @@ Api.prototype.register = function(name, constructor, style, flags) {
       args = {};
       if (flags.module) {
         args.module = this.waiters[name][i].from;
-      } else if (flags.config) {
+      }
+      if (flags.config) {
         args.config = this.waiters[name][i].from.config;
       }
       this.waiters[name][i].resolve({
@@ -94,7 +95,8 @@ Api.prototype.getCore = function(name, from) {
         var args = {};
         if (this.providers[name].flags.module) {
           args.module = from;
-        } else if (this.providers[name].flags.config) {
+        }
+        if (this.providers[name].flags.config) {
           args.config = from.config;
         }
         resolve({
