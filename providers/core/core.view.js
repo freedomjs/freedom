@@ -154,7 +154,10 @@ Core_View.prototype.show = function (name, continuation) {
           files[files.length - 1],
           files,
           this.dispatchEvent.bind(this, 'message')).then(
-        continuation,
+        function (c) {
+          // Make sure continuation is called without an argument.
+          c();
+        }.bind({}, continuation),
         continuation.bind({}, undefined)
       );
     }.bind(this), function (err) {
