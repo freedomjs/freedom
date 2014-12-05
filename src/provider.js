@@ -118,6 +118,9 @@ Provider.prototype.close = function () {
   }
   this.emit('close');
 
+  // Release references.
+  delete this.iface;
+  delete this.providerCls;
   this.ifaces = {};
   this.emits = {};
   this.emitChannel = null;

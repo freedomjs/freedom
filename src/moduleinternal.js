@@ -58,7 +58,9 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
     this.generateEnv(message.manifest, objects).then(function () {
       return this.loadLinks(objects);
     }.bind(this)).then(this.loadScripts.bind(this, message.id,
-        message.manifest.app.script));
+        message.manifest.app.script)).then(null, function (err) {
+      this.debug.error('Could not set up module ' + this.appId + ': ', err);
+    }.bind(this));
   } else if (flow === 'default' && this.requests[message.id]) {
     this.requests[message.id](message.data);
     delete this.requests[message.id];
