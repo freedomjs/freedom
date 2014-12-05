@@ -52,7 +52,10 @@ var setup = function (context, manifest, config) {
           context.isModule
     },
     link,
-    Port;
+    Port,
+    cleanup = function () {
+      api.cleanup();
+    };
 
   if (config) {
     util.mixin(site_cfg, config, true);
@@ -99,8 +102,11 @@ var setup = function (context, manifest, config) {
       // Define how to load a root module.
       var fallbackLogger, getIface;
       fallbackLogger = function (message) {
-        api.getCore('core.console', debug).then(function (provider) {
-          debug.setLogger(new provider.inst());
+        api.getCore('core.console', {
+          config: site_cfg
+        }).then(function (provider) {
+          var logger = new provider.inst();
+          debug.setLogger(logger);
           if (message) {
             debug.error(message);
           }
@@ -133,6 +139,7 @@ var setup = function (context, manifest, config) {
 
       // Load root module.
       getIface(site_cfg.manifest).then(function (iface) {
+        iface.port.once('close', cleanup);
         return iface.external;
       }, function (err) {
         debug.error('Failed to retrieve manifest: ' + err);

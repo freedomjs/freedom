@@ -135,7 +135,25 @@ Api.prototype.provideCore = function (name, provider, from) {
       core.args.provider = iface;
     }
     iface()[this.providers[name].style](core.inst);
+  }.bind(this), function (err) {
+    this.debug.error('Could not provide core: ', err);
   }.bind(this));
+};
+
+/**
+ * Shutdown the API registry, and reject any pending waiters.
+ */
+Api.prototype.cleanup = function () {
+  var prop,
+    doReject = function (waiter) {
+      waiter.reject();
+    };
+  for (prop in this.waiters) {
+    if (this.waiters.hasOwnProperty(prop)) {
+      this.waiters[prop].forEach(doReject);
+    }
+  }
+  delete this.waiters;
 };
 
 /**

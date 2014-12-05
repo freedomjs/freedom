@@ -48,7 +48,11 @@ module.exports = function (pc, dc, setup) {
         return bob.setLocalDescription(answer).then(function () {return answer; });
       }).then(function (answer) {
         return alice.setRemoteDescription(answer);
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
+    }, function (err) {
+      console.error('RTC failed: ',err);
     });
   });
   
@@ -101,7 +105,11 @@ module.exports = function (pc, dc, setup) {
         return bob.setLocalDescription(answer).then(function () {return answer; });
       }).then(function (answer) {
         return alice.setRemoteDescription(answer);
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
+    }, function (err) {
+      console.error('RTC failed: ',err);
     });
   });
 
@@ -138,6 +146,8 @@ module.exports = function (pc, dc, setup) {
             done();
           }, onError);
         }
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
     });
 
@@ -154,6 +164,8 @@ module.exports = function (pc, dc, setup) {
         return bob.setLocalDescription(answer).then(function () {return answer; });
       }).then(function (answer) {
         return alice.setRemoteDescription(answer);
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
     });
 
@@ -165,8 +177,27 @@ module.exports = function (pc, dc, setup) {
         {url: '-invalid-url-'}
       ]
     });
+  
+    var testOver = done;
+    var finished = function() {
+      if (testOver) {
+        var done = testOver;
+        testOver = false;
+        done();
+      }
+    };
+
+    var timeoutId = setTimeout(function () {
+      // Option 1. subsequent calls fail.
+      badPeer.createOffer().then(function() {
+        console.error('Expected call to bad rtc connection to fail.');
+      }, finished);
+    }, 100);
+  
     peercon.onClose(badPeer, function () {
-      done();
+      // Option 2. a constructor error forces a system level on-close.
+      clearTimeout(timeoutId);
+      finished();
     });
   });
 };
