@@ -1,6 +1,7 @@
 ### Built files
 /spec.js
 /tools/freedom.*.js
+build/
 
 ### Auto-generated
 tools/freedomjs

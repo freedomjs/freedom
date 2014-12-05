@@ -3,7 +3,8 @@
 module.exports = function (grunt) {
   'use strict';
   var minify = require('node-json-minify'),
-    fs = require('fs');
+    fs = require('fs'),
+    path = require('path');
 
   grunt.registerMultiTask('create-interface-bundle',
     'Prepare freedom.js interface bundle.',
@@ -16,6 +17,9 @@ module.exports = function (grunt) {
         interfaces = interfaces.map(function (iface) {
           return JSON.parse(minify(iface));
         });
+        if (!fs.existsSync(path.dirname(filePair.dest))) {
+          fs.mkdirSync(path.dirname(filePair.dest));
+        }
         fs.writeFileSync(filePair.dest,
             'module.exports = ' + JSON.stringify(interfaces) + ';\n');
       });
