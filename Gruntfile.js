@@ -121,7 +121,7 @@ module.exports = function (grunt) {
     'create-interface-bundle': {
       freedom: {
         files: {
-          'tools/bundle.compiled.js': ['interface/*.json']
+          'dist/bundle.compiled.js': ['interface/*.json']
         }
       }
     },
@@ -180,10 +180,7 @@ module.exports = function (grunt) {
       options: {
         browserifyOptions: {
           debug: true
-        },
-        alias: [
-          './tools/bundle.compiled.js:freedomjs-interface-bundle'
-        ]
+        }
       }
     },
     concat: {

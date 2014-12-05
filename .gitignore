@@ -6,6 +6,8 @@
 /tools/freedom.*.js
 /tools/bundle.*.js
 /spec.js
+build/
+dist/
 
 ### Auto-generated
 tools/freedomjs

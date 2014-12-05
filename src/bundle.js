@@ -2,7 +2,7 @@
 
 var Bundle = function () {
   'use strict';
-  this.interfaces = require('freedomjs-interface-bundle');
+  this.interfaces = require('../dist/bundle.compiled');
 };
 
 /**
