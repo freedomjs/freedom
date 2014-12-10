@@ -6,7 +6,7 @@
     "index": "index.html",
     "static": [ 
       "../style.css",
-      "ux.js"
+      "page.js"
     ]
   },
   "dependencies": {
