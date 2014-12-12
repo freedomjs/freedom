@@ -53,6 +53,17 @@ Logger_console.prototype.print = function (severity, source, msg) {
     arr.unshift('\x1B[39m');
     arr.unshift('\x1B[31m' + source);
     /*jslint nomen: true*/
+    // Firefox in JSM context.
+    // see: http://mxr.mozilla.org/mozilla-release/source/toolkit/devtools/Console.jsm
+    } else if (this.console.maxLogLevel && source) {
+      if (!this.console.freedomDump) {
+        this.console.freedomDump = this.console.dump;
+        this.console.dump = function() {};
+      }
+      this.console.freedomDump('{' + source + '}.' + severity + ': ' +
+          arr.join(' ') + '\n');
+      arr.unshift(source.toUpperCase());
+  // Firefox in browser context.
   } else if (this.console.__mozillaConsole__ && source) {
     arr.unshift(source.toUpperCase());
     /*jslint nomen: false*/
