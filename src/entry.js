@@ -55,6 +55,7 @@ var setup = function (context, manifest, config) {
     Port,
     cleanup = function () {
       api.cleanup();
+      manager.destroy();
     };
 
   if (config) {

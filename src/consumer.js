@@ -206,6 +206,9 @@ Consumer.prototype.doEmit = function (to, msg, all) {
  * @param {String} id The id of the interface to tear down.
  */
 Consumer.prototype.teardown = function (id) {
+  if (this.emits[id]) {
+    this.emits[id]('close');
+  }
   delete this.emits[id];
   if (this.closeHandlers[id]) {
     util.eachProp(this.closeHandlers[id], function (prop) {

@@ -73,7 +73,7 @@ Module.prototype.onMessage = function (flow, message) {
       return;
     } else if (message.type === 'close') {
       // Closing channel.
-      if (message.channel === 'control') {
+      if (!message.channel || message.channel === 'control') {
         this.stop();
       }
       this.deregisterFlow(message.channel, false);
@@ -149,7 +149,7 @@ Module.prototype.deregisterFlow = function (flow, internal) {
           request: 'unlink',
           to: this.externalPortMap[key]
         });
-      } else {
+      } else if (this.port) {
         this.port.onMessage('control', {
           type: 'close',
           channel: this.internalPortMap[key]
@@ -241,6 +241,7 @@ Module.prototype.stop = function () {
     this.port.stop();
     delete this.port;
   }
+  delete this.policy;
   this.started = false;
 };
 
@@ -368,6 +369,8 @@ Module.prototype.loadLinks = function () {
         }.bind(this), function (err) {
           this.debug.warn('failed to load dep: ', name, err);
         }.bind(this));
+      }.bind(this), function (err) {
+        this.debug.warn('failed to load dep: ', name, err);
       }.bind(this));
     }.bind(this));
   }

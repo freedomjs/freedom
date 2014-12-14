@@ -59,8 +59,13 @@ var ApiInterface = function(def, onMsg, emit, debug) {
 
   onMsg(this, function(type, msg) {
     if (type === 'close') {
-      this.off();
-      delete this.inflight;
+      if (this.off) {
+        this.off();
+      }
+      util.eachProp(inflight, function (obj) {
+        obj.reject('closed');
+      });
+      inflight = {};
       return;
     }
     if (!msg) {

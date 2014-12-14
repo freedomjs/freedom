@@ -176,11 +176,22 @@ Manager.prototype.setup = function (port) {
 };
 
 /**
- * Tear down a port on the hub.
+ * Tear down a port on the hub, or the full local hub.
  * @method destroy
- * @apram {Port} port The port to unregister.
+ * @apram {Port?} port The port to unregister.
  */
 Manager.prototype.destroy = function (port) {
+  if (!port) {
+    // Tear down everything!
+    util.eachProp(this.controlFlows, function (flow) {
+      this.hub.onMessage(flow, {
+        type: 'close'
+      });
+    }.bind(this));
+    this.hub.teardown();
+    return;
+  }
+
   if (!port.id) {
     this.debug.warn("Unable to tear down unidentified port");
     return false;
@@ -343,7 +354,9 @@ Manager.prototype.getCore = function (cb) {
     this.api.getCore('core', this).then(function (core) {
       this.core = core.inst;
       cb(this.core);
-    }.bind(this));
+    }.bind(this), function () {
+      cb(undefined);
+    });
   }
 };
 
