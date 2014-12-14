@@ -216,12 +216,13 @@ util.handleEvents = function(obj) {
    */
   obj.emit = function(type, data) {
     var i, queue;
-    if (this.multiple[type]) {
-      for (i = 0; this.multiple[type] &&
-           i < this.multiple[type].length; i += 1) {
-        if (this.multiple[type][i](data) === false) {
-          return;
-        }
+    // Note that registered handlers may stop events on the object, by calling
+    // this.off(). As such, the presence of these keys must be checked on each
+    // iteration of the relevant loops.
+    for (i = 0; this.multiple[type] &&
+         i < this.multiple[type].length; i += 1) {
+      if (this.multiple[type][i](data) === false) {
+        return;
       }
     }
     if (this.single[type]) {
