@@ -1,28 +1,14 @@
 ### Built files
 /freedom.js
-/freedom.js.map
-/freedom.min.js
-/freedom.min.js.map
-/tools/freedom.*.js
-/tools/bundle.*.js
+/dist
 /spec.js
-build/
-dist/
+/tools
 
 ### Auto-generated
-tools/freedomjs
-tools/doc
-tools/coverage/
-tools/coverage*.json
-tools/lcov.info
-lcov.info
-node_modules
+/node_modules
 
 ### Scrap
 .*.swp
 sauce_connect.log*
 npm-debug.log
 .grunt/
-
-### Chrome Test Runner temp files
-tools/chromeTestRunner/temp

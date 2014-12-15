@@ -29,15 +29,6 @@
  **/
 
 var FILES = {
-  srcCore: [
-    'src/*.js',
-    'src/link/*.js',
-    'src/proxy/*.js',
-    'interface/*.js'
-  ],
-  srcPlatform: [
-    'providers/core/*.js'
-  ],
   specCoreUnit: [
     'spec/src/*.spec.js'
   ],
@@ -52,10 +43,6 @@ var FILES = {
   specProviderIntegration: [
     'spec/providers/*.integration.spec.js',
     'spec/providers/storage/*.integration.spec.js'
-  ],
-  specAll: ['spec/**/*.spec.js'],
-  freedom: [
-    'freedom.js'
   ]
 };
 
@@ -126,9 +113,7 @@ module.exports = function (grunt) {
       }
     },
     jshint: {
-      beforeconcat: {
-        files: { src: FILES.srcCore.concat(FILES.srcPlatform) }
-      },
+      src: ['src/**/*.js'],
       grunt: ['Gruntfile.js'],
       providers: ['providers/**/*.js'],
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],
@@ -183,24 +168,53 @@ module.exports = function (grunt) {
         }
       }
     },
+    // Exorcise, Uglify, Concat are used to create a minimized freedom.js with
+    // correct sourcemap. Uglify needs an explicit 'sourceMapIn' argument,
+    // requiring that exorcise be used before hand. Concat is able to properly
+    // attach a banner while maintaining the correct source-map offsets.
+    exorcise: {
+      dist: {
+        files: {
+          'tools/freedom.worker.js.map': ['tools/freedom.worker.js']
+        }
+      }
+    },
+    uglify: {
+      dist: {
+        files: {
+          'tools/freedom.worker.min.js': ['tools/freedom.worker.js']
+        },
+        options: {
+          sourceMap: true,
+          sourceMapIn: 'tools/freedom.worker.js.map',
+          sourceMapIncludeSources: true,
+          drop_console: true
+        }
+      }
+    },
     concat: {
       options: {
         sourceMap: true,
         banner: require('fs').readFileSync('src/util/header.txt').toString()
       },
-      dist: {
+      full: {
         src: 'tools/freedom.worker.js',
-        dest: 'freedom.js'
+        dest: 'freedom.js',
+        options: {
+          sourceMapStyle: 'inline'
+        }
+      },
+      min: {
+        src: 'tools/freedom.worker.min.js',
+        dest: 'dist/freedom.min.js'
       }
     },
     clean: [
-      'freedom.js',
-      'freedom.js.map',
-      'freedom.min.js',
-      'freedom.min.js.map',
+      'freedom.*',
       'spec.js',
-      'tools/freedom.worker.js',
-      'tools/freedom.frame.js'],
+      'dist/*',
+      'tools/freedom.*'
+    ],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -293,12 +307,14 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-codeclimate-reporter');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-yuidoc');
-  grunt.loadNpmTasks('grunt-coveralls');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-yuidoc');
+  grunt.loadNpmTasks('grunt-coveralls');
+  grunt.loadNpmTasks('grunt-exorcise');
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
@@ -351,7 +367,10 @@ module.exports = function (grunt) {
     'jshint',
     'create-interface-bundle',
     'browserify:freedom',
-    'concat'
+    'concat:full',
+    'exorcise',
+    'uglify',
+    'concat:min'
   ]);
   grunt.registerTask('unit', [
     'create-interface-bundle',
