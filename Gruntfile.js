@@ -124,12 +124,12 @@ module.exports = function (grunt) {
     browserify: {
       freedom: {
         files: {
-          'tools/freedom.worker.js': ['src/util/workerEntry.js']
+          'build/freedom.worker.js': ['src/util/workerEntry.js']
         }
       },
       frame: {
         files: {
-          'tools/freedom.frame.js': ['src/util/frameEntry.js']
+          'build/freedom.frame.js': ['src/util/frameEntry.js']
         }
       },
       jasmine_unit: {
@@ -175,18 +175,18 @@ module.exports = function (grunt) {
     exorcise: {
       dist: {
         files: {
-          'tools/freedom.worker.js.map': ['tools/freedom.worker.js']
+          'build/freedom.worker.js.map': ['build/freedom.worker.js']
         }
       }
     },
     uglify: {
       dist: {
         files: {
-          'tools/freedom.worker.min.js': ['tools/freedom.worker.js']
+          'build/freedom.worker.min.js': ['build/freedom.worker.js']
         },
         options: {
           sourceMap: true,
-          sourceMapIn: 'tools/freedom.worker.js.map',
+          sourceMapIn: 'build/freedom.worker.js.map',
           sourceMapIncludeSources: true,
           drop_console: true
         }
@@ -198,14 +198,14 @@ module.exports = function (grunt) {
         banner: require('fs').readFileSync('src/util/header.txt').toString()
       },
       full: {
-        src: 'tools/freedom.worker.js',
+        src: 'build/freedom.worker.js',
         dest: 'freedom.js',
         options: {
           sourceMapStyle: 'inline'
         }
       },
       min: {
-        src: 'tools/freedom.worker.min.js',
+        src: 'build/freedom.worker.min.js',
         dest: 'dist/freedom.min.js'
       }
     },
@@ -213,7 +213,7 @@ module.exports = function (grunt) {
       'freedom.*',
       'spec.js',
       'dist/*',
-      'tools/freedom.*'
+      'build/*'
     ],
     yuidoc: {
       compile: {

@@ -1,6 +1,7 @@
 ### Built files
 /spec.js
 /tools
+/build
 
 ### Auto-generated
 /node_modules
