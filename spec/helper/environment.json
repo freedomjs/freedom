@@ -1,0 +1,14 @@
+{
+  "name": "Environment Test Helper",
+  "description": "Test methods for ensuring module enviornment consistency. Run by spec/providers/coreIntegration/environment.integration.src.js",
+  "app": {
+    "script": "environment.js"
+  },
+  "provides": ["environment"],
+  "default": "environment",
+  "api": {
+    "environment": {
+      "testCrypto": {"type": "method", "value":[], "ret": "object"}
+    }
+  }
+}

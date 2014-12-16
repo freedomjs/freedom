@@ -27,6 +27,10 @@ describe("integration: storebuffer.indexeddb.json",
 describe("integration: transport.webrtc.json",
     require("./transport/transport.integration.src").bind(this, "/providers/transport/webrtc/transport.webrtc.json", setup));
 
+describe("integration: Module Environment",
+    require("./coreIntegration/environment.integration.src").bind(this, setup));
+
+
 // core.rtcpeerconnection
 describe("integration: core.rtcpeerconnection",
     require("./coreIntegration/rtcpeerconnection.integration.src").bind(this,
