@@ -102,7 +102,7 @@ IndexedDBStorageProvider.prototype.get = function (key, continuation) {
     cont(undefined, this.createError("UNKNOWN"));
   }.bind(this, continuation);
   request.onsuccess = function (cont, e) {
-    var retValue = e.target.result.value;
+    var retValue = e.target.result ? e.target.result.value : null;
     /**
     if (retValue !== null && retValue.length) {
       console.log("storage.indexeddb.get: return string length " + retValue.length);
