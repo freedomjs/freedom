@@ -9,11 +9,11 @@ module.exports = function (setup) {
   beforeEach(function (done) {
     setup();
     testUtil.setupModule('relative://spec/helper/environment.json')
-        .then(function (Mod) {
-      Handle = Mod;
-      moduleEnv = new Mod();
-      done();
-    });
+      .then(function (Mod) {
+        Handle = Mod;
+        moduleEnv = new Mod();
+        done();
+      });
   });
   
   afterEach(function (done) {
