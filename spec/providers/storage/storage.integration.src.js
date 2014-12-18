@@ -99,6 +99,18 @@ module.exports = function(provider_url, setup, useArrayBuffer) {
     };
     helper.call("s", "set", ["k1-d", beforeSet("v1-d")], callbackOne);
   });
+  
+  it("resolves 'null' when getting unset keys", function (done) {
+    var callbackOne = function (ret) {
+      expect(ret).toEqual(null);
+      done();
+    };
+    helper.call("s", "get", ["ku"], callbackOne, function(err) {
+      console.error(err);
+      expect(1).toEqual(2);
+      done();
+    });
+  });
 
   it("clears the store", function(done) {
     var callbackOne = function(ret) {
