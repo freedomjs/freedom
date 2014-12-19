@@ -100,7 +100,7 @@ module.exports = function(provider_url, setup, useArrayBuffer) {
     helper.call("s", "set", ["k1-d", beforeSet("v1-d")], callbackOne);
   });
   
-  it("resolves undefined when getting unset keys", function (done) {
+  it("resolves 'null' when getting unset keys", function (done) {
     var callbackOne = function (ret) {
       expect(ret).toEqual(null);
       done();
