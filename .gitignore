@@ -1,9 +1,8 @@
 ### Built files
-/freedom.js
-/dist
 /spec.js
-/tools
 /build
+/dist
+/freedom.js
 
 ### Auto-generated
 /node_modules

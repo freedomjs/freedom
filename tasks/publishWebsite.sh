@@ -7,43 +7,43 @@ TAG=$(git describe --abbrev=0 --tags)
 #TAG=$(git describe --exact-match --tags HEAD 2>/dev/null)
 
 # Clone
-rm -rf tools/freedomjs
-git clone git@github.com:freedomjs/freedomjs.github.io.git tools/freedomjs
+rm -rf build/freedomjs
+git clone git@github.com:freedomjs/freedomjs.github.io.git build/freedomjs
 
 # Copy latest release
-mkdir -p tools/freedomjs/dist/freedom/$TAG
-cp freedom.js tools/freedomjs/dist/freedom/$TAG/freedom.$TAG.js
-cp freedom.js.map tools/freedomjs/dist/freedom/$TAG/freedom.$TAG.js.map
-cp freedom.min.js tools/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js
-cp freedom.min.js.map tools/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js.map
-ln -s freedom.$TAG.js tools/freedomjs/dist/freedom/$TAG/freedom.js
-ln -s freedom.$TAG.js.map tools/freedomjs/dist/freedom/$TAG/freedom.js.map
-ln -s freedom.$TAG.min.js tools/freedomjs/dist/freedom/$TAG/freedom.min.js
-ln -s freedom.$TAG.min.js.map tools/freedomjs/dist/freedom/$TAG/freedom.min.js.map
+mkdir -p build/freedomjs/dist/freedom/$TAG
+cp freedom.js build/freedomjs/dist/freedom/$TAG/freedom.$TAG.js
+cp freedom.js.map build/freedomjs/dist/freedom/$TAG/freedom.$TAG.js.map
+cp freedom.min.js build/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js
+cp freedom.min.js.map build/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js.map
+ln -s freedom.$TAG.js build/freedomjs/dist/freedom/$TAG/freedom.js
+ln -s freedom.$TAG.js.map build/freedomjs/dist/freedom/$TAG/freedom.js.map
+ln -s freedom.$TAG.min.js build/freedomjs/dist/freedom/$TAG/freedom.min.js
+ln -s freedom.$TAG.min.js.map build/freedomjs/dist/freedom/$TAG/freedom.min.js.map
 
 # Copy docs
-mkdir -p tools/freedomjs/dist/freedom/$TAG
-rm -rf tools/freedomjs/dist/freedom/$TAG/doc
-cp -r tools/doc tools/freedomjs/dist/freedom/$TAG/doc
+mkdir -p build/freedomjs/dist/freedom/$TAG
+rm -rf build/freedomjs/dist/freedom/$TAG/doc
+cp -r build/doc build/freedomjs/dist/freedom/$TAG/doc
 
 # Copy demos
-mkdir -p tools/freedomjs/dist/freedom/$TAG
-rm -rf tools/freedomjs/dist/freedom/$TAG/demo
-cp -r demo tools/freedomjs/dist/freedom/$TAG/demo
-rm -rf tools/freedomjs/dist/freedom/$TAG/providers
-cp -r providers tools/freedomjs/dist/freedom/$TAG/providers
+mkdir -p build/freedomjs/dist/freedom/$TAG
+rm -rf build/freedomjs/dist/freedom/$TAG/demo
+cp -r demo build/freedomjs/dist/freedom/$TAG/demo
+rm -rf build/freedomjs/dist/freedom/$TAG/providers
+cp -r providers build/freedomjs/dist/freedom/$TAG/providers
 
 # Link to the latest
-rm -f tools/freedomjs/dist/freedom/latest
-ln -s $TAG tools/freedomjs/dist/freedom/latest
+rm -f build/freedomjs/dist/freedom/latest
+ln -s $TAG build/freedomjs/dist/freedom/latest
 
 #if [ "$TAG" ]; then
-#  cp freedom.js tools/freedomjs/release/$BRANCH/freedom.$TAG.js
-#  cp freedom.min.js tools/freedomjs/release/$BRANCH/freedom.$TAG.min.js
+#  cp freedom.js build/freedomjs/release/$BRANCH/freedom.$TAG.js
+#  cp freedom.min.js build/freedomjs/release/$BRANCH/freedom.$TAG.min.js
 #fi
 
 # Commit
-cd tools/freedomjs
+cd build/freedomjs
 git add -A .
 git commit -m $FREEDOMCR/$COMMIT
 git push origin master
