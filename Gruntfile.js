@@ -295,12 +295,7 @@ module.exports = function (grunt) {
         }
       }
     },
-    shell: {
-      options: {},
-      publishWebsite: {
-        command: 'bash tasks/publishWebsite.sh'
-      }
-    }
+    publishWebsite : {}
   });
 
   // Load tasks.
@@ -319,7 +314,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
-  grunt.loadNpmTasks('grunt-shell');
   grunt.loadTasks('tasks');
 
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
@@ -402,7 +396,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('website', [
     'yuidoc',
-    'shell:publishWebsite'
+    'publishWebsite'
   ]);
 
   if (process.env.TRAVIS_JOB_NUMBER) {
