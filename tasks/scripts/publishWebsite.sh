@@ -13,11 +13,9 @@ git clone git@github.com:freedomjs/freedomjs.github.io.git build/freedomjs
 # Copy latest release
 mkdir -p build/freedomjs/dist/freedom/$TAG
 cp freedom.js build/freedomjs/dist/freedom/$TAG/freedom.$TAG.js
-cp freedom.js.map build/freedomjs/dist/freedom/$TAG/freedom.$TAG.js.map
-cp freedom.min.js build/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js
-cp freedom.min.js.map build/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js.map
+cp dist/freedom.min.js build/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js
+cp dist/freedom.min.js.map build/freedomjs/dist/freedom/$TAG/freedom.$TAG.min.js.map
 ln -s freedom.$TAG.js build/freedomjs/dist/freedom/$TAG/freedom.js
-ln -s freedom.$TAG.js.map build/freedomjs/dist/freedom/$TAG/freedom.js.map
 ln -s freedom.$TAG.min.js build/freedomjs/dist/freedom/$TAG/freedom.min.js
 ln -s freedom.$TAG.min.js.map build/freedomjs/dist/freedom/$TAG/freedom.min.js.map
 

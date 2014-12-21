@@ -23,7 +23,7 @@ If you want a built version of freedom.js into your website, grab a copy from ou
 
 Websites: 
 * [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
-* [freedom.v0.6.1.js](http://freedomjs.org/dist/freedom/v0.6.1/freedom.v0.6.1.js) (stable)
+* [freedom.v0.6.13.js](http://freedomjs.org/dist/freedom/v0.6.13/freedom.v0.6.13.js) (stable)
 
 Chrome Apps:
 * [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
