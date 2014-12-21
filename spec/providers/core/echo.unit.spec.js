@@ -1,6 +1,6 @@
 var testUtil = require('../../util');
 var Util = require('../../../src/util');
-var Echo = require('../../../providers/core/echo.unprivileged');
+var Echo = require('../../../providers/core/core.echo');
 
 describe("providers/core/Echo_Unprivileged", function() {
   var app;

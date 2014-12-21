@@ -1,4 +1,4 @@
-var Provider = require('../../../providers/core/storage.localstorage');
+var Provider = require('../../../providers/core/core.storage');
 
 describe("core.storage unprivileged", function() {
   var provider;

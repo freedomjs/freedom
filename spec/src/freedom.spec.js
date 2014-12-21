@@ -8,7 +8,7 @@ describe("freedom", function() {
   beforeEach(function() {
     testUtil.setCoreProviders([
       require('../../providers/core/core.unprivileged'),
-      require('../../providers/core/console.unprivileged')
+      require('../../providers/core/core.console')
     ]);
     freedom = testUtil.setupModule("relative://spec/helper/manifest.json");
   });
@@ -66,7 +66,7 @@ describe("freedom instances", function() {
   beforeEach(function() {
     testUtil.setCoreProviders([
       require('../../providers/core/core.unprivileged'),
-      require('../../providers/core/console.unprivileged')
+      require('../../providers/core/core.console')
     ]);
   });
 

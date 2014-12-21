@@ -2,15 +2,15 @@
 
 var providers = [
   require('../../providers/core/core.unprivileged'),
-  require('../../providers/core/echo.unprivileged'),
-  require('../../providers/core/console.unprivileged'),
-  require('../../providers/core/peerconnection.unprivileged'),
+  require('../../providers/core/core.echo'),
+  require('../../providers/core/core.console'),
+  require('../../providers/core/core.peerconnection'),
   require('../../providers/core/core.rtcpeerconnection'),
   require('../../providers/core/core.rtcdatachannel'),
-  require('../../providers/core/storage.localstorage'),
+  require('../../providers/core/core.storage'),
   require('../../providers/core/core.view'),
   require('../../providers/core/core.oauth'),
-  require('../../providers/core/websocket.unprivileged')
+  require('../../providers/core/core.websocket')
 ];
 
 function getFreedomScript() {
