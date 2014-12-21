@@ -2,10 +2,10 @@ var testUtil = require("../util");
 var setup = function() {
   testUtil.setCoreProviders([
     require("../../providers/core/core.unprivileged"),
-    require("../../providers/core/console.unprivileged"),
-    require("../../providers/core/peerconnection.unprivileged"),
-    require("../../providers/core/storage.localstorage"),
-    require("../../providers/core/websocket.unprivileged")
+    require("../../providers/core/core.console"),
+    require("../../providers/core/core.peerconnection"),
+    require("../../providers/core/core.storage"),
+    require("../../providers/core/core.websocket")
   ]);
 };
 describe("integration-single: social.loopback.json",

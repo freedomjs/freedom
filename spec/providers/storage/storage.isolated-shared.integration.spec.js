@@ -6,8 +6,8 @@ describe("storage.isolated.json - storage.shared.json", function() {
   beforeEach(function(done) {
     testUtil.setCoreProviders([
       require('../../../providers/core/core.unprivileged'),
-      require('../../../providers/core/console.unprivileged'),
-      require('../../../providers/core/storage.localstorage')
+      require('../../../providers/core/core.console'),
+      require('../../../providers/core/core.storage')
     ]);
     freedom = testUtil.setupModule("relative://spec/helper/providers.json");
     freedom.then(function(chan) {

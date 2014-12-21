@@ -1,4 +1,4 @@
-var PeerConnection = require('../../../providers/core/peerconnection.unprivileged');
+var PeerConnection = require('../../../providers/core/core.peerconnection');
 
 function MockRTCIceCandidate() {
 }

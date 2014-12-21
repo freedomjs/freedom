@@ -1,5 +1,5 @@
 var testUtil = require('../../util');
-var Console_unpriv = require('../../../providers/core/console.unprivileged');
+var Console_unpriv = require('../../../providers/core/core.console');
 
 describe("providers/core/Console_unprivileged", function() {
   var app, logger, console;

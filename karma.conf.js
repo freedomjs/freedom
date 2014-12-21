@@ -20,7 +20,7 @@ module.exports = function (config) {
       require.resolve('es5-shim'),
       require.resolve('es6-promise'),
       'spec.js',
-      {pattern: 'tools/freedom.frame.js', included: false}
+      {pattern: 'build/freedom.frame.js', included: false}
     ],
     
     // web server port
@@ -53,7 +53,7 @@ module.exports = function (config) {
     // Coverage report options
     coverageReporter: {
       type: 'lcovonly',
-      dir: 'tools/coverage/',
+      dir: 'build/coverage/',
       file: 'lcov.info'
     },
 
