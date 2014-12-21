@@ -222,13 +222,13 @@ module.exports = function (grunt) {
         version: '<%= pkg.version %>',
         options: {
           paths: 'src/',
-          outdir: 'tools/doc/'
+          outdir: 'build/doc/'
         }
       }
     },
     coveralls: {
       report: {
-        src: 'tools/coverage/PhantomJS**/*lcov.info'
+        src: 'build/coverage/PhantomJS**/*lcov.info'
       }
     },
     codeclimate: {
@@ -298,7 +298,7 @@ module.exports = function (grunt) {
     shell: {
       options: {},
       publishWebsite: {
-        command: 'bash tools/publishWebsite.sh'
+        command: 'bash tasks/publishWebsite.sh'
       }
     }
   });
@@ -343,17 +343,17 @@ module.exports = function (grunt) {
     });
   grunt.registerTask('dynamic_codeclimate', 'Run codeclimate with correct lcov.',
     function () {
-      var file = require("glob").sync("tools/coverage/PhantomJS**/lcov.info");
+      var file = require("glob").sync("build/coverage/PhantomJS**/lcov.info");
       if (file.length !== 1) {
         return grunt.log.error("lcov file not present or distinguishable for code climate");
       }
-      require('fs').renameSync(file[0], "tools/coverage/lcov.info");
+      require('fs').renameSync(file[0], "build/coverage/lcov.info");
       grunt.config.merge({
         codeclimate: {
           report: {
-            src: "tools/coverage/lcov.info",
+            src: "build/coverage/lcov.info",
             options: {
-              file: "tools/coverage/lcov.info",
+              file: "build/coverage/lcov.info",
               token: process.env.CODECLIMATETOKEN
             }
           }
