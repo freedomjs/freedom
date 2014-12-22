@@ -27,11 +27,11 @@ Websites:
 
 Chrome Apps:
 * [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
-* [freedom-for-chrome.v0.4.1.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.1.js) (stable)
+* [freedom-for-chrome.v0.4.8.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.8.js) (stable)
 
 Firefox Extensions:
 * [freedom-for-firefox.latest.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
-* [freedom-for-firefox.v0.5.0.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.5.0.jsm) (stable)
+* [freedom-for-firefox.v0.6.6.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.6.jsm) (stable)
 
 freedom, freedom-for-node, freedom-for-chrome, and freedom-for-firefox also exist as npm packages
 
