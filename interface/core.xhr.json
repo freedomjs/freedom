@@ -21,21 +21,21 @@
     "setRequestHeader": { "type": "method", "value": [ "string", "string" ] },
     // @param {String} mimetype
     "overrideMimeType": { "type": "method", "value": [ "string" ] },
-    "getReadyState": { "type": "method", "value": [], "ret": "number" }
-    "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer", "buffer" } }
-    "getResponseText": { "type": "method", "value": [], "ret": "string" }
-    "getResponseType": { "type": "method", "value": [], "ret": "string" }
-    "getStatus": { "type": "method", "value": [], "ret": "number" }
-    "getStatusText": { "type": "method", "value": [], "ret": "string" }
-    "getTimeout": { "type": "method", "value": [], "ret": "number" }
-    "setTimeout": { "type": "method", "value": [ "number" ] }
+    "getReadyState": { "type": "method", "value": [], "ret": "number" },
+    "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer": "buffer" } },
+    "getResponseText": { "type": "method", "value": [], "ret": "string" },
+    "getResponseType": { "type": "method", "value": [], "ret": "string" },
+    "getStatus": { "type": "method", "value": [], "ret": "number" },
+    "getStatusText": { "type": "method", "value": [], "ret": "string" },
+    "getTimeout": { "type": "method", "value": [], "ret": "number" },
+    "setTimeout": { "type": "method", "value": [ "number" ] },
 
     "progress": { "type": "event", "value": {} },
     "load": { "type": "event", "value": {} },
     "error": { "type": "event", "value": {} },
     "abort": { "type": "event", "value": {} },
-    "timeout": { "type": "event", "value": {} }
-    "loadend": { "type": "event", "value": {} }
+    "timeout": { "type": "event", "value": {} },
+    "loadend": { "type": "event", "value": {} },
     "readystatechange": { "type": "event", "value": {} }
   }
 }
