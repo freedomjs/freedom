@@ -1,0 +1,65 @@
+{
+  "name": "core.xhr",
+  "api": {
+    // @param {String} method - GET/POST/DELETE
+    // @param {String} url
+    // @param {Boolean} async
+    // @param {String} user
+    // @param {String} password
+    "open": {
+      "type": "method",
+      "value": [ "string", "string", "boolean", "string", "string" ]
+    },
+    
+    // Specify a single element in the argument object,
+    // depending on the type of data to send (e.g. in POST)
+    "send": {
+      "type": "method",
+      "value": [ {
+        "string": "string",
+        "buffer": "buffer"
+      } ]
+    },
+    
+    "abort": {
+      "type": "method",
+      "value": []
+    },
+
+    // @param {String} header
+    // @return {String} value
+    "getResponseHeader": {
+      "type": "method",
+      "value": [ "string" ],
+      "ret": "string"
+    },
+
+    // @param {String} all headers in a String
+    "getAllResponseHeaders": {
+      "type": "method",
+      "value": [],
+      "ret": "string"
+    },
+
+    // @param {String} header
+    // @param {String} value
+    "setRequestHeader": {
+      "type": "method",
+      "value": [ "string", "string" ]
+    },
+
+    // @param {String} mimetype
+    "overrideMimeType": {
+      "type": "method",
+      "value": [ "string" ]
+    },
+
+    "progress": { "type": "event", "value": {} },
+    "load": { "type": "event", "value": {} },
+    "error": { "type": "event", "value": {} },
+    "abort": { "type": "event", "value": {} },
+    "timeout": { "type": "event", "value": {} }
+    "loadend": { "type": "event", "value": {} }
+    "readystatechange": { "type": "event", "value": {} }
+  }
+}
