@@ -6,53 +6,29 @@
     // @param {Boolean} async
     // @param {String} user
     // @param {String} password
-    "open": {
-      "type": "method",
-      "value": [ "string", "string", "boolean", "string", "string" ]
-    },
-    
+    "open": { "type": "method", "value": [ "string", "string", "boolean", "string", "string" ] },
     // Specify a single element in the argument object,
     // depending on the type of data to send (e.g. in POST)
-    "send": {
-      "type": "method",
-      "value": [ {
-        "string": "string",
-        "buffer": "buffer"
-      } ]
-    },
-    
-    "abort": {
-      "type": "method",
-      "value": []
-    },
-
+    "send": { "type": "method", "value": [ { "string": "string", "buffer": "buffer" } ] },
+    "abort": { "type": "method", "value": [] },
     // @param {String} header
     // @return {String} value
-    "getResponseHeader": {
-      "type": "method",
-      "value": [ "string" ],
-      "ret": "string"
-    },
-
+    "getResponseHeader": { "type": "method", "value": [ "string" ], "ret": "string" },
     // @param {String} all headers in a String
-    "getAllResponseHeaders": {
-      "type": "method",
-      "value": [],
-      "ret": "string"
-    },
-
+    "getAllResponseHeaders": { "type": "method", "value": [], "ret": "string" },
     // @param {String} header
     // @param {String} value
-    "setRequestHeader": {
-      "type": "method",
-      "value": [ "string", "string" ]
-    },
-
+    "setRequestHeader": { "type": "method", "value": [ "string", "string" ] },
     // @param {String} mimetype
-    "overrideMimeType": {
-      "type": "method",
-      "value": [ "string" ]
-    },
+    "overrideMimeType": { "type": "method", "value": [ "string" ] },
+    "getReadyState": { "type": "method", "value": [], "ret": "number" }
+    "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer", "buffer" } }
+    "getResponseText": { "type": "method", "value": [], "ret": "string" }
+    "getResponseType": { "type": "method", "value": [], "ret": "string" }
+    "getStatus": { "type": "method", "value": [], "ret": "number" }
+    "getStatusText": { "type": "method", "value": [], "ret": "string" }
+    "getTimeout": { "type": "method", "value": [], "ret": "number" }
+    "setTimeout": { "type": "method", "value": [ "number" ] }
 
     "progress": { "type": "event", "value": {} },
     "load": { "type": "event", "value": {} },
