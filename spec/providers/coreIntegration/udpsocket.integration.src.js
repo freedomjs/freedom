@@ -8,71 +8,70 @@ module.exports = function(provider, setup) {
   });
 
   it("Connects, has state, and sends/receives data", function (done) {
-    // Currently a copy of 'receives data' unit test from firefox, change it
+    const todo = [];  // Pending tasks to complete before calling |done()|.
+    const markTask = function(name) {
+      var tag = { name: name };
+      todo.push(tag);
+      return tag;
+    }
+    const did = function(task) {
+      var i = todo.indexOf(task);
+      expect(i).not.toEqual(-1);  // A task must not be done twice.
+      todo.splice(i, 1);  // Remove |task| from the list.
+      if (todo.length == 0) {
+        done();  // This is the only call to |done()|.
+      }
+    };
+    // callPoint returns a function that must be called exactly once.
+    const callPoint = function(name) {
+      return did.bind(null, markTask(name));
+    };
+
+    const LOCALHOST = '127.0.0.1';
+    const checkSocketInfo = function(socketToCheck, port) {
+      const getInfoTask = markTask('getInfo');
+      socketToCheck.getInfo(function(state) {
+        expect(state).toEqual(jasmine.objectContaining({
+          'localAddress': LOCALHOST,
+          'localPort': port
+        }));
+        did(getInfoTask);
+      });
+    };
+
     const sendString = "Hello World",
           sendBuffer = str2ab(sendString),
           clientDispatchEvent = jasmine.createSpy("dispatchEvent"),
-          sendingSocket = new provider.provider(undefined, clientDispatchEvent),
-          sendContinuation = jasmine.createSpy("sendContinuation"),
-          bindContinuation = jasmine.createSpy("bindContinuation"),
-          stateContinuation = jasmine.createSpy("stateContinuation"),
-          destroyContinuation = jasmine.createSpy("destroyContinuation");
+          sendingSocket = new provider.provider(undefined, clientDispatchEvent);
+
+    // Don't finish this test until a packet is received.
+    const receivePacketTask = markTask('receive packet');
+
     // Set up connections
-    socket.bind("127.0.0.1", listenPort, bindContinuation);
-    setTimeout(function() {
-      expect(bindContinuation).toHaveBeenCalledWith(0);
-      done();
-    }, 500);
-    sendingSocket.bind("127.0.0.1", sendPort, bindContinuation);
-    setTimeout(function() {
-      expect(bindContinuation.calls.count()).toEqual(2);
-      expect(bindContinuation.calls.mostRecent().args[0]).toEqual(0);
-      done();
-    }, 500);
+    socket.bind(LOCALHOST, listenPort, function(returnCode) {
+      expect(returnCode).toEqual(0);
+      checkSocketInfo(socket, listenPort);
 
-    // Check socket state
-    const listenState = {"localAddress": "127.0.0.1", "localPort": listenPort},
-          sendState = {"localAddress": "127.0.0.1", "localPort": sendPort};
-    setTimeout(function() {
-      socket.getInfo(stateContinuation);
-      setTimeout(function() {
-        expect(stateContinuation).toHaveBeenCalledWith(listenState);
-        done();
-      }, 250);
-      done();
-    }, 250);
-    setTimeout(function() {
-      sendingSocket.getInfo(stateContinuation);
-      setTimeout(function() {
-        expect(stateContinuation).toHaveBeenCalledWith(sendState);
-        expect(stateContinuation.calls.count()).toEqual(2);
-        done();
-      }, 250);
-      done();
-    }, 250);
+      sendingSocket.bind(LOCALHOST, sendPort, function(returnCode) {
+        expect(returnCode).toEqual(0);
+        checkSocketInfo(sendingSocket, sendPort);
 
-    // Check data sending
-    serverDispatchEvent.and.callFake(function fakeDispatchEvent(event, data) {
-      expect(event).toEqual("onData");
-      expect(data.resultCode).toEqual(0);
-      expect(data.port).toEqual(sendPort);
-      expect(data.data).toEqual(sendBuffer);
-      done();
+        // Check data sending
+        serverDispatchEvent.and.callFake(function(event, data) {
+          expect(event).toEqual("onData");
+          expect(data.resultCode).toEqual(0);
+          expect(data.port).toEqual(sendPort);
+          expect(data.data).toEqual(sendBuffer);
+
+          sendingSocket.destroy(callPoint('destroy sending socket'));
+          socket.destroy(callPoint('destroy receiving socket'));
+
+          did(receivePacketTask);
+        });
+        sendingSocket.sendTo(sendBuffer, "127.0.0.1",
+                             listenPort, callPoint('send continuation'));
+      });
     });
-    sendingSocket.sendTo(sendBuffer, "127.0.0.1",
-                         listenPort, sendContinuation);
-    setTimeout(function() {
-      socket.getInfo(stateContinuation);
-      expect(sendContinuation).toHaveBeenCalled();
-      done();
-    }, 500);
-    sendingSocket.destroy(destroyContinuation);
-    socket.destroy(destroyContinuation);
-    setTimeout(function() {
-      socket.getInfo(stateContinuation);
-      expect(destroyContinuation.calls.count()).toEqual(2);
-      done();
-    }, 500);
   });
 
   function str2ab(str) {
