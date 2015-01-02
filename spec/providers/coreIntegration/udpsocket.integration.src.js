@@ -22,8 +22,8 @@ module.exports = function(provider, setup) {
         done();  // This is the only call to |done()|.
       }
     };
-    // callPoint returns a function that must be called exactly once.
-    var callPoint = function(name) {
+    // requiredCallback returns a function that must be called exactly once.
+    var requiredCallback = function(name) {
       return did.bind(null, markTask(name));
     };
 
@@ -63,13 +63,13 @@ module.exports = function(provider, setup) {
           expect(data.port).toEqual(sendPort);
           expect(data.data).toEqual(sendBuffer);
 
-          sendingSocket.destroy(callPoint('destroy sending socket'));
-          socket.destroy(callPoint('destroy receiving socket'));
+          sendingSocket.destroy(requiredCallback('destroy sending socket'));
+          socket.destroy(requiredCallback('destroy receiving socket'));
 
           did(receivePacketTask);
         });
         sendingSocket.sendTo(sendBuffer, "127.0.0.1",
-                             listenPort, callPoint('send continuation'));
+                             listenPort, requiredCallback('send continuation'));
       });
     });
   });
