@@ -27,14 +27,13 @@ module.exports = function(provider, setup) {
       return did.bind(null, markTask(name));
     };
 
-    var LOCALHOST = '127.0.0.1';
+    var LOCALHOST_V4 = '127.0.0.1';
     var checkSocketInfo = function(socketToCheck, port) {
       var getInfoTask = markTask('getInfo');
       socketToCheck.getInfo(function(state) {
-        expect(state).toEqual(jasmine.objectContaining({
-          'localAddress': LOCALHOST,
-          'localPort': port
-        }));
+        // On Chrome, this is "127.0.0.1".  On Firefox it's "localhost".
+        expect([LOCALHOST_V4, 'localhost']).toContain(state['localAddress']);
+        expect(state['localPort']).toEqual(port);
         did(getInfoTask);
       });
     };
@@ -48,11 +47,11 @@ module.exports = function(provider, setup) {
     var receivePacketTask = markTask('receive packet');
 
     // Set up connections
-    socket.bind(LOCALHOST, listenPort, function(returnCode) {
+    socket.bind(LOCALHOST_V4, listenPort, function(returnCode) {
       expect(returnCode).toEqual(0);
       checkSocketInfo(socket, listenPort);
 
-      sendingSocket.bind(LOCALHOST, sendPort, function(returnCode) {
+      sendingSocket.bind(LOCALHOST_V4, sendPort, function(returnCode) {
         expect(returnCode).toEqual(0);
         checkSocketInfo(sendingSocket, sendPort);
 
@@ -68,7 +67,7 @@ module.exports = function(provider, setup) {
 
           did(receivePacketTask);
         });
-        sendingSocket.sendTo(sendBuffer, "127.0.0.1",
+        sendingSocket.sendTo(sendBuffer, LOCALHOST_V4,
                              listenPort, requiredCallback('send continuation'));
       });
     });
