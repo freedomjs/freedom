@@ -27,7 +27,9 @@ XhrProvider.prototype.open = function(method, url, async, user, password) {
 
 XhrProvider.prototype.send = function(data) {
   "use strict";
-  if (data.hasOwnProperty("string")) {
+  if (!(data instanceof Object)) {
+    this._xhr.send();
+  } else if (data.hasOwnProperty("string")) {
     this._xhr.send(data.string);
   } else if (data.hasOwnProperty("buffer")) {
     this._xhr.send(data.buffer);
@@ -74,14 +76,13 @@ XhrProvider.prototype.getResponse = function() {
   "use strict";
   if (this._xhr.response === null) {
     return PromiseCompat.resolve(null);
-  } else if (this._xhr.response instanceof String) {
+  } else if (typeof this._xhr.response === "string") {
     return PromiseCompat.resolve({ string: this._xhr.response });
   } else if (this._xhr.response instanceof ArrayBuffer) {
     return PromiseCompat.resolve({ buffer: this._xhr.response });
   }
 
-  // Log issue?
-  return PromiseCompat.resolve({});
+  return PromiseCompat.reject("core.xhr cannot determine type of response");
 };
 
 XhrProvider.prototype.getResponseText = function() {
