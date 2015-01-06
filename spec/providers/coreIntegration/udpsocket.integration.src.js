@@ -31,7 +31,8 @@ module.exports = function(provider, setup) {
     var checkSocketInfo = function(socketToCheck, port) {
       var getInfoTask = markTask('getInfo');
       socketToCheck.getInfo(function(state) {
-        // On Chrome, this is "127.0.0.1".  On Firefox it's "localhost".
+        // On Chrome and node.js, the local address is "127.0.0.1".
+        // On Firefox it's "localhost".
         expect([LOCALHOST_V4, 'localhost']).toContain(state['localAddress']);
         expect(state['localPort']).toEqual(port);
         did(getInfoTask);
