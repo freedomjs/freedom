@@ -47,6 +47,9 @@ module.exports = function (provider, setup) {
   it("can GET github.com", function(done) {
     var response;
     dispatch.gotMessageAsync("onload", [], function(e) {
+      expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
+      expect(e.loaded).toEqual(jasmine.any(Number));
+      expect(e.total).toEqual(jasmine.any(Number));;
       xhr.getReadyState().then(function(readyState) {
         expect(readyState).toEqual(4); // Done
         return xhr.getStatus();
