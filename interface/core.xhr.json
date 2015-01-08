@@ -38,6 +38,8 @@
     "getStatusText": { "type": "method", "value": [], "ret": "string" },
     "getTimeout": { "type": "method", "value": [], "ret": "number" },
     "setTimeout": { "type": "method", "value": [ "number" ] },
+    "getWithCredentials": { "type": "method", "value": [], "ret": "boolean" },
+    "setWithCredentials": { "type": "method", "value": [ "boolean" ] },
 
     "onloadstart": { "type": "event", "value": {} },
     "onprogress": { "type": "event", "value": {} },

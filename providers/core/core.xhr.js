@@ -137,6 +137,18 @@ XhrProvider.prototype.setTimeout = function(timeout) {
   return PromiseCompat.resolve();
 };
 
+XhrProvider.prototype.getWithCredentials = function() {
+  "use strict";
+  return PromiseCompat.resolve(this._xhr.withCredentials);
+};
+
+XhrProvider.prototype.setWithCredentials = function(wc) {
+  "use strict";
+  this._xhr.withCredentials = wc;
+  return PromiseCompat.resolve();
+};
+
+
 XhrProvider.prototype._setupListeners = function() {
   "use strict";
   this._events.forEach(function (eventName) {
