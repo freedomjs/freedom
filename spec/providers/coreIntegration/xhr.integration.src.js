@@ -6,7 +6,7 @@ module.exports = function (provider, setup) {
   beforeEach(function () {
     setup();
     dispatch = testUtil.createTestPort('msgs');
-    xhr = new provider.provider(undefined, dispatch.onMessage.bind(dispatch));
+    xhr = new provider.provider({ provider: { onClose: function(i, f) {}} }, dispatch.onMessage.bind(dispatch));
   });
 
   it("calling open with async=false returns an error", function(done) {
