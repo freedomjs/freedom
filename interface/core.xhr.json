@@ -29,7 +29,7 @@
     // @param {String} mimetype
     "overrideMimeType": { "type": "method", "value": [ "string" ] },
     "getReadyState": { "type": "method", "value": [], "ret": "number" },
-    "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer": "buffer" } },
+    "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer": "buffer", "object": "object" } },
     "getResponseText": { "type": "method", "value": [], "ret": "string" },
     "getResponseType": { "type": "method", "value": [], "ret": "string" },
     "setResponseType": { "type": "method", "value": [  "string" ] },

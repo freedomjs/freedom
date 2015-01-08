@@ -83,10 +83,12 @@ XhrProvider.prototype.getResponse = function() {
   "use strict";
   if (this._xhr.response === null) {
     return PromiseCompat.resolve(null);
-  } else if (typeof this._xhr.response === "string") {
+  } else if (this._xhr.responseType === "text" || this._xhr.responseType === "") {
     return PromiseCompat.resolve({ string: this._xhr.response });
-  } else if (this._xhr.response instanceof ArrayBuffer) {
+  } else if (this._xhr.responseType === "arraybuffer") {
     return PromiseCompat.resolve({ buffer: this._xhr.response });
+  } else if (this._xhr.responseType === "json") {
+    return PromiseCompat.resolve({ object: this._xhr.response });
   }
 
   return PromiseCompat.reject("core.xhr cannot determine type of response");
