@@ -32,6 +32,7 @@
     "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer": "buffer" } },
     "getResponseText": { "type": "method", "value": [], "ret": "string" },
     "getResponseType": { "type": "method", "value": [], "ret": "string" },
+    "setResponseType": { "type": "method", "value": [  "string" ] },
     "getStatus": { "type": "method", "value": [], "ret": "number" },
     "getStatusText": { "type": "method", "value": [], "ret": "string" },
     "getTimeout": { "type": "method", "value": [], "ret": "number" },

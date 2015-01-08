@@ -102,6 +102,12 @@ XhrProvider.prototype.getResponseType = function() {
   return PromiseCompat.resolve(this._xhr.responseType);
 };
 
+XhrProvider.prototype.setResponseType = function(type) {
+  "use strict";
+  this._xhr.responseType = type;
+  return PromiseCompat.resolve();
+};
+
 XhrProvider.prototype.getStatus = function() {
   "use strict";
   return PromiseCompat.resolve(this._xhr.status);
