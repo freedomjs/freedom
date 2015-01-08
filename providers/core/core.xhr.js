@@ -153,7 +153,7 @@ XhrProvider.prototype._setupListeners = function() {
   "use strict";
   this._events.forEach(function (eventName) {
     this._xhr.addEventListener(eventName, function(eventName, event) {
-      this._dispatchEvent("on" + eventName, {});
+      this._dispatchEvent("on" + eventName, event);
     }.bind(this, eventName), false);
   }.bind(this));
 };

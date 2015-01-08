@@ -41,13 +41,13 @@
     "getWithCredentials": { "type": "method", "value": [], "ret": "boolean" },
     "setWithCredentials": { "type": "method", "value": [ "boolean" ] },
 
-    "onloadstart": { "type": "event", "value": {} },
-    "onprogress": { "type": "event", "value": {} },
-    "onabort": { "type": "event", "value": {} },
-    "onerror": { "type": "event", "value": {} },
-    "onload": { "type": "event", "value": {} },
-    "ontimeout": { "type": "event", "value": {} },
-    "onloadend": { "type": "event", "value": {} },
+    "onloadstart": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onprogress": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onabort": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onerror": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onload": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "ontimeout": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onloadend": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
     "onreadystatechange": { "type": "event", "value": {} }
   }
 }
