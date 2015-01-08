@@ -46,7 +46,7 @@ module.exports = function (provider, setup) {
   // Note, test needs to GET a domain with CORS enabled or test will fail
   it("can GET github.com", function(done) {
     var response;
-    dispatch.gotMessageAsync("load", [], function(e) {
+    dispatch.gotMessageAsync("onload", [], function(e) {
       xhr.getReadyState().then(function(readyState) {
         expect(readyState).toEqual(4); // Done
         return xhr.getStatus();
@@ -63,6 +63,9 @@ module.exports = function (provider, setup) {
         return xhr.getResponse();
       }).then(function(resp) {
         expect(resp.string).toEqual(response);
+        return xhr.getResponseURL();
+      }).then(function(url) {
+        expect(url).toEqual("https://api.github.com/");
         done();
       });
     });

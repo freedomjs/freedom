@@ -31,6 +31,7 @@
     "getReadyState": { "type": "method", "value": [], "ret": "number" },
     "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer": "buffer", "object": "object" } },
     "getResponseText": { "type": "method", "value": [], "ret": "string" },
+    "getResponseURL": { "type": "method", "value": [], "ret": "string" },
     "getResponseType": { "type": "method", "value": [], "ret": "string" },
     "setResponseType": { "type": "method", "value": [  "string" ] },
     "getStatus": { "type": "method", "value": [], "ret": "number" },
@@ -38,12 +39,13 @@
     "getTimeout": { "type": "method", "value": [], "ret": "number" },
     "setTimeout": { "type": "method", "value": [ "number" ] },
 
-    "progress": { "type": "event", "value": {} },
-    "load": { "type": "event", "value": {} },
-    "error": { "type": "event", "value": {} },
-    "abort": { "type": "event", "value": {} },
-    "timeout": { "type": "event", "value": {} },
-    "loadend": { "type": "event", "value": {} },
-    "readystatechange": { "type": "event", "value": {} }
+    "onloadstart": { "type": "event", "value": {} },
+    "onprogress": { "type": "event", "value": {} },
+    "onabort": { "type": "event", "value": {} },
+    "onerror": { "type": "event", "value": {} },
+    "onload": { "type": "event", "value": {} },
+    "ontimeout": { "type": "event", "value": {} },
+    "onloadend": { "type": "event", "value": {} },
+    "onreadystatechange": { "type": "event", "value": {} }
   }
 }

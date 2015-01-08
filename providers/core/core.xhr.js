@@ -8,10 +8,11 @@ var XhrProvider = function(cap, dispatchEvent) {
   this._xhr = new XMLHttpRequest();
 
   this._events = [
+    "loadstart",
     "progress",
-    "load",
-    "error",
     "abort",
+    "error",
+    "load",
     "timeout",
     "loadend",
     "readystatechange"
@@ -99,6 +100,11 @@ XhrProvider.prototype.getResponseText = function() {
   return PromiseCompat.resolve(this._xhr.responseText);
 };
 
+XhrProvider.prototype.getResponseURL = function() {
+  "use strict";
+  return PromiseCompat.resolve(this._xhr.responseURL);
+};
+
 XhrProvider.prototype.getResponseType = function() {
   "use strict";
   return PromiseCompat.resolve(this._xhr.responseType);
@@ -135,7 +141,7 @@ XhrProvider.prototype._setupListeners = function() {
   "use strict";
   this._events.forEach(function (eventName) {
     this._xhr.addEventListener(eventName, function(eventName, event) {
-      this._dispatchEvent(eventName, {});
+      this._dispatchEvent("on" + eventName, {});
     }.bind(this, eventName), false);
   }.bind(this));
 };
