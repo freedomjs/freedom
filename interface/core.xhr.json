@@ -41,6 +41,7 @@
     "getWithCredentials": { "type": "method", "value": [], "ret": "boolean" },
     "setWithCredentials": { "type": "method", "value": [ "boolean" ] },
 
+    // Download Events
     "onloadstart": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
     "onprogress": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
     "onabort": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
@@ -48,6 +49,17 @@
     "onload": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
     "ontimeout": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
     "onloadend": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
-    "onreadystatechange": { "type": "event", "value": {} }
+    "onreadystatechange": { "type": "event", "value": {} },
+
+    // Upload Events
+    "onuploadloadstart": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadprogress": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadabort": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploaderror": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadload": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadtimeout": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadloadend": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadreadystatechange": { "type": "event", "value": {} }
+
   }
 }

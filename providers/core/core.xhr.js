@@ -157,9 +157,17 @@ XhrProvider.prototype.setWithCredentials = function(wc) {
 
 XhrProvider.prototype._setupListeners = function() {
   "use strict";
+  // Download events
   this._events.forEach(function (eventName) {
     this._xhr.addEventListener(eventName, function(eventName, event) {
       this._dispatchEvent("on" + eventName, event);
+    }.bind(this, eventName), false);
+  }.bind(this));
+
+  // Upload events
+  this._events.forEach(function (eventName) {
+    this._xhr.upload.addEventListener(eventName, function(eventName, event) {
+      this._dispatchEvent("onupload" + eventName, event);
     }.bind(this, eventName), false);
   }.bind(this));
 };

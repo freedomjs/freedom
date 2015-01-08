@@ -75,4 +75,16 @@ module.exports = function (provider, setup) {
     xhr.open("GET", "https://api.github.com/", true);
     xhr.send(null);
   });
+
+  //@todo Pending a valid URL that we can upload things to
+  xit("triggers upload events", function(done) {
+    dispatch.gotMessageAsync("onuploadprogress", [], function(e) {
+      expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
+      expect(e.loaded).toEqual(jasmine.any(Number));
+      expect(e.total).toEqual(jasmine.any(Number));;
+      done();
+    });
+    xhr.open("POST", "http://pastebin.com/api/api_post.php", true);
+    xhr.send("POST");
+  });
 };
