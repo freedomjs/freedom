@@ -1,0 +1,65 @@
+{
+  "name": "core.xhr",
+  "api": {
+    // @param {String} method - GET/POST/DELETE
+    // @param {String} url
+    // @param {Boolean} async
+    // @param {String} user
+    // @param {String} password
+    "open": {
+      "type": "method",
+      "value": [ "string", "string", "boolean", "string", "string" ],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+    // Specify a single element in the argument object,
+    // depending on the type of data to send (e.g. in POST)
+    "send": { "type": "method", "value": [ { "string": "string", "buffer": "buffer" } ] },
+    "abort": { "type": "method", "value": [] },
+    // @param {String} header
+    // @return {String} value
+    "getResponseHeader": { "type": "method", "value": [ "string" ], "ret": "string" },
+    // @param {String} all headers in a String
+    "getAllResponseHeaders": { "type": "method", "value": [], "ret": "string" },
+    // @param {String} header
+    // @param {String} value
+    "setRequestHeader": { "type": "method", "value": [ "string", "string" ] },
+    // @param {String} mimetype
+    "overrideMimeType": { "type": "method", "value": [ "string" ] },
+    "getReadyState": { "type": "method", "value": [], "ret": "number" },
+    "getResponse": { "type": "method", "value": [], "ret": { "string": "string", "buffer": "buffer", "object": "object" } },
+    "getResponseText": { "type": "method", "value": [], "ret": "string" },
+    "getResponseURL": { "type": "method", "value": [], "ret": "string" },
+    "getResponseType": { "type": "method", "value": [], "ret": "string" },
+    "setResponseType": { "type": "method", "value": [  "string" ] },
+    "getStatus": { "type": "method", "value": [], "ret": "number" },
+    "getStatusText": { "type": "method", "value": [], "ret": "string" },
+    "getTimeout": { "type": "method", "value": [], "ret": "number" },
+    "setTimeout": { "type": "method", "value": [ "number" ] },
+    "getWithCredentials": { "type": "method", "value": [], "ret": "boolean" },
+    "setWithCredentials": { "type": "method", "value": [ "boolean" ] },
+
+    // Download Events
+    "onloadstart": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onprogress": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onabort": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onerror": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onload": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "ontimeout": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onloadend": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onreadystatechange": { "type": "event", "value": {} },
+
+    // Upload Events
+    "onuploadloadstart": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadprogress": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadabort": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploaderror": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadload": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadtimeout": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadloadend": { "type": "event", "value": { "lengthComputable": "boolean", "loaded": "number", "total": "number" } },
+    "onuploadreadystatechange": { "type": "event", "value": {} }
+
+  }
+}

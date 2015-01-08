@@ -37,6 +37,11 @@ describe("integration: core.rtcpeerconnection",
     require("../../providers/core/core.rtcpeerconnection"),
     require("../../providers/core/core.rtcdatachannel"), setup));
 
+// core.xhr
+describe("integration: core.xhr", 
+    require("./coreIntegration/xhr.integration.src").bind(this, 
+    require("../../providers/core/core.xhr"), setup));
+
 // core.oauth
 describe("integration: core.oauth - localpageauth",
     require("./coreIntegration/oauth.integration.src").bind(this,
