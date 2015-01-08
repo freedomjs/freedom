@@ -9,7 +9,7 @@ var XhrProvider = function(cap, dispatchEvent) {
 
   setTimeout(cap.provider.onClose.bind(
     cap.provider,
-    this._xhr,
+    this,
     this._xhr.abort.bind(this._xhr)
   ), 0);
 
