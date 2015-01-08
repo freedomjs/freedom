@@ -7,6 +7,12 @@ var XhrProvider = function(cap, dispatchEvent) {
   this._dispatchEvent = dispatchEvent;
   this._xhr = new XMLHttpRequest();
 
+  setTimeout(cap.provider.onClose.bind(
+    cap.provider,
+    this._xhr,
+    this._xhr.abort.bind(this._xhr)
+  ), 0);
+
   this._events = [
     "loadstart",
     "progress",
@@ -18,6 +24,7 @@ var XhrProvider = function(cap, dispatchEvent) {
     "readystatechange"
   ];
   this._setupListeners();
+
 };
 
 XhrProvider.prototype.open = function(method, url, async, user, password) {
@@ -147,7 +154,6 @@ XhrProvider.prototype.setWithCredentials = function(wc) {
   this._xhr.withCredentials = wc;
   return PromiseCompat.resolve();
 };
-
 
 XhrProvider.prototype._setupListeners = function() {
   "use strict";
