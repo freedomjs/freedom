@@ -21,6 +21,13 @@ var XhrProvider = function(cap, dispatchEvent) {
 
 XhrProvider.prototype.open = function(method, url, async, user, password) {
   "use strict";
+  if (typeof async !== "undefined" && async !== true) {
+    return PromiseCompat.reject({
+      errcode: "InvalidAccessError",
+      message: "async should always be set to true"
+    });
+  }
+
   this._xhr.open(method, url, async, user, password);
   return PromiseCompat.resolve();
 };

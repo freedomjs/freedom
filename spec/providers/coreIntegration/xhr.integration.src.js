@@ -9,10 +9,28 @@ module.exports = function (provider, setup) {
     xhr = new provider.provider(undefined, dispatch.onMessage.bind(dispatch));
   });
 
+  it("calling open with async=false returns an error", function(done) {
+    xhr.open("GET", "https://api.github.com/", false).then(function(ret) {
+      //console.log(ret);
+    }, function(err) {
+      expect(err.errcode).toEqual("InvalidAccessError");
+      done();
+    });
+  });
+
+  it("calling open with async=undefined is all good", function(done) {
+    xhr.open("GET", "https://api.github.com/").then(function(ret) {
+      expect(ret).not.toBeDefined();
+      done();
+    }, function(err) {
+      //console.log(err);
+    });
+  });
+
   it("getReadyState properly returns state", function(done) {
     xhr.getReadyState().then(function(readyState) {
       expect(readyState).toEqual(0);
-      xhr.open("GET", "http://www.google.com", true);
+      xhr.open("GET", "https://api.github.com/", true);
       return xhr.getReadyState();
     }).then(function(readyState) {
       expect(readyState).toEqual(1);

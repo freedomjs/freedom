@@ -6,7 +6,14 @@
     // @param {Boolean} async
     // @param {String} user
     // @param {String} password
-    "open": { "type": "method", "value": [ "string", "string", "boolean", "string", "string" ] },
+    "open": {
+      "type": "method",
+      "value": [ "string", "string", "boolean", "string", "string" ],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
     // Specify a single element in the argument object,
     // depending on the type of data to send (e.g. in POST)
     "send": { "type": "method", "value": [ { "string": "string", "buffer": "buffer" } ] },
