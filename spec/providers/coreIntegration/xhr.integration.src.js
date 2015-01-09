@@ -48,7 +48,9 @@ module.exports = function (provider, setup) {
     var response;
     dispatch.gotMessageAsync("onload", [], function(e) {
       // @todo not implemented in node polyfill yet
-      //expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
+      if (typeof window !== 'undefined') {
+        expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
+      }
       expect(e.loaded).toEqual(jasmine.any(Number));
       expect(e.total).toEqual(jasmine.any(Number));;
       xhr.getReadyState().then(function(readyState) {
@@ -70,7 +72,9 @@ module.exports = function (provider, setup) {
         return xhr.getResponseURL();
       }).then(function(url) {
         // @todo not implemented in node polyfill yet
-        //expect(url).toEqual("https://api.github.com/");
+        if (typeof window !== 'undefined') {
+          expect(url).toEqual("https://api.github.com/");
+        }
         done();
       });
     });
@@ -78,17 +82,18 @@ module.exports = function (provider, setup) {
     xhr.send(null);
   });
 
-  /**
   // @todo not implemented in node polyfill yet
-  it("triggers upload events", function(done) {
-    dispatch.gotMessageAsync("onuploadloadstart", [], function(e) {
-      expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
-      expect(e.loaded).toEqual(jasmine.any(Number));
-      expect(e.total).toEqual(jasmine.any(Number));;
-      done();
+  if (typeof window !== 'undefined') {
+    it("triggers upload events", function(done) {
+      dispatch.gotMessageAsync("onuploadloadstart", [], function(e) {
+        expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
+        expect(e.loaded).toEqual(jasmine.any(Number));
+        expect(e.total).toEqual(jasmine.any(Number));;
+        done();
+      });
+      xhr.open("POST", "http://pastebin.com/api/api_post.php", true);
+      xhr.send({ string: "POST" });
     });
-    xhr.open("POST", "http://pastebin.com/api/api_post.php", true);
-    xhr.send({ string: "POST" });
-  });
-  **/
+}
+
 };
