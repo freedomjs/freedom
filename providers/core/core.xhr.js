@@ -7,10 +7,12 @@ var XhrProvider = function(cap, dispatchEvent) {
   "use strict";
   if (typeof window !== "undefined" &&
       typeof window.XMLHttpRequest !== "undefined" &&
-      XhrClass === null) {
+      XhrClass === null) { // freedom
     XhrClass = window.XMLHttpRequest;
-  }
-  if (XhrClass === null) {
+  } else if (typeof XMLHttpRequest !== "undefined" &&
+      XhrClass === null) { // freedom-for-firefox
+    XhrClass = XMLHttpRequest;
+  } else if (XhrClass === null) {
     console.error("Platform does not support XMLHttpRequest");
   }
 
