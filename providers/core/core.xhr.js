@@ -1,11 +1,19 @@
 /*jshint node:true*/
 /*global */
 var PromiseCompat = require('es6-promise').Promise;
+var XhrClass = null;
 
 var XhrProvider = function(cap, dispatchEvent) {
   "use strict";
+  if (window && window.XMLHttpRequest && XhrClass === null) {
+    XhrClass = window.XMLHttpRequest;
+  }
+  if (XhrClass === null) {
+    console.error("Platform does not support XMLHttpRequest");
+  }
+
   this._dispatchEvent = dispatchEvent;
-  this._xhr = new XMLHttpRequest();
+  this._xhr = new XhrClass();
 
   setTimeout(cap.provider.onClose.bind(
     cap.provider,
@@ -177,3 +185,7 @@ exports.name = "core.xhr";
 exports.provider = XhrProvider;
 exports.style = "providePromises";
 exports.flags = { provider: true };
+exports.setImpl = function(impl) {
+  "use strict";
+  XhrClass = impl;
+};
