@@ -36,7 +36,8 @@ XhrProvider.prototype.open = function(method, url, async, user, password) {
     });
   }
 
-  this._xhr.open(method, url, async, user, password);
+  // Force async to be true. undefined can lead to async=false in Chrome packaged apps
+  this._xhr.open(method, url, true, user, password);
   return PromiseCompat.resolve();
 };
 
