@@ -23,15 +23,15 @@ If you want a built version of freedom.js into your website, grab a copy from ou
 
 Websites: 
 * [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
-* [freedom.v0.6.13.js](http://freedomjs.org/dist/freedom/v0.6.13/freedom.v0.6.13.js) (stable)
+* [freedom.v0.6.18.js](http://freedomjs.org/dist/freedom/v0.6.18/freedom.v0.6.18.js) (stable)
 
 Chrome Apps:
 * [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
-* [freedom-for-chrome.v0.4.8.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.8.js) (stable)
+* [freedom-for-chrome.v0.4.9.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.9.js) (stable)
 
 Firefox Extensions:
 * [freedom-for-firefox.latest.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
-* [freedom-for-firefox.v0.6.6.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.6.jsm) (stable)
+* [freedom-for-firefox.v0.6.7.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.7.jsm) (stable)
 
 freedom, freedom-for-node, freedom-for-chrome, and freedom-for-firefox also exist as npm packages
 
