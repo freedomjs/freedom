@@ -5,7 +5,9 @@ var XhrClass = null;
 
 var XhrProvider = function(cap, dispatchEvent) {
   "use strict";
-  if (window && window.XMLHttpRequest && XhrClass === null) {
+  if (typeof window !== "undefined" &&
+      typeof window.XMLHttpRequest !== "undefined" &&
+      XhrClass === null) {
     XhrClass = window.XMLHttpRequest;
   }
   if (XhrClass === null) {
