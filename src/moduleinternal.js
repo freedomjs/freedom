@@ -364,6 +364,8 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
       this.emit(this.externalChannel, {
         type: 'ready'
       });
+      // Freezing worker scope for security purposes
+      Object.freeze(this.port.obj);
       return;
     }
 
@@ -402,15 +404,16 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
  * @returns {Promise} completion of load
  */
 ModuleInternal.prototype.tryLoad = function (importer, url) {
-  return new PromiseCompat(importer.bind({}, url)).then(function (val) {
-    Object.seal(this);
-    return val;
+  return new PromiseCompat(importer.bind({}, url)).then(
+    function (val) {
+      return val;
   }, function (e) {
-    this.debug.warn(e.stack);
-    this.debug.error('Error loading ' + url, e);
-    this.debug.error('If the stack trace is not useful, see https://' +
-        'github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors');
-  }.bind(this));
+       this.debug.warn(e.stack);
+       this.debug.error('Error loading ' + url, e);
+       this.debug.error(
+         'If the stack trace is not useful, see https://' +
+           'github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors');
+     }.bind(this));
 };
 
 module.exports = ModuleInternal;

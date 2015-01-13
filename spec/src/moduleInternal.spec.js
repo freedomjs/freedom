@@ -54,16 +54,17 @@ describe('ModuleInternal', function() {
 
   it('handles script loading and attachment', function(done) {
     global.document = document;
-    
+
     var script = btoa('fileIncluded = true; callback();');
 
     window.callback = function() {
       expect(fileIncluded).toEqual(true);
       delete callback;
       done();
-    } 
-    
-    app.loadScripts(loc, ['data:text/javascript;base64,' + script, 'non_existing_file']);
+    }
+
+    app.loadScripts(loc, ['data:text/javascript;base64,' + script,
+                          'non_existing_file']);
   });
 
   it('load scripts sequentially', function(done) {

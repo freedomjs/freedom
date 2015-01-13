@@ -82,8 +82,6 @@ WorkerLink.prototype.setupListener = function() {
       Object.defineProperty(this.obj, val, {value:undefined});
     }
   }.bind(this));
-  // TODO: find right way/place to freeze webworker scope
-  //Object.freeze(this.obj);
 };
 
 /**
