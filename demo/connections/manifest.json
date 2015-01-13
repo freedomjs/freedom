@@ -14,11 +14,13 @@
     "core.view"
   ],
   "views": {
-    "connections": [
-      "view.html",
-      "view.css",
-      "view.js",
-      "third-party/qr/qr.js"
-    ]
+    "connections": {
+      "main": "view.html",
+      "files": [
+        "view.css",
+        "view.js",
+        "third-party/qr/qr.js"
+      ]
+    }
   }
 }

@@ -7,11 +7,11 @@ var util = require('../../src/util');
  * @Class Logger_console
  * @constructor
  * @private
- * @param {App} app The application creating this provider, in practice unset.
+ * @param {config: Object} cap Capabilities - console requires global config.
  */
-var Logger_console = function (app) {
-  this.level = (app.config && app.config.debug) || 'log';
-  this.console = (app.config && app.config.global.console);
+var Logger_console = function (cap) {
+  this.level = (cap.config && cap.config.debug) || 'log';
+  this.console = (cap.config && cap.config.global.console);
   util.handleEvents(this);
 };
 
@@ -53,6 +53,17 @@ Logger_console.prototype.print = function (severity, source, msg) {
     arr.unshift('\x1B[39m');
     arr.unshift('\x1B[31m' + source);
     /*jslint nomen: true*/
+    // Firefox in JSM context.
+    // see: http://mxr.mozilla.org/mozilla-release/source/toolkit/devtools/Console.jsm
+    } else if (this.console.maxLogLevel && source) {
+      if (!this.console.freedomDump) {
+        this.console.freedomDump = this.console.dump;
+        this.console.dump = function() {};
+      }
+      this.console.freedomDump('{' + source + '}.' + severity + ': ' +
+          arr.join(' ') + '\n');
+      arr.unshift(source.toUpperCase());
+  // Firefox in browser context.
   } else if (this.console.__mozillaConsole__ && source) {
     arr.unshift(source.toUpperCase());
     /*jslint nomen: false*/
@@ -124,3 +135,4 @@ Logger_console.prototype.error = function (source, msg, continuation) {
 /** REGISTER PROVIDER **/
 exports.provider = Logger_console;
 exports.name = 'core.console';
+exports.flags = {config: true};

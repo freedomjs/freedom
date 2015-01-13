@@ -20,8 +20,11 @@ var Provider = function (def, debug) {
   this.mode = Provider.mode.synchronous;
   this.channels = {};
   this.iface = null;
+  this.closeHandlers = {};
   this.providerCls = null;
-  this.providerInstances = {};
+
+  this.ifaces = {};
+  this.emits = {};
 };
 
 /**
@@ -68,11 +71,11 @@ Provider.prototype.onMessage = function (source, message) {
     }
 
     if (message.type === 'close' && message.to) {
-      delete this.providerInstances[source][message.to];
-    } else if (message.to && this.providerInstances[source] &&
-               this.providerInstances[source][message.to]) {
+      this.teardown(source, message.to);
+    } else if (message.to && this.emits[source] &&
+               this.emits[source][message.to]) {
       message.message.to = message.to;
-      this.providerInstances[source][message.to](message.message);
+      this.emits[source][message.to](message.message);
     } else if (message.to && message.message &&
         message.message.type === 'construct') {
       var args = Consumer.portableToMessage(
@@ -80,11 +83,20 @@ Provider.prototype.onMessage = function (source, message) {
               this.definition.constructor.value : [],
           message.message,
           this.debug
-        );
-      if (!this.providerInstances[source]) {
-        this.providerInstances[source] = {};
+        ),
+        instance;
+      if (!this.ifaces[source]) {
+        this.ifaces[source] = {};
+        this.emits[source] = {};
       }
-      this.providerInstances[source][message.to] = this.getProvider(source, message.to, args);
+      this.ifaces[source][message.to] = true;
+      instance = this.getProvider(source, message.to, args);
+      // don't save a reference to instance if it closed itself already.
+      if (this.ifaces[source] &&
+          this.ifaces[source][message.to]) {
+        this.ifaces[source][message.to] = instance.instance;
+        this.emits[source][message.to] = instance.onmsg;
+      }
     } else {
       this.debug.warn(this.toString() + ' dropping message ' +
           JSON.stringify(message));
@@ -106,8 +118,34 @@ Provider.prototype.close = function () {
   }
   this.emit('close');
 
-  this.providerInstances = {};
+  // Release references.
+  delete this.iface;
+  delete this.providerCls;
+  this.ifaces = {};
+  this.emits = {};
   this.emitChannel = null;
+};
+
+/**
+ * Teardown a single instance of an object fulfilling this provider.
+ * @method teardown
+ * @param {String} source The consumer source of the instance.
+ * @param {String} id The id of the instance to tear down.
+ */
+Provider.prototype.teardown = function (source, id) {
+  // Ignore teardown of non-existant ids.
+  if (!this.ifaces[source]) {
+    return;
+  }
+
+  delete this.ifaces[source][id];
+  delete this.emits[source][id];
+  if (this.closeHandlers[source] && this.closeHandlers[source][id]) {
+    util.eachProp(this.closeHandlers[source][id], function (prop) {
+      prop();
+    });
+    delete this.closeHandlers[source][id];
+  }
 };
 
 /**
@@ -134,9 +172,6 @@ Provider.prototype.getInterface = function () {
       providePromises: function (prov) {
         this.providerCls = prov;
         this.mode = Provider.mode.promises;
-      }.bind(this),
-      close: function () {
-        this.close();
       }.bind(this)
     };
 
@@ -167,15 +202,17 @@ Provider.prototype.getProxyInterface = function () {
 
   func.close = function (iface) {
     if (iface) {
-      util.eachProp(this.ifaces, function (candidate, id) {
-        if (candidate === iface) {
-          this.teardown(id);
-          this.emit(this.emitChannel, {
-            type: 'close',
-            to: id
-          });
-          return true;
-        }
+      util.eachProp(this.ifaces, function (ids, source) {
+        util.eachProp(ids, function (candidate, id) {
+          if (candidate === iface) {
+            this.teardown(source, id);
+            this.emit(this.channels[source], {
+              type: 'close',
+              to: id
+            });
+            return true;
+          }
+        }.bind(this));
       }.bind(this));
     } else {
       // Close the channel.
@@ -184,21 +221,25 @@ Provider.prototype.getProxyInterface = function () {
   }.bind(this);
 
   func.onClose = function (iface, handler) {
+    // Listen to the channel directly.
     if (typeof iface === 'function' && handler === undefined) {
-      // Add an on-channel-closed handler.
       this.once('close', iface);
       return;
     }
 
-    util.eachProp(this.ifaces, function (candidate, id) {
-      if (candidate === iface) {
-        if (this.handlers[id]) {
-          this.handlers[id].push(handler);
-        } else {
-          this.handlers[id] = [handler];
+    util.eachProp(this.ifaces, function (ids, source) {
+      util.eachProp(ids, function (candidate, id) {
+        if (candidate === iface) {
+          if (!this.closeHandlers[source]) {
+            this.closeHandlers[source] = {};
+          }
+          if (!this.closeHandlers[source][id]) {
+            this.closeHandlers[source][id] = [];
+          }
+          this.closeHandlers[source][id].push(handler);
+          return true;
         }
-        return true;
-      }
+      }.bind(this));
     }.bind(this));
   }.bind(this);
 
@@ -215,8 +256,8 @@ Provider.prototype.getProxyInterface = function () {
  */
 Provider.prototype.getProvider = function (source, identifier, args) {
   if (!this.providerCls) {
-    this.debug.warn('Cannot instantiate provider, since it is not provided');
-    return null;
+    this.debug.error('Cannot instantiate provider, since it is not provided');
+    return {instance: undefined, onmsg: undefined};
   }
 
   var events = {},
@@ -252,48 +293,51 @@ Provider.prototype.getProvider = function (source, identifier, args) {
       [this.providerCls, dispatchEvent].concat(args || []));
   instance = new BoundClass();
 
-  return function (port, src, msg) {
-    if (msg.action === 'method') {
-      if (typeof this[msg.type] !== 'function') {
-        port.debug.warn("Provider does not implement " + msg.type + "()!");
-        return;
-      }
-      var prop = port.definition[msg.type],
-        debug = port.debug,
-        args = Consumer.portableToMessage(prop.value, msg, debug),
-        ret = function (src, msg, prop, resolve, reject) {
-          var streams = Consumer.messageToPortable(prop.ret, resolve,
-                                                       debug);
-          this.emit(this.channels[src], {
-            type: 'method',
-            to: msg.to,
-            message: {
-              to: msg.to,
-              type: 'method',
-              reqId: msg.reqId,
-              name: msg.type,
-              text: streams.text,
-              binary: streams.binary,
-              error: reject
-            }
-          });
-        }.bind(port, src, msg, prop);
-      if (!Array.isArray(args)) {
-        args = [args];
-      }
-      if (port.mode === Provider.mode.synchronous) {
-        try {
-          ret(this[msg.type].apply(this, args));
-        } catch (e) {
-          ret(undefined, e.message);
+  return {
+    instance: instance,
+    onmsg: function (port, src, msg) {
+      if (msg.action === 'method') {
+        if (typeof this[msg.type] !== 'function') {
+          port.debug.warn("Provider does not implement " + msg.type + "()!");
+          return;
         }
-      } else if (port.mode === Provider.mode.asynchronous) {
-        this[msg.type].apply(instance, args.concat(ret));
-      } else if (port.mode === Provider.mode.promises) {
-        this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
+        var prop = port.definition[msg.type],
+          debug = port.debug,
+          args = Consumer.portableToMessage(prop.value, msg, debug),
+          ret = function (src, msg, prop, resolve, reject) {
+            var streams = Consumer.messageToPortable(prop.ret, resolve,
+                                                         debug);
+            this.emit(this.channels[src], {
+              type: 'method',
+              to: msg.to,
+              message: {
+                to: msg.to,
+                type: 'method',
+                reqId: msg.reqId,
+                name: msg.type,
+                text: streams.text,
+                binary: streams.binary,
+                error: reject
+              }
+            });
+          }.bind(port, src, msg, prop);
+        if (!Array.isArray(args)) {
+          args = [args];
+        }
+        if (port.mode === Provider.mode.synchronous) {
+          try {
+            ret(this[msg.type].apply(this, args));
+          } catch (e) {
+            ret(undefined, e.message);
+          }
+        } else if (port.mode === Provider.mode.asynchronous) {
+          this[msg.type].apply(instance, args.concat(ret));
+        } else if (port.mode === Provider.mode.promises) {
+          this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
+        }
       }
-    }
-  }.bind(instance, this, source);
+    }.bind(instance, this, source)
+  };
 };
 
 /**

@@ -1,25 +1,9 @@
 /*jslint indent:2,node:true */
-var includeFolder = require('include-folder');
-var minify = require('node-json-minify');
-
-var util = require('./util');
 
 var Bundle = function () {
   'use strict';
-  var found;
-  this.interfaces = [];
-  /*jslint nomen: true */
-  try {
-    found = includeFolder(__dirname + '/../interface');
-  } catch (e) {
-    // pass.
-  }
-  /*jslint nomen: false */
-  util.eachProp(found, function (json) {
-    this.interfaces.push(JSON.parse(minify(json)));
-  }.bind(this));
+  this.interfaces = require('../dist/bundle.compiled');
 };
-
 
 /**
  * Populate an API registry with provided providers, and with known API
@@ -41,7 +25,10 @@ exports.register = function (providers, registry) {
 
   providers.forEach(function (provider) {
     if (provider.name) {
-      registry.register(provider.name, provider.provider, provider.style);
+      registry.register(provider.name,
+                        provider.provider,
+                        provider.style,
+                        provider.flags);
     }
   });
 };

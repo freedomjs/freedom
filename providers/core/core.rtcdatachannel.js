@@ -9,7 +9,7 @@ var allocateChannel = function (dataChannel) {
   return id;
 };
 
-var RTCDataChannelAdapter = function (app, dispatchEvents, id) {
+var RTCDataChannelAdapter = function (cap, dispatchEvents, id) {
   this.dispatchEvent = dispatchEvents;
   if (!unAttachedChannels[id]) {
     console.warn('Invalid ID, creating acting on unattached DataChannel');

@@ -1,65 +1,84 @@
 /*jslint indent:2,browser:true, node:true */
 var PromiseCompat = require('es6-promise').Promise;
 
-var oAuthRedirectId = 'freedom.oauth.redirect.handler',
-  listeners = {};
+var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
+function RemotePageAuth() {
+  "use strict";
+  this.listeners = {};
+}
 
 /**
- * Listen for messages from a relay iframe.
+ * Indicate the intention to initiate an oAuth flow, allowing an appropriate
+ * oAuth provider to begin monitoring for redirection.
+ *
+ * @method initiateOAuth
+ * @param {string[]} redirectURIs - oAuth redirection URIs registered with the
+ *     provider.
+ * @param {Function} continuation - Function to call when complete
+ *    Expected to see a value of schema: {{redirect:String, state:String}}
+ *    where 'redirect' is the chosen redirect URI
+ *    and 'state' is the state to pass to the URI on completion of oAuth
+ * @return {Boolean} true if can handle, false otherwise
  */
-function monitorFrame(src, oAuth) {
-  'use strict';
-  return new PromiseCompat(function (resolve, reject) {
-    var frame = global.document.createElement('iframe'),
-      state = oAuthRedirectId + Math.random();
-    frame.src = src;
-    frame.style.display = 'none';
-
-    global.document.body.appendChild(frame);
-    frame.addEventListener('load', function () {
-      resolve({
-        redirect: src,
-        state: state
-      });
-      listeners[state] = function (url) {
-        this.dispatchEvent("oAuthEvent", url);
-      }.bind(oAuth);
-
-      frame.contentWindow.postMessage(state, '*');
-    });
-
-    window.addEventListener('message', function (frame, msg) {
-      if (msg.data && msg.data.key && msg.data.url && listeners[msg.data.key]) {
-        listeners[msg.data.key](msg.data.url);
-        document.body.removeChild(frame);
+RemotePageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
+  "use strict";
+  if (typeof global !== 'undefined' && global && global.document) {
+    for (var i=0; i<redirectURIs.length; i++) {
+      // TODO: remove restriction on URL pattern match.
+      if ((redirectURIs[i].indexOf('http://') === 0 ||
+          redirectURIs[i].indexOf('https://') === 0) &&
+          redirectURIs[i].indexOf('oauth-relay.html') > 0) {
+        continuation({
+          redirect: redirectURIs[i],
+          state: oAuthRedirectId + Math.random()
+        });
+        return true;
       }
-    }.bind({}, frame), false);
-  });
-}
+    }
+  }
+  return false;
+};
+
+/**
+ * oAuth client-side flow - launch the provided URL
+ * This must be called after initiateOAuth with the returned state object
+ *
+ * @method launchAuthFlow
+ * @param {String} authUrl - The URL that initiates the auth flow.
+ * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
+ * @param {Function} continuation - Function to call when complete
+ *    Expected to see a String value that is the response Url containing the access token
+ */
+RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
+  "use strict";
+  var frame = global.document.createElement('iframe');
+  frame.src = stateObj.redirect;
+  frame.style.display = 'none';
+
+  global.document.body.appendChild(frame);
+  frame.addEventListener('load', function () {
+    this.listeners[stateObj.state] = continuation;
+    window.open(authUrl);
+
+    frame.contentWindow.postMessage(stateObj.state, '*');
+  }.bind(this));
+
+  window.addEventListener('message', function (frame, msg) {
+    if (msg.data && msg.data.key && msg.data.url && this.listeners[msg.data.key]) {
+      this.listeners[msg.data.key](msg.data.url);
+      delete this.listeners[msg.data.key];
+      try {
+        document.body.removeChild(frame);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }.bind(this, frame), false);
+};
 
 /**
  * If we have a local domain, and freedom.js is loaded at startup, we can use
  * the local page as a redirect URI.
  */
-exports.register = function (OAuth) {
-  'use strict';
-  if (typeof global !== 'undefined' && global && global.document) {
-    OAuth.register(function (redirectURIs, instance) {
-      var promises = [], i;
-      for (i = 0; i < redirectURIs.length; i += 1) {
-        // TODO: remove restriction on URL pattern match.
-        if ((redirectURIs[i].indexOf('http://') === 0 ||
-             redirectURIs[i].indexOf('https://') === 0) &&
-            redirectURIs[i].indexOf('oauth-relay.html') > 0) {
-          promises.push(monitorFrame(redirectURIs[i], instance));
-        }
-      }
-      if (promises.length) {
-        return PromiseCompat.race(promises);
-      } else {
-        return false;
-      }
-    });
-  }
-};
+module.exports = RemotePageAuth;

@@ -5,6 +5,9 @@ var EventInterface = function(onMsg, emit, debug) {
   util.handleEvents(this);
   
   onMsg(this, function(emit, type, msg) {
+    if (type === 'close') {
+      return;
+    }
     emit(msg.type, msg.message);
   }.bind(this, this.emit));
 

@@ -13,7 +13,6 @@ var Hub = function (debug) {
   this.config = {};
   this.apps = {};
   this.routes = {};
-  this.unbound = [];
 
   util.handleEvents(this);
   this.on('config', function (config) {
@@ -183,6 +182,20 @@ Hub.prototype.uninstall = function (source, flow) {
     source.off(route);
   }
   return true;
+};
+
+/**
+ * Remove all listeners and notify all connected destinations of their removal.
+ * @method teardown
+ */
+Hub.prototype.teardown = function () {
+  util.eachProp(this.apps, function (source) {
+    if (typeof source.off === 'function') {
+      source.off();
+    }
+  });
+  this.apps = {};
+  this.routes = {};
 };
 
 /**

@@ -1,6 +1,6 @@
 var testUtil = require('../../util');
 var Util = require('../../../src/util');
-var Echo = require('../../../providers/core/echo.unprivileged');
+var Echo = require('../../../providers/core/core.echo');
 
 describe("providers/core/Echo_Unprivileged", function() {
   var app;
@@ -9,7 +9,7 @@ describe("providers/core/Echo_Unprivileged", function() {
   beforeEach(function() {
     app = testUtil.createTestPort('test');
     app.controlChannel = 'control';
-    echo = new Echo.provider(app, app.emit.bind(app));
+    echo = new Echo.provider({module:app}, app.emit.bind(app));
   });
 
   it("Needs core", function() {

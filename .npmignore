@@ -1,21 +1,12 @@
 ### Built files
 /spec.js
-/spec/helper/frame.js
+/build
 
 ### Auto-generated
-tools/freedomjs
-tools/doc
-tools/coverage/
-tools/coverage*.json
-tools/lcov.info
-lcov.info
-node_modules
+/node_modules
 
 ### Scrap
 .*.swp
 sauce_connect.log*
 npm-debug.log
 .grunt/
-
-### Chrome Test Runner temp files
-tools/chromeTestRunner/temp

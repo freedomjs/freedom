@@ -1,4 +1,4 @@
-var WS = require('../../../providers/core/websocket.unprivileged');
+var WS = require('../../../providers/core/core.websocket');
 
 function MockWebSocket(url, protocols) {
   MockWebSocket.currentInstance = this;

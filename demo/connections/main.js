@@ -8,9 +8,14 @@
 
 var social;
 var view = freedom['core.view']();
+var logger;
 var users = {};    //Keep track of the roster
 var myClientState = null;
 var doLogin;
+
+freedom.core().getLogger('Connection Controller').then(function (log) {
+  logger = log;
+});
 
 /**
  * Relay messages from the social network to the view.
@@ -57,9 +62,9 @@ function onState(data) {
       event: 'status',
       online: data.status === social.STATUS.ONLINE
     });
-    freedom().emit('height', data.status === social.STATUS.ONLINE ? 384 : 109);
+    view.postMessage({'height': data.status === social.STATUS.ONLINE ? 384 : 109});
     if (data.status !== social.STATUS.ONLINE) {
-      console.error('got status ' + data.status + ' from social');
+      logger.error('got status ' + data.status + ' from social');
       doLogin();
     }
   }
@@ -88,22 +93,22 @@ doLogin = function () {
       event: 'status',
       online: ret.status === social.STATUS.ONLINE
     });
-    freedom().emit('height', ret.status === social.STATUS.ONLINE ? 384 : 109);
+    view.postMessage({'height': ret.status === social.STATUS.ONLINE ? 384 : 109});
   }, function (err) {
     view.postMessage({
       event: 'status',
       online: err
     });
-    freedom().emit('height', 109);
+    view.postMessage({'height': 109});
   });
 };
 doLogin();
 
 view.on('message', function (msg) {
-  console.warn('main got msg ' + msg);
+  logger.log('main got msg ' + msg);
 });
 
 /** SHOW VIEW AT START **/
-view.open('connections', {file: 'view.html'}).then(function () {
-  view.show();
+view.show('connections').then(function () {
+  logger.log('View opened');
 });

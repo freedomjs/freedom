@@ -29,15 +29,6 @@
  **/
 
 var FILES = {
-  srcCore: [
-    'src/*.js',
-    'src/link/*.js',
-    'src/proxy/*.js',
-    'interface/*.js'
-  ],
-  srcPlatform: [
-    'providers/core/*.js'
-  ],
   specCoreUnit: [
     'spec/src/*.spec.js'
   ],
@@ -52,10 +43,6 @@ var FILES = {
   specProviderIntegration: [
     'spec/providers/*.integration.spec.js',
     'spec/providers/storage/*.integration.spec.js'
-  ],
-  specAll: ['spec/**/*.spec.js'],
-  freedom: [
-    'freedom.js'
   ]
 };
 
@@ -118,10 +105,15 @@ module.exports = function (grunt) {
         customLaunchers: CUSTOM_LAUNCHER
       }
     },
+    'create-interface-bundle': {
+      freedom: {
+        files: {
+          'dist/bundle.compiled.js': ['interface/*.json']
+        }
+      }
+    },
     jshint: {
-      beforeconcat: {
-        files: { src: FILES.srcCore.concat(FILES.srcPlatform) }
-      },
+      src: ['src/**/*.js'],
       grunt: ['Gruntfile.js'],
       providers: ['providers/**/*.js'],
       demo: ['demo/**/*.js', '!demo/**/third-party/**'],
@@ -132,19 +124,12 @@ module.exports = function (grunt) {
     browserify: {
       freedom: {
         files: {
-          'freedom.js': ['src/util/workerEntry.js']
-        },
-        options: {
-          postBundleCB: function (err, src, next) {
-            next(err, require('fs').readFileSync('src/util/header.txt') +
-                      grunt.template.process('/** Version: <%= pkg.version %> **/\n') +
-                      src);
-          }
+          'build/freedom.worker.js': ['src/util/workerEntry.js']
         }
       },
       frame: {
         files: {
-          'spec/helper/frame.js': ['src/util/frameEntry.js']
+          'build/freedom.frame.js': ['src/util/frameEntry.js']
         }
       },
       jasmine_unit: {
@@ -163,9 +148,8 @@ module.exports = function (grunt) {
           )
         },
         options: {
-          transform: ['folderify', ['browserify-istanbul', {
-            // Note: bundle must be ignored, 
-            ignore: ['**/spec/**', '**/src/bundle.js']
+          transform: [['browserify-istanbul', {
+            ignore: ['**/spec/**']
           }]]
         }
       },
@@ -175,25 +159,62 @@ module.exports = function (grunt) {
             FILES.specPlatformUnit,
             FILES.specProviderUnit,
             FILES.specProviderIntegration
-          ),
-          'spec/helper/frame.js': ['src/util/frameEntry.js']
+          )
         }
       },
       options: {
-        transform: ['folderify'],
         browserifyOptions: {
           debug: true
         }
       }
     },
-    clean: ['freedom.js', 'freedom.js.map', 'freedom.min.js', 'freedom.min.js.map', 'spec.js', 'spec/helper/frame.js'],
-    "extract_sourcemap": {
-      freedom: {
+    // Exorcise, Uglify, Concat are used to create a minimized freedom.js with
+    // correct sourcemap. Uglify needs an explicit 'sourceMapIn' argument,
+    // requiring that exorcise be used before hand. Concat is able to properly
+    // attach a banner while maintaining the correct source-map offsets.
+    exorcise: {
+      dist: {
         files: {
-          "./": ["freedom.js"]
+          'build/freedom.worker.js.map': ['build/freedom.worker.js']
         }
       }
     },
+    uglify: {
+      dist: {
+        files: {
+          'build/freedom.worker.min.js': ['build/freedom.worker.js']
+        },
+        options: {
+          sourceMap: true,
+          sourceMapIn: 'build/freedom.worker.js.map',
+          sourceMapIncludeSources: true,
+          drop_console: true
+        }
+      }
+    },
+    concat: {
+      options: {
+        sourceMap: true,
+        banner: require('fs').readFileSync('src/util/header.txt').toString()
+      },
+      full: {
+        src: 'build/freedom.worker.js',
+        dest: 'freedom.js',
+        options: {
+          sourceMapStyle: 'inline'
+        }
+      },
+      min: {
+        src: 'build/freedom.worker.min.js',
+        dest: 'dist/freedom.min.js'
+      }
+    },
+    clean: [
+      'freedom.*',
+      'spec.js',
+      'dist/*',
+      'build/*'
+    ],
     yuidoc: {
       compile: {
         name: '<%= pkg.name %>',
@@ -201,13 +222,19 @@ module.exports = function (grunt) {
         version: '<%= pkg.version %>',
         options: {
           paths: 'src/',
-          outdir: 'tools/doc/'
+          outdir: 'build/doc/'
         }
       }
     },
     coveralls: {
       report: {
-        src: 'tools/coverage/PhantomJS**/*lcov.info'
+        src: 'build/coverage/PhantomJS**/*lcov.info'
+      }
+    },
+    codeclimate: {
+      options: {
+        file: 'unset: use `grunt prepare_codeclimate` to set.',
+        token: process.env.CODECLIMATETOKEN || 'unknown'
       }
     },
     connect: {
@@ -238,7 +265,7 @@ module.exports = function (grunt) {
         files: ['package.json', 'bower.json'],
         commit: true,
         commitMessage: 'Release v%VERSION%',
-        commitFiles: ['package.json'],
+        commitFiles: ['package.json', 'bower.json'],
         createTag: true,
         tagName: 'v%VERSION%',
         tagMessage: 'Version %VERSION%',
@@ -262,35 +289,33 @@ module.exports = function (grunt) {
               config: 'bump.options.tagMessage',
               type: 'input',
               message: 'Enter a git tag message:',
-              default: 'v%VERSION%',
+              default: 'v%VERSION%'
             }
           ]
         }
       }
     },
-    shell: {
-      options: {},
-      publishWebsite: {
-        command: 'bash tools/publishWebsite.sh'
-      }
-    }
+    publishWebsite : {}
   });
 
   // Load tasks.
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-bump');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-codeclimate-reporter');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-yuidoc');
   grunt.loadNpmTasks('grunt-coveralls');
-  grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-extract-sourcemap');
+  grunt.loadNpmTasks('grunt-exorcise');
   grunt.loadNpmTasks('grunt-gitinfo');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
-  grunt.loadNpmTasks('grunt-shell');
-  
+  grunt.loadTasks('tasks');
+
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
     function () {
       grunt.config.merge({
@@ -310,14 +335,39 @@ module.exports = function (grunt) {
         }
       });
     });
+  grunt.registerTask('dynamic_codeclimate', 'Run codeclimate with correct lcov.',
+    function () {
+      var file = require("glob").sync("build/coverage/PhantomJS**/lcov.info");
+      if (file.length !== 1) {
+        return grunt.log.error("lcov file not present or distinguishable for code climate");
+      }
+      require('fs').renameSync(file[0], "build/coverage/lcov.info");
+      grunt.config.merge({
+        codeclimate: {
+          report: {
+            src: "build/coverage/lcov.info",
+            options: {
+              file: "build/coverage/lcov.info",
+              token: process.env.CODECLIMATETOKEN
+            }
+          }
+        }
+      });
+      grunt.task.run('codeclimate:report');
+    });
   
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
+    'create-interface-bundle',
     'browserify:freedom',
-    'extract_sourcemap'
+    'concat:full',
+    'exorcise',
+    'uglify',
+    'concat:min'
   ]);
   grunt.registerTask('unit', [
+    'create-interface-bundle',
     'browserify:frame',
     'browserify:jasmine_unit',
     'connect:freedom',
@@ -325,6 +375,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('test', [
     'jshint',
+    'create-interface-bundle',
     'browserify:frame',
     'browserify:jasmine_full',
     'connect:freedom',
@@ -332,18 +383,20 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('debug', [
     'prepare_watch',
-    'build',
-    'connect:freedom',
+    'jshint',
+    'create-interface-bundle',
+    'browserify:frame',
     'browserify:jasmine_full',
+    'connect:freedom',
     'karma:browsers'
   ]);
   grunt.registerTask('demo', [
-    'browserify:freedom',
+    'build',
     'connect:demo'
   ]);
   grunt.registerTask('website', [
     'yuidoc',
-    'shell:publishWebsite'
+    'publishWebsite'
   ]);
 
   if (process.env.TRAVIS_JOB_NUMBER) {
@@ -351,16 +404,19 @@ module.exports = function (grunt) {
     //When run from Travis from jobs *.1
     if (jobParts.length > 1 && jobParts[1] === '1') {
       grunt.registerTask('ci', [
+        'build',
         'browserify:frame',
         'browserify:jasmine_coverage',
         'connect:freedom',
         'karma:phantom',
         'gitinfo',
         'karma:saucelabs',
-        'coveralls:report'
+        'coveralls:report',
+        'dynamic_codeclimate'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
+        'build',
         'browserify:frame',
         'browserify:jasmine_unit',
         'connect:freedom',
@@ -369,6 +425,7 @@ module.exports = function (grunt) {
     }
   } else {  //When run from command-line
     grunt.registerTask('ci', [
+      'build',
       'browserify:frame',
       'browserify:jasmine_unit',
       'connect:freedom',
@@ -393,6 +450,3 @@ module.exports = function (grunt) {
 
   grunt.registerTask('default', ['build', 'unit']);
 };
-
-module.exports.FILES = FILES;
-module.exports.CUSTOM_LAUNCHER = CUSTOM_LAUNCHER;

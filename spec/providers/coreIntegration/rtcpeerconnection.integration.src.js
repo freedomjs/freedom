@@ -5,7 +5,12 @@ module.exports = function (pc, dc, setup) {
   var peercon, datachan;
   beforeEach(function () {
     setup();
-    peercon = testUtil.directProviderFor(pc.provider.bind(pc.provider, {}), testUtil.getApis().get(pc.name).definition);
+    var pcProvider = {
+      provide: function(iface) {
+        iface().providePromises(pc.provider.bind(pc.provider, {provider:iface}));
+      }
+    };
+    peercon = testUtil.directProviderFor(pcProvider, testUtil.getApis().get(pc.name).definition);
     datachan = testUtil.directProviderFor(dc.provider.bind(dc.provider, {}), testUtil.getApis().get(dc.name).definition);
   });
 
@@ -43,7 +48,11 @@ module.exports = function (pc, dc, setup) {
         return bob.setLocalDescription(answer).then(function () {return answer; });
       }).then(function (answer) {
         return alice.setRemoteDescription(answer);
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
+    }, function (err) {
+      console.error('RTC failed: ',err);
     });
   });
   
@@ -96,7 +105,11 @@ module.exports = function (pc, dc, setup) {
         return bob.setLocalDescription(answer).then(function () {return answer; });
       }).then(function (answer) {
         return alice.setRemoteDescription(answer);
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
+    }, function (err) {
+      console.error('RTC failed: ',err);
     });
   });
 
@@ -133,6 +146,8 @@ module.exports = function (pc, dc, setup) {
             done();
           }, onError);
         }
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
     });
 
@@ -149,8 +164,40 @@ module.exports = function (pc, dc, setup) {
         return bob.setLocalDescription(answer).then(function () {return answer; });
       }).then(function (answer) {
         return alice.setRemoteDescription(answer);
+      }, function (err) {
+        console.error('RTC failed: ',err);
       });
     });
 
+  });
+
+  it("Signals 'onClose' when created with incorrect parameters", function (done) {
+    var badPeer = peercon({
+      iceServers: [
+        {url: '-invalid-url-'}
+      ]
+    });
+  
+    var testOver = done;
+    var finished = function() {
+      if (testOver) {
+        var done = testOver;
+        testOver = false;
+        done();
+      }
+    };
+
+    var timeoutId = setTimeout(function () {
+      // Option 1. subsequent calls fail.
+      badPeer.createOffer().then(function() {
+        console.error('Expected call to bad rtc connection to fail.');
+      }, finished);
+    }, 100);
+  
+    peercon.onClose(badPeer, function () {
+      // Option 2. a constructor error forces a system level on-close.
+      clearTimeout(timeoutId);
+      finished();
+    });
   });
 };

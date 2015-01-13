@@ -344,7 +344,7 @@ function PeerConnection(portModule, dispatchEvent,
 
   // This is the portApp (defined in freedom/src/port-app.js). A way to speak
   // to freedom.
-  this.freedomModule = portModule;
+  this.freedomModule = portModule.module;
 
   // For tests we may mock out the PeerConnection and
   // SessionDescription implementations
@@ -501,3 +501,4 @@ PeerConnection.prototype.close = function (continuation) {
 
 exports.provider = PeerConnection;
 exports.name = 'core.peerconnection';
+exports.flags = {module: true};

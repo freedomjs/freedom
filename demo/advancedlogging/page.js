@@ -2,10 +2,10 @@
 /*globals freedom, console*/
 
 /**
- * Bind handlers on startup
+ * Bind handlers on startup.
  */
-function start(instance) {
-  var logClient = instance(),
+function start(LogClient) {
+  var logClient = new LogClient(),
     input = document.getElementById('msg-input');
 
   input.focus();

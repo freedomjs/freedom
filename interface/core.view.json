@@ -1,11 +1,8 @@
 {
   "name": "core.view",
   "api": {
-    "open": {"type": "method", "value": ["string", {
-      "file": "string",
-      "code": "string"
-    }]},
-    "show": {"type": "method", "value": []},
+    "show": {"type": "method", "value": ["string"]},
+    "isSecure": {"type": "method", "value": [], "ret": "boolean" },
     "close": {"type": "method", "value": []},
     "postMessage": {"type": "method", "value": ["object"]},
   

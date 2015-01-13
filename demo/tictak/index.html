@@ -9,12 +9,12 @@
 
   <script type="text/javascript">
     // Load the runtime.
-    freedom('manifest.json').then(function(interface) {
-      var board = interface();
+    var start = function(TicTakToe) {
+      var tictak = new TicTakToe();
 
       // These events are defined in the 'board' API in manifest.json,
       // and sent in main.js by calling ```dispatchEvent('stats', value);```
-      board.on('stats', function(stats) {
+      tictak.on('stats', function(stats) {
         var win = 0, lose = 0;
         if (stats) {
           win = stats.win || 0;
@@ -24,7 +24,7 @@
         document.getElementById('lose').innerText = lose;
       });
 
-      board.on('update', function (state) {
+      tictak.on('update', function (state) {
         for (var i = 0; i < state.length; i++) {
           var realid = 'b' + (i + 1);
           document.getElementById(realid).className = 'c' + state[i];
@@ -35,9 +35,11 @@
       // Add onclick listeners to each tile to run code in the module.
       var inputs = document.getElementsByTagName('input');
       for (var i = 0; i < inputs.length; i ++) {
-        inputs[i].addEventListener('click', board.move.bind(board, i), true);
+        inputs[i].addEventListener('click', tictak.move.bind(tictak, i), true);
       }
-    });
+    };
+
+    freedom('manifest.json').then(start);
   </script>
   <style type='text/css'>
   #win {color: rgb(100, 200, 100);}

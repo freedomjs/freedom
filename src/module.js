@@ -73,7 +73,7 @@ Module.prototype.onMessage = function (flow, message) {
       return;
     } else if (message.type === 'close') {
       // Closing channel.
-      if (message.channel === 'control') {
+      if (!message.channel || message.channel === 'control') {
         this.stop();
       }
       this.deregisterFlow(message.channel, false);
@@ -149,7 +149,7 @@ Module.prototype.deregisterFlow = function (flow, internal) {
           request: 'unlink',
           to: this.externalPortMap[key]
         });
-      } else {
+      } else if (this.port) {
         this.port.onMessage('control', {
           type: 'close',
           channel: this.internalPortMap[key]
@@ -231,6 +231,7 @@ Module.prototype.stop = function () {
   if (!this.started) {
     return;
   }
+  this.emit('close');
   if (this.port) {
     this.port.off();
     this.port.onMessage('control', {
@@ -240,6 +241,7 @@ Module.prototype.stop = function () {
     this.port.stop();
     delete this.port;
   }
+  delete this.policy;
   this.started = false;
 };
 
@@ -328,11 +330,8 @@ Module.prototype.emitMessage = function (name, message) {
  * @private
  */
 Module.prototype.loadLinks = function () {
-  var i, channels = ['default'], name, dep,
-    finishLink = function (dep, name, provider) {
-      var style = this.api.getInterfaceStyle(name);
-      dep.getInterface()[style](provider);
-    };
+  var i, channels = ['default'], name, dep;
+
   if (this.manifest.permissions) {
     for (i = 0; i < this.manifest.permissions.length; i += 1) {
       name = this.manifest.permissions[i];
@@ -340,7 +339,7 @@ Module.prototype.loadLinks = function () {
         channels.push(name);
         this.dependantChannels.push(name);
         dep = new Provider(this.api.get(name).definition, this.debug);
-        this.api.getCore(name, this).then(finishLink.bind(this, dep, name));
+        this.api.provideCore(name, dep, this);
 
         this.emit(this.controlChannel, {
           type: 'Core Link to ' + name,
@@ -370,6 +369,8 @@ Module.prototype.loadLinks = function () {
         }.bind(this), function (err) {
           this.debug.warn('failed to load dep: ', name, err);
         }.bind(this));
+      }.bind(this), function (err) {
+        this.debug.warn('failed to load dep: ', name, err);
       }.bind(this));
     }.bind(this));
   }

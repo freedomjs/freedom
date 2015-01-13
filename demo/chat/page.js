@@ -4,8 +4,8 @@
 /**
  * Bind handlers on startup
  */
-function start(instance) {
-  var chatClient = instance(),
+function start(ChatClient) {
+  var chatClient = new ChatClient(),
     // If messages are going to a specific user, store that here.
     activeBuddylistEntry,
     buddylist,

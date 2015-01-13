@@ -2,21 +2,17 @@
 
 var providers = [
   require('../../providers/core/core.unprivileged'),
-  require('../../providers/core/echo.unprivileged'),
-  require('../../providers/core/console.unprivileged'),
-  require('../../providers/core/peerconnection.unprivileged'),
+  require('../../providers/core/core.echo'),
+  require('../../providers/core/core.console'),
+  require('../../providers/core/core.peerconnection'),
   require('../../providers/core/core.rtcpeerconnection'),
   require('../../providers/core/core.rtcdatachannel'),
-  require('../../providers/core/storage.localstorage'),
-  require('../../providers/core/view.unprivileged'),
-  require('../../providers/core/websocket.unprivileged')
+  require('../../providers/core/core.storage'),
+  require('../../providers/core/core.view'),
+  require('../../providers/core/core.oauth'),
+  require('../../providers/core/core.websocket'),
+  require('../../providers/core/core.xhr')
 ];
-
-var oauth = require('../../providers/core/oauth');
-require('../../providers/oauth/oauth.pageauth').register(oauth);
-require('../../providers/oauth/oauth.remotepageauth').register(oauth);
-
-providers.push(oauth);
 
 function getFreedomScript() {
   'use strict';
@@ -47,7 +43,11 @@ if (typeof window !== 'undefined') {
     location: window.location.href,
     portType: require('../link/worker'),
     source: getFreedomScript(),
-    providers: providers
+    providers: providers,
+    oauth: [
+      require('../../providers/oauth/oauth.localpageauth'),
+      require('../../providers/oauth/oauth.remotepageauth')
+    ]
   });
 } else {
   require('../entry')({
