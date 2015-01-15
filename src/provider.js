@@ -304,6 +304,7 @@ Provider.prototype.getProvider = function (source, identifier, args) {
         var prop = port.definition[msg.type],
           debug = port.debug,
           args = Consumer.portableToMessage(prop.value, msg, debug),
+          returnPromise,
           ret = function (src, msg, prop, resolve, reject) {
             var streams = Consumer.messageToPortable(prop.ret, resolve,
                                                          debug);
@@ -331,9 +332,22 @@ Provider.prototype.getProvider = function (source, identifier, args) {
             ret(undefined, e.message);
           }
         } else if (port.mode === Provider.mode.asynchronous) {
-          this[msg.type].apply(instance, args.concat(ret));
+          try {
+            this[msg.type].apply(instance, args.concat(ret));
+          } catch (e) {
+            ret(undefined, e.message);
+          }
         } else if (port.mode === Provider.mode.promises) {
-          this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
+          try {
+            returnPromise = this[msg.type].apply(this, args);
+            if (returnPromise && returnPromise.then) {
+              returnPromise.then(ret, ret.bind({}, undefined));
+            } else {
+              ret(undefined, returnPromise);
+            }
+          } catch(e) {
+            ret(undefined, e.message);
+          }
         }
       }
     }.bind(instance, this, source)
