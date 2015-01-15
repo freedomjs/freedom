@@ -328,14 +328,14 @@ Provider.prototype.getProvider = function (source, identifier, args) {
         if (port.mode === Provider.mode.synchronous) {
           try {
             ret(this[msg.type].apply(this, args));
-          } catch (e) {
-            ret(undefined, e.message);
+          } catch (e1) {
+            ret(undefined, e1.message + ' ' + e1.stack);
           }
         } else if (port.mode === Provider.mode.asynchronous) {
           try {
             this[msg.type].apply(instance, args.concat(ret));
-          } catch (e) {
-            ret(undefined, e.message);
+          } catch (e2) {
+            ret(undefined, e2.message + ' ' + e2.stack);
           }
         } else if (port.mode === Provider.mode.promises) {
           try {
@@ -343,10 +343,11 @@ Provider.prototype.getProvider = function (source, identifier, args) {
             if (returnPromise && returnPromise.then) {
               returnPromise.then(ret, ret.bind({}, undefined));
             } else {
-              ret(undefined, returnPromise);
+              ret(undefined, 'No promise returned from ' +
+                  msg.type + ': ' + returnPromise);
             }
-          } catch(e) {
-            ret(undefined, e.message);
+          } catch (e3) {
+            ret(undefined, e3.message + ' ' + e3.stack);
           }
         }
       }
