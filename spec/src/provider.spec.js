@@ -10,7 +10,9 @@ describe("Provider", function() {
       'e1': {type: 'event', value:'string'},
       'c1': {type: 'constant', value:"test_constant"}
     };
-    port = new Provider(definition);
+    port = new Provider(definition, {
+      warn: function(x) {console.error(x);}
+    });
 
     constructspy = jasmine.createSpy('constructor');
     o = function() {
@@ -99,6 +101,90 @@ describe("Provider", function() {
       expect(n.message.text).toEqual('resolved mystr');
       done();
     });
+  });
+
+  it("rejects method calls when the provider errors", function (done) {
+    var iface = port.getInterface();
+    var o = function() {};
+    o.prototype.m1 = function(str) {
+      throw new Error('hi.myerr');
+    };
+
+    iface.providePromises(o);
+    port.onMessage('default', {
+      channel: 'message'
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message:{
+      'type': 'construct',
+    }});
+
+    port.on('message', function(n) {
+      expect(n.message.error).toContain('hi.myerr');
+      done();
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message: {
+      'action': 'method',
+      'type': 'm1',
+      'text': ['mystr'],
+      'reqId': 1
+    }});
+  });
+
+  it("rejects method calls when the provider doesn't return a promise", function (done) {
+    var iface = port.getInterface();
+    var o = function() {};
+    o.prototype.m1 = function(str) {
+      return 'a weird return';
+    };
+
+    iface.providePromises(o);
+    port.onMessage('default', {
+      channel: 'message'
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message:{
+      'type': 'construct',
+    }});
+
+    port.on('message', function(n) {
+      expect(n.message.error).toContain('a weird return');
+      done();
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message: {
+      'action': 'method',
+      'type': 'm1',
+      'text': ['mystr'],
+      'reqId': 1
+    }});
+  });
+
+  it("rejects method calls when the provider doesn't exist", function (done) {
+    var iface = port.getInterface();
+    var o = function() {};
+
+    iface.providePromises(o);
+    port.onMessage('default', {
+      channel: 'message'
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message:{
+      'type': 'construct',
+    }});
+
+    port.on('message', function(n) {
+      expect(n.message.error.length).toBeGreaterThan(0);
+      done();
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message: {
+      'action': 'method',
+      'type': 'm1',
+      'text': ['mystr'],
+      'reqId': 1
+    }});
   });
 
   it("Allows closing", function() {

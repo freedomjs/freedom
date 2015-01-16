@@ -299,11 +299,23 @@ Provider.prototype.getProvider = function (source, identifier, args) {
       if (msg.action === 'method') {
         if (typeof this[msg.type] !== 'function') {
           port.debug.warn("Provider does not implement " + msg.type + "()!");
+          port.emit(port.channels[src], {
+            type: 'method',
+            to: msg.to,
+            message: {
+              to: msg.to,
+              type: 'method',
+              reqId: msg.reqId,
+              name: msg.type,
+              error: 'Provider does not implement ' + msg.type + '()!'
+            }
+          });
           return;
         }
         var prop = port.definition[msg.type],
           debug = port.debug,
           args = Consumer.portableToMessage(prop.value, msg, debug),
+          returnPromise,
           ret = function (src, msg, prop, resolve, reject) {
             var streams = Consumer.messageToPortable(prop.ret, resolve,
                                                          debug);
@@ -327,13 +339,27 @@ Provider.prototype.getProvider = function (source, identifier, args) {
         if (port.mode === Provider.mode.synchronous) {
           try {
             ret(this[msg.type].apply(this, args));
-          } catch (e) {
-            ret(undefined, e.message);
+          } catch (e1) {
+            ret(undefined, e1.message + ' ' + e1.stack);
           }
         } else if (port.mode === Provider.mode.asynchronous) {
-          this[msg.type].apply(instance, args.concat(ret));
+          try {
+            this[msg.type].apply(instance, args.concat(ret));
+          } catch (e2) {
+            ret(undefined, e2.message + ' ' + e2.stack);
+          }
         } else if (port.mode === Provider.mode.promises) {
-          this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
+          try {
+            returnPromise = this[msg.type].apply(this, args);
+            if (returnPromise && returnPromise.then) {
+              returnPromise.then(ret, ret.bind({}, undefined));
+            } else {
+              ret(undefined, 'No promise returned from ' +
+                  msg.type + ': ' + returnPromise);
+            }
+          } catch (e3) {
+            ret(undefined, e3.message + ' ' + e3.stack);
+          }
         }
       }
     }.bind(instance, this, source)
