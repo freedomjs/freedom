@@ -10,7 +10,9 @@ describe("Provider", function() {
       'e1': {type: 'event', value:'string'},
       'c1': {type: 'constant', value:"test_constant"}
     };
-    port = new Provider(definition);
+    port = new Provider(definition, {
+      warn: function(x) {console.error(x);}
+    });
 
     constructspy = jasmine.createSpy('constructor');
     o = function() {
@@ -130,7 +132,7 @@ describe("Provider", function() {
     }});
   });
 
-  iit("rejects method calls when the provider doesn't return a promise", function (done) {
+  it("rejects method calls when the provider doesn't return a promise", function (done) {
     var iface = port.getInterface();
     var o = function() {};
     o.prototype.m1 = function(str) {
@@ -162,7 +164,6 @@ describe("Provider", function() {
   it("rejects method calls when the provider doesn't exist", function (done) {
     var iface = port.getInterface();
     var o = function() {};
-    var called = false, resp;
 
     iface.providePromises(o);
     port.onMessage('default', {
@@ -173,19 +174,17 @@ describe("Provider", function() {
       'type': 'construct',
     }});
 
+    port.on('message', function(n) {
+      expect(n.message.error.length).toBeGreaterThan(0);
+      done();
+    });
+
     port.onMessage('default', {to: 'testInst', type:'message', message: {
       'action': 'method',
       'type': 'm1',
       'text': ['mystr'],
       'reqId': 1
     }});
-
-    expect(called).toEqual(true);
-
-    port.on('message', function(n) {
-      expect(n.message.error.length).toBeGreaterThan(0);
-      done();
-    });
   });
 
   it("Allows closing", function() {

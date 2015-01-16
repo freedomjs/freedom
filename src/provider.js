@@ -299,6 +299,17 @@ Provider.prototype.getProvider = function (source, identifier, args) {
       if (msg.action === 'method') {
         if (typeof this[msg.type] !== 'function') {
           port.debug.warn("Provider does not implement " + msg.type + "()!");
+          port.emit(port.channels[src], {
+            type: 'method',
+            to: msg.to,
+            message: {
+              to: msg.to,
+              type: 'method',
+              reqId: msg.reqId,
+              name: msg.type,
+              error: 'Provider does not implement ' + msg.type + '()!'
+            }
+          });
           return;
         }
         var prop = port.definition[msg.type],
