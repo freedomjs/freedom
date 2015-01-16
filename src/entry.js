@@ -14,7 +14,7 @@ var Bundle = require('./bundle');
 var freedomGlobal;
 var getGlobal = function () {
   'use strict';
-  
+
   // Node.js
   if (typeof global !== 'undefined' && global.prototype === undefined) {
     freedomGlobal = global;
@@ -37,6 +37,9 @@ getGlobal();
  */
 var setup = function (context, manifest, config) {
   'use strict';
+  console.log("CONFIG");
+  console.log(config);
+  console.log(context);
   var debug = new Debug(),
     hub = new Hub(debug),
     resource = new Resource(debug),
@@ -47,9 +50,11 @@ var setup = function (context, manifest, config) {
     site_cfg = {
       'debug': 'log',
       'manifest': manifest,
-      'moduleContext': (!context || typeof (context.isModule) === "undefined") ?
-          util.isModuleContext() :
-          context.isModule
+      'moduleContext': (!context || typeof (context.isModule) === 'undefined') ?
+        util.isModuleContext() :
+        context.isModule,
+      'mutableScope': false || ((typeof config !== 'undefined') &&
+                                config.mutableScope)
     },
     link,
     Port,
@@ -57,6 +62,7 @@ var setup = function (context, manifest, config) {
       api.cleanup();
       manager.destroy();
     };
+  console.log(site_cfg);
 
   if (config) {
     util.mixin(site_cfg, config, true);
@@ -84,7 +90,7 @@ var setup = function (context, manifest, config) {
       }
     }
   });
-  
+
   Bundle.register(context.providers, api);
   resource.register(context.resolvers || []);
 

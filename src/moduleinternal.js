@@ -41,6 +41,9 @@ var ModuleInternal = function (manager) {
  * @param {Object} message The message.
  */
 ModuleInternal.prototype.onMessage = function (flow, message) {
+  console.log("INTERNAL CONFIG");
+  console.log(this.config);
+  console.log(message.config);
   if (flow === 'control') {
     if (!this.controlChannel && message.channel) {
       this.controlChannel = message.channel;
@@ -365,7 +368,10 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
         type: 'ready'
       });
       // Freezing worker scope for security purposes
-      Object.freeze(this.port.obj);
+      console.log(this.config);
+      if (!this.config.mutableScope) {
+        Object.seal(this.port.obj);
+      }
       return;
     }
 
