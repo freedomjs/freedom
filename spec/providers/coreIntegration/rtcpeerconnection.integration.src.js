@@ -40,6 +40,15 @@ module.exports = function (pc, dc, setup) {
       });
       alice.createOffer().then(function (offer) {
         return alice.setLocalDescription(offer).then(function () {return offer; });
+      }).then(function() {
+        // Delay 100ms for Firefox to get its act together.
+        return new Promise(function(resolve) {
+          setTimeout(function() {
+            alice.createOffer().then(function (offer) {
+              resolve(offer);
+            });
+          }, 100);
+        });
       }).then(function (offer) {
         return bob.setRemoteDescription(offer);
       }).then(function () {
