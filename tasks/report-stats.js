@@ -7,6 +7,13 @@
  * * Build time
  * * Commit
  * * Branch
+ * Statistics are collected in:
+ * https://docs.google.com/spreadsheets/d/1f3aL376-FKWGYOh2lpHTwELL9kfzZjcp668k-gZU6Ug/edit?usp=sharing
+ * via the appscript at:
+ * https://script.google.com/d/1vsdAkMWx_zB30TJAGDtEtiG8rcvwEA0QBfdBBjhHoXue_jYkx8Z4jTPf/edit?usp=sharing
+ *
+ * Statistics are authenticated by the appscript by checking the presence of the
+ * STAT_KEY variable, which is saved in Travis CI as an environmental variable.
  */
 module.exports = function (grunt) {
   'use strict';
