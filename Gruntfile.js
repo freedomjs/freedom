@@ -412,7 +412,8 @@ module.exports = function (grunt) {
         'gitinfo',
         'karma:saucelabs',
         'coveralls:report',
-        'dynamic_codeclimate'
+        'dynamic_codeclimate',
+        'reportStats'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
       grunt.registerTask('ci', [
