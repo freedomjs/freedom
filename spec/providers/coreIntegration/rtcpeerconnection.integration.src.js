@@ -71,12 +71,16 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Closes Cleanly", function (done) {
-    var alice, bob, aliceChannel, bobchannel;
+    var alice, bob, aliceChannel, bobchannel,
+      aliceCandidates = [];
     var onClose = jasmine.createSpy('onclose');
     onClose.and.callFake(function () {
       // TODO: Firefox doesn't yet close remote data channels.
-      if (onClose.calls.count() === 2 ||
-         navigator.userAgent.indexOf("Firefox") > 0) {
+      console.error('onclose');
+      console.error(typeof Component);
+      if (onClose.calls.count() === 2 || (typeof navigator !== 'undefined' &&
+          navigator.userAgent.indexOf("Firefox") > 0) ||
+          (typeof Components !== 'undefined' /*ffox addon*/)) {
         alice.close();
         bob.close();
         done();
@@ -84,9 +88,6 @@ module.exports = function (pc, dc, setup) {
     });
 
     alice = peercon();
-    alice.on('onicecandidate', function (msg) {
-      msg.candidate && bob.addIceCandidate(msg.candidate);
-    });
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
       bobchannel = datachan(msg.channel);
@@ -99,6 +100,27 @@ module.exports = function (pc, dc, setup) {
     bob.on('onicecandidate', function (msg) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
     });
+    alice.on('onicecandidate', function (msg) {
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceCandidates.shift()).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift())
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ',err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
+    });
     alice.createDataChannel('channel').then(function (id) {
       aliceChannel = datachan(id);
       aliceChannel.on('onopen', function () {
@@ -106,30 +128,18 @@ module.exports = function (pc, dc, setup) {
       });
       aliceChannel.on('onclose', onClose);
       alice.createOffer().then(function (offer) {
-        return alice.setLocalDescription(offer).then(function () {return offer; });
-      }).then(function (offer) {
-        return bob.setRemoteDescription(offer);
-      }).then(function () {
-        return bob.createAnswer();
-      }).then(function (answer) {
-        return bob.setLocalDescription(answer).then(function () {return answer; });
-      }).then(function (answer) {
-        return alice.setRemoteDescription(answer);
-      }, function (err) {
-        console.error('RTC failed: ',err);
+        alice.setLocalDescription(offer);
+        aliceCandidates.push(offer);
       });
     }, function (err) {
       console.error('RTC failed: ',err);
     });
   });
 
-  it("getStats works", function (done) {
-    var alice, bob;
+  fit("getStats works", function (done) {
+    var alice, bob, aliceCandidates = [];
 
     alice = peercon();
-    alice.on('onicecandidate', function (msg) {
-      msg.candidate && bob.addIceCandidate(msg.candidate);
-    });
     bob = peercon();
     bob.on('onicecandidate', function (msg) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
@@ -163,22 +173,35 @@ module.exports = function (pc, dc, setup) {
 
     // We have to create a data channel because otherwise there is no
     // audio, video, or data, so CreateOffer fails (at least in Firefox).
+    alice.on('onicecandidate', function (msg) {
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceCandidates.shift()).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift())
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ',err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
+    });
     alice.createDataChannel('channel').then(function (id) {
       alice.createOffer().then(function (offer) {
-        return alice.setLocalDescription(offer).then(function () {return offer; });
-      }).then(function (offer) {
-        return bob.setRemoteDescription(offer);
-      }).then(function () {
-        return bob.createAnswer();
-      }).then(function (answer) {
-        return bob.setLocalDescription(answer).then(function () {return answer; });
-      }).then(function (answer) {
-        return alice.setRemoteDescription(answer);
-      }, function (err) {
-        console.error('RTC failed: ',err);
+        alice.setLocalDescription(offer);
+        aliceCandidates.push(offer);
       });
+    }, function (err) {
+      console.error('RTC failed: ',err);
     });
-
   });
 
   it("Signals 'onClose' when created with incorrect parameters", function (done) {
