@@ -15,11 +15,9 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Sends messages across data channels", function (done) {
-    var alice, bob, aliceChannel, bobchannel;
+    var alice, bob, aliceChannel, bobchannel,
+      aliceCandidates = [];
     alice = peercon();
-    alice.on('onicecandidate', function (msg) {
-      msg.candidate && bob.addIceCandidate(msg.candidate);
-    });
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
       bobchannel = datachan(msg.channel);
@@ -33,32 +31,35 @@ module.exports = function (pc, dc, setup) {
     bob.on('onicecandidate', function (msg) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
     });
+    alice.on('onicecandidate', function (msg) {
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceCandidates.shift()).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift())
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ',err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
+    });
     alice.createDataChannel('channel').then(function (id) {
       aliceChannel = datachan(id);
       aliceChannel.on('onopen', function () {
         aliceChannel.send('message from alice');
       });
       alice.createOffer().then(function (offer) {
-        return alice.setLocalDescription(offer).then(function () {return offer; });
-      }).then(function() {
-        // Delay 100ms for Firefox to get its act together.
-        return new Promise(function(resolve) {
-          setTimeout(function() {
-            alice.createOffer().then(function (offer) {
-              resolve(offer);
-            });
-          }, 100);
-        });
-      }).then(function (offer) {
-        return bob.setRemoteDescription(offer);
-      }).then(function () {
-        return bob.createAnswer();
-      }).then(function (answer) {
-        return bob.setLocalDescription(answer).then(function () {return answer; });
-      }).then(function (answer) {
-        return alice.setRemoteDescription(answer);
-      }, function (err) {
-        console.error('RTC failed: ',err);
+        alice.setLocalDescription(offer);
+        aliceCandidates.push(offer);
       });
     }, function (err) {
       console.error('RTC failed: ',err);
