@@ -31,136 +31,108 @@ module.exports = function(freedom, provider_url, freedomOpts) {
   };
   
   it("logs in", function(done) {
-    client.login({ agent: "jasmine", interactive: false }).then(function(state) {
+    client.login({ agent: "jasmine" }).then(function(state) {
       expect(state).toEqual(makeClientState("ONLINE"));
       client.logout().then(done);
     });
   });
 
-/**
   it("returns clients", function(done) {
-    var ids = {};
     var myClientState;
-    var callbackOne = function(ret) {
-      myClientState = ret;
-      ids[1] = helper.call("s", "getClients", [], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      var keys = Object.keys(ret);
+    client.login({ agent: "jasmine" }).then(function(state) {
+      myClientState = state;
+      return client.getClients();
+    }).then(function(clientList) {
+      var keys = Object.keys(clientList);
       expect(keys.length).toBeGreaterThan(0);
       expect(keys).toContain(myClientState.clientId);
-      expect(ret[myClientState.clientId]).toEqual(makeClientState("ONLINE"));
-      expect(ret[myClientState.clientId].userId).toEqual(myClientState.userId);
-      expect(ret[myClientState.clientId].clientId).toEqual(myClientState.clientId);
-      ids[2] = helper.call("s", "logout", [], function(ret) {
-        done();
-      });
-    };
-    
-    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+      expect(clientList[myClientState.clientId]).toEqual(makeClientState("ONLINE"));
+      expect(clientList[myClientState.clientId].userId).toEqual(myClientState.userId);
+      expect(clientList[myClientState.clientId].clientId).toEqual(myClientState.clientId);
+      return client.logout();
+    }).then(done);
   });
 
-
   it("returns users", function(done) {
-    var ids = {};
     var myClientState;
-    var callbackOne = function(ret) {
-      myClientState = ret;
-      ids[1] = helper.call("s", "getUsers", [], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      var keys = Object.keys(ret);
+
+    client.login({ agent: "jasmine" }).then(function(state) {
+      myClientState = state;
+      return client.getUsers();
+    }).then(function(userList) {
+      var keys = Object.keys(userList);
       expect(keys.length).toBeGreaterThan(0);
       expect(keys).toContain(myClientState.userId);
-      expect(ret[myClientState.userId]).toEqual(jasmine.objectContaining({
+      expect(userList[myClientState.userId]).toEqual(jasmine.objectContaining({
         userId: myClientState.userId,
         lastUpdated: jasmine.any(Number)
       }));
-      ids[2] = helper.call("s", "logout", [], function(ret) {
-        done();
-      });
-    };
-    
-    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+      return client.logout();
+    }).then(done);
   });
 
   it("sends message", function(done) {
-    var ids = {};
     var msg = "Hello World";
     var myClientState;
     var sendSpy = jasmine.createSpy("sendMessage");
 
-    helper.on("s", "onMessage", function(message) {
+    client.on("onMessage", function(message) {
       expect(message.from).toEqual(makeClientState("ONLINE"));
       expect(message.from.userId).toEqual(myClientState.userId);
       expect(message.from.clientId).toEqual(myClientState.clientId);
       expect(message.message).toEqual(msg);
-      ids[2] = helper.call("s", "logout", [], function(ret) {
+      client.logout().then(function() {
         expect(sendSpy.calls.length || sendSpy.calls.count()).toEqual(1);
         done();
       });
     });
-    var callbackOne = function(ret) {
-      myClientState = ret;
-      ids[1] = helper.call("s", "sendMessage", [myClientState.clientId, msg], sendSpy);
-    };
-        
-    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+
+    client.login({ agent: "jasmine" }).then(function(state) {
+      myClientState = state;
+      return client.sendMessage(myClientState.clientId, msg);
+    }).then(sendSpy);
   });
   
   it("ERRCODE-OFFLINE", function(done) {
-    var ids = {};
     var callbackCount = 0;
 
-    var checkDone = function() {
-      var keys = Object.keys(ids);
-      if (callbackCount >= keys.length) {
-        done();
-      }
-    };
     var errHandler = function(err) {
       callbackCount++;
       expect(err.errcode).toEqual("OFFLINE");
-      checkDone();
+      if (callbackCount >= 4) {
+        done();
+      }
     };
 
-    ids[0] = helper.call("s", "getUsers", [], dead, errHandler);
-    ids[1] = helper.call("s", "getClients", [], dead, errHandler);
-    ids[2] = helper.call("s", "sendMessage", ["",""], dead, errHandler);
-    ids[3] = helper.call("s", "logout", [], dead, errHandler);
-  
+    client.getUsers().then(dead, errHandler);
+    client.getClients().then(dead, errHandler);
+    client.sendMessage("", "").then(dead, errHandler);
+    client.logout().then(dead, errHandler);
   });
 
   it("ERRCODE-LOGIN_ALREADYONLINE", function(done) {
-    var ids = {};
     var myClientState;
-    var callbackOne = function(ret) {
-      myClientState = ret;
-      ids[1] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], dead, errHandler);
-    };
-    var errHandler = function(err) {
+
+    client.login({ agent: "jasmine", interactive: false }).then(function(state) {
+      myClientState = state;
+      return client.login({ agent: "jasmine", interactive: false });
+    }).then(dead).catch(function(err) {
       expect(err.errcode).toEqual("LOGIN_ALREADYONLINE");
-      ids[2] = helper.call("s", "logout", [], done);
-    }
-        
-    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+      return client.logout();
+    }).then(done);
   });
   
   it("ERRCODE-SEND_INVALIDDESTINATION", function(done) {
-    var ids = {};
     var myClientState;
-    var callbackOne = function(ret) {
-      myClientState = ret;
-      ids[1] = helper.call("s", "sendMessage", ["invalid-destination", "pooballs"], dead, errHandler);
-    };
-    var errHandler = function(err) {
+
+    client.login({ agent: "jasmine", interactive: false }).then(function(state) {
+      myClientState = state;
+      return client.sendMessage("invalid-destination", "pooballs");
+    }).then(dead).catch(function(err) {
       expect(err.errcode).toEqual("SEND_INVALIDDESTINATION");
-      ids[2] = helper.call("s", "logout", [], done);
-    }
-        
-    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+      return client.logout();
+    }).then(done);
   });
-**/
  
 };
 

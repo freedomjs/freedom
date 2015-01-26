@@ -9,12 +9,12 @@ var setup = function() {
   ]);
 };
 
-ddescribe("integration-single: social.loopback.json", require("./social/social.single.integration.src")
+describe("integration-single: social.loopback.json", require("./social/social.single.integration.src")
   .bind(this, window.freedom, "providers/social/loopback/social.loopback.json"), {});
 describe("integration-single: social.ws.json", require("./social/social.single.integration.src")
   .bind(this, window.freedom, "providers/social/websocket-server/social.ws.json", {}));
-describe("integration-double: social.ws.json",
-    require("./social/social.double.integration.src").bind(this, "/providers/social/websocket-server/social.ws.json", setup));
+describe("integration-double: social.ws.json", require("./social/social.double.integration.src")
+  .bind(this, window.freedom, "providers/social/websocket-server/social.ws.json", {}));
 
 describe("integration: storage.isolated.json",
     require("./storage/storage.integration.src").bind(this, "/providers/storage/isolated/storage.isolated.json", setup));

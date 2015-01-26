@@ -88,7 +88,12 @@ module.exports = function (grunt) {
       },
       integration: {
         browsers: [ 'Chrome' ],
-        options: { files: [ 'freedom.js', 'spec-integration.js' ] }
+        options: { files: [
+          require.resolve('es5-shim'),
+          require.resolve('es6-promise'),
+          'freedom.js',
+          'spec-integration.js'
+        ] }
       },
       saucelabs: {
         browsers: ['sauce_chrome_mac', 'sauce_chrome_win', 'sauce_firefox'],
