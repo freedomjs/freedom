@@ -48,7 +48,15 @@
       // Connection Refused
       "CONNECTION_REFUSED": "Connection refused",
       // Generic Failure
-      "CONNECTION_FAILED": "Connection failed"
+      "CONNECTION_FAILED": "Connection failed",
+      // DNS lookup failed
+      "NAME_NOT_RESOLVED": "DNS lookup failed",
+      // The network is not connected or configured
+      "INTERNET_DISCONNECTED": "Cannot reach any network",
+      // The IP address is not correctly formed.
+      "ADDRESS_INVALID": "Invalid address",
+      // The IP address is unreachable.
+      "ADDRESS_UNREACHABLE": "No route to host"
     }},
     
     // Close a socket. Will Fail if the socket is not connected or already
