@@ -1,72 +1,62 @@
-var testUtil = require('../../util');
 
-module.exports = function(provider_url, setup, useArrayBuffer) { 
-  var helper;
+module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) { 
+  var Storage, client, ERRCODE;
 
-  function beforeSet(str) {
-    if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
-      return str;
-    } else {
-      var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-      var bufView = new Uint16Array(buf);
-      for (var i=0, strLen=str.length; i<strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
+  var util = {
+    beforeSet: function (str) {
+      if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
+        return str;
+      } else {
+        var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+        var bufView = new Uint16Array(buf);
+        for (var i=0, strLen=str.length; i<strLen; i++) {
+          bufView[i] = str.charCodeAt(i);
+        }
+        return buf;
       }
-      return buf;
-    }
-  }
-
-  function afterGet(val) {
-    if (val == null) {
-      return null;
-    } else if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
-      return val;
-    } else {
-      return String.fromCharCode.apply(null, new Uint16Array(val));
+    },
+    afterGet: function(val) {
+      if (val == null) {
+        return null;
+      } else if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
+        return val;
+      } else {
+        return String.fromCharCode.apply(null, new Uint16Array(val));
+      }
     }
   }
 
   beforeEach(function(done) {
-    setup();
-    var promise;
-    if (typeof useArrayBuffer == 'undefined' || useArrayBuffer == false) {
-      promise = testUtil.providerFor(provider_url, "storage");
-    } else {
-      promise = testUtil.providerFor(provider_url, "storebuffer");
-    }
-    promise.then(function(h) {
-      helper = h;
-      helper.create("s");
-      helper.call("s", "clear", [], done);
+    freedom(provider_url, freedomOpts).then(function(constructor) {
+      Storage = constructor;
+      client = new Storage();
+      ERRCODE = client.ERRCODE;
+      client.clear().then(done);
     });
   });
 
   afterEach(function() {
-    helper.removeListeners("s");
-    testUtil.cleanupIframes();
+    Storage.close(client);
+    done();
   });
   
   it("sets and gets keys", function(done) {
-    var callbackOne = function(ret) {
-      helper.call("s", "get", ["key-a"], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("value-a");
-      helper.call("s", "clear", [], done);
-    };
-    helper.call("s", "set", ["key-a", beforeSet("value-a")], callbackOne);
+    client.set("k-a", util.beforeSet("v-a")).then(function(ret) {
+      return client.get("k-a");
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v-a");
+      return client.clear();
+    }).then(done);
   });
 
   it("set returns old value", function(done) {
-    var callbackOne = function(ret) {
-      expect(afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key-b", beforeSet("value2-b")], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("value1-b");
-      helper.call("s", "clear", [], done);
-    };
-    helper.call("s", "set", ["key-b", beforeSet("value1-b")], callbackOne);
+    client.set("k-b", util.beforeSet("v1-b")).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual(null);
+      return client.set("k-b", util.beforeSet("v2-b"));
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v1-b");
+      return client.clear();
+    }).then(done);
   });
 
   it("removes a key", function(done) {
@@ -74,19 +64,19 @@ module.exports = function(provider_url, setup, useArrayBuffer) {
       helper.call("s", "remove", ["key-c"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("myvalue-c");
+      expect(util.afterGet(ret)).toEqual("myvalue-c");
       helper.call("s", "keys", [], callbackThree);
     };
     var callbackThree = function(ret) {
       expect(ret).toEqual([]);
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key-c", beforeSet("myvalue-c")], callbackOne);
+    helper.call("s", "set", ["key-c", util.beforeSet("myvalue-c")], callbackOne);
   });
 
   it("lists keys that have been set", function(done) {
     var callbackOne = function(ret) {
-      helper.call("s", "set", ["k2-d", beforeSet("v2-d")], callbackTwo);
+      helper.call("s", "set", ["k2-d", util.beforeSet("v2-d")], callbackTwo);
     };
     var callbackTwo = function(ret) {
       helper.call("s", "keys", [], callbackThree);
@@ -97,7 +87,7 @@ module.exports = function(provider_url, setup, useArrayBuffer) {
       expect(ret).toContain("k2-d");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["k1-d", beforeSet("v1-d")], callbackOne);
+    helper.call("s", "set", ["k1-d", util.beforeSet("v1-d")], callbackOne);
   });
   
   it("resolves 'null' when getting unset keys", function (done) {
@@ -123,31 +113,31 @@ module.exports = function(provider_url, setup, useArrayBuffer) {
       expect(ret.length).toEqual(0);
       done();
     };
-    helper.call("s", "set", ["key-e", beforeSet("value-e")], callbackOne);
+    helper.call("s", "set", ["key-e", util.beforeSet("value-e")], callbackOne);
   });
 
   it("sets work across keys", function(done) {
     var callbackOne = function(ret) {
-      expect(afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key2-f", beforeSet("value1-f")], callbackTwo);
+      expect(util.afterGet(ret)).toEqual(null);
+      helper.call("s", "set", ["key2-f", util.beforeSet("value1-f")], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key1-f", beforeSet("value2-f")], callbackThree);
+      expect(util.afterGet(ret)).toEqual(null);
+      helper.call("s", "set", ["key1-f", util.beforeSet("value2-f")], callbackThree);
     };
     var callbackThree = function(ret) {
-      expect(afterGet(ret)).toEqual("value1-f");
-      helper.call("s", "set", ["key2-f", beforeSet("value1-f")], callbackFour);
+      expect(util.afterGet(ret)).toEqual("value1-f");
+      helper.call("s", "set", ["key2-f", util.beforeSet("value1-f")], callbackFour);
     };
     var callbackFour = function(ret) {
-      expect(afterGet(ret)).toEqual("value1-f");
+      expect(util.afterGet(ret)).toEqual("value1-f");
       helper.call("s", "get", ["key1-f"], callbackFive);
     };
     var callbackFive = function(ret) {
-      expect(afterGet(ret)).toEqual("value2-f");
+      expect(util.afterGet(ret)).toEqual("value2-f");
       helper.call("s", "clear", [], done);
     };
-    helper.call("s", "set", ["key1-f", beforeSet("value1-f")], callbackOne);
+    helper.call("s", "set", ["key1-f", util.beforeSet("value1-f")], callbackOne);
   });
 
   //@todo - not sure if this is even desired behavior
@@ -156,14 +146,14 @@ module.exports = function(provider_url, setup, useArrayBuffer) {
       helper.call("s2", "get", ["key"], callbackTwo);
     };
     var callbackTwo = function(ret) {
-      expect(afterGet(ret)).toEqual("value");
+      expect(util.afterGet(ret)).toEqual("value");
       helper.call("s", "clear", [], callbackThree);
     };
     var callbackThree = function(ret) {
       helper.call("s2", "clear", [], done);
     };
     helper.create("s2");
-    helper.call("s", "set", ["key", beforeSet("value")], callbackOne);
+    helper.call("s", "set", ["key", util.beforeSet("value")], callbackOne);
   });
 };
 

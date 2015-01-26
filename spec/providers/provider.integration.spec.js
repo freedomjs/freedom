@@ -9,6 +9,7 @@ var setup = function() {
   ]);
 };
 
+/** Social **/
 describe("integration-single: social.loopback.json", require("./social/social.single.integration.src")
   .bind(this, window.freedom, "providers/social/loopback/social.loopback.json"), {});
 describe("integration-single: social.ws.json", require("./social/social.single.integration.src")
@@ -16,7 +17,8 @@ describe("integration-single: social.ws.json", require("./social/social.single.i
 describe("integration-double: social.ws.json", require("./social/social.double.integration.src")
   .bind(this, window.freedom, "providers/social/websocket-server/social.ws.json", {}));
 
-describe("integration: storage.isolated.json",
+/** Storage **/
+ddescribe("integration: storage.isolated.json",
     require("./storage/storage.integration.src").bind(this, "/providers/storage/isolated/storage.isolated.json", setup));
 describe("integration: storage.shared.json",
     require("./storage/storage.integration.src").bind(this, "/providers/storage/shared/storage.shared.json", setup, false));
@@ -25,25 +27,26 @@ describe("integration: storage.indexeddb.json",
 describe("integration: storebuffer.indexeddb.json",
     require("./storage/storage.integration.src").bind(this, "/providers/storage/indexeddb/storebuffer.indexeddb.json", setup, true));
 
+/** Transport **/
 describe("integration: transport.webrtc.json",
     require("./transport/transport.integration.src").bind(this, "/providers/transport/webrtc/transport.webrtc.json", setup));
 
+/** environment **/
 describe("integration: Module Environment",
     require("./coreIntegration/environment.integration.src").bind(this, setup));
 
-
-// core.rtcpeerconnection
+/** core.rtcpeerconnection **/
 describe("integration: core.rtcpeerconnection",
     require("./coreIntegration/rtcpeerconnection.integration.src").bind(this,
     require("../../providers/core/core.rtcpeerconnection"),
     require("../../providers/core/core.rtcdatachannel"), setup));
 
-// core.xhr
+/** core.xhr **/
 describe("integration: core.xhr", 
     require("./coreIntegration/xhr.integration.src").bind(this, 
     require("../../providers/core/core.xhr"), setup));
 
-// core.oauth
+/** core.oauth **/
 describe("integration: core.oauth - localpageauth",
     require("./coreIntegration/oauth.integration.src").bind(this,
     require("../../providers/core/core.oauth"), 
