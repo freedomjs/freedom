@@ -15,13 +15,14 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Sends messages across data channels", function (done) {
-    var alice, bob, aliceChannel, bobchannel,
-      aliceCandidates = [];
+    var alice, bob, aliceChannel, bobChannel,
+      aliceCandidates = [],
+      aliceOffer;
     alice = peercon();
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
-      bobchannel = datachan(msg.channel);
-      bobchannel.on('onmessage', function (msg) {
+      bobChannel = datachan(msg.channel);
+      bobChannel.on('onmessage', function (msg) {
         expect(msg.text).toEqual('message from alice');
         alice.close();
         bob.close();
@@ -33,7 +34,7 @@ module.exports = function (pc, dc, setup) {
     });
     alice.on('onicecandidate', function (msg) {
       if (!msg.candidate) {
-        bob.setRemoteDescription(aliceCandidates.shift()).then(function () {
+        bob.setRemoteDescription(aliceOffer).then(function () {
           var last;
           while (aliceCandidates.length) {
             last = bob.addIceCandidate(aliceCandidates.shift())
@@ -59,7 +60,7 @@ module.exports = function (pc, dc, setup) {
       });
       alice.createOffer().then(function (offer) {
         alice.setLocalDescription(offer);
-        aliceCandidates.push(offer);
+        aliceOffer = offer;
       });
     }, function (err) {
       console.error('RTC failed: ',err);
@@ -71,13 +72,12 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Closes Cleanly", function (done) {
-    var alice, bob, aliceChannel, bobchannel,
-      aliceCandidates = [];
+    var alice, bob, aliceChannel, bobChannel,
+      aliceCandidates = [],
+      aliceOffer;
     var onClose = jasmine.createSpy('onclose');
     onClose.and.callFake(function () {
       // TODO: Firefox doesn't yet close remote data channels.
-      console.error('onclose');
-      console.error(typeof Component);
       if (onClose.calls.count() === 2 || (typeof navigator !== 'undefined' &&
           navigator.userAgent.indexOf("Firefox") > 0) ||
           (typeof Components !== 'undefined' /*ffox addon*/)) {
@@ -90,11 +90,11 @@ module.exports = function (pc, dc, setup) {
     alice = peercon();
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
-      bobchannel = datachan(msg.channel);
-      bobchannel.on('onclose', onClose);
-      bobchannel.on('onmessage', function (msg) {
+      bobChannel = datachan(msg.channel);
+      bobChannel.on('onclose', onClose);
+      bobChannel.on('onmessage', function (msg) {
         expect(msg.text).toEqual('message from alice');
-        bobchannel.close();
+        bobChannel.close();
       });
     });
     bob.on('onicecandidate', function (msg) {
@@ -102,7 +102,7 @@ module.exports = function (pc, dc, setup) {
     });
     alice.on('onicecandidate', function (msg) {
       if (!msg.candidate) {
-        bob.setRemoteDescription(aliceCandidates.shift()).then(function () {
+        bob.setRemoteDescription(aliceOffer).then(function () {
           var last;
           while (aliceCandidates.length) {
             last = bob.addIceCandidate(aliceCandidates.shift())
@@ -129,7 +129,7 @@ module.exports = function (pc, dc, setup) {
       aliceChannel.on('onclose', onClose);
       alice.createOffer().then(function (offer) {
         alice.setLocalDescription(offer);
-        aliceCandidates.push(offer);
+        aliceOffer = offer;
       });
     }, function (err) {
       console.error('RTC failed: ',err);
@@ -137,7 +137,7 @@ module.exports = function (pc, dc, setup) {
   });
 
   fit("getStats works", function (done) {
-    var alice, bob, aliceCandidates = [];
+    var alice, bob, aliceCandidates = [], aliceOffer;
 
     alice = peercon();
     bob = peercon();
@@ -175,7 +175,7 @@ module.exports = function (pc, dc, setup) {
     // audio, video, or data, so CreateOffer fails (at least in Firefox).
     alice.on('onicecandidate', function (msg) {
       if (!msg.candidate) {
-        bob.setRemoteDescription(aliceCandidates.shift()).then(function () {
+        bob.setRemoteDescription(aliceOffer).then(function () {
           var last;
           while (aliceCandidates.length) {
             last = bob.addIceCandidate(aliceCandidates.shift())
@@ -197,7 +197,7 @@ module.exports = function (pc, dc, setup) {
     alice.createDataChannel('channel').then(function (id) {
       alice.createOffer().then(function (offer) {
         alice.setLocalDescription(offer);
-        aliceCandidates.push(offer);
+        aliceOffer = offer;
       });
     }, function (err) {
       console.error('RTC failed: ',err);
