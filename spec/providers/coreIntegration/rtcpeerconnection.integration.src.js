@@ -33,6 +33,7 @@ module.exports = function (pc, dc, setup) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
     });
     alice.on('onicecandidate', function (msg) {
+      // firefox needs ice candidates all sent before asking for an answer.
       if (!msg.candidate) {
         bob.setRemoteDescription(aliceOffer).then(function () {
           var last;
