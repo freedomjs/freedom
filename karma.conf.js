@@ -19,7 +19,7 @@ module.exports = function (config) {
     files: [
       require.resolve('es5-shim'),
       require.resolve('es6-promise'),
-      'spec.js',
+      'spec-unit.js',
       {pattern: 'build/freedom.frame.js', included: false}
     ],
     

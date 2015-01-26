@@ -1,5 +1,6 @@
 ### Built files
-/spec.js
+/spec-unit.js
+/spec-integration.js
 /build
 /dist
 /freedom.js

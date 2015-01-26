@@ -1,21 +1,18 @@
-var testUtil = require('../../util');
 
-module.exports = function(provider_url, setup) {
-  var helper;
-  var ERRCODE = testUtil.getApis().get("social").definition.ERRCODE.value;
+module.exports = function(freedom, provider_url, freedomOpts) {
+  var Social, client, ERRCODE;
 
   beforeEach(function(done) {
-    setup();
-    testUtil.providerFor(provider_url, 'social').then(function(h) {
-      helper = h;
-      helper.create("s");
+    freedom(provider_url, freedomOpts).then(function(constructor) {
+      Social = constructor;
+      client = new Social();
+      ERRCODE = client.ERRCODE;
       done();
     });
   });
   
   afterEach(function(done) {
-    helper.removeListeners("s");
-    testUtil.cleanupIframes();
+    Social.close(client);
     done();
   });
 
@@ -34,17 +31,13 @@ module.exports = function(provider_url, setup) {
   };
   
   it("logs in", function(done) {
-    var ids = {};
-    var callbackOne = function(ret) {
-      expect(ret).toEqual(makeClientState("ONLINE"));
-      ids[1] = helper.call("s", "logout", [], function(ret) {
-        done();
-      });
-    };
-    
-    ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
+    client.login({ agent: "jasmine", interactive: false }).then(function(state) {
+      expect(state).toEqual(makeClientState("ONLINE"));
+      client.logout().then(done);
+    });
   });
 
+/**
   it("returns clients", function(done) {
     var ids = {};
     var myClientState;
@@ -167,7 +160,7 @@ module.exports = function(provider_url, setup) {
         
     ids[0] = helper.call("s", "login", [{agent: "jasmine", interactive: false}], callbackOne);
   });
-
+**/
  
 };
 
