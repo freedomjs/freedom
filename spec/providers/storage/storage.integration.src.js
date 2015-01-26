@@ -35,7 +35,7 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
     });
   });
 
-  afterEach(function() {
+  afterEach(function(done) {
     Storage.close(client);
     done();
   });
@@ -60,84 +60,71 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
   });
 
   it("removes a key", function(done) {
-    var callbackOne = function(ret) {
-      helper.call("s", "remove", ["key-c"], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      expect(util.afterGet(ret)).toEqual("myvalue-c");
-      helper.call("s", "keys", [], callbackThree);
-    };
-    var callbackThree = function(ret) {
+    client.set("k-c", util.beforeSet("v-c")).then(function(ret) {
+      return client.remove("k-c");
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v-c");
+      return client.keys();
+    }).then(function(ret) {
       expect(ret).toEqual([]);
-      helper.call("s", "clear", [], done);
-    };
-    helper.call("s", "set", ["key-c", util.beforeSet("myvalue-c")], callbackOne);
+      return client.clear();
+    }).then(done);
   });
 
   it("lists keys that have been set", function(done) {
-    var callbackOne = function(ret) {
-      helper.call("s", "set", ["k2-d", util.beforeSet("v2-d")], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      helper.call("s", "keys", [], callbackThree);
-    };
-    var callbackThree = function(ret) {
+    Promise.all([
+      client.set("k1-d", util.beforeSet("v1-d")),
+      client.set("k2-d", util.beforeSet("v2-d"))
+    ]).then(function(ret) {
+      return client.keys();
+    }).then(function(ret) {
       expect(ret.length).toEqual(2);
       expect(ret).toContain("k1-d");
       expect(ret).toContain("k2-d");
-      helper.call("s", "clear", [], done);
-    };
-    helper.call("s", "set", ["k1-d", util.beforeSet("v1-d")], callbackOne);
+      return client.clear();
+    }).then(done);
   });
   
   it("resolves 'null' when getting unset keys", function (done) {
-    var callbackOne = function (ret) {
+    client.get("ku").then(function(ret) {
       expect(ret).toEqual(null);
       done();
-    };
-    helper.call("s", "get", ["ku"], callbackOne, function(err) {
+    }).catch(function(err) {
       console.error(err);
-      expect(1).toEqual(2);
+      expect(err).toBeUndefined()
       done();
     });
   });
 
   it("clears the store", function(done) {
-    var callbackOne = function(ret) {
-      helper.call("s", "clear", [], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      helper.call("s", "keys", [], callbackThree);
-    };
-    var callbackThree = function(ret) {
+    client.set("k-e", util.beforeSet("v-e")).then(function(ret) {
+      return client.clear();
+    }).then(function(ret) {
+      return client.keys();
+    }).then(function(ret) {
       expect(ret.length).toEqual(0);
       done();
-    };
-    helper.call("s", "set", ["key-e", util.beforeSet("value-e")], callbackOne);
+    });
   });
 
   it("sets work across keys", function(done) {
-    var callbackOne = function(ret) {
-      expect(util.afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key2-f", util.beforeSet("value1-f")], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      expect(util.afterGet(ret)).toEqual(null);
-      helper.call("s", "set", ["key1-f", util.beforeSet("value2-f")], callbackThree);
-    };
-    var callbackThree = function(ret) {
-      expect(util.afterGet(ret)).toEqual("value1-f");
-      helper.call("s", "set", ["key2-f", util.beforeSet("value1-f")], callbackFour);
-    };
-    var callbackFour = function(ret) {
-      expect(util.afterGet(ret)).toEqual("value1-f");
-      helper.call("s", "get", ["key1-f"], callbackFive);
-    };
-    var callbackFive = function(ret) {
-      expect(util.afterGet(ret)).toEqual("value2-f");
-      helper.call("s", "clear", [], done);
-    };
-    helper.call("s", "set", ["key1-f", util.beforeSet("value1-f")], callbackOne);
+    Promise.all([
+      client.set("k1-f", util.beforeSet("v1-f")),
+      client.set("k2-f", util.beforeSet("v1-f"))
+    ]).then(function(ret) {
+      expect(util.afterGet(ret[0])).toEqual(null);
+      expect(util.afterGet(ret[1])).toEqual(null);
+      return client.set("k1-f", util.beforeSet("v2-f"));
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v1-f");
+      return client.set("k2-f", util.beforeSet("v1-f"));
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v1-f");
+      return client.get("k1-f");
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v2-f");
+      return client.clear()
+    }).then(done);
   });
 
   //@todo - not sure if this is even desired behavior

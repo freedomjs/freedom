@@ -18,14 +18,14 @@ describe("integration-double: social.ws.json", require("./social/social.double.i
   .bind(this, window.freedom, "providers/social/websocket-server/social.ws.json", {}));
 
 /** Storage **/
-ddescribe("integration: storage.isolated.json",
-    require("./storage/storage.integration.src").bind(this, "/providers/storage/isolated/storage.isolated.json", setup));
-describe("integration: storage.shared.json",
-    require("./storage/storage.integration.src").bind(this, "/providers/storage/shared/storage.shared.json", setup, false));
-describe("integration: storage.indexeddb.json",
-    require("./storage/storage.integration.src").bind(this, "/providers/storage/indexeddb/storage.indexeddb.json", setup));
-describe("integration: storebuffer.indexeddb.json",
-    require("./storage/storage.integration.src").bind(this, "/providers/storage/indexeddb/storebuffer.indexeddb.json", setup, true));
+describe("integration: storage.isolated.json", require("./storage/storage.integration.src")
+  .bind(this, window.freedom, "providers/storage/isolated/storage.isolated.json", {}, false));
+describe("integration: storage.shared.json", require("./storage/storage.integration.src")
+  .bind(this, window.freedom, "providers/storage/shared/storage.shared.json", {}, false));
+describe("integration: storage.indexeddb.json", require("./storage/storage.integration.src")
+  .bind(this, window.freedom, "providers/storage/indexeddb/storage.indexeddb.json", {}, false));
+describe("integration: storebuffer.indexeddb.json", require("./storage/storage.integration.src")
+  .bind(this, window.freedom, "providers/storage/indexeddb/storebuffer.indexeddb.json", {}, true));
 
 /** Transport **/
 describe("integration: transport.webrtc.json",
