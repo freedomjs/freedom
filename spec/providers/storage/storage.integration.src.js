@@ -129,18 +129,13 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
 
   //@todo - not sure if this is even desired behavior
   xit("shares data between different instances", function(done) {
-    var callbackOne = function(ret) {
-      helper.call("s2", "get", ["key"], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      expect(util.afterGet(ret)).toEqual("value");
-      helper.call("s", "clear", [], callbackThree);
-    };
-    var callbackThree = function(ret) {
-      helper.call("s2", "clear", [], done);
-    };
-    helper.create("s2");
-    helper.call("s", "set", ["key", util.beforeSet("value")], callbackOne);
+    var s2 = new Storage();
+    client.set("k", util.beforeSet("v")).then(function(ret) {
+      return s2.get("k");
+    }).then(function(ret) {
+      expect(util.afterGet(ret)).toEqual("v");
+      return Promise.all([ client.clear(), s2.clear() ]);
+    }).then(done);
   });
 };
 

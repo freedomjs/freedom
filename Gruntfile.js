@@ -87,7 +87,7 @@ module.exports = function (grunt) {
         browsers: [ 'PhantomJS' ]
       },
       integration: {
-        browsers: [ 'Chrome' ],
+        browsers: [ 'Chrome', 'Firefox' ],
         options: { files: [
           require.resolve('es5-shim'),
           require.resolve('es6-promise'),
@@ -380,20 +380,14 @@ module.exports = function (grunt) {
     'connect:freedom',
     'karma:phantom'
   ]);
-  // Run unit tests on Chrome/Firefox
-  grunt.registerTask('unit', [
-    'jshint',
-    'create-interface-bundle',
+  // Run unit+integration tests on Chrome/Firefox
+  grunt.registerTask('test', [
+    'build',
     'browserify:frame',
     'browserify:jasmine_unit',
-    'connect:freedom',
-    'karma:browsers',
-  ]);
-  // Run integration tests on Chrome/Firefox
-  grunt.registerTask('integration', [
-    'build',
     'browserify:jasmine_integration',
     'connect:freedom',
+    'karma:browsers',
     'karma:integration'
   ]);
   // Debug unit tests
@@ -463,6 +457,5 @@ module.exports = function (grunt) {
     ]);
   });
 
-  grunt.registerTask('test', [ 'build', 'unit', 'integration' ]);
   grunt.registerTask('default', [ 'build', 'test-phantom' ]);
 };
