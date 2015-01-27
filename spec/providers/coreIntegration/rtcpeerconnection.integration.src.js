@@ -6,8 +6,8 @@ module.exports = function (pc, dc, setup) {
   beforeEach(function () {
     setup();
     var pcProvider = {
-      provide: function(iface) {
-        iface().providePromises(pc.provider.bind(pc.provider, {provider:iface}));
+      provide: function (iface) {
+        iface().providePromises(pc.provider.bind(pc.provider, {provider: iface}));
       }
     };
     peercon = testUtil.directProviderFor(pcProvider, testUtil.getApis().get(pc.name).definition);
@@ -15,15 +15,14 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Sends messages across data channels", function (done) {
-    var alice, bob, aliceChannel, bobchannel;
+    var alice, bob, aliceChannel, bobChannel,
+      aliceCandidates = [],
+      aliceOffer;
     alice = peercon();
-    alice.on('onicecandidate', function (msg) {
-      msg.candidate && bob.addIceCandidate(msg.candidate);
-    });
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
-      bobchannel = datachan(msg.channel);
-      bobchannel.on('onmessage', function (msg) {
+      bobChannel = datachan(msg.channel);
+      bobChannel.on('onmessage', function (msg) {
         expect(msg.text).toEqual('message from alice');
         alice.close();
         bob.close();
@@ -33,26 +32,39 @@ module.exports = function (pc, dc, setup) {
     bob.on('onicecandidate', function (msg) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
     });
+    alice.on('onicecandidate', function (msg) {
+      // firefox needs ice candidates all sent before asking for an answer.
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceOffer).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift());
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ', err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
+    });
     alice.createDataChannel('channel').then(function (id) {
       aliceChannel = datachan(id);
       aliceChannel.on('onopen', function () {
         aliceChannel.send('message from alice');
       });
       alice.createOffer().then(function (offer) {
-        return alice.setLocalDescription(offer).then(function () {return offer; });
-      }).then(function (offer) {
-        return bob.setRemoteDescription(offer);
-      }).then(function () {
-        return bob.createAnswer();
-      }).then(function (answer) {
-        return bob.setLocalDescription(answer).then(function () {return answer; });
-      }).then(function (answer) {
-        return alice.setRemoteDescription(answer);
-      }, function (err) {
-        console.error('RTC failed: ',err);
+        alice.setLocalDescription(offer);
+        aliceOffer = offer;
       });
     }, function (err) {
-      console.error('RTC failed: ',err);
+      console.error('RTC failed: ', err);
     });
   });
   
@@ -61,12 +73,16 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Closes Cleanly", function (done) {
-    var alice, bob, aliceChannel, bobchannel;
+    var alice, bob, aliceChannel, bobChannel,
+      aliceCandidates = [],
+      aliceOffer;
     var onClose = jasmine.createSpy('onclose');
     onClose.and.callFake(function () {
       // TODO: Firefox doesn't yet close remote data channels.
       if (onClose.calls.count() === 2 ||
-         navigator.userAgent.indexOf("Firefox") > 0) {
+          (typeof navigator !== 'undefined' &&
+              navigator.userAgent.indexOf("Firefox") > 0) ||
+          (typeof Components !== 'undefined' /*ffox addon*/)) {
         alice.close();
         bob.close();
         done();
@@ -74,20 +90,38 @@ module.exports = function (pc, dc, setup) {
     });
 
     alice = peercon();
-    alice.on('onicecandidate', function (msg) {
-      msg.candidate && bob.addIceCandidate(msg.candidate);
-    });
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
-      bobchannel = datachan(msg.channel);
-      bobchannel.on('onclose', onClose);
-      bobchannel.on('onmessage', function (msg) {
+      bobChannel = datachan(msg.channel);
+      bobChannel.on('onclose', onClose);
+      bobChannel.on('onmessage', function (msg) {
         expect(msg.text).toEqual('message from alice');
-        bobchannel.close();
+        bobChannel.close();
       });
     });
     bob.on('onicecandidate', function (msg) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
+    });
+    alice.on('onicecandidate', function (msg) {
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceOffer).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift());
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ',err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
     });
     alice.createDataChannel('channel').then(function (id) {
       aliceChannel = datachan(id);
@@ -96,17 +130,8 @@ module.exports = function (pc, dc, setup) {
       });
       aliceChannel.on('onclose', onClose);
       alice.createOffer().then(function (offer) {
-        return alice.setLocalDescription(offer).then(function () {return offer; });
-      }).then(function (offer) {
-        return bob.setRemoteDescription(offer);
-      }).then(function () {
-        return bob.createAnswer();
-      }).then(function (answer) {
-        return bob.setLocalDescription(answer).then(function () {return answer; });
-      }).then(function (answer) {
-        return alice.setRemoteDescription(answer);
-      }, function (err) {
-        console.error('RTC failed: ',err);
+        alice.setLocalDescription(offer);
+        aliceOffer = offer;
       });
     }, function (err) {
       console.error('RTC failed: ',err);
@@ -114,18 +139,15 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("getStats works", function (done) {
-    var alice, bob;
+    var alice, bob, aliceCandidates = [], aliceOffer;
 
     alice = peercon();
-    alice.on('onicecandidate', function (msg) {
-      msg.candidate && bob.addIceCandidate(msg.candidate);
-    });
     bob = peercon();
     bob.on('onicecandidate', function (msg) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
     });
 
-    var onError = function(e) { throw e; };
+    var onError = function (e) { throw e; };
 
     bob.on('oniceconnectionstatechange', function () {
       bob.getIceConnectionState().then(function (state) {
@@ -153,22 +175,35 @@ module.exports = function (pc, dc, setup) {
 
     // We have to create a data channel because otherwise there is no
     // audio, video, or data, so CreateOffer fails (at least in Firefox).
+    alice.on('onicecandidate', function (msg) {
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceOffer).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift())
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ',err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
+    });
     alice.createDataChannel('channel').then(function (id) {
       alice.createOffer().then(function (offer) {
-        return alice.setLocalDescription(offer).then(function () {return offer; });
-      }).then(function (offer) {
-        return bob.setRemoteDescription(offer);
-      }).then(function () {
-        return bob.createAnswer();
-      }).then(function (answer) {
-        return bob.setLocalDescription(answer).then(function () {return answer; });
-      }).then(function (answer) {
-        return alice.setRemoteDescription(answer);
-      }, function (err) {
-        console.error('RTC failed: ',err);
+        alice.setLocalDescription(offer);
+        aliceOffer = offer;
       });
+    }, function (err) {
+      console.error('RTC failed: ',err);
     });
-
   });
 
   it("Signals 'onClose' when created with incorrect parameters", function (done) {
