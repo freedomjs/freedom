@@ -6,8 +6,8 @@ module.exports = function (pc, dc, setup) {
   beforeEach(function () {
     setup();
     var pcProvider = {
-      provide: function(iface) {
-        iface().providePromises(pc.provider.bind(pc.provider, {provider:iface}));
+      provide: function (iface) {
+        iface().providePromises(pc.provider.bind(pc.provider, {provider: iface}));
       }
     };
     peercon = testUtil.directProviderFor(pcProvider, testUtil.getApis().get(pc.name).definition);
@@ -38,7 +38,7 @@ module.exports = function (pc, dc, setup) {
         bob.setRemoteDescription(aliceOffer).then(function () {
           var last;
           while (aliceCandidates.length) {
-            last = bob.addIceCandidate(aliceCandidates.shift())
+            last = bob.addIceCandidate(aliceCandidates.shift());
           }
           return last;
         }).then(function () {
@@ -48,7 +48,7 @@ module.exports = function (pc, dc, setup) {
         }).then(function (answer) {
           return alice.setRemoteDescription(answer);
         }, function (err) {
-          console.error('RTC failed: ',err);
+          console.error('RTC failed: ', err);
         });
       } else {
         aliceCandidates.push(msg.candidate);
@@ -64,7 +64,7 @@ module.exports = function (pc, dc, setup) {
         aliceOffer = offer;
       });
     }, function (err) {
-      console.error('RTC failed: ',err);
+      console.error('RTC failed: ', err);
     });
   });
   
@@ -79,8 +79,9 @@ module.exports = function (pc, dc, setup) {
     var onClose = jasmine.createSpy('onclose');
     onClose.and.callFake(function () {
       // TODO: Firefox doesn't yet close remote data channels.
-      if (onClose.calls.count() === 2 || (typeof navigator !== 'undefined' &&
-          navigator.userAgent.indexOf("Firefox") > 0) ||
+      if (onClose.calls.count() === 2 ||
+          (typeof navigator !== 'undefined' &&
+              navigator.userAgent.indexOf("Firefox") > 0) ||
           (typeof Components !== 'undefined' /*ffox addon*/)) {
         alice.close();
         bob.close();
@@ -106,7 +107,7 @@ module.exports = function (pc, dc, setup) {
         bob.setRemoteDescription(aliceOffer).then(function () {
           var last;
           while (aliceCandidates.length) {
-            last = bob.addIceCandidate(aliceCandidates.shift())
+            last = bob.addIceCandidate(aliceCandidates.shift());
           }
           return last;
         }).then(function () {
@@ -137,7 +138,7 @@ module.exports = function (pc, dc, setup) {
     });
   });
 
-  fit("getStats works", function (done) {
+  it("getStats works", function (done) {
     var alice, bob, aliceCandidates = [], aliceOffer;
 
     alice = peercon();
@@ -146,7 +147,7 @@ module.exports = function (pc, dc, setup) {
       msg.candidate && alice.addIceCandidate(msg.candidate);
     });
 
-    var onError = function(e) { throw e; };
+    var onError = function (e) { throw e; };
 
     bob.on('oniceconnectionstatechange', function () {
       bob.getIceConnectionState().then(function (state) {
