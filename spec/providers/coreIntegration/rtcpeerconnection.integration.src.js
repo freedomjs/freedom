@@ -14,7 +14,9 @@ module.exports = function (pc, dc, setup) {
     datachan = testUtil.directProviderFor(dc.provider.bind(dc.provider, {}), testUtil.getApis().get(dc.name).definition);
   });
 
-  it("Sends messages across data channels", function (done) {
+  // Establishes a peerconnection with one datachannel, sends a message on the
+  // datachannel and calls back with the message received by the other peer.
+  var sendMessageToPeer = function(payload, callback) {
     var alice, bob, aliceChannel, bobChannel,
       aliceCandidates = [],
       aliceOffer;
@@ -22,11 +24,11 @@ module.exports = function (pc, dc, setup) {
     bob = peercon();
     bob.on('ondatachannel', function (msg) {
       bobChannel = datachan(msg.channel);
+      bobChannel.setBinaryType('arraybuffer', function () {});
       bobChannel.on('onmessage', function (msg) {
-        expect(msg.text).toEqual('message from alice');
         alice.close();
         bob.close();
-        done();
+        callback(msg);
       });
     });
     bob.on('onicecandidate', function (msg) {
@@ -57,17 +59,43 @@ module.exports = function (pc, dc, setup) {
     alice.createDataChannel('channel').then(function (id) {
       aliceChannel = datachan(id);
       aliceChannel.on('onopen', function () {
-        aliceChannel.send('message from alice');
+        if (payload instanceof ArrayBuffer) {
+          aliceChannel.sendBuffer(payload);
+        } else {
+          aliceChannel.send(payload);
+        }
       });
-      alice.createOffer().then(function (offer) {
+      aliceChannel.setBinaryType('arraybuffer').then(function () {
+        return alice.createOffer();
+      }).then(function (offer) {
         alice.setLocalDescription(offer);
         aliceOffer = offer;
       });
     }, function (err) {
       console.error('RTC failed: ', err);
     });
-  });
+  };
   
+  it("Sends string messages across data channels", function (done) {
+    sendMessageToPeer('message from alice', function(result) {
+      expect(result.text).toEqual('message from alice');
+      done();
+    });
+  });
+
+  it("Sends binary messages across data channels", function (done) {
+    var payloadBytes = new Uint8Array([5, 200, 45, 128, 1]);
+    sendMessageToPeer(payloadBytes.buffer, function(result) {
+      expect(result.buffer).not.toBeUndefined();
+      expect(result.buffer.byteLength).toEqual(payloadBytes.buffer.byteLength);
+      var resultBytes = new Uint8Array(result.buffer);
+      for (var i = 0; i < resultBytes.length; i++) {
+        expect(resultBytes[i]).toEqual(payloadBytes[i]);
+      }
+      done();
+    });
+  });
+
   xit("Checks that Firefox actually signals data channel closing.", function () {
     //TODO: fix below.
   });
