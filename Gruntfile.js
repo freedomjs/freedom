@@ -78,7 +78,13 @@ module.exports = function (grunt) {
         // NOTE: need to run 'connect:default' to serve files
         configFile: 'karma.conf.js',
         singleRun: true,
-        autoWatch: false
+        autoWatch: false,
+        files: [
+          require.resolve('es5-shim'),
+          require.resolve('es6-promise'),
+          'spec-unit.js',
+          { pattern: 'build/freedom.frame.js', included: false }
+        ],
       },
       browsers: {
         browsers: [ 'Chrome', 'Firefox' ]
