@@ -1,6 +1,34 @@
 
 module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) { 
-  var Storage, client, ERRCODE;
+  var Storage, ERRCODE;
+  var client = null;
+  
+  beforeEach(function(done) {
+    var complete = function() {
+      client = new Storage();
+      ERRCODE = client.ERRCODE;
+      client.clear().then(done);
+    };
+    // Only create a freedom module the first time
+    // Fails on Firefox otherwise
+    if (typeof Storage === "undefined") {
+      freedom(provider_url, freedomOpts).then(function(constructor) {
+        Storage = constructor;
+        complete();
+      });  
+    } else {
+      complete();
+    }
+  });
+
+  afterEach(function(done) {
+    //Storage.onClose(client, done);
+    client.clear().then(function () {
+      Storage.close(client);
+      client = null;
+      done();
+    });
+  });
 
   var util = {
     beforeSet: function (str) {
@@ -26,27 +54,18 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
     }
   }
 
-  beforeEach(function(done) {
-    freedom(provider_url, freedomOpts).then(function(constructor) {
-      Storage = constructor;
-      client = new Storage();
-      ERRCODE = client.ERRCODE;
-      client.clear().then(done);
-    });
-  });
+  function errHandler(err) {
+    console.error(err);
+    expect(err).toBeUndefined();
+  }
 
-  afterEach(function(done) {
-    Storage.close(client);
-    done();
-  });
-  
   it("sets and gets keys", function(done) {
     client.set("k-a", util.beforeSet("v-a")).then(function(ret) {
       return client.get("k-a");
     }).then(function(ret) {
       expect(util.afterGet(ret)).toEqual("v-a");
-      return client.clear();
-    }).then(done);
+      done();
+    }).catch(errHandler);
   });
 
   it("set returns old value", function(done) {
@@ -55,8 +74,8 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
       return client.set("k-b", util.beforeSet("v2-b"));
     }).then(function(ret) {
       expect(util.afterGet(ret)).toEqual("v1-b");
-      return client.clear();
-    }).then(done);
+      done();
+    }).catch(errHandler);
   });
 
   it("removes a key", function(done) {
@@ -67,33 +86,28 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
       return client.keys();
     }).then(function(ret) {
       expect(ret).toEqual([]);
-      return client.clear();
-    }).then(done);
+      done();
+    }).catch(errHandler);
   });
 
   it("lists keys that have been set", function(done) {
-    Promise.all([
-      client.set("k1-d", util.beforeSet("v1-d")),
-      client.set("k2-d", util.beforeSet("v2-d"))
-    ]).then(function(ret) {
+    client.set("k1-d", util.beforeSet("v1-d")).then(function(ret) {
+      return client.set("k2-d", util.beforeSet("v2-d"));
+    }).then(function(ret) {
       return client.keys();
     }).then(function(ret) {
       expect(ret.length).toEqual(2);
       expect(ret).toContain("k1-d");
       expect(ret).toContain("k2-d");
-      return client.clear();
-    }).then(done);
+      done();
+    }).catch(errHandler);
   });
   
   it("resolves 'null' when getting unset keys", function (done) {
     client.get("ku").then(function(ret) {
       expect(ret).toEqual(null);
       done();
-    }).catch(function(err) {
-      console.error(err);
-      expect(err).toBeUndefined()
-      done();
-    });
+    }).catch(errHandler);
   });
 
   it("clears the store", function(done) {
@@ -104,7 +118,7 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
     }).then(function(ret) {
       expect(ret.length).toEqual(0);
       done();
-    });
+    }).catch(errHandler);
   });
 
   it("sets work across keys", function(done) {
@@ -123,8 +137,8 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
       return client.get("k1-f");
     }).then(function(ret) {
       expect(util.afterGet(ret)).toEqual("v2-f");
-      return client.clear()
-    }).then(done);
+      done();
+    }).catch(errHandler);
   });
 
   //@todo - not sure if this is even desired behavior
@@ -135,7 +149,7 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
     }).then(function(ret) {
       expect(util.afterGet(ret)).toEqual("v");
       return Promise.all([ client.clear(), s2.clear() ]);
-    }).then(done);
+    }).then(done).catch(errHandler);
   });
 };
 

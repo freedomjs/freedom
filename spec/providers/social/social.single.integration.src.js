@@ -1,18 +1,29 @@
 
 module.exports = function(freedom, provider_url, freedomOpts) {
-  var Social, client, ERRCODE;
+  var Social, ERRCODE;
+  var client = null;
 
   beforeEach(function(done) {
-    freedom(provider_url, freedomOpts).then(function(constructor) {
-      Social = constructor;
+    var complete = function() {
       client = new Social();
       ERRCODE = client.ERRCODE;
       done();
-    });
+    };
+    // Only create a freedom module the first time
+    // Fails on Firefox otherwise
+    if (typeof Social === "undefined") {
+      freedom(provider_url, freedomOpts).then(function(constructor) {
+        Social = constructor;
+        complete();
+      });
+    } else {
+      complete();
+    }
   });
   
   afterEach(function(done) {
     Social.close(client);
+    client = null;
     done();
   });
 
@@ -29,12 +40,17 @@ module.exports = function(freedom, provider_url, freedomOpts) {
   function dead() {
     console.error("This should never be called");
   };
-  
+
+  function errHandler(err) {
+    console.error(err);
+    expect(err).toBeUndefined();
+  }
+
   it("logs in", function(done) {
     client.login({ agent: "jasmine" }).then(function(state) {
       expect(state).toEqual(makeClientState("ONLINE"));
-      client.logout().then(done);
-    });
+      return client.logout();
+    }).then(done).catch(errHandler);
   });
 
   it("returns clients", function(done) {
@@ -50,7 +66,7 @@ module.exports = function(freedom, provider_url, freedomOpts) {
       expect(clientList[myClientState.clientId].userId).toEqual(myClientState.userId);
       expect(clientList[myClientState.clientId].clientId).toEqual(myClientState.clientId);
       return client.logout();
-    }).then(done);
+    }).then(done).catch(errHandler);
   });
 
   it("returns users", function(done) {
@@ -68,7 +84,7 @@ module.exports = function(freedom, provider_url, freedomOpts) {
         lastUpdated: jasmine.any(Number)
       }));
       return client.logout();
-    }).then(done);
+    }).then(done).catch(errHandler);
   });
 
   it("sends message", function(done) {
@@ -76,7 +92,7 @@ module.exports = function(freedom, provider_url, freedomOpts) {
     var myClientState;
     var sendSpy = jasmine.createSpy("sendMessage");
 
-    client.on("onMessage", function(message) {
+    client.once("onMessage", function(message) {
       expect(message.from).toEqual(makeClientState("ONLINE"));
       expect(message.from.userId).toEqual(myClientState.userId);
       expect(message.from.clientId).toEqual(myClientState.clientId);
@@ -90,24 +106,24 @@ module.exports = function(freedom, provider_url, freedomOpts) {
     client.login({ agent: "jasmine" }).then(function(state) {
       myClientState = state;
       return client.sendMessage(myClientState.clientId, msg);
-    }).then(sendSpy);
+    }).then(sendSpy).catch(errHandler);
   });
   
   it("ERRCODE-OFFLINE", function(done) {
     var callbackCount = 0;
 
-    var errHandler = function(err) {
+    var errCounter = function(err) {
       callbackCount++;
       expect(err.errcode).toEqual("OFFLINE");
-      if (callbackCount >= 4) {
+      if (callbackCount == 4) {
         done();
       }
     };
 
-    client.getUsers().then(dead, errHandler);
-    client.getClients().then(dead, errHandler);
-    client.sendMessage("", "").then(dead, errHandler);
-    client.logout().then(dead, errHandler);
+    client.getUsers().then(dead, errCounter);
+    client.getClients().then(dead, errCounter);
+    client.sendMessage("", "").then(dead, errCounter);
+    client.logout().then(dead, errCounter);
   });
 
   it("ERRCODE-LOGIN_ALREADYONLINE", function(done) {
@@ -119,7 +135,7 @@ module.exports = function(freedom, provider_url, freedomOpts) {
     }).then(dead).catch(function(err) {
       expect(err.errcode).toEqual("LOGIN_ALREADYONLINE");
       return client.logout();
-    }).then(done);
+    }).then(done).catch(errHandler);
   });
   
   it("ERRCODE-SEND_INVALIDDESTINATION", function(done) {
@@ -131,8 +147,8 @@ module.exports = function(freedom, provider_url, freedomOpts) {
     }).then(dead).catch(function(err) {
       expect(err.errcode).toEqual("SEND_INVALIDDESTINATION");
       return client.logout();
-    }).then(done);
+    }).then(done).catch(errHandler);
   });
- 
+
 };
 
