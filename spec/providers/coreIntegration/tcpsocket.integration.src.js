@@ -27,12 +27,12 @@ module.exports = function (provider, setup) {
         console.warn('written');
         written = true;
       });
-      setTimeout(function () {
+      dispatch.gotMessageAsync('onData', [], function(msg) {
+        console.warn('received onData');
         expect(written).toBe(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
-        done();
-        socket.close(function () {});
-      }, 500);
+        socket.close(function () { done(); });
+      });
     });
   });
 
@@ -70,10 +70,10 @@ module.exports = function (provider, setup) {
       }
       expect(evt).toEqual('onData');
       expect(msg.data.byteLength).toEqual(10);
-      done();
       socket.close(function () {});
       client.close(function () {});
       receiver.close(function () {});
+      done();
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       console.warn('connection');
@@ -100,5 +100,6 @@ module.exports = function (provider, setup) {
         done();
       });
   });
+
   // TODO: add tests for tcpsocket.secure, accepting multiple.
 };
