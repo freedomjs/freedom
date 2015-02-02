@@ -1,10 +1,12 @@
 /*jslint node:true,bitwise:true*/
 /*globals Uint8Array, beforeEach, afterEach, it, expect, jasmine */
 var testUtil = require('../../util');
+var PromiseCompat = require('es6-promise').Promise
 
 module.exports = function (provider, setup) {
   'use strict';
   var socket, dispatch;
+
   beforeEach(function () {
     setup();
     dispatch = testUtil.createTestPort('msgs');
@@ -31,7 +33,7 @@ module.exports = function (provider, setup) {
         console.warn('received onData');
         expect(written).toBe(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
-        socket.close(function () { done(); });
+        socket.close(done);
       });
     });
   });
@@ -42,9 +44,10 @@ module.exports = function (provider, setup) {
       onconnect = function () {
         client.getInfo(function (info) {
           expect(info.localPort).toBeGreaterThan(1023);
-          client.close(function () {});
-          socket.close(function () {});
-          done();
+          PromiseCompat.all([
+            client.close(function () {}),
+            socket.close(function () {}),
+            done()]);
         });
       };
 
@@ -70,10 +73,11 @@ module.exports = function (provider, setup) {
       }
       expect(evt).toEqual('onData');
       expect(msg.data.byteLength).toEqual(10);
-      socket.close(function () {});
-      client.close(function () {});
-      receiver.close(function () {});
-      done();
+      PromiseCompat.all([
+        socket.close(function () {}),
+        client.close(function () {}),
+        receiver.close(function () {}),
+        done()]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       console.warn('connection');
