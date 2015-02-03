@@ -23,14 +23,11 @@ module.exports = function (provider, setup) {
 
   it("Works as a Client", function (done) {
     socket.connect('www.google.com', 80, function () {
-      console.warn('connected');
       var written = false;
       socket.write(rawStringToBuffer('GET / HTTP/1.0\n\n'), function (okay) {
-        console.warn('written');
         written = true;
       });
       dispatch.gotMessageAsync('onData', [], function(msg) {
-        console.warn('received onData');
         expect(written).toBe(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
         socket.close(done);
@@ -80,18 +77,14 @@ module.exports = function (provider, setup) {
         done()]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
-      console.warn('connection');
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
-      console.log('new socket id', msg);
     });
     onconnect = function () {
-      console.warn('connected');
       var buf = new Uint8Array(10);
       client.write(buf.buffer, function () {});
     };
     socket.listen('127.0.0.1', 9981, function () {
-      console.warn('listening');
       client = new provider.provider(undefined, cspy);
       client.connect('127.0.0.1', 9981, onconnect);
     });
