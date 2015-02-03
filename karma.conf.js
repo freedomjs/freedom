@@ -1,6 +1,4 @@
 /*jslint node:true */
-var FILES = require('./Gruntfile').FILES;
-
 module.exports = function (config) {
   'use strict';
   config.set({
@@ -13,15 +11,6 @@ module.exports = function (config) {
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine'],
-
-    // list of files / patterns to load in the browser
-    // Testing Providers for now
-    files: [
-      require.resolve('es5-shim'),
-      require.resolve('es6-promise'),
-      'spec.js',
-      {pattern: 'build/freedom.frame.js', included: false}
-    ],
     
     // web server port
     port: 9876,
