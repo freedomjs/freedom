@@ -93,7 +93,8 @@ module.exports = function (provider, setup) {
   it("Gives error when connecting to invalid domain", function (done) {
     socket.connect('www.domainexistsbecausesomeonepaidmoneytobreakourtests.gov', 80,
       function (success, err) {
-        expect(err.errcode).toBe('CONNECTION_FAILED');
+        var allowedErrors = ['CONNECTION_FAILED', 'NAME_NOT_RESOLVED'];
+        expect(allowedErrors).toContain(err.errcode);
         done();
       });
   });
