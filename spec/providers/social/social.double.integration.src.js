@@ -1,22 +1,33 @@
-var testUtil = require('../../util');
-
-module.exports = function(provider_url, setup) {
-  var helper;
+var Promise = require("es6-promise").Promise;
+module.exports = function(freedom, provider_url, freedomOpts) {
+  var Social, ERRCODE;
+  var c1 = null;
+  var c2 = null;
 
   beforeEach(function(done) {
-    setup();
-    testUtil.providerFor(provider_url, 'social').then(function(h) {
-      helper = h;
-      helper.create("SocialA");
-      helper.create("SocialB");
+    var complete = function() {
+      c1 = new Social();
+      c2 = new Social();
+      ERRCODE = c1.ERRCODE;
       done();
-    });
+    };
+    // Only create a freedom module the first time
+    // Fails on Firefox otherwise
+    if (typeof Social === "undefined") {
+      freedom(provider_url, freedomOpts).then(function(constructor) {
+        Social = constructor;
+        complete();
+      });
+    } else {
+      complete();
+    }
   });
   
   afterEach(function(done) {
-    helper.removeListeners("SocialA");
-    helper.removeListeners("SocialB");
-    testUtil.cleanupIframes();
+    Social.close(c1);
+    Social.close(c2);
+    c1 = null;
+    c2 = null;
     done();
   });
 
@@ -37,117 +48,82 @@ module.exports = function(provider_url, setup) {
     });
   }
 
+  function errHandler(err) {
+    console.error(err);
+    expect(err).toBeUndefined();
+  }
+
   it("A-B: sends message between A->B", function(done) {
-    var ids = {};
+    var c1State, c2State;
     var msg = "Hello World";
-    var clientStateA, clientStateB;
 
-    helper.on("SocialB", "onMessage", function(message) {
-      expect(message.from).toEqual(makeClientState(clientStateA.userId, clientStateA.clientId, "ONLINE"));
+    c2.once("onMessage", function(message) {
+      expect(message.from).toEqual(makeClientState(c1State.userId, c1State.clientId, "ONLINE"));
       expect(message.message).toEqual(msg);
-      // Cleanup and finish
-      ids[3] = helper.call("SocialA", "logout", [], function(ret) {
-        ids[4] = helper.call("SocialB", "logout", [], function(ret) {
-          done();
-        });
-      });
+      Promise.all([ c1.logout(), c2.logout() ]).then(done, errHandler);
     });
-    
-    var callbackOne = function(ret) {
-      clientStateA = ret;
-      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      clientStateB = ret;
-      ids[2] = helper.call("SocialA", "sendMessage", [clientStateB.userId, msg]);
-    };
 
-    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
+    Promise.all([ c1.login({ agent: "jasmine" }), c2.login({ agent: "jasmine" }) ]).then(function (ret) {
+      c1State = ret[0];
+      c2State = ret[1];
+      return c1.sendMessage(c2State.clientId, msg);
+    }).catch(errHandler);
   });
-
+  
   it("A-B: sends roster updates through the onChange event.", function(done) {
-    var ids = {};
-    var clientStateA, clientStateB = null;
+    var c1State, c2State = null;
     var receivedClientState = [];
     var receivedUserProfiles = [];
     var ranExpectations = false;
   
-    helper.on("SocialA", "onUserProfile", function(info) {
+    c1.on("onUserProfile", function(info) {
       receivedUserProfiles.push(info);
     });
 
-    helper.on("SocialA", "onClientState", function(info) {
+    c1.on("onClientState", function(info) {
       receivedClientState.push(info);
-
-      if (clientStateB !== null) {
+      if (c2State !== null) {
         // Only wanna see statuses from clientB
         receivedClientState = receivedClientState.filter(function(elt) {
-          return elt.clientId == clientStateB.clientId;
+          return elt.clientId == c2State.clientId;
         });
         //Expect to see ONLINE then OFFLINE from clientB
-        if (!ranExpectations &&
-            receivedClientState.length >= 2 ) {
+        if (!ranExpectations && receivedClientState.length >= 2 ) {
           ranExpectations = true;
-          expect(receivedUserProfiles).toContain(makeUserProfile(clientStateB.userId));
-          expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
-          expect(receivedClientState).toContain(makeClientState(clientStateB.userId, clientStateB.clientId, "OFFLINE"));
-          ids[3] = helper.call("SocialA", "logout", [], done);
+          expect(receivedUserProfiles).toContain(makeUserProfile(c2State.userId));
+          expect(receivedClientState).toContain(makeClientState(c2State.userId, c2State.clientId, "ONLINE"));
+          expect(receivedClientState).toContain(makeClientState(c2State.userId, c2State.clientId, "OFFLINE"));
+          c1.logout().then(done, errHandler);
         }
       }
     });
-
-    var callbackOne = function(ret) {
-      clientStateA = ret;
-      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
-    }
-    var callbackTwo = function(ret) {
-      clientStateB = ret;
-      ids[2] = helper.call("SocialB", "logout", []);
-    };
-
-    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
+    
+    Promise.all([ c1.login({ agent: "jasmine" }), c2.login({ agent: "jasmine" }) ]).then(function (ret) {
+      c1State = ret[0];
+      c2State = ret[1];
+      return c2.logout();
+    }).catch(errHandler);
   });
 
   it("A-B: can return the roster", function(done) {
-    var ids = {};
-    var clientStateA, clientStateB = null;
-    var callbackCount = 0;
-    var loggingOut = false;
+    var c1State, c2State = null;
 
-    var callbackOne = function(ret) {
-      clientStateA = ret;
-      ids[1] = helper.call("SocialB", "login", [{agent: "jasmine"}], callbackTwo);
-    };
-    var callbackTwo = function(ret) {
-      clientStateB = ret;
-      ids[2] = helper.call("SocialA", "getUsers", [], callbackGetUsers);
-      ids[3] = helper.call("SocialB", "getUsers", [], callbackGetUsers);
-      ids[4] = helper.call("SocialA", "getClients", [], callbackGetClients);
-      ids[5] = helper.call("SocialB", "getClients", [], callbackGetClients);
-    };
-    var callbackGetUsers = function(ret) {
-      callbackCount++;
-      expect(ret[clientStateA.userId]).toEqual(makeUserProfile(clientStateA.userId));
-      expect(ret[clientStateB.userId]).toEqual(makeUserProfile(clientStateB.userId));
-      checkDone();
-    };
-    var callbackGetClients = function(ret) {
-      callbackCount++;
-      expect(ret[clientStateA.clientId]).toEqual(makeClientState(clientStateA.userId, clientStateA.clientId, "ONLINE"));
-      expect(ret[clientStateB.clientId]).toEqual(makeClientState(clientStateB.userId, clientStateB.clientId, "ONLINE"));
-      checkDone();
-    };
-    var checkDone = function() {
-      if (callbackCount >= 4 && !loggingOut) {
-        loggingOut = true;
-        ids[6] = helper.call("SocialA", "logout", [], function(ret) {
-          ids[7] = helper.call("SocialB", "logout", [], done);
-        });
-      }
-    };
-    
-    ids[0] = helper.call("SocialA", "login", [{agent: "jasmine"}], callbackOne);
+    Promise.all([ c1.login({ agent: "jasmine" }),  c2.login({ agent: "jasmine" }) ]).then(function(ret) {
+      c1State = ret[0];
+      c2State = ret[1];
+      return Promise.all([ c1.getUsers(), c2.getUsers(), c1.getClients(), c2.getClients() ]);
+    }).then(function(ret) {
+      expect(ret[0][c1State.userId]).toEqual(makeUserProfile(c1State.userId));
+      expect(ret[0][c2State.userId]).toEqual(makeUserProfile(c2State.userId));
+      expect(ret[1][c1State.userId]).toEqual(makeUserProfile(c1State.userId));
+      expect(ret[1][c2State.userId]).toEqual(makeUserProfile(c2State.userId));
+      expect(ret[2][c1State.clientId]).toEqual(makeClientState(c1State.userId, c1State.clientId, "ONLINE"));
+      expect(ret[2][c2State.clientId]).toEqual(makeClientState(c2State.userId, c2State.clientId, "ONLINE"));
+      expect(ret[3][c1State.clientId]).toEqual(makeClientState(c1State.userId, c1State.clientId, "ONLINE"));
+      expect(ret[3][c2State.clientId]).toEqual(makeClientState(c2State.userId, c2State.clientId, "ONLINE"));
+      return Promise.all([ c1.logout(), c2.logout() ])  
+    }).then(done).catch(errHandler);
   });
- 
+
 };
 

@@ -1,10 +1,12 @@
 /*jslint node:true,bitwise:true*/
 /*globals Uint8Array, beforeEach, afterEach, it, expect, jasmine */
 var testUtil = require('../../util');
+var PromiseCompat = require('es6-promise').Promise
 
 module.exports = function (provider, setup) {
   'use strict';
   var socket, dispatch;
+
   beforeEach(function () {
     setup();
     dispatch = testUtil.createTestPort('msgs');
@@ -21,18 +23,15 @@ module.exports = function (provider, setup) {
 
   it("Works as a Client", function (done) {
     socket.connect('www.google.com', 80, function () {
-      console.warn('connected');
       var written = false;
       socket.write(rawStringToBuffer('GET / HTTP/1.0\n\n'), function (okay) {
-        console.warn('written');
         written = true;
       });
-      setTimeout(function () {
+      dispatch.gotMessageAsync('onData', [], function(msg) {
         expect(written).toBe(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
-        done();
-        socket.close(function () {});
-      }, 500);
+        socket.close(done);
+      });
     });
   });
 
@@ -42,9 +41,10 @@ module.exports = function (provider, setup) {
       onconnect = function () {
         client.getInfo(function (info) {
           expect(info.localPort).toBeGreaterThan(1023);
-          client.close(function () {});
-          socket.close(function () {});
-          done();
+          PromiseCompat.all([
+            client.close(function () {}),
+            socket.close(function () {}),
+            done()]);
         });
       };
 
@@ -70,24 +70,21 @@ module.exports = function (provider, setup) {
       }
       expect(evt).toEqual('onData');
       expect(msg.data.byteLength).toEqual(10);
-      done();
-      socket.close(function () {});
-      client.close(function () {});
-      receiver.close(function () {});
+      PromiseCompat.all([
+        socket.close(function () {}),
+        client.close(function () {}),
+        receiver.close(function () {}),
+        done()]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
-      console.warn('connection');
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
-      console.log('new socket id', msg);
     });
     onconnect = function () {
-      console.warn('connected');
       var buf = new Uint8Array(10);
       client.write(buf.buffer, function () {});
     };
     socket.listen('127.0.0.1', 9981, function () {
-      console.warn('listening');
       client = new provider.provider(undefined, cspy);
       client.connect('127.0.0.1', 9981, onconnect);
     });
@@ -100,5 +97,6 @@ module.exports = function (provider, setup) {
         done();
       });
   });
+
   // TODO: add tests for tcpsocket.secure, accepting multiple.
 };
