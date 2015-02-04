@@ -126,9 +126,12 @@ RTCDataChannelAdapter.prototype.onmessage = function (event) {
   if (typeof event.data === 'string') {
     this.dispatchEvent('onmessage', {text: event.data});
   } else if (this.channel.binaryType === 'arraybuffer' &&
-      typeof Components !== 'undefined' && !(event.data instanceof ArrayBuffer)) {
-    var view = {},
-      myData = Components.utils.cloneInto(event.data, view);
+      typeof Components !== 'undefined' &&
+      !(event.data instanceof ArrayBuffer)) {
+    // In Firefox Addons, incoming array buffers are not always owned by the
+    // Addon context. The following line clones the object to take ownership.
+    // See: https://developer.mozilla.org/en-US/docs/Components.utils.cloneInto
+    var myData = Components.utils.cloneInto(event.data, {});
     this.dispatchEvent('onmessage', {buffer: myData});
   } else {
     this.dispatchEvent('onmessage', {buffer: event.data});
