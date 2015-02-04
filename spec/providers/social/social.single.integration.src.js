@@ -1,4 +1,4 @@
-
+var Promise = require("es6-promise").Promise;
 module.exports = function(freedom, provider_url, freedomOpts) {
   var Social, ERRCODE;
   var client = null;
