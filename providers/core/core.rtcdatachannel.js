@@ -124,6 +124,11 @@ RTCDataChannelAdapter.prototype.onclose = function (event) {
 RTCDataChannelAdapter.prototype.onmessage = function (event) {
   if (typeof event.data === 'string') {
     this.dispatchEvent('onmessage', {text: event.data});
+  } else if (this.channel.binaryType === 'arraybuffer' &&
+      typeof Components !== 'undefined' && !(event.data instanceof ArrayBuffer)) {
+    var view = {},
+      myData = Components.utils.cloneInto(event.data, view);
+    this.dispatchEvent('onmessage', {buffer: myData});
   } else {
     this.dispatchEvent('onmessage', {buffer: event.data});
   }
