@@ -1,4 +1,5 @@
-/*jslint indent:2,sloppy:true, node:true */
+/*jslint sloppy:true, node:true */
+/*globals Components, ArrayBuffer */
 
 var util = require('../../src/util');
 
