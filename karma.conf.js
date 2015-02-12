@@ -56,7 +56,7 @@ module.exports = function (config) {
     junitReporter: {
       outputFile: 'shippable/testresults/test-results.xml',
       suite: ''
-    }
+    },
 
     // SauceLabs config that gets overwritten in Gruntfile.js
     sauceLabs: {},
