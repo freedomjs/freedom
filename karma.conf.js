@@ -41,9 +41,15 @@ module.exports = function (config) {
     
     // Coverage report options
     coverageReporter: {
-      type: 'lcovonly',
-      dir: 'build/coverage/',
-      file: 'lcov.info'
+      reporters: [ {
+        type: 'lcovonly',
+        dir: 'build/coverage/',
+        file: 'lcov.info'
+      }, {
+        type: 'cobertura',
+        dir: 'shippable/codecoverage',
+        file: 'test-coverage.xml'
+      } ]
     },
 
     // JUnit report options (for Shippable)
