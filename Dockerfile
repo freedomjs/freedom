@@ -4,6 +4,7 @@ MAINTAINER Raymond Cheng <ryscheng@cs.washington.edu>
 
 USER root
 
+RUN apt-get update -qqy
 RUN apt-get install -qqy software-properties-common
 RUN add-apt-repository -y ppa:mozillateam/firefox-next
 RUN add-apt-repository -y ppa:chris-lea/node.js
@@ -16,8 +17,7 @@ RUN apt-get -qqy install \
       xfonts-75dpi \
       xfonts-scalable \
       xfonts-cyrillic \
-      firefox \
-      google-chrome-beta
+      firefox
 RUN npm install -g grunt-cli
 
 ADD . /freedom
