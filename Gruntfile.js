@@ -88,12 +88,16 @@ module.exports = function (grunt) {
       },
       browsers: {
         browsers: [ 'Chrome', 'Firefox' ]
+        junitReporter: { outputFile: 'shippable/testresults/test-unit.xml', suite: '' },
       },
       phantom: {
         browsers: [ 'PhantomJS' ]
+        junitReporter: { outputFile: 'shippable/testresults/test-unit.xml', suite: '' },
       },
       integration: {
         browsers: [ 'Chrome', 'Firefox' ],
+        junitReporter: { outputFile: 'shippable/testresults/test-integration.xml', suite: '' },
+        coverageReporter: {},
         options: { files: [
           require.resolve('es5-shim'),
           require.resolve('es6-promise'),
