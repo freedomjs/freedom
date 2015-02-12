@@ -1,7 +1,9 @@
 freedom.js
 =======
 [![Build Status](https://travis-ci.org/freedomjs/freedom.png?branch=master)](https://travis-ci.org/freedomjs/freedom)
+[![Build Status](https://api.shippable.com/projects/54c823bf5ab6cc135289fbd6/badge?branchName=master)](https://app.shippable.com/projects/54c823bf5ab6cc135289fbd6/builds/latest)
 [![Coverage Status](https://coveralls.io/repos/freedomjs/freedom/badge.png?branch=master)](https://coveralls.io/r/freedomjs/freedom?branch=master)
+[![Code Climate](https://codeclimate.com/github/freedomjs/freedom/badges/gpa.svg)](https://codeclimate.com/github/freedomjs/freedom)
 [![Selenium Test Status](https://saucelabs.com/browser-matrix/freedomjs.svg)](https://saucelabs.com/u/freedomjs)
 
 freedom.js is a framework for building peer-to-peer (P2P) web apps. 
