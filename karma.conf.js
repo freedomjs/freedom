@@ -37,7 +37,7 @@ module.exports = function (config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress', 'html', 'coverage', 'saucelabs', 'unicorn', 'story'],
+    reporters: ['progress', 'story', 'html', 'junit', 'coverage', 'saucelabs', 'unicorn'],
     
     // Coverage report options
     coverageReporter: {
@@ -45,6 +45,12 @@ module.exports = function (config) {
       dir: 'build/coverage/',
       file: 'lcov.info'
     },
+
+    // JUnit report options (for Shippable)
+    junitReporter: {
+      outputFile: 'shippable/testresults/test-results.xml',
+      suite: ''
+    }
 
     // SauceLabs config that gets overwritten in Gruntfile.js
     sauceLabs: {},
