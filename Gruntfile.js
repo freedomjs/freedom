@@ -87,17 +87,19 @@ module.exports = function (grunt) {
         ],
       },
       browsers: {
-        browsers: [ 'Chrome', 'Firefox' ]
+        browsers: [ 'Chrome', 'Firefox' ],
         junitReporter: { outputFile: 'shippable/testresults/test-unit.xml', suite: '' },
       },
       phantom: {
-        browsers: [ 'PhantomJS' ]
+        browsers: [ 'PhantomJS' ],
         junitReporter: { outputFile: 'shippable/testresults/test-unit.xml', suite: '' },
       },
       integration: {
         browsers: [ 'Chrome', 'Firefox' ],
         junitReporter: { outputFile: 'shippable/testresults/test-integration.xml', suite: '' },
-        coverageReporter: {},
+        coverageReporter: {
+          dir: 'build/coverage/'
+        },
         options: { files: [
           require.resolve('es5-shim'),
           require.resolve('es6-promise'),
