@@ -109,7 +109,7 @@ module.exports = function (provider, setup) {
           return;
         }
 
-        // One onData is allowed during pause due to https://crbug.com/403076.
+        // One onData is allowed during pause due to https://crbug.com/360026.
         ++messageCount;
         if (messageCount === 1) {
           return;
