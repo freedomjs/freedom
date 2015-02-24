@@ -99,5 +99,47 @@ module.exports = function (provider, setup) {
       });
   });
 
+  it("Pause and Resume work", function (done) {
+    socket.connect('www.google.com', 80, function () {
+      var paused = false;
+      var messageCount = 0;
+      dispatch.on('onMessage', function(msg) {
+        if (!('data' in msg)) {
+          // Not an 'onData' message.
+          return;
+        }
+
+        // One onData is allowed during pause due to https://crbug.com/403076.
+        ++messageCount;
+        if (messageCount === 1) {
+          return;
+        }
+
+        // Check that the second message doesn't arrive until after the socket
+        // resumes.
+        expect(paused).toBe(false);
+        socket.close(done);
+      });
+
+      socket.pause(function() {
+        paused = true;
+        // This URL is selected to be a file large enough to generate
+        // multiple onData events.
+        socket.write(
+            rawStringToBuffer('GET /images/srpr/logo11w.png HTTP/1.0\n\n'),
+            function (okay) {});
+
+        // Wait a second before unpausing.  Data received in this second
+        // will fail the expectation that paused is false in gotMessageAsync.
+        setTimeout(function() {
+          // The observed behavior is that the next packet is received after
+          // the call to resume, but before resume returns.
+          socket.resume(function () {});
+          paused = false;
+        }, 1000);
+      });
+    });
+  });
+
   // TODO: add tests for tcpsocket.secure, accepting multiple.
 };

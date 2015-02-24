@@ -97,6 +97,29 @@
       }
     },
   
+    // Pauses a socket.  Once this call returns, at most one more onData event
+    // will be emitted.  Subsequent incoming packets will be queued in a
+    // finite-size buffer, resulting in TCP backpressure to the sender.
+    // TODO: Tighten this definition once https://crbug.com/403076 is fixed.
+    "pause": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Allows the socket to resume emitting the onData event.
+    "resume": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
     // Prepares a socket for becoming secure after the next read event.
     // See details at
     // https://github.com/freedomjs/freedom/wiki/prepareSecure-API-Usage
