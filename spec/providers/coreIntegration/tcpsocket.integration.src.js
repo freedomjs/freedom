@@ -111,12 +111,12 @@ module.exports = function (provider, setup) {
 
         // One onData is allowed during pause due to https://crbug.com/360026.
         ++messageCount;
-        if (messageCount === 1) {
+        if (paused && messageCount === 1) {
           return;
         }
 
-        // Check that the second message doesn't arrive until after the socket
-        // resumes.
+        // Apart from the above exception, check that data doesn't arrive until
+        // after the socket resumes.
         expect(paused).toBe(false);
         socket.close(done);
       });
