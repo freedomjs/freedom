@@ -12,6 +12,10 @@
         document.getElementById('log').innerHTML += msg + '\r\n';
 	  });
 
+      CustomChannel.onClose(function () {
+        document.getElementById('log').innerHTML += 'Module Errored, and is now closed.\r\n';
+      });
+
 	  function mkbutton(m) {
         var msger = document.createElement('button');
 		msger.innerHTML = 'Message ' + m;
@@ -41,6 +45,10 @@
 		mkbutton(m);
 		channel.emit('peer');
       }, true);
+
+      document.getElementById('err').addEventListener('click', function() {
+		channel.emit('mkerr');
+      }, true);
     }
 
     freedom('manifest.json', {"debug": "debug"}).then(start);
@@ -52,6 +60,7 @@
 	Runtime Channel Control:
 	<button id='create'>Create</button>
 	<button id='peer'>Peer</button>
+	<button id='err'>Throw Exception</button>
 	<pre id='log'></pre>
   </header>
 </body>

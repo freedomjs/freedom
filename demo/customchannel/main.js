@@ -68,6 +68,10 @@ page.on('peer', function () {
   });
 });
 
+page.on('mkerr', function () {
+  throw new Error("I am a custom error");
+});
+
 friend.on('message', function (str) {
   page.emit('message', str);
 });

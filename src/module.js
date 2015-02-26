@@ -193,7 +193,9 @@ Module.prototype.start = function () {
     this.port.on(this.emitMessage.bind(this));
     this.port.addErrorHandler(function (err) {
       this.debug.warn('Module Failed', err);
-      this.stop();
+      this.emit(this.controlChannel, {
+        request: 'close'
+      });
     }.bind(this));
     // Tell the local port to ask us for help.
     this.port.onMessage('control', {
