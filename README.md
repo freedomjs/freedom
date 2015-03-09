@@ -24,16 +24,16 @@ Use freedom.js
 If you want a built version of freedom.js into your website, grab a copy from our CDN:
 
 Websites: 
-* [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
-* [freedom.v0.6.19.js](http://freedomjs.org/dist/freedom/v0.6.19/freedom.v0.6.19.js) (stable)
+* [freedom.latest.js](http://www.freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
+* [freedom.v0.6.19.js](http://www.freedomjs.org/dist/freedom/v0.6.19/freedom.v0.6.19.js) (stable)
 
 Chrome Apps:
-* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
-* [freedom-for-chrome.v0.4.12.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.12.js) (stable)
+* [freedom-for-chrome.latest.js](http://www.freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
+* [freedom-for-chrome.v0.4.12.js](http://www.freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.12.js) (stable)
 
 Firefox Extensions:
-* [freedom-for-firefox.latest.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
-* [freedom-for-firefox.v0.6.8.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.8.jsm) (stable)
+* [freedom-for-firefox.latest.jsm](http://www.freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
+* [freedom-for-firefox.v0.6.8.jsm](http://www.freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.8.jsm) (stable)
 
 freedom, freedom-for-node, freedom-for-chrome, and freedom-for-firefox also exist as npm packages
 
