@@ -27,7 +27,7 @@ module.exports = function (provider, setup) {
       socket.write(rawStringToBuffer('GET / HTTP/1.0\n\n'), function (okay) {
         written = true;
       });
-      dispatch.gotMessageAsync('onData', [], function(msg) {
+      dispatch.gotMessageAsync('onData', [], function (msg) {
         expect(written).toBe(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
         socket.close(done);
@@ -48,6 +48,9 @@ module.exports = function (provider, setup) {
         });
       };
 
+    socket.getInfo(function (info) {
+      expect(info.localPort).not.toBeDefined();
+    });
     socket.listen('127.0.0.1', 0, function () {
       socket.getInfo(function (info) {
         expect(info.localPort).toBeGreaterThan(1023);
@@ -66,6 +69,8 @@ module.exports = function (provider, setup) {
 
     onDispatch = function (evt, msg) {
       if (evt === 'onDisconnect') {
+        // Putting the 'done' here also tests for onDisconnect message
+        done();
         return;
       }
       expect(evt).toEqual('onData');
@@ -73,8 +78,7 @@ module.exports = function (provider, setup) {
       PromiseCompat.all([
         socket.close(function () {}),
         client.close(function () {}),
-        receiver.close(function () {}),
-        done()]);
+        receiver.close(function () {})]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
@@ -99,11 +103,24 @@ module.exports = function (provider, setup) {
       });
   });
 
-  it("Pause and Resume work", function (done) {
+  it("Closes socket and open new one on the same port", function (done) {
+    socket.listen('127.0.0.1', 9981, function () {
+      socket.close(function () {
+        socket.listen('127.0.0.1', 9981, function () {
+          expect(true).toEqual(true);
+          PromiseCompat.all([
+            socket.close(function () {}),
+            done()]);
+        });
+      });
+    });
+  });
+
+  it("Pauses and resumes", function (done) {
     socket.connect('www.google.com', 80, function () {
       var paused = false;
       var messageCount = 0;
-      dispatch.on('onMessage', function(msg) {
+      dispatch.on('onMessage', function (msg) {
         if (!('data' in msg)) {
           // Not an 'onData' message.
           return;
@@ -121,7 +138,7 @@ module.exports = function (provider, setup) {
         socket.close(done);
       });
 
-      socket.pause(function() {
+      socket.pause(function () {
         paused = true;
         // This URL is selected to be a file large enough to generate
         // multiple onData events.
@@ -131,7 +148,7 @@ module.exports = function (provider, setup) {
 
         // Wait a second before unpausing.  Data received in this second
         // will fail the expectation that paused is false in gotMessageAsync.
-        setTimeout(function() {
+        setTimeout(function () {
           // The observed behavior is that the next packet is received after
           // the call to resume, but before resume returns.
           socket.resume(function () {});
