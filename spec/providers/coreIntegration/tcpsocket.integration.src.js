@@ -49,6 +49,7 @@ module.exports = function (provider, setup) {
       };
 
     socket.getInfo(function (info) {
+      expect(info.connected).toEqual(false);
       expect(info.localPort).not.toBeDefined();
     });
     socket.listen('127.0.0.1', 0, function () {
@@ -65,10 +66,12 @@ module.exports = function (provider, setup) {
       client,
       receiver,
       onDispatch,
-      onconnect;
+      onconnect,
+      onConnectionReceived;
 
     onDispatch = function (evt, msg) {
       if (evt === 'onDisconnect') {
+        expect(onConnectionReceived).toEqual(true);
         // Putting the 'done' here also tests for onDisconnect message
         done();
         return;
@@ -81,6 +84,7 @@ module.exports = function (provider, setup) {
         receiver.close(function () {})]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      onConnectionReceived = true;
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
     });
@@ -154,6 +158,42 @@ module.exports = function (provider, setup) {
           socket.resume(function () {});
           paused = false;
         }, 1000);
+      });
+    });
+  });
+
+  it("Errors when securing a disconnected socket", function(done) {
+    socket.secure(function (success, err) {
+      var allowedErrors = ['NOT_CONNECTED', 'SOCKET_NOT_CONNECTED'];
+      expect(allowedErrors).toContain(err.errcode);
+      done();
+    });
+  });
+
+  it("Errors when writing a disconnected socket", function(done) {
+    socket.write(rawStringToBuffer(''), function (success, err) {
+      var allowedErrors = ['NOT_CONNECTED', 'SOCKET_NOT_CONNECTED'];
+      expect(allowedErrors).toContain(err.errcode);
+      done();
+    });
+  });
+
+  it("Errors when closing a disconnected socket", function(done) {
+    socket.close(function (success, err) {
+      var allowedErrors = ['SOCKET_CLOSED'];
+      expect(allowedErrors).toContain(err.errcode);
+      done();
+    });
+  });
+
+  it("Errors when listening on an already allocated socket", function(done) {
+    socket.listen('127.0.0.1', 9981, function () {
+      socket.listen('127.0.0.1', 9981, function (success, err) {
+        // TODO - consider removing 'UNKNOWN' as allowed error
+        // (currently in use in freedom-for-firefox provider)
+        var allowedErrors = ['ALREADY_CONNECTED', 'UNKNOWN'];
+        expect(allowedErrors).toContain(err.errcode);
+        socket.close(done);
       });
     });
   });
