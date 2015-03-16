@@ -35,6 +35,19 @@ module.exports = function (provider, setup) {
     });
   });
 
+  it("Closes socket and open new one on the same port", function (done) {
+    socket.listen('127.0.0.1', 9981, function () {
+      socket.close(function () {
+        socket.listen('127.0.0.1', 9981, function () {
+          expect(true).toEqual(true);
+          PromiseCompat.all([
+            socket.close(function () {}),
+            done()]);
+        });
+      });
+    });
+  });
+
   it("Gets info on client & server sockets", function (done) {
     var cspy = jasmine.createSpy('client'),
       client,
@@ -63,17 +76,13 @@ module.exports = function (provider, setup) {
 
   it("Sends from Client to Server", function (done) {
     var cspy = jasmine.createSpy('client'),
-      client,
-      receiver,
-      onDispatch,
-      onconnect,
-      onConnectionReceived;
+        client,
+        receiver,
+        onDispatch,
+        onconnect;
 
     onDispatch = function (evt, msg) {
       if (evt === 'onDisconnect') {
-        expect(onConnectionReceived).toEqual(true);
-        // Putting the 'done' here also tests for onDisconnect message
-        done();
         return;
       }
       expect(evt).toEqual('onData');
@@ -81,10 +90,11 @@ module.exports = function (provider, setup) {
       PromiseCompat.all([
         socket.close(function () {}),
         client.close(function () {}),
-        receiver.close(function () {})]);
+        receiver.close(function () {}),
+        done()
+      ]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
-      onConnectionReceived = true;
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
     });
@@ -98,25 +108,30 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Gives error when connecting to invalid domain", function (done) {
-    socket.connect('www.domainexistsbecausesomeonepaidmoneytobreakourtests.gov', 80,
-      function (success, err) {
-        var allowedErrors = ['CONNECTION_FAILED', 'NAME_NOT_RESOLVED'];
-        expect(allowedErrors).toContain(err.errcode);
-        done();
-      });
-  });
+  it("Fires onConnection and onDisconnect events", function (done) {
+    var cspy = jasmine.createSpy('client'),
+        client,
+        onConnectionReceived,
+        onDispatch,
+        receiver;
 
-  it("Closes socket and open new one on the same port", function (done) {
-    socket.listen('127.0.0.1', 9981, function () {
-      socket.close(function () {
-        socket.listen('127.0.0.1', 9981, function () {
-          expect(true).toEqual(true);
-          PromiseCompat.all([
-            socket.close(function () {}),
-            done()]);
-        });
+    onDispatch = function (evt, msg) {
+      expect(evt).toEqual('onDisconnect');
+      expect(onConnectionReceived).toEqual(true);
+      client.getInfo(function (info) {
+        expect(info.connected).toEqual(false);
       });
+      socket.close(done);
+    };
+    dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      onConnectionReceived = true;
+      expect(msg.socket).toBeDefined();
+      receiver = new provider.provider(undefined, onDispatch, msg.socket);
+      client.close();
+    });
+    socket.listen('127.0.0.1', 9981, function () {
+      client = new provider.provider(undefined, cspy);
+      client.connect('127.0.0.1', 9981, function () { });//client.close(); });
     });
   });
 
@@ -160,6 +175,16 @@ module.exports = function (provider, setup) {
         }, 1000);
       });
     });
+  });
+
+  it("Gives error when connecting to invalid domain", function (done) {
+    socket.connect('www.domainexiststobreakourtests.gov', 80,
+                   function (success, err) {
+                     var allowedErrors = ['CONNECTION_FAILED',
+                                          'NAME_NOT_RESOLVED'];
+                     expect(allowedErrors).toContain(err.errcode);
+                     done();
+                   });
   });
 
   it("Errors when securing a disconnected socket", function(done) {
