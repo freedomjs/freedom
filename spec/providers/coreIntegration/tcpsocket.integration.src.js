@@ -189,24 +189,21 @@ module.exports = function (provider, setup) {
 
   it("Errors when securing a disconnected socket", function(done) {
     socket.secure(function (success, err) {
-      var allowedErrors = ['NOT_CONNECTED', 'SOCKET_NOT_CONNECTED'];
-      expect(allowedErrors).toContain(err.errcode);
+      expect(err.errcode).toEqual('NOT_CONNECTED');
       done();
     });
   });
 
   it("Errors when writing a disconnected socket", function(done) {
     socket.write(rawStringToBuffer(''), function (success, err) {
-      var allowedErrors = ['NOT_CONNECTED', 'SOCKET_NOT_CONNECTED'];
-      expect(allowedErrors).toContain(err.errcode);
+      expect(err.errcode).toEqual('NOT_CONNECTED');
       done();
     });
   });
 
   it("Errors when closing a disconnected socket", function(done) {
     socket.close(function (success, err) {
-      var allowedErrors = ['SOCKET_CLOSED'];
-      expect(allowedErrors).toContain(err.errcode);
+      expect(err.errcode).toEqual('SOCKET_CLOSED');
       done();
     });
   });
@@ -214,10 +211,7 @@ module.exports = function (provider, setup) {
   it("Errors when listening on an already allocated socket", function(done) {
     socket.listen('127.0.0.1', 9981, function () {
       socket.listen('127.0.0.1', 9981, function (success, err) {
-        // TODO - consider removing 'UNKNOWN' as allowed error
-        // (currently in use in freedom-for-firefox provider)
-        var allowedErrors = ['ALREADY_CONNECTED', 'UNKNOWN'];
-        expect(allowedErrors).toContain(err.errcode);
+        expect(err.errcode).toEqual('ALREADY_CONNECTED');
         socket.close(done);
       });
     });
