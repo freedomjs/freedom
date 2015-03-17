@@ -177,6 +177,29 @@ module.exports = function (provider, setup) {
     });
   });
 
+  it("Secures a socket", function (done) {
+    socket.connect('www.google.com', 80, function () {
+      var prepared = false;
+      dispatch.gotMessageAsync('onData', [], function (msg) {
+        expect(prepared).toEqual(true);
+        socket.secure(done);
+      });
+      // prepareSecure is Chrome specific, see freedom-for-chrome
+      socket.prepareSecure(function () {
+        prepared = true;
+        socket.write(rawStringToBuffer('GET / HTTP/1.0\n\n'),
+                     function (okay) {});
+      });
+    });
+  });
+
+  it("Gives error when securing a disconnected socket", function(done) {
+    socket.secure(function (success, err) {
+      expect(err.errcode).toEqual('NOT_CONNECTED');
+      done();
+    });
+  });
+
   it("Gives error when connecting to invalid domain", function (done) {
     socket.connect('www.domainexiststobreakourtests.gov', 80,
                    function (success, err) {
@@ -187,28 +210,21 @@ module.exports = function (provider, setup) {
                    });
   });
 
-  it("Errors when securing a disconnected socket", function(done) {
-    socket.secure(function (success, err) {
-      expect(err.errcode).toEqual('NOT_CONNECTED');
-      done();
-    });
-  });
-
-  it("Errors when writing a disconnected socket", function(done) {
+  it("Gives error when writing a disconnected socket", function(done) {
     socket.write(rawStringToBuffer(''), function (success, err) {
       expect(err.errcode).toEqual('NOT_CONNECTED');
       done();
     });
   });
 
-  it("Errors when closing a disconnected socket", function(done) {
+  it("Gives error when closing a disconnected socket", function(done) {
     socket.close(function (success, err) {
       expect(err.errcode).toEqual('SOCKET_CLOSED');
       done();
     });
   });
 
-  it("Errors when listening on an already allocated socket", function(done) {
+  it("Gives error when listening on already allocated socket", function(done) {
     socket.listen('127.0.0.1', 9981, function () {
       socket.listen('127.0.0.1', 9981, function (success, err) {
         expect(err.errcode).toEqual('ALREADY_CONNECTED');
