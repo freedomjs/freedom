@@ -127,7 +127,7 @@ module.exports = function (provider, setup) {
       onConnectionReceived = true;
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
-      client.close();
+      client.close(function () {});
     });
     socket.listen('127.0.0.1', 9981, function () {
       client = new provider.provider(undefined, cspy);
