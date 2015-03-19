@@ -131,7 +131,7 @@ module.exports = function (provider, setup) {
     });
     socket.listen('127.0.0.1', 9981, function () {
       client = new provider.provider(undefined, cspy);
-      client.connect('127.0.0.1', 9981, function () { });//client.close(); });
+      client.connect('127.0.0.1', 9981, function () { });
     });
   });
 
@@ -233,5 +233,27 @@ module.exports = function (provider, setup) {
     });
   });
 
-  // TODO: add tests for tcpsocket.secure, accepting multiple.
+  it("Socket reusing id of closed socket is also closed", function(done) {
+    var cspy = jasmine.createSpy('client'),
+        client,
+        socketCopy;
+
+    dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      expect(msg.socket).toBeDefined();
+      client.close(function () {
+        socketCopy = new provider.provider(undefined, function () {},
+                                           msg.socket);
+        socketCopy.getInfo(function (info) {
+          // TODO consider changing implementation to give more explicit failure
+          expect(info.connected).toEqual(false);
+          done();
+        });
+      });
+    });
+    socket.listen('127.0.0.1', 9981, function () {
+      client = new provider.provider(undefined, cspy);
+      client.connect('127.0.0.1', 9981, function () {});
+    });
+
+  });
 };
