@@ -6,8 +6,6 @@ module.exports = function (config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
 
-    browserNoActivityTimeout: 30000,
-
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine'],
@@ -33,6 +31,12 @@ module.exports = function (config) {
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
+
+    // Set timeouts to avoid DISCONNECTED messages
+    captureTimeout: 120000,  // default 60000
+    browserDisconnectTimeout: 10000, // default 2000
+    browserDisconnectTolerance: 1, // default 0
+    browserNoActivityTimeout: 60000, //default 10000
     
     // test results reporter to use
     // possible values: 'dots', 'progress'
