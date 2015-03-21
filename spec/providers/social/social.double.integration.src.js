@@ -55,14 +55,27 @@ module.exports = function(freedom, provider_url, freedomOpts) {
 
   it("A-B: sends message between A->B", function(done) {
     var c1State, c2State;
+    var c1StateEvts = [];
     var sent = false;
     var msg = "Hello World-" + Math.random();
 
+    var c2Online = function() {
+      for(var i = 0; i < c1StateEvts.length; i++) {
+        if (c1StateEvts[i].clientId == c2State.clientId &&
+            c1StateEvts[i].status == "ONLINE") {
+          return true;
+        }
+      }
+      return false;
+    };
+
     var trySend = function(info) {
-       if (!sent &&
+      if (typeof info !== "undefined") {
+        c1StateEvts.push(info);
+      }
+      if (!sent &&
           typeof c2State !== "undefined" &&
-          info.clientId == c2State.clientId &&
-          info.status == "ONLINE") {
+          c2Online()) {
         sent = true;
         c1.sendMessage(c2State.clientId, msg).then(function(ret) {
           // Message sent
@@ -81,7 +94,7 @@ module.exports = function(freedom, provider_url, freedomOpts) {
     Promise.all([ c1.login({ agent: "jasmine" }), c2.login({ agent: "jasmine" }) ]).then(function (ret) {
       c1State = ret[0];
       c2State = ret[1];
-      
+      trySend();
     }).catch(errHandler);
   });
   
