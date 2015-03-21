@@ -55,7 +55,8 @@ module.exports = function(freedom, provider_url, freedomOpts) {
 
   it("A-B: sends message between A->B", function(done) {
     var c1State, c2State;
-    var msg = "Hello World";
+    var sent = false;
+    var msg = "Hello World-" + Math.random();
 
     c2.once("onMessage", function(message) {
       expect(message.from).toEqual(makeClientState(c1State.userId, c1State.clientId, "ONLINE"));
@@ -63,10 +64,21 @@ module.exports = function(freedom, provider_url, freedomOpts) {
       Promise.all([ c1.logout(), c2.logout() ]).then(done, errHandler);
     });
 
+    c1.on("onClientState", function(info) {
+      if (!sent &&
+          typeof c2State !== "undefined" &&
+          info.clientId == c2State.clientId &&
+          info.status == "ONLINE") {
+        sent = true;
+        c1.sendMessage(c2State.clientId, msg).then(function(ret) {
+          // Message sent
+        }).catch(errHandler);
+      }
+    });
+
     Promise.all([ c1.login({ agent: "jasmine" }), c2.login({ agent: "jasmine" }) ]).then(function (ret) {
       c1State = ret[0];
       c2State = ret[1];
-      return c1.sendMessage(c2State.clientId, msg);
     }).catch(errHandler);
   });
   
