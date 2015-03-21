@@ -140,46 +140,28 @@ module.exports = function(freedom, provider_url, freedomOpts) {
     var c1StateEvts = [];
     var c2StateEvts = [];
 
-    // Checks if we saw user profiles for both clients
-    var containsProfiles = function(evts) {
+    // Checks if we see both users for a set of events
+    var seeBoth = function(evts, key) {
       var saw1 = false, saw2 = false;
       for (var i = 0; i < evts.length; i++) {
-        if (evts[i].userId == c1State.userId) {
+        if (typeof c1State !== "undefined" && evts[i][key] == c1State[key]) {
           saw1 = true;
         }
-        if (evts[i].userId == c2State.userId) {
+        if (typeof c2State !== "undefined" && evts[i][key] == c2State[key]) {
           saw2 = true;
         }
       }
       return saw1 && saw2;
     };
     
-    // Checks if we saw client states for both clients
-    var containsClients = function(evts) {
-      var saw1 = false, saw2 = false;
-      for (var i = 0; i < evts.length; i++) {
-        if (evts[i].clientId == c1State.clientId) {
-          saw1 = true;
-        }
-        if (evts[i].clientId == c2State.clientId) {
-          saw2 = true;
-        }
-      }
-      return saw1 && saw2;
-    };
-
     // Triggered on every event, waiting until all necessary events are collected
     var tryGetRoster = function(arr, info) {
       if (typeof arr !== "undefined") {
         arr.push(info);
       }
       if (!triggered &&
-          typeof c1State !== "undefined" &&
-          typeof c2State !== "undefined" &&
-          containsProfiles(c1ProfileEvts) &&
-          containsProfiles(c2ProfileEvts) &&
-          containsClients(c1StateEvts) &&
-          containsClients(c2StateEvts)) {
+          seeBoth(c1ProfileEvts, "userId") && seeBoth(c2ProfileEvts, "userId") &&
+          seeBoth(c1StateEvts, "clientId") && seeBoth(c2StateEvts, "clientId")) {
         triggered = true;
         Promise.all([ c1.getUsers(), c2.getUsers(), c1.getClients(), c2.getClients() ]).then(function(ret) {
           expect(ret[0][c1State.userId]).toEqual(Helper.makeUserProfile(c1State.userId));
