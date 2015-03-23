@@ -28,7 +28,7 @@ module.exports = function (provider, setup) {
         written = true;
       });
       dispatch.gotMessageAsync('onData', [], function (msg) {
-        expect(written).toBe(true);
+        expect(written).toEqual(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
         socket.close(done);
       });
@@ -40,9 +40,7 @@ module.exports = function (provider, setup) {
       socket.close(function () {
         socket.listen('127.0.0.1', 9981, function () {
           expect(true).toEqual(true);
-          PromiseCompat.all([
-            socket.close(function () {}),
-            done()]);
+          socket.close(done);
         });
       });
     });
@@ -91,8 +89,7 @@ module.exports = function (provider, setup) {
         socket.close(function () {}),
         client.close(function () {}),
         receiver.close(function () {}),
-        done()
-      ]);
+        done()]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
@@ -136,6 +133,7 @@ module.exports = function (provider, setup) {
   });
 
   it("Pauses and resumes", function (done) {
+    // TODO: this test breaks in node (runs code after done())
     socket.connect('www.google.com', 80, function () {
       var paused = false;
       var messageCount = 0;
@@ -153,7 +151,7 @@ module.exports = function (provider, setup) {
 
         // Apart from the above exception, check that data doesn't arrive until
         // after the socket resumes.
-        expect(paused).toBe(false);
+        expect(paused).toEqual(false);
         socket.close(done);
       });
 
@@ -178,18 +176,25 @@ module.exports = function (provider, setup) {
   });
 
   it("Secures a socket", function (done) {
-    socket.connect('www.google.com', 80, function () {
-      var prepared = false;
-      dispatch.gotMessageAsync('onData', [], function (msg) {
-        expect(prepared).toEqual(true);
-        socket.secure(done);
-      });
+    socket.connect('www.google.com', 443, function () {
+      var prepared;
       // prepareSecure is Chrome specific, see freedom-for-chrome
       socket.prepareSecure(function () {
         prepared = true;
-        socket.write(rawStringToBuffer('GET / HTTP/1.0\n\n'),
-                     function (okay) {});
       });
+      // TODO: timeout approach sucks, preferred approach:
+      // https://github.com/freedomjs/freedom/wiki/prepareSecure-API-Usage
+      // But right now:
+      // a) dispatch isn't receiving the message specified by wiki
+      // b) non-chrome providers won't receive the message either
+      // Overall it's still unclear if secure is behaving as expected here
+      // Hopefully eventually prepareSecure isn't needed, simplifying this test
+      setTimeout(function () {
+        expect(prepared).toEqual(true);
+        socket.secure(function () {
+          socket.close(done);
+        });
+      }, 1000);
     });
   });
 
