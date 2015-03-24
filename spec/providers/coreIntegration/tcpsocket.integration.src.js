@@ -176,25 +176,14 @@ module.exports = function (provider, setup) {
   });
 
   it("Secures a socket", function (done) {
+    // TODO - prepareSecure test, if Chrome isn't fixing that soon
     socket.connect('www.google.com', 443, function () {
-      var prepared;
-      // prepareSecure is Chrome specific, see freedom-for-chrome
-      socket.prepareSecure(function () {
-        prepared = true;
-      });
-      // TODO: timeout approach sucks, preferred approach:
-      // https://github.com/freedomjs/freedom/wiki/prepareSecure-API-Usage
-      // But right now:
-      // a) dispatch isn't receiving the message specified by wiki
-      // b) non-chrome providers won't receive the message either
-      // Overall it's still unclear if secure is behaving as expected here
-      // Hopefully eventually prepareSecure isn't needed, simplifying this test
-      setTimeout(function () {
-        expect(prepared).toEqual(true);
-        socket.secure(function () {
+      socket.secure(function() {
+        socket.getInfo(function (info) {
+          expect(info.connected).toEqual(true);
           socket.close(done);
         });
-      }, 1000);
+      });
     });
   });
 
