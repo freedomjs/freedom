@@ -187,4 +187,39 @@ Debug.prototype.getLogger = function (name) {
   return logger;
 };
 
+/**
+ * Create a synchronous 'getLogger' method that binds around an asynchronous
+ * logger by creating a buffer until the asynchronous logger is resolved.
+ * @see {ModuleInternal.loadLinks} for where this method is bound to the created
+ *     external interface.
+ * @method getLoggingShim
+ * @param {Function} asyncMethod The wrapper to 'getLogger'
+ */
+Debug.prototype.getLoggingShim = function (asyncMethod) {
+  return function getLogggerSync(name) {
+    var toResolve = asyncMethod(name),
+      buffer = [],
+      methods = ['debug', 'info', 'log', 'warn', 'error'],
+      backing = null,
+      ret = {};
+    toResolve.then(function (logger) {
+      backing = logger;
+      buffer.forEach(function (item) {
+        backing[item[0]].apply(backing, item[1]);
+      });
+    });
+    methods.forEach(function (mthd) {
+      ret[mthd] = function() {
+        var args = Array.prototype.splice.call(arguments, 0);
+        if (backing) {
+          backing[this].apply(backing, args);
+        } else {
+          buffer.push([this, args]);
+        }
+      }.bind(mthd);
+    });
+    return ret;
+  };
+};
+
 module.exports = Debug;
