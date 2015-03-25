@@ -2,7 +2,7 @@
   "name": "Counter",
   "description": "Counter Sample freedom.js application",
   "app": {
-    "script": "counter.js",
+    "script": "freedom-module.js",
     "index": "index.html",
     "static": [ "../style.css" ]
   },
