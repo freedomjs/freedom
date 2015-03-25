@@ -15,7 +15,7 @@ var Provider = function (def, debug) {
   this.id = Consumer.nextId();
   util.handleEvents(this);
   this.debug = debug;
-  
+
   this.definition = def;
   this.mode = Provider.mode.synchronous;
   this.channels = {};
@@ -160,16 +160,25 @@ Provider.prototype.getInterface = function () {
   if (this.iface) {
     return this.iface;
   } else {
+    var sanityCheck = function (prov) {
+      if (!prov || typeof prov !== "function") {
+        throw new Error("Provider " + this.toString() +
+            " needs to be implemented by a function.");
+      }
+    };
     this.iface = {
       provideSynchronous: function (prov) {
+        sanityCheck(prov);
         this.providerCls = prov;
         this.mode = Provider.mode.synchronous;
       }.bind(this),
       provideAsynchronous: function (prov) {
+        sanityCheck(prov);
         this.providerCls = prov;
         this.mode = Provider.mode.asynchronous;
       }.bind(this),
       providePromises: function (prov) {
+        sanityCheck(prov);
         this.providerCls = prov;
         this.mode = Provider.mode.promises;
       }.bind(this)
