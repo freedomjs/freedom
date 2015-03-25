@@ -1,3 +1,6 @@
+/*jslint sloppy:true */
+/*globals freedom, console*/
+
 /**
  * This is the JavaScript that runs directly in the browser.
  * It interacts with the DOM as normal, and communicates with
