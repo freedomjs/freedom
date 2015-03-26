@@ -115,7 +115,7 @@ module.exports = function(provider_url, setup) {
     createTwoProviders(doSend);
   });
 
-  it("sends through multiple tags", function(done){
+  xit("sends through multiple tags", function(done){
     var ids = {};
     var toSend = {"tag1": "This is tag 1",
                   "tag2": "This is tag 2",
