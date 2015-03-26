@@ -36,7 +36,7 @@ describe("integration: transport.webrtc.json",
     require("./transport/transport.integration.src").bind(this, "/providers/transport/webrtc/transport.webrtc.json", setup));
 
 // environment
-describe("integration: Module Environment",
+xdescribe("integration: Module Environment",
     require("./coreIntegration/environment.integration.src").bind(this, setup));
 
 // core.rtcpeerconnection
