@@ -28,7 +28,6 @@ RUN apt-get update -qqy
 # apt-get
 RUN apt-get -qqy install \
       nodejs \
-      git \
       xvfb \
       x11vnc \
       xfonts-100dpi \
