@@ -14,7 +14,9 @@ RUN apt-get install -qqy software-properties-common wget curl
 RUN curl -sL https://deb.nodesource.com/setup_0.12 | sudo bash -
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
-RUN add-apt-repository -y ppa:mozillateam/firefox-next
+
+# Firefox beta (37) has weird XHR behavior
+# RUN add-apt-repository -y ppa:mozillateam/firefox-next
 
 # Mutually exclusive with Node 0.12
 # RUN curl -sL https://deb.nodesource.com/setup_iojs_1.x | sudo bash -
