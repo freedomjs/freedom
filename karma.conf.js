@@ -33,10 +33,10 @@ module.exports = function (config) {
     singleRun: false,
 
     // Set timeouts to avoid DISCONNECTED messages
-    captureTimeout: 180000,  // default 60000
-    browserDisconnectTimeout: 60000, // default 2000
+    captureTimeout: 120000,  // default 60000
+    browserDisconnectTimeout: 10000, // default 2000
     browserDisconnectTolerance: 1, // default 0
-    browserNoActivityTimeout: 300000, //default 10000
+    browserNoActivityTimeout: 60000, //default 10000
     
     // test results reporter to use
     // possible values: 'dots', 'progress'
