@@ -27,10 +27,21 @@ module.exports = function (provider, setup) {
       socket.write(rawStringToBuffer('GET / HTTP/1.0\n\n'), function (okay) {
         written = true;
       });
-      dispatch.gotMessageAsync('onData', [], function(msg) {
-        expect(written).toBe(true);
+      dispatch.gotMessageAsync('onData', [], function (msg) {
+        expect(written).toEqual(true);
         expect(dispatch.gotMessage('onData', [])).not.toEqual(false);
         socket.close(done);
+      });
+    });
+  });
+
+  it("Closes socket and open new one on the same port", function (done) {
+    socket.listen('127.0.0.1', 9981, function () {
+      socket.close(function () {
+        socket.listen('127.0.0.1', 9981, function () {
+          expect(true).toEqual(true);
+          socket.close(done);
+        });
       });
     });
   });
@@ -48,6 +59,10 @@ module.exports = function (provider, setup) {
         });
       };
 
+    socket.getInfo(function (info) {
+      expect(info.connected).toEqual(false);
+      expect(info.localPort).not.toBeDefined();
+    });
     socket.listen('127.0.0.1', 0, function () {
       socket.getInfo(function (info) {
         expect(info.localPort).toBeGreaterThan(1023);
@@ -59,10 +74,10 @@ module.exports = function (provider, setup) {
 
   it("Sends from Client to Server", function (done) {
     var cspy = jasmine.createSpy('client'),
-      client,
-      receiver,
-      onDispatch,
-      onconnect;
+        client,
+        receiver,
+        onDispatch,
+        onconnect;
 
     onDispatch = function (evt, msg) {
       if (evt === 'onDisconnect') {
@@ -90,20 +105,39 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Gives error when connecting to invalid domain", function (done) {
-    socket.connect('www.domainexistsbecausesomeonepaidmoneytobreakourtests.gov', 80,
-      function (success, err) {
-        var allowedErrors = ['CONNECTION_FAILED', 'NAME_NOT_RESOLVED'];
-        expect(allowedErrors).toContain(err.errcode);
-        done();
+  it("Fires onConnection and onDisconnect events", function (done) {
+    var cspy = jasmine.createSpy('client'),
+        client,
+        onConnectionReceived,
+        onDispatch,
+        receiver;
+
+    onDispatch = function (evt, msg) {
+      expect(evt).toEqual('onDisconnect');
+      expect(onConnectionReceived).toEqual(true);
+      client.getInfo(function (info) {
+        expect(info.connected).toEqual(false);
       });
+      socket.close(done);
+    };
+    dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      onConnectionReceived = true;
+      expect(msg.socket).toBeDefined();
+      receiver = new provider.provider(undefined, onDispatch, msg.socket);
+      client.close(function () {});
+    });
+    socket.listen('127.0.0.1', 9981, function () {
+      client = new provider.provider(undefined, cspy);
+      client.connect('127.0.0.1', 9981, function () { });
+    });
   });
 
-  it("Pause and Resume work", function (done) {
+  it("Pauses and resumes", function (done) {
+    // TODO: this test breaks in node (runs code after done())
     socket.connect('www.google.com', 80, function () {
       var paused = false;
       var messageCount = 0;
-      dispatch.on('onMessage', function(msg) {
+      dispatch.on('onMessage', function (msg) {
         if (!('data' in msg)) {
           // Not an 'onData' message.
           return;
@@ -117,11 +151,11 @@ module.exports = function (provider, setup) {
 
         // Apart from the above exception, check that data doesn't arrive until
         // after the socket resumes.
-        expect(paused).toBe(false);
+        expect(paused).toEqual(false);
         socket.close(done);
       });
 
-      socket.pause(function() {
+      socket.pause(function () {
         paused = true;
         // This URL is selected to be a file large enough to generate
         // multiple onData events.
@@ -131,7 +165,7 @@ module.exports = function (provider, setup) {
 
         // Wait a second before unpausing.  Data received in this second
         // will fail the expectation that paused is false in gotMessageAsync.
-        setTimeout(function() {
+        setTimeout(function () {
           // The observed behavior is that the next packet is received after
           // the call to resume, but before resume returns.
           socket.resume(function () {});
@@ -141,5 +175,79 @@ module.exports = function (provider, setup) {
     });
   });
 
-  // TODO: add tests for tcpsocket.secure, accepting multiple.
+  it("Secures a socket", function (done) {
+    // TODO - prepareSecure test, if Chrome isn't fixing that soon
+    socket.connect('www.google.com', 443, function () {
+      socket.secure(function() {
+        socket.getInfo(function (info) {
+          expect(info.connected).toEqual(true);
+          socket.close(done);
+        });
+      });
+    });
+  });
+
+  it("Gives error when securing a disconnected socket", function(done) {
+    socket.secure(function (success, err) {
+      expect(err.errcode).toEqual('NOT_CONNECTED');
+      done();
+    });
+  });
+
+  it("Gives error when connecting to invalid domain", function (done) {
+    socket.connect('www.domainexiststobreakourtests.gov', 80,
+                   function (success, err) {
+                     var allowedErrors = ['CONNECTION_FAILED',
+                                          'NAME_NOT_RESOLVED'];
+                     expect(allowedErrors).toContain(err.errcode);
+                     done();
+                   });
+  });
+
+  it("Gives error when writing a disconnected socket", function(done) {
+    socket.write(rawStringToBuffer(''), function (success, err) {
+      expect(err.errcode).toEqual('NOT_CONNECTED');
+      done();
+    });
+  });
+
+  it("Gives error when closing a disconnected socket", function(done) {
+    socket.close(function (success, err) {
+      expect(err.errcode).toEqual('SOCKET_CLOSED');
+      done();
+    });
+  });
+
+  it("Gives error when listening on already allocated socket", function(done) {
+    socket.listen('127.0.0.1', 9981, function () {
+      socket.listen('127.0.0.1', 9981, function (success, err) {
+        expect(err.errcode).toEqual('ALREADY_CONNECTED');
+        socket.close(done);
+      });
+    });
+  });
+
+  it("Socket reusing id of closed socket is also closed", function(done) {
+    var cspy = jasmine.createSpy('client'),
+        client,
+        socketCopy;
+
+    dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      expect(msg.socket).toBeDefined();
+      client.close(function () {
+        socketCopy = new provider.provider(undefined, function () {},
+                                           msg.socket);
+        socketCopy.getInfo(function (info) {
+          // TODO consider changing implementation to give more explicit failure
+          expect(info.connected).toEqual(false);
+          done();
+        });
+      });
+    });
+    socket.listen('127.0.0.1', 9981, function () {
+      client = new provider.provider(undefined, cspy);
+      client.connect('127.0.0.1', 9981, function () {});
+    });
+
+  });
 };
