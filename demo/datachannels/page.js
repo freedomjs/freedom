@@ -39,7 +39,7 @@ var negotiateState = function (text, button, channel) {
 };
 
 window.onload = function () {
-  freedom("manifest.json", {
+  freedom("freedom-module.json", {
     "debug": "info"
   }).then(function (DataChannel) {
     var alice = new DataChannel('Alice'),
