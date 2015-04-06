@@ -234,6 +234,81 @@ module.exports = function (pc, dc, setup) {
     });
   });
 
+  it("early messages aren't lost", function (done) {
+    var alice, bob, aliceCandidates = [], aliceOffer;
+
+    alice = peercon();
+    bob = peercon();
+    bob.on('onicecandidate', function (msg) {
+      msg.candidate && alice.addIceCandidate(msg.candidate);
+    });
+
+    bob.on('ondatachannel', function (msg) {
+      // Wait 500 ms before actually constructing the DataChannel object, to
+      // ensure that the remote message has already arrived first.
+      // This is a regression test, to ensure that this message is not lost
+      // (https://github.com/freedomjs/freedom/issues/251).
+      setTimeout(function() {
+        var closed = false;
+        var bobChannel = datachan(msg.channel);
+        bobChannel.on('onmessage', function (msg) {
+          expect(msg.text).toEqual('message from alice');
+          expect(closed).toBe(false);
+        });
+        // Also verify that the onclose event is not received until after the
+        // message.
+        bobChannel.on('onclose', function (msg) {
+          closed = true;
+          bobChannel.close();
+          done();
+        });
+      }, 500);
+    });
+
+    var onError = function (e) { throw e; };
+
+    // We have to create a data channel because otherwise there is no
+    // audio, video, or data, so CreateOffer fails (at least in Firefox).
+    alice.on('onicecandidate', function (msg) {
+      if (!msg.candidate) {
+        bob.setRemoteDescription(aliceOffer).then(function () {
+          var last;
+          while (aliceCandidates.length) {
+            last = bob.addIceCandidate(aliceCandidates.shift())
+          }
+          return last;
+        }).then(function () {
+          return bob.createAnswer();
+        }).then(function (answer) {
+          return bob.setLocalDescription(answer).then(function () {return answer; });
+        }).then(function (answer) {
+          return alice.setRemoteDescription(answer);
+        }, function (err) {
+          console.error('RTC failed: ',err);
+        });
+      } else {
+        aliceCandidates.push(msg.candidate);
+      }
+    });
+
+    alice.createDataChannel('channel').then(function (id) {
+      alice.createOffer().then(function (offer) {
+        alice.setLocalDescription(offer);
+        aliceOffer = offer;
+      });
+
+      var aliceChannel = datachan(id);
+      aliceChannel.on('onopen', function () {
+        // Start the test.  Bob should see the message, followed by the close
+        // event.
+        aliceChannel.send('message from alice');
+        aliceChannel.close();
+      });
+    }, function (err) {
+      console.error('RTC failed: ',err);
+    });
+  });
+
   it("Signals 'onClose' when created with incorrect parameters", function (done) {
     var badPeer = peercon({
       iceServers: [

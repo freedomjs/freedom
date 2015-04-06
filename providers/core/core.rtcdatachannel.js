@@ -3,10 +3,25 @@
 
 var util = require('../../src/util');
 
+var eventNames = [
+  'onopen',
+  'onerror',
+  'onclose',
+  'onmessage'
+];
+
 var unAttachedChannels = {};
+var pendingEvents = {};
 var allocateChannel = function (dataChannel) {
   var id = util.getId();
   unAttachedChannels[id] = dataChannel;
+  pendingEvents[id] = [];
+  eventNames.forEach(function(eventName) {
+    // This listener will be overridden (re-set) after the constructor runs.
+    dataChannel[eventName] = function(event) {
+      pendingEvents[id].push(event);
+    };
+  });
   return id;
 };
 
@@ -23,23 +38,33 @@ var RTCDataChannelAdapter = function (cap, dispatchEvents, id) {
   this.channel = unAttachedChannels[id];
   delete unAttachedChannels[id];
 
-  this.events = [
-    'onopen',
-    'onerror',
-    'onclose',
-    'onmessage'
-  ];
-  this.manageEvents(true);
+  // After the constructor returns, and the caller has a chance to register
+  // event listeners, fire all pending events, and then ensure that all
+  // subsequent events are handled immediately.
+  setTimeout(function() {
+    this.drainPendingEvents(id);
+
+    // This function must not be called until after the pending events are
+    // drained, to ensure that messages are delivered in order.
+    this.manageEvents(true);
+  }.bind(this), 0);
+};
+
+RTCDataChannelAdapter.prototype.drainPendingEvents = function(id) {
+  pendingEvents[id].forEach(function(event) {
+    this['on' + event.type](event);
+  }.bind(this));
+  delete pendingEvents[id];
 };
 
 // Attach or detach listeners for events against the connection.
 RTCDataChannelAdapter.prototype.manageEvents = function (attach) {
-  this.events.forEach(function (event) {
+  eventNames.forEach(function (eventName) {
     if (attach) {
-      this[event] = this[event].bind(this);
-      this.channel[event] = this[event];
+      this[eventName] = this[eventName].bind(this);
+      this.channel[eventName] = this[eventName];
     } else {
-      delete this.channel[event];
+      delete this.channel[eventName];
     }
   }.bind(this));
 };
