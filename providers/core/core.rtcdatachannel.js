@@ -14,11 +14,17 @@ var unAttachedChannels = {};
 var pendingEvents = {};
 var allocateChannel = function (dataChannel) {
   var id = util.getId();
+  console.log('assigning id ' + id + ' to data channel ' + dataChannel.label);
+  console.log('allocating channel in the ' + dataChannel.readyState + ' state for ' + id);
+  if (id in unAttachedChannels || id in pendingEvents) {
+    throw new Error('Non-unique GUID: ' + id);
+  }
   unAttachedChannels[id] = dataChannel;
   pendingEvents[id] = [];
   eventNames.forEach(function(eventName) {
     // This listener will be overridden (re-set) after the constructor runs.
     dataChannel[eventName] = function(event) {
+      console.log('Storing pending ' + event.type + ' event for ' + id);
       pendingEvents[id].push(event);
     };
   });
@@ -34,6 +40,7 @@ var RTCDataChannelAdapter = function (cap, dispatchEvents, id) {
     id = provider.createDataChannel();
     provider.close();
   }
+  this.id = id;
 
   this.channel = unAttachedChannels[id];
   delete unAttachedChannels[id];
@@ -46,26 +53,23 @@ var RTCDataChannelAdapter = function (cap, dispatchEvents, id) {
 
     // This function must not be called until after the pending events are
     // drained, to ensure that messages are delivered in order.
-    this.manageEvents(true);
+    this.manageEvents();
   }.bind(this), 0);
 };
 
 RTCDataChannelAdapter.prototype.drainPendingEvents = function(id) {
   pendingEvents[id].forEach(function(event) {
+    console.log('Draining ' + event.type + ' for ' + id);
     this['on' + event.type](event);
   }.bind(this));
   delete pendingEvents[id];
 };
 
 // Attach or detach listeners for events against the connection.
-RTCDataChannelAdapter.prototype.manageEvents = function (attach) {
+RTCDataChannelAdapter.prototype.manageEvents = function () {
   eventNames.forEach(function (eventName) {
-    if (attach) {
-      this[eventName] = this[eventName].bind(this);
-      this.channel[eventName] = this[eventName];
-    } else {
-      delete this.channel[eventName];
-    }
+    this[eventName] = this[eventName].bind(this);
+    this.channel[eventName] = this[eventName];
   }.bind(this));
 };
 
@@ -114,6 +118,8 @@ RTCDataChannelAdapter.prototype.setBinaryType = function (binaryType, callback) 
 };
 
 RTCDataChannelAdapter.prototype.send = function (text, callback) {
+  console.log('adapter send start for ' + this.id);
+  console.log('sending in the ' + this.channel.readyState + ' state');
   this.channel.send(text);
   callback();
 };
@@ -124,12 +130,14 @@ RTCDataChannelAdapter.prototype.sendBuffer = function (buffer, callback) {
 };
 
 RTCDataChannelAdapter.prototype.close = function (callback) {
+  console.log('adapter close start for ' + this.id);
+  console.log('closing in the ' + this.channel.readyState + ' state');
   if (!this.channel) {
     return callback();
   }
-  this.manageEvents(false);
   this.channel.close();
   callback();
+  console.log('adapter close end for ' + this.id);
 };
 
 RTCDataChannelAdapter.prototype.onopen = function (event) {
@@ -144,6 +152,7 @@ RTCDataChannelAdapter.prototype.onerror = function (event) {
 };
 
 RTCDataChannelAdapter.prototype.onclose = function (event) {
+  console.log('Dispatching onclose for ' + this.id);
   this.dispatchEvent('onclose', event.message);
 };
 

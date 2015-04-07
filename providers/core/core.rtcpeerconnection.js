@@ -163,6 +163,7 @@ RTCPeerConnectionAdapter.prototype.close = function () {
 
 RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChannelDict) {
   var id = DataChannel.allocate(this.connection.createDataChannel(label, dataChannelDict));
+  console.log('createDataChannel allocated id ' + id);
   return PromiseCompat.resolve(id);
 };
 
@@ -174,6 +175,7 @@ RTCPeerConnectionAdapter.prototype.getStats = function (selector) {
 
 RTCPeerConnectionAdapter.prototype.ondatachannel = function (event) {
   var id = DataChannel.allocate(event.channel);
+  console.log('ondatachannel allocated id ' + id);
   this.dispatchEvent('ondatachannel', {channel: id});
 };
 

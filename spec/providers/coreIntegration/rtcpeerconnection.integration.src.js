@@ -244,23 +244,28 @@ module.exports = function (pc, dc, setup) {
     });
 
     bob.on('ondatachannel', function (msg) {
+      console.log("Bob got datachannel");
       // Wait 500 ms before actually constructing the DataChannel object, to
       // ensure that the remote message has already arrived first.
       // This is a regression test, to ensure that this message is not lost
       // (https://github.com/freedomjs/freedom/issues/251).
       setTimeout(function() {
         var closed = false;
+        console.log("Bob constructing datachannel");
         var bobChannel = datachan(msg.channel);
         bobChannel.on('onmessage', function (msg) {
+          console.log("Bob got onmessage");
           expect(msg.text).toEqual('message from alice');
           expect(closed).toBe(false);
         });
         // Also verify that the onclose event is not received until after the
         // message.
         bobChannel.on('onclose', function (msg) {
+          console.log("Bob got onclose");
           closed = true;
           bobChannel.close();
           done();
+          console.log("early messages aren't lost is done");
         });
       }, 500);
     });
@@ -291,7 +296,7 @@ module.exports = function (pc, dc, setup) {
       }
     });
 
-    alice.createDataChannel('channel').then(function (id) {
+    alice.createDataChannel('early message test channel').then(function (id) {
       alice.createOffer().then(function (offer) {
         alice.setLocalDescription(offer);
         aliceOffer = offer;
