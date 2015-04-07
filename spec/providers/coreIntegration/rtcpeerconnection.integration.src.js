@@ -254,13 +254,13 @@ module.exports = function (pc, dc, setup) {
         bobChannel.on('onmessage', function (msg) {
           expect(msg.text).toEqual('message from alice');
           expect(closed).toBe(false);
+          done();
         });
         // Also verify that the onclose event is not received until after the
         // message.
         bobChannel.on('onclose', function (msg) {
           closed = true;
           bobChannel.close();
-          done();
         });
       }, 500);
     });
