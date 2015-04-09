@@ -253,14 +253,7 @@ module.exports = function (pc, dc, setup) {
         var bobChannel = datachan(msg.channel);
         bobChannel.on('onmessage', function (msg) {
           expect(msg.text).toEqual('message from alice');
-          expect(closed).toBe(false);
           done();
-        });
-        // Also verify that the onclose event is not received until after the
-        // message.
-        bobChannel.on('onclose', function (msg) {
-          closed = true;
-          bobChannel.close();
         });
       }, 500);
     });
@@ -299,10 +292,10 @@ module.exports = function (pc, dc, setup) {
 
       var aliceChannel = datachan(id);
       aliceChannel.on('onopen', function () {
-        // Start the test.  Bob should see the message, followed by the close
-        // event.
+        // Start the test.  Bob should see the message, even though he starts
+        // listening late.
         aliceChannel.send('message from alice');
-        aliceChannel.close();
+        // TODO: Once https://crbug.com/474688 is resolved, close the channel here.
       });
     }, function (err) {
       console.error('RTC failed: ',err);

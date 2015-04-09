@@ -19,13 +19,15 @@ var allocateChannel = function (dataChannel) {
   eventNames.forEach(function(eventName) {
     // This listener will be overridden (re-set) after the constructor runs.
     var handler = function(event) {
-      var currentHandler = dataChannel[eventName]
+      var currentHandler = dataChannel[eventName];
       if (currentHandler === handler) {
         pendingEvents[id].push(event);
       } else if (typeof currentHandler === 'function') {
         // If an event somehow runs on this event handler after it has been
         // replaced, forward that event to the new event handler.
         currentHandler(event);
+      } else {
+        throw new Error('No handler for ' + event.type + ' event');
       }
     };
     dataChannel[eventName] = handler;
