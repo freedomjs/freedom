@@ -44,7 +44,7 @@ function start(LogClient) {
 
 // Start freedom with a custom logger defined.
 window.onload = function () {
-  freedom('manifest.json', {
+  freedom('freedom-module.json', {
     logger: 'logger.json'
   }).then(start);
 };

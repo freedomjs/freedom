@@ -11,7 +11,7 @@ notifications:
 before_install:
   - "export DISPLAY=:10.0"
   - "Xvfb :10 -screen 0 1280x1024x24 &"
-  - "x11vnc -forever -create &"
+  - "x11vnc -nopw -forever -create &"
 install:
   - "google-chrome --version"
   - "firefox -v"
