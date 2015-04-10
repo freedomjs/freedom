@@ -49,6 +49,13 @@
       document.getElementById('err').addEventListener('click', function() {
 		channel.emit('mkerr');
       }, true);
+
+      document.getElementById('req').addEventListener('keyup', function(k) {
+        // Submit on 'enter' key.
+        if (k.keyCode === 13 || k.keyCode === 10) {
+          channel.emit('req', document.getElementById('req').value);
+        }
+      }, true);
     }
 
     freedom('manifest.json', {"debug": "debug"}).then(start);
@@ -61,8 +68,8 @@
 	<button id='create'>Create</button>
 	<button id='peer'>Peer</button>
 	<button id='err'>Throw Exception</button>
+  <input type='text' id='req' value='./friend.json' />
 	<pre id='log'></pre>
   </header>
 </body>
 </html>
-

@@ -22,10 +22,11 @@ var ModuleInternal = function (manager) {
   this.api = this.manager.api;
   this.manifests = {};
   this.providers = {};
-  
+
   this.id = 'ModuleInternal';
   this.pendingPorts = 0;
   this.requests = {};
+  this.unboundPorts = {};
 
   util.handleEvents(this);
 };
@@ -119,6 +120,23 @@ ModuleInternal.prototype.generateEnv = function (manifest, items) {
 };
 
 /**
+ * Register an unused channel ID for callback, and once information
+ * about the channel is known, call the handler with that information.
+ * @method registerId
+ * @param {String} api The preferred API to use for the new channel.
+ * @param {Function} callback Function to call once channel ready
+ * @returns {String} The allocated channel name.
+ */
+ModuleInternal.prototype.registerId = function (api, callback) {
+  var id = util.getId();
+  this.unboundPorts[id] = {
+    name: api,
+    callback: callback
+  };
+  return id;
+};
+
+/**
  * Attach a proxy to the externally visible namespace.
  * @method attach
  * @param {String} name The name of the proxy.
@@ -129,7 +147,7 @@ ModuleInternal.prototype.generateEnv = function (manifest, items) {
  */
 ModuleInternal.prototype.attach = function (name, provides, proxy) {
   var exp = this.config.global.freedom;
-  
+
   if (provides) {
     this.providers[name] = proxy.port;
   }
@@ -145,6 +163,8 @@ ModuleInternal.prototype.attach = function (name, provides, proxy) {
   if (this.pendingPorts === 0) {
     this.emit('start');
   }
+
+  return exp[name];
 };
 
 /**
@@ -196,7 +216,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
     }
     this.pendingPorts += 1;
   }
-  
+
   // Allow resolution of files by parent.
   this.manager.resource.addResolver(function (manifest, url, resolve) {
     var id = util.getId();
@@ -215,7 +235,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
   core = this.api.get('core').definition;
   provider = new Provider(core, this.debug);
   this.manager.getCore(function (CoreProv) {
-    new CoreProv(this.manager).setId(this.lineage);
+    new CoreProv(this.manager).setId(this.lineage, this);
     provider.getInterface().provideAsynchronous(CoreProv);
   }.bind(this));
 
@@ -225,7 +245,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
     name: 'core',
     to: provider
   });
-  
+
   this.binder.getExternal(provider, 'default', {
     name: 'core',
     definition: core
@@ -259,6 +279,16 @@ ModuleInternal.prototype.updateManifest = function (name, manifest) {
 
   if (exp && exp[name]) {
     exp[name].manifest = manifest;
+  // Handle require() dependency resolution.
+  } else if (this.unboundPorts[name]) {
+    this.binder.getExternal(this.port, name,
+        this.binder.getAPI(manifest, this.api, this.unboundPorts[name].api))
+      .then(
+        this.attach.bind(this, name, false)
+      ).then(function(proxy) {
+        this.unboundPorts[name].callback(proxy);
+        delete this.unboundPorts[name];
+      }.bind(this));
   } else {
     this.manifests[name] = manifest;
   }
@@ -272,7 +302,7 @@ ModuleInternal.prototype.updateManifest = function (name, manifest) {
  */
 ModuleInternal.prototype.mapProxies = function (manifest) {
   var proxies = [], seen = ['core'], i, obj;
-  
+
   if (manifest.permissions) {
     for (i = 0; i < manifest.permissions.length; i += 1) {
       obj = {
@@ -286,7 +316,7 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
       }
     }
   }
-  
+
   if (manifest.dependencies) {
     util.eachProp(manifest.dependencies, function (desc, name) {
       obj = {
@@ -302,7 +332,7 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
       }
     }.bind(this));
   }
-  
+
   if (manifest.provides) {
     for (i = 0; i < manifest.provides.length; i += 1) {
       obj = {

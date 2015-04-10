@@ -7,6 +7,7 @@
     }},
     "bindChannel": {"type": "method", "value": ["string"], "ret": "proxy"},
     "getId": {"type": "method", "value": [], "ret": ["array", "string"]},
-    "getLogger": {"type": "method", "value": ["string"], "ret": "proxy"}
+    "getLogger": {"type": "method", "value": ["string"], "ret": "proxy"},
+    "require": {"type": "method", "value": ["string", "string"], "ret": "proxy"}
   }
 }

@@ -105,4 +105,35 @@ ProxyBinder.prototype.bindDefault = function (port, api, manifest, internal) {
   );
 };
 
+/**
+ * Get the definition for a proxy given a requested API and the manifest of
+ * the module.
+ * @method getAPI
+ * @param {Object} manifest The manifest for the proxy.
+ * @param {Api} apiProvider The registry of known APIs.
+ * @param {String} api The Requested API.
+ * @returns {Object} definition The definition to use for calls to getExternal.
+ */
+ProxyBinder.prototype.getAPI = function (manifest, apiProvider, api) {
+  'use strict';
+  if (manifest.api[api]) {
+    return {
+      name: api,
+      definition: manifest.api[api]
+    };
+  } else if (manifest['default']) {
+    var def = apiProvider.get(manifest['default']);
+    if (!def && manifest.api && manifest.api[manifest['default']]) {
+      return {
+        name: manifest['default'],
+        definition: manifest.api[manifest['default']]
+      };
+    }
+    return def;
+  } else {
+    return false;
+  }
+};
+
+
 module.exports = ProxyBinder;

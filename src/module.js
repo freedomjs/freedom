@@ -214,7 +214,7 @@ Module.prototype.start = function () {
       request: 'delegate',
       flow: 'core'
     });
-    
+
     // Tell the container to instantiate the counterpart to this external view.
     this.port.onMessage('control', {
       type: 'Environment Configuration',
@@ -281,7 +281,8 @@ Module.prototype.emitMessage = function (name, message) {
         this.once('core', this.emitMessage.bind(this, name, message));
         return;
       }
-      if (message.message.type === 'register') {
+      if (message.message.type === 'register' ||
+          message.message.type === 'require') {
         message.message.reply = this.port.onMessage.bind(this.port, 'control');
         this.externalPortMap[message.message.id] = false;
       }
@@ -327,6 +328,46 @@ Module.prototype.emitMessage = function (name, message) {
 };
 
 /**
+ * Create a dynamic dependency on another module.
+ * @method require
+ * @param {String} name The name of the dependency.
+ * @param {String} manifest The URL of the dependency to add.
+ */
+Module.prototype.require = function (name, manifest) {
+  this.dependantChannels.push(name);
+  this.addDependency(manifest, name);
+};
+
+/**
+ * Add a dependency to the module's dependency tree
+ * @method addDependency
+ * @param {String} url The manifest URL of the dependency
+ * @param {String} name The exposed name of the module.
+ * @returns {Module} The created dependent module.
+ * @private
+ */
+Module.prototype.addDependency = function (url, name) {
+  return this.resource.get(this.manifestId, url)
+    .then(function (url) {
+      return this.policy.get(this.lineage, url);
+    }.bind(this))
+    .then(function (dep) {
+      this.updateEnv(name, dep.manifest);
+      this.emit(this.controlChannel, {
+        type: 'Link to ' + name,
+        request: 'link',
+        name: name,
+        overrideDest: name + '.' + this.id,
+        to: dep
+      });
+      return dep;
+    }.bind(this))
+    .catch(function (err) {
+      this.debug.warn('failed to load dep: ', name, err);
+    }.bind(this));
+};
+
+/**
  * Request the external routes used by this module.
  * @method loadLinks
  * @private
@@ -358,22 +399,7 @@ Module.prototype.loadLinks = function () {
         channels.push(name);
         this.dependantChannels.push(name);
       }
-      this.resource.get(this.manifestId, desc.url).then(function (url) {
-        this.policy.get(this.lineage, url).then(function (dep) {
-          this.updateEnv(name, dep.manifest);
-          this.emit(this.controlChannel, {
-            type: 'Link to ' + name,
-            request: 'link',
-            name: name,
-            overrideDest: name + '.' + this.id,
-            to: dep
-          });
-        }.bind(this), function (err) {
-          this.debug.warn('failed to load dep: ', name, err);
-        }.bind(this));
-      }.bind(this), function (err) {
-        this.debug.warn('failed to load dep: ', name, err);
-      }.bind(this));
+      this.addDependency(desc.url, name);
     }.bind(this));
   }
   // Note that messages can be synchronous, so some ports may already be bound.
@@ -397,7 +423,7 @@ Module.prototype.updateEnv = function (dep, manifest) {
     this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
     return;
   }
-  
+
   var metadata;
 
   // Decide if/what other properties should be exported.
@@ -408,7 +434,7 @@ Module.prototype.updateEnv = function (dep, manifest) {
     description: manifest.description,
     api: manifest.api
   };
-  
+
   this.port.onMessage(this.modInternal, {
     type: 'manifest',
     name: dep,

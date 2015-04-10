@@ -26,12 +26,12 @@ var Manager = function (hub, resource, api) {
 
   this.delegate = null;
   this.toDelegate = {};
-  
+
   this.hub.on('config', function (config) {
     util.mixin(this.config, config);
     this.emit('config');
   }.bind(this));
-  
+
   util.handleEvents(this);
   this.hub.register(this);
 };
@@ -165,7 +165,7 @@ Manager.prototype.setup = function (port) {
   if (port.lineage) {
     this.emit('moduleAdd', {id: port.id, lineage: port.lineage});
   }
-  
+
   this.hub.onMessage(flow, {
     type: 'setup',
     channel: reverse,
@@ -232,7 +232,7 @@ Manager.prototype.createLink = function (port, name, destination, destName,
       this.createLink.bind(this, port, name, destination, destName));
     return;
   }
-  
+
   if (!this.controlFlows[port.id]) {
     this.debug.warn('Unwilling to link from non-registered source.');
     return;
