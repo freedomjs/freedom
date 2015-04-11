@@ -15,6 +15,12 @@ var Debug = function (logger) {
 };
 
 /**
+ * The supported log levels for debugging.
+ * @static
+ */
+Debug.LEVELS = ['debug', 'info', 'log', 'warn', 'error'];
+
+/**
  * Provide a textual description of this port.
  * @method toString
  * @return {String} the textual description.
@@ -177,13 +183,11 @@ Debug.prototype.getLogger = function (name) {
     this.format(severity, source, args);
   },
     logger = {
-      freedom: true,
-      debug: log.bind(this, 'debug', name),
-      info: log.bind(this, 'info', name),
-      log: log.bind(this, 'log', name),
-      warn: log.bind(this, 'warn', name),
-      error: log.bind(this, 'error', name)
+      freedom: true
     };
+  Debug.LEVELS.forEach(function (level) {
+    logger[level] = log.bind(this, level, name);
+  }.bind(this));
   return logger;
 };
 
@@ -199,7 +203,7 @@ Debug.prototype.getLoggingShim = function (asyncMethod) {
   return function getLogggerSync(name) {
     var toResolve = asyncMethod(name),
       buffer = [],
-      methods = ['debug', 'info', 'log', 'warn', 'error'],
+      methods = Debug.LEVELS,
       backing = null,
       ret = {};
     toResolve.then(function (logger) {
