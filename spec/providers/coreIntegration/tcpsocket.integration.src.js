@@ -46,7 +46,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Gets info on client & server sockets", function (done) {
+  xit("Gets info on client & server sockets", function (done) {
     var cspy = jasmine.createSpy('client'),
       client,
       onconnect = function () {
@@ -72,7 +72,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Sends from Client to Server", function (done) {
+  xit("Sends from Client to Server", function (done) {
     var cspy = jasmine.createSpy('client'),
         client,
         receiver,
@@ -113,26 +113,32 @@ module.exports = function (provider, setup) {
         receiver;
 
     onDispatch = function (evt, msg) {
+      console.log("SPOT 3");
       expect(evt).toEqual('onDisconnect');
       expect(onConnectionReceived).toEqual(true);
       client.getInfo(function (info) {
+        console.log("SPOT 4");
         expect(info.connected).toEqual(false);
       });
+      console.log("SPOT 5");
       socket.close(done);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      console.log("SPOT 2");
       onConnectionReceived = true;
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
-      client.close(function () {});
+      client.close(function () { console.log("SPOT 2.5"); });
     });
     socket.listen('127.0.0.1', 9981, function () {
+      console.log("SPOT 1");
       client = new provider.provider(undefined, cspy);
-      client.connect('127.0.0.1', 9981, function () { });
+      console.log("SPOT 1.25");
+      client.connect('127.0.0.1', 9981, function () { console.log("SPOT 1.5"); });
     });
   });
 
-  it("Pauses and resumes", function (done) {
+  xit("Pauses and resumes", function (done) {
     // TODO: this test breaks in node (runs code after done())
     socket.connect('www.google.com', 80, function () {
       var paused = false;
@@ -175,7 +181,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Secures a socket", function (done) {
+  xit("Secures a socket", function (done) {
     // TODO - prepareSecure test, if Chrome isn't fixing that soon
     socket.connect('www.google.com', 443, function () {
       socket.secure(function() {
@@ -227,7 +233,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Socket reusing id of closed socket is also closed", function(done) {
+  xit("Socket reusing id of closed socket is also closed", function(done) {
     var cspy = jasmine.createSpy('client'),
         client,
         socketCopy;
