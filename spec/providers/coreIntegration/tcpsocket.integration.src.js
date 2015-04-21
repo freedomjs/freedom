@@ -1,7 +1,7 @@
 /*jslint node:true,bitwise:true*/
 /*globals Uint8Array, beforeEach, afterEach, it, expect, jasmine */
 var testUtil = require('../../util');
-var PromiseCompat = require('es6-promise').Promise
+var PromiseCompat = require('es6-promise').Promise;
 
 module.exports = function (provider, setup) {
   'use strict';
@@ -160,8 +160,8 @@ module.exports = function (provider, setup) {
         // This URL is selected to be a file large enough to generate
         // multiple onData events.
         socket.write(
-            rawStringToBuffer('GET /images/srpr/logo11w.png HTTP/1.0\n\n'),
-            function (okay) {});
+          rawStringToBuffer('GET /images/srpr/logo11w.png HTTP/1.0\n\n'),
+          function (okay) {});
 
         // Wait a second before unpausing.  Data received in this second
         // will fail the expectation that paused is false in gotMessageAsync.
