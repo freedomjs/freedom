@@ -46,7 +46,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  xit("Gets info on client & server sockets", function (done) {
+  it("Gets info on client & server sockets", function (done) {
     var cspy = jasmine.createSpy('client'),
       client,
       onconnect = function () {
@@ -72,7 +72,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  xit("Sends from Client to Server", function (done) {
+  it("Sends from Client to Server", function (done) {
     var cspy = jasmine.createSpy('client'),
         client,
         receiver,
@@ -108,37 +108,31 @@ module.exports = function (provider, setup) {
   it("Fires onConnection and onDisconnect events", function (done) {
     var cspy = jasmine.createSpy('client'),
         client,
-        onConnectionReceived,
+        receiver,
         onDispatch,
-        receiver;
+        onConnectionReceived;
 
     onDispatch = function (evt, msg) {
-      console.log("SPOT 3");
       expect(evt).toEqual('onDisconnect');
       expect(onConnectionReceived).toEqual(true);
       client.getInfo(function (info) {
-        console.log("SPOT 4");
         expect(info.connected).toEqual(false);
       });
-      console.log("SPOT 5");
       socket.close(done);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
-      console.log("SPOT 2");
       onConnectionReceived = true;
       expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
-      client.close(function () { console.log("SPOT 2.5"); });
+      client.close(function () { });
     });
     socket.listen('127.0.0.1', 9981, function () {
-      console.log("SPOT 1");
       client = new provider.provider(undefined, cspy);
-      console.log("SPOT 1.25");
-      client.connect('127.0.0.1', 9981, function () { console.log("SPOT 1.5"); });
+      client.connect('127.0.0.1', 9981, function () { });
     });
   });
 
-  xit("Pauses and resumes", function (done) {
+  it("Pauses and resumes", function (done) {
     // TODO: this test breaks in node (runs code after done())
     socket.connect('www.google.com', 80, function () {
       var paused = false;
@@ -149,7 +143,7 @@ module.exports = function (provider, setup) {
           return;
         }
 
-        // One onData is allowed during pause due to https://crbug.com/360026.
+        // One onData is allowed during pause due to https://crbug.com/360026
         ++messageCount;
         if (paused && messageCount === 1) {
           return;
@@ -181,7 +175,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  xit("Secures a socket", function (done) {
+  it("Secures a socket", function (done) {
     // TODO - prepareSecure test, if Chrome isn't fixing that soon
     socket.connect('www.google.com', 443, function () {
       socket.secure(function() {
@@ -233,7 +227,7 @@ module.exports = function (provider, setup) {
     });
   });
 
-  xit("Socket reusing id of closed socket is also closed", function(done) {
+  it("Socket reusing id of closed socket is also closed", function(done) {
     var cspy = jasmine.createSpy('client'),
         client,
         socketCopy;
