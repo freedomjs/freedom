@@ -1,0 +1,6 @@
+{
+  "name": "core.crypto",
+  "api": {
+    "getRandomBytes": {"type": "method", "value": ["number"], "ret": "buffer"}
+  }
+}
