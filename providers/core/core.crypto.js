@@ -1,4 +1,4 @@
-/*globals console */
+/*globals console, crypto */
 /*jslint indent:2, node:true */
 var util = require('../../src/util');
 
@@ -11,6 +11,7 @@ var util = require('../../src/util');
  * @param {module:Module} cap The module creating this provider.
  */
 var Core_crypto = function(cap, dispatchEvent) {
+  'use strict';
   this.dispatchEvent = dispatchEvent;
   util.handleEvents(this);
 };
@@ -22,6 +23,7 @@ var Core_crypto = function(cap, dispatchEvent) {
  * @method send
  */
  Core_crypto.prototype.getRandomBytes = function(number, continuation) {
+   'use strict';
    var buffer = new Uint8Array(number);
    crypto.getRandomValues(buffer);
    continuation(buffer.buffer);
