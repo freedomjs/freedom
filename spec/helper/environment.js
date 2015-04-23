@@ -22,7 +22,7 @@ EnvironmentTest.prototype.testCrypto = function () {
     }
 
     if (zeros > 50) {
-      reject("Crypto doens't seem to give real random values");
+      reject("Crypto doesn't seem to give real random values");
     } else {
       resolve(true);
     }
