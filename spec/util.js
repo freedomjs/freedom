@@ -1,3 +1,6 @@
+/* jslint sloppy:true */
+/* globals require, exports, spyOn, global */
+
 var Api = require('../src/api');
 var ApiInterface = require('../src/proxy/apiInterface');
 var Bundle = require('../src/bundle');
@@ -122,7 +125,7 @@ exports.setSpecBase = function(base, resolvers) {
   if (resolvers) {
     extraResolve = resolvers;
   }
-}
+};
 
 exports.getResolvers = function() {
   var resolvers = [];
@@ -149,13 +152,13 @@ exports.getResolvers = function() {
   resolvers.push({'proto':'null', 'retriever': rsrc.xhrRetriever});
   extraResolve(resolvers);
   return resolvers;
-}
+};
 
 exports.setupResolvers = function() { 
   var rsrc = new Resource();
   rsrc.register(exports.getResolvers());
   return rsrc;
-}
+};
 
 var activeContexts = [];
 exports.cleanupIframes = function() {
@@ -172,7 +175,7 @@ exports.cleanupIframes = function() {
   while (frames.length > 0) {
     frames[0].parentNode.removeChild(frames[0]);
   }
-}
+};
 
 var coreProviders;
 exports.setCoreProviders = function(providers) {
@@ -220,7 +223,7 @@ exports.setupModule = function(manifest_url, options) {
     activeContexts.push(c);
   });
   return freedom;
-}
+};
 
 exports.directProviderFor = function (mod, api) {
   var debug = new Debug();
@@ -257,7 +260,7 @@ exports.providerFor = function(module, api) {
     };
     return provider;
   });
-}
+};
 
 function ProviderHelper(inFreedom) {
   this.callId = 0;
@@ -310,7 +313,7 @@ ProviderHelper.prototype.err = function(obj) {
     this.errcallbacks[obj.id](obj.data);
     delete this.errcallbacks[obj.id];
   }
-}
+};
 
 ProviderHelper.prototype._on = function(eventInfo) {
   var provider = eventInfo.provider;
