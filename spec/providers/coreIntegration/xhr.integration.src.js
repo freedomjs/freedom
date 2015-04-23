@@ -33,7 +33,7 @@ module.exports = function (provider, setup) {
 
   it("getReadyState properly returns state", function(done) {
     xhr.getReadyState().then(function(readyState) {
-      expect([0, 1]).toContain(getReadyState);  // xhr2 allows unsent or open
+      expect([0, 1]).toContain(readyState);  // xhr2 allows unsent or open
       xhr.open("GET", "https://api.github.com/", true);
       return xhr.getReadyState();
     }).then(function(readyState) {
