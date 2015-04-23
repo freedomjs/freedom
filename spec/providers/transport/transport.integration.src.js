@@ -60,7 +60,7 @@ module.exports = function(provider_url, setup) {
     });
   });
 
-  xit("sends a small amount of data.", function(done) {
+  it("sends a small amount of data.", function(done) {
     var testString = "Hi";
     var ids = {};
     function doSend (chanId1, chanId2) {

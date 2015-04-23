@@ -32,7 +32,7 @@ describe("integration: storebuffer.indexeddb.json", require("./storage/storage.i
 **/
 
 // Transport
-describe("integration: transport.webrtc.json",
+xdescribe("integration: transport.webrtc.json",
     require("./transport/transport.integration.src").bind(this, "/providers/transport/webrtc/transport.webrtc.json", setup));
 
 // environment
