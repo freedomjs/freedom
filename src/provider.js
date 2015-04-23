@@ -160,8 +160,8 @@ Provider.prototype.getInterface = function () {
   if (this.iface) {
     return this.iface;
   } else {
-    var sanityCheck = function (prov) {
-      if (!prov || typeof prov !== "function") {
+    var sanityCheck = function (provider) {
+      if (typeof provider !== "function") {
         throw new Error("Provider " + this.toString() +
             " needs to be implemented by a function.");
       }

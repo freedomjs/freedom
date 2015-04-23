@@ -369,7 +369,7 @@ Module.prototype.addDependency = function (url, name) {
       return dep;
     }.bind(this))
     .catch(function (err) {
-      this.debug.warn('failed to load dep: ', name, err);
+      this.debug.warn(this.toString() + ' failed to load dep: ', name, err);
       throw err;
     }.bind(this));
 };
@@ -406,6 +406,7 @@ Module.prototype.loadLinks = function () {
         channels.push(name);
         this.dependantChannels.push(name);
       }
+
       this.addDependency(desc.url, name);
     }.bind(this));
   }

@@ -3,7 +3,8 @@
  * This is the root module of freedom.js.
  * It runs in an isolated thread with its own namespace.
  * The root module has a special object 'freedom', which
- * is used to provide the interface defined in manifest.json
+ * is used to provide the interface defined in
+ * freedom-module.json
  **/
 var Counter = function (dispatchEvents, base) {
   'use strict';

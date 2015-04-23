@@ -254,14 +254,12 @@ ModuleInternal.prototype.loadLinks = function (items) {
   this.binder.getExternal(provider, 'default', {
     name: 'core',
     definition: core
-  }).then(
-    this.attach.bind(this, 'core', false)
-  );
+  }).then(function (core) {
+    core.external.getLoggerSync = this.debug.getLoggingShim(
+        core.external().getLogger);
+    this.attach('core', false, core);
+  }.bind(this));
 
-
-//  proxy = new Proxy(ApiInterface.bind({}, core), this.debug);
-//  this.manager.createLink(provider, 'default', proxy);
-//  this.attach('core', {port: pr, external: proxy});
 
   if (this.pendingPorts === 0) {
     this.emit('start');
