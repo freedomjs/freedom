@@ -72,12 +72,13 @@ module.exports = function (provider, setup) {
     });
   });
 
-  it("Sends from Client to Server", function (done) {
+  it("Sends from Client to Server, onConnection/onDisconnect", function (done) {
     var cspy = jasmine.createSpy('client'),
         client,
         receiver,
         onDispatch,
-        onconnect;
+        onConnect,
+        onConnectionReceived;
 
     onDispatch = function (evt, msg) {
       if (evt === 'onDisconnect') {
@@ -85,50 +86,26 @@ module.exports = function (provider, setup) {
       }
       expect(evt).toEqual('onData');
       expect(msg.data.byteLength).toEqual(10);
-      PromiseCompat.all([
-        socket.close(function () {}),
-        client.close(function () {}),
-        receiver.close(function () {}),
-        done()]);
+      PromiseCompat.all([ client.close(function () {}),
+                          socket.close(function () {} ) ]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
+      onConnectionReceived = true;
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
     });
-    onconnect = function () {
+    dispatch.gotMessageAsync('onDisconnect', [], function (msg) {
+      expect(onConnectionReceived).toEqual(true);
+      PromiseCompat.all([ receiver.close(function () {}),
+                          done() ]);
+    });
+    onConnect = function () {
       var buf = new Uint8Array(10);
       client.write(buf.buffer, function () {});
     };
     socket.listen('127.0.0.1', 9981, function () {
       client = new provider.provider(undefined, cspy);
-      client.connect('127.0.0.1', 9981, onconnect);
-    });
-  });
-
-  it("Fires onConnection and onDisconnect events", function (done) {
-    var cspy = jasmine.createSpy('client'),
-        client,
-        receiver,
-        onDispatch,
-        onConnectionReceived;
-
-    onDispatch = function (evt, msg) {
-      expect(evt).toEqual('onDisconnect');
-      expect(onConnectionReceived).toEqual(true);
-      client.getInfo(function (info) {
-        expect(info.connected).toEqual(false);
-      });
-      socket.close(done);
-    };
-    dispatch.gotMessageAsync('onConnection', [], function (msg) {
-      onConnectionReceived = true;
-      expect(msg.socket).toBeDefined();
-      receiver = new provider.provider(undefined, onDispatch, msg.socket);
-      client.close(function () { });
-    });
-    socket.listen('127.0.0.1', 9981, function () {
-      client = new provider.provider(undefined, cspy);
-      client.connect('127.0.0.1', 9981, function () { });
+      client.connect('127.0.0.1', 9981, onConnect);
     });
   });
 
