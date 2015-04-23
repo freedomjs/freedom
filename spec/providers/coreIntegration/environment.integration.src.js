@@ -34,8 +34,8 @@ module.exports = function (setup) {
   });
 
   it("exposes dynamic require functionality", function (done) {
-    moduleEnv.testRequire(true).then(function (ret) {
-      expect(ret).toEqual(true);
+    moduleEnv.testRequire('relative://spec/helper/friend.json').then(function (ret) {
+      expect(ret).toEqual('success');
       done();
     }, function (ret) {
       expect(ret).toEqual(true);
@@ -44,9 +44,9 @@ module.exports = function (setup) {
     });
   });
 
-  it("hanles dynamic require failures", function (done) {
-    moduleEnv.testRequire(false).then(function (ret) {
-      expect(ret).toEqual(true);
+  it("handles dynamic require failures", function (done) {
+    moduleEnv.testRequire('relative://spec/helper/friend.js').then(function (ret) {
+      expect(ret).toEqual('failed');
       done();
     }, function (ret) {
       expect(ret).toEqual(true);

@@ -29,25 +29,18 @@ EnvironmentTest.prototype.testCrypto = function () {
   });
 };
 
-EnvironmentTest.prototype.testRequire = function (tf) {
-  var url = 'relative://spec/helper/friend.json';
-  if (!tf) {
-    url = 'relative://spec/helper/friend.js';
-  }
+EnvironmentTest.prototype.testRequire = function (url) {
   return freedom.core().require(url).then(function (Dep) {
     if (!Dep) {
-      return false;
+      return 'then returned no object';
     }
     var d = new Dep();
     if (typeof d.on === 'function') {
-      return true;
+      return 'success';
     }
-    return false;
+    return 'method on not found';
   }, function (err) {
-    if (!tf) {
-      return true;
-    }
-    return false;
+    return 'failed';
   });
 };
 

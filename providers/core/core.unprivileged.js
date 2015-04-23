@@ -36,7 +36,7 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
       chan = this.getChannel(proxy);
   this.manager.setup(proxy);
 
-  if (this.manager.delegate && this.manager.toDelegate.core) {
+  if (this.isInModule()) {
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -153,7 +153,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       }
     });
     delete Core_unprivileged.unboundChannels[identifier];
-  } else if (this.manager.delegate && this.manager.toDelegate.core) {
+  } else if (this.isInModule()) {
     this.debug.info('delegating channel bind for an unknown ID:' + identifier);
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
@@ -188,8 +188,17 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
 };
 
 /**
+ * @method isInModule
+ * @private
+ * @returns {Boolean} Whether this class is running in a module.
+ */
+Core_unprivileged.prototype.isInModule = function () {
+  return (this.manager.delegate && this.manager.toDelegate.core);
+};
+
+/**
  * Require a dynamic dependency for your freedom module.
- * If new permissions are needed beyone what are already available to the
+ * If new permissions are needed beyond what are already available to the
  * freedom context, the user will need to approve of the requested permissions.
  * @method require
  * @param {String} manifest The URL of the manifest to require.
@@ -197,8 +206,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
  * @param {Function} callback The function to call with the dependency.
  */
 Core_unprivileged.prototype.require = function (manifest, api, callback) {
-  if (this.manager.delegate && this.manager.toDelegate.core &&
-      Core_unprivileged.moduleInternal) {
+  if (this.isInModule() && Core_unprivileged.moduleInternal) {
     // Register a callback with moduleInternal.
     // DependencyName is the name of the channel moduelInternal will allocate
     // callback will be called once a link to that channel is seen.

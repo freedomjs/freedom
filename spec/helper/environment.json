@@ -9,7 +9,7 @@
   "api": {
     "environment": {
       "testCrypto": {"type": "method", "value":[], "ret": "object"},
-      "testRequire": {"type": "method", "value":["boolean"], "ret": "object"}
+      "testRequire": {"type": "method", "value":["string"], "ret": "string"}
     }
   }
 }

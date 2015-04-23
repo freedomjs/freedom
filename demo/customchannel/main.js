@@ -80,7 +80,6 @@ page.on('req', function(url) {
   page.emit('message', 'requiring ' + url);
   core.require(url).then(function (Dependency) {
     var d = new Dependency();
-    var method = '';
     page.emit('message', 'has methods: ' + JSON.stringify(Object.keys(d)));
   }, function (err) {
     page.emit('message', 'Failed to load: ' + err);
