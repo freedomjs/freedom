@@ -85,7 +85,7 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
       expect(util.afterGet(ret)).toEqual("v-c");
       return client.keys();
     }).then(function(ret) {
-      expect(ret).toEqual([]);
+      expect(ret.length).toEqual(0);
       done();
     }).catch(errHandler);
   });

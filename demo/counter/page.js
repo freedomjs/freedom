@@ -21,7 +21,7 @@ var start = function(Counter) {
 window.onload = function() {
   // After loading freedom.js, the window is populated with a 'freedom'
   // object, which is used as a message passing channel to the root module
-  freedom('freedom-module.json', {
+  freedom('counter.json', {
     'debug': 'log'
   }).then(start);
 };
