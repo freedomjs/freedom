@@ -314,7 +314,7 @@ Module.prototype.emitMessage = function (name, message) {
   } else if (name === 'ModInternal' && message.type === 'resolve') {
     this.resource.get(this.manifestId, message.data).then(function (id, data) {
       this.port.onMessage(this.modInternal, {
-        type: 'resolve response',
+        type: 'resolve.response',
         id: id,
         data: data
       });
@@ -335,7 +335,13 @@ Module.prototype.emitMessage = function (name, message) {
  */
 Module.prototype.require = function (name, manifest) {
   this.dependantChannels.push(name);
-  this.addDependency(manifest, name);
+  this.addDependency(manifest, name).catch(function (err) {
+    this.port.onMessage(this.modInternal, {
+      type: 'require.failure',
+      id: name,
+      error: err.message
+    });
+  });
 };
 
 /**
@@ -364,6 +370,7 @@ Module.prototype.addDependency = function (url, name) {
     }.bind(this))
     .catch(function (err) {
       this.debug.warn('failed to load dep: ', name, err);
+      throw err;
     }.bind(this));
 };
 

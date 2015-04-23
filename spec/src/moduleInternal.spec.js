@@ -26,7 +26,7 @@ describe('ModuleInternal', function() {
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/');
     loc = path.substr(0, dir_idx) + '/';
-});
+  });
 
   it('configures an app environment', function() {
     var source = testUtil.createTestPort('test');
@@ -54,15 +54,15 @@ describe('ModuleInternal', function() {
 
   it('handles script loading and attachment', function(done) {
     global.document = document;
-    
+
     var script = btoa('fileIncluded = true; callback();');
 
     window.callback = function() {
       expect(fileIncluded).toEqual(true);
       delete callback;
       done();
-    } 
-    
+    }
+
     app.loadScripts(loc, ['data:text/javascript;base64,' + script, 'non_existing_file']);
   });
 
@@ -92,10 +92,11 @@ describe('ModuleInternal', function() {
                           'non_existing_file']);
   })
 
-  it('exposes dependency apis', function(done) {
+  iit('exposes dependency apis', function(done) {
     var source = testUtil.createTestPort('test');
     manager.setup(source);
     manager.createLink(source, 'default', app, 'default');
+
     source.on('onMessage', function(msg) {
       // Dependencies will be requested via 'createLink' messages. resolve those.
       if (msg.channel && msg.type === 'createLink') {
@@ -104,7 +105,8 @@ describe('ModuleInternal', function() {
           channel: msg.reverse
         });
       } else if (msg.type === 'resolve') {
-        hub.onMessage(source.messages[1][1].channel, {
+        app.onMessage('default', {
+          type: 'resolve.response',
           id: msg.id,
           data: 'spec/' + msg.data
         });

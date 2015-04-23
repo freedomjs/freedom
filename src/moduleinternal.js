@@ -62,9 +62,14 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
         message.manifest.app.script)).then(null, function (err) {
       this.debug.error('Could not set up module ' + this.appId + ': ', err);
     }.bind(this));
-  } else if (flow === 'default' && this.requests[message.id]) {
+  } else if (flow === 'default' && message.type === 'resolve.response' &&
+             this.requests[message.id]) {
     this.requests[message.id](message.data);
     delete this.requests[message.id];
+  } else if (flow === 'default' && message.type === 'require.failure' &&
+             this.unboundPorts[message.id]) {
+    this.unboundPorts[message.id].callback(undefined, message.error);
+    delete this.unboundPorts[message.id];
   } else if (flow === 'default' && message.type === 'manifest') {
     this.emit('manifest', message);
     this.updateManifest(message.name, message.manifest);
