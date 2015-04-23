@@ -37,14 +37,18 @@ function start(LogClient) {
     if (evt.keyCode === 13) {
       var text = input.value;
       input.value = "";
-      logClient.emit('warn', text);
+      if (document.getElementById('msg-sync').checked) {
+        logClient.emit('warnSync', text);
+      } else {
+        logClient.emit('warn', text);
+      }
     }
   };
 }
 
 // Start freedom with a custom logger defined.
 window.onload = function () {
-  freedom('freedom-module.json', {
+  freedom('logger-client.json', {
     logger: 'logger.json'
   }).then(start);
 };

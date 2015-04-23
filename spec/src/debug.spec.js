@@ -1,4 +1,5 @@
 var Debug = require('../../src/debug.js');
+var PromiseCompat = require('es6-promise').Promise;
 
 describe("Debug", function() {
   var debug, activeLogger, onLogger;
@@ -59,5 +60,32 @@ describe("Debug", function() {
     };
 
     debug.print(msg);
-});
+  });
+
+  it("Exports a synchronous logger", function (done) {
+    var resolve;
+    var promise = new PromiseCompat(function (r) {resolve = r;});
+    var syncLogger = debug.getLoggingShim(function (name) {
+      expect(name).toEqual('my Name');
+      return promise;
+    });
+    var logger = syncLogger('my Name');
+    logger.log('log 1');
+    promise.then(function () {
+      logger.warn('log 2');
+    });
+
+    var loggedItem1 = false;
+    resolve({
+      log: function(item) {
+        expect(item).toEqual('log 1');
+        loggedItem1 = true;
+      },
+      warn: function(item) {
+        expect(item).toEqual('log 2');
+        expect(loggedItem1).toEqual(true);
+        done();
+      }
+    });
+  });
 });

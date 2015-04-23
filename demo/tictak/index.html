@@ -12,7 +12,7 @@
     var start = function(TicTakToe) {
       var tictak = new TicTakToe();
 
-      // These events are defined in the 'board' API in freedom-module.json,
+      // These events are defined in the 'board' API in tictak.json,
       // and sent in main.js by calling ```dispatchEvent('stats', value);```
       tictak.on('stats', function(stats) {
         var win = 0, lose = 0;
@@ -39,7 +39,7 @@
       }
     };
 
-    freedom('freedom-module.json').then(start);
+    freedom('tictak.json').then(start);
   </script>
   <style type='text/css'>
   #win {color: rgb(100, 200, 100);}
