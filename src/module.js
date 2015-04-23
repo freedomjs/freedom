@@ -214,7 +214,7 @@ Module.prototype.start = function () {
       request: 'delegate',
       flow: 'core'
     });
-    
+
     // Tell the container to instantiate the counterpart to this external view.
     this.port.onMessage('control', {
       type: 'Environment Configuration',
@@ -369,10 +369,10 @@ Module.prototype.loadLinks = function () {
             to: dep
           });
         }.bind(this), function (err) {
-          this.debug.warn('failed to load dep: ', name, err);
+          this.debug.warn(this.toString() + 'failed to load dep: ', name, err);
         }.bind(this));
       }.bind(this), function (err) {
-        this.debug.warn('failed to load dep: ', name, err);
+        this.debug.warn(this.toString() + 'failed to load dep: ', name, err);
       }.bind(this));
     }.bind(this));
   }
@@ -397,7 +397,7 @@ Module.prototype.updateEnv = function (dep, manifest) {
     this.once('modInternal', this.updateEnv.bind(this, dep, manifest));
     return;
   }
-  
+
   var metadata;
 
   // Decide if/what other properties should be exported.
@@ -408,7 +408,7 @@ Module.prototype.updateEnv = function (dep, manifest) {
     description: manifest.description,
     api: manifest.api
   };
-  
+
   this.port.onMessage(this.modInternal, {
     type: 'manifest',
     name: dep,
