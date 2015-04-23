@@ -15,15 +15,37 @@ module.exports = function (setup) {
         done();
       });
   });
-  
+
   afterEach(function (done) {
     Handle.close();
     testUtil.cleanupIframes();
     done();
   });
-  
+
   it("can crypto.getRandomValues", function (done) {
     moduleEnv.testCrypto().then(function (ret) {
+      expect(ret).toEqual(true);
+      done();
+    }, function (ret) {
+      expect(ret).toEqual(true);
+      expect(true).toEqual(false);
+      done();
+    });
+  });
+
+  it("exposes dynamic require functionality", function (done) {
+    moduleEnv.testRequire(true).then(function (ret) {
+      expect(ret).toEqual(true);
+      done();
+    }, function (ret) {
+      expect(ret).toEqual(true);
+      expect(true).toEqual(false);
+      done();
+    });
+  });
+
+  it("hanles dynamic require failures", function (done) {
+    moduleEnv.testRequire(false).then(function (ret) {
       expect(ret).toEqual(true);
       done();
     }, function (ret) {

@@ -8,7 +8,8 @@
   "default": "environment",
   "api": {
     "environment": {
-      "testCrypto": {"type": "method", "value":[], "ret": "object"}
+      "testCrypto": {"type": "method", "value":[], "ret": "object"},
+      "testRequire": {"type": "method", "value":["boolean"], "ret": "object"}
     }
   }
 }

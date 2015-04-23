@@ -29,6 +29,28 @@ EnvironmentTest.prototype.testCrypto = function () {
   });
 };
 
+EnvironmentTest.prototype.testRequire = function (tf) {
+  var url = 'relative://spec/helper/friend.json';
+  if (!tf) {
+    url = 'relative://spec/helper/friend.js';
+  }
+  return freedom.core().require(url).then(function (Dep) {
+    if (!Dep) {
+      return false;
+    }
+    var d = new Dep();
+    if (typeof d.on === 'function') {
+      return true;
+    }
+    return false;
+  }, function (err) {
+    if (!tf) {
+      return true;
+    }
+    return false;
+  });
+};
+
 
 /** REGISTER **/
 if (typeof freedom !== 'undefined') {

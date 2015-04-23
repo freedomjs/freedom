@@ -116,7 +116,7 @@ ProxyBinder.prototype.bindDefault = function (port, api, manifest, internal) {
  */
 ProxyBinder.prototype.getAPI = function (manifest, apiProvider, api) {
   'use strict';
-  if (manifest.api[api]) {
+  if (manifest.api && manifest.api[api]) {
     return {
       name: api,
       definition: manifest.api[api]

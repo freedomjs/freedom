@@ -341,7 +341,7 @@ Module.prototype.require = function (name, manifest) {
       id: name,
       error: err.message
     });
-  });
+  }.bind(this));
 };
 
 /**
