@@ -3,6 +3,10 @@
   // API follows http://w3c.github.io/webrtc-pc/
   "api": {
 
+    "ERRCODE": {"type": "constant", "value": {
+      "INVALID_STATE": "This action cannot be taken in the current readyState."
+    }},
+
     "constructor": {
       // Numeric ID retreaved from core.rtcpeerconnection.createDataChannel
       // or from an ondatachannel event.

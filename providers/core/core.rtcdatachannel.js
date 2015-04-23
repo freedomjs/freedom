@@ -124,11 +124,34 @@ RTCDataChannelAdapter.prototype.setBinaryType = function (binaryType, callback) 
 };
 
 RTCDataChannelAdapter.prototype.send = function (text, callback) {
+  // The specification indicates that send() throws an InvalidStateError when
+  // called in the 'connecting' state, and otherwise does not throw any errors.
+  // Instead, it silently fails to send the message when called in the
+  // 'closing' or 'closed' states.  To avoid this silent failure, the client
+  // should check the readyState before calling send, but that is impossible
+  // when using this core provider, because of the asynchronous call barrier.
+  // To avoid ambiguity about whether a call to send() was successful, we extend
+  // the invalid state error to these other states as well.
+  if (this.channel.readyState !== 'open') {
+    callback(undefined, {
+      errcode: 'INVALID_STATE',
+      message: 'Cannot call send in the ' + this.channel.readyState + ' state'
+    });
+    return;
+  }
   this.channel.send(text);
   callback();
 };
 
 RTCDataChannelAdapter.prototype.sendBuffer = function (buffer, callback) {
+  if (this.channel.readyState !== 'open') {
+    callback(undefined, {
+      errcode: 'INVALID_STATE',
+      message: 'Cannot call sendBuffer in the ' + this.channel.readyState +
+          ' state'
+    });
+    return;
+  }
   this.channel.send(buffer);
   callback();
 };
