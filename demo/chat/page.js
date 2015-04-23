@@ -119,5 +119,5 @@ function start(ChatClient) {
 }
 
 window.onload = function () {
-  freedom('freedom-module.json').then(start);
+  freedom('chat.json').then(start);
 };
