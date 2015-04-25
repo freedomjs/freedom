@@ -26,6 +26,7 @@ var ModuleInternal = function (manager) {
   this.id = 'ModuleInternal';
   this.pendingPorts = 0;
   this.requests = {};
+  this.unboundPorts = {};
 
   util.handleEvents(this);
 };
@@ -61,9 +62,14 @@ ModuleInternal.prototype.onMessage = function (flow, message) {
         message.manifest.app.script)).then(null, function (err) {
       this.debug.error('Could not set up module ' + this.appId + ': ', err);
     }.bind(this));
-  } else if (flow === 'default' && this.requests[message.id]) {
+  } else if (flow === 'default' && message.type === 'resolve.response' &&
+             this.requests[message.id]) {
     this.requests[message.id](message.data);
     delete this.requests[message.id];
+  } else if (flow === 'default' && message.type === 'require.failure' &&
+             this.unboundPorts[message.id]) {
+    this.unboundPorts[message.id].callback(undefined, message.error);
+    delete this.unboundPorts[message.id];
   } else if (flow === 'default' && message.type === 'manifest') {
     this.emit('manifest', message);
     this.updateManifest(message.name, message.manifest);
@@ -119,6 +125,23 @@ ModuleInternal.prototype.generateEnv = function (manifest, items) {
 };
 
 /**
+ * Register an unused channel ID for callback, and once information
+ * about the channel is known, call the handler with that information.
+ * @method registerId
+ * @param {String} api The preferred API to use for the new channel.
+ * @param {Function} callback Function to call once channel ready
+ * @returns {String} The allocated channel name.
+ */
+ModuleInternal.prototype.registerId = function (api, callback) {
+  var id = util.getId();
+  this.unboundPorts[id] = {
+    name: api,
+    callback: callback
+  };
+  return id;
+};
+
+/**
  * Attach a proxy to the externally visible namespace.
  * @method attach
  * @param {String} name The name of the proxy.
@@ -145,6 +168,8 @@ ModuleInternal.prototype.attach = function (name, provides, proxy) {
   if (this.pendingPorts === 0) {
     this.emit('start');
   }
+
+  return exp[name];
 };
 
 /**
@@ -215,7 +240,7 @@ ModuleInternal.prototype.loadLinks = function (items) {
   core = this.api.get('core').definition;
   provider = new Provider(core, this.debug);
   this.manager.getCore(function (CoreProv) {
-    new CoreProv(this.manager).setId(this.lineage);
+    new CoreProv(this.manager).setId(this.lineage, this);
     provider.getInterface().provideAsynchronous(CoreProv);
   }.bind(this));
 
@@ -257,6 +282,16 @@ ModuleInternal.prototype.updateManifest = function (name, manifest) {
 
   if (exp && exp[name]) {
     exp[name].manifest = manifest;
+  // Handle require() dependency resolution.
+  } else if (this.unboundPorts[name]) {
+    this.binder.getExternal(this.port, name,
+        this.binder.getAPI(manifest, this.api, this.unboundPorts[name].api))
+      .then(
+        this.attach.bind(this, name, false)
+      ).then(function(proxy) {
+        this.unboundPorts[name].callback(proxy);
+        delete this.unboundPorts[name];
+      }.bind(this));
   } else {
     this.manifests[name] = manifest;
   }

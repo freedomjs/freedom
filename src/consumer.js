@@ -16,7 +16,7 @@ var Consumer = function (interfaceCls, debug) {
   this.interfaceCls = interfaceCls;
   this.debug = debug;
   util.handleEvents(this);
-  
+
   this.ifaces = {};
   this.closeHandlers = {};
   this.errorHandlers = {};
@@ -75,7 +75,7 @@ Consumer.prototype.onMessage = function (source, message) {
  * Create a consumer.Interface associated with this consumer.
  * An interface is returned, which is supplied with important control of the
  * api via constructor arguments: (bound below in getInterfaceConstructor)
- * 
+ *
  * onMsg: function(binder) sets the function to call when messages for this
  *    interface arrive on the channel,
  * emit: function(msg) allows this interface to emit messages,
@@ -331,9 +331,10 @@ Consumer.portableToMessage = function (template, streams, debug) {
  */
 Consumer.conform = function (template, from, externals, separate, debug) {
   /* jshint -W086 */
-  if (typeof (from) === 'function') {
+  if (typeof (from) === 'function' && template !== 'proxy') {
     //from = undefined;
     //throw "Trying to conform a function";
+    debug.error("Message discarded as functions can't cross modules!");
     return undefined;
   } else if (typeof (from) === 'undefined') {
     return undefined;

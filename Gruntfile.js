@@ -5,17 +5,17 @@
  * Here are the common tasks used:
  * build
  *  - Lint and compile freedom.js
- *  - (default Grunt task) 
+ *  - (default Grunt task)
  *  - This must be run before ANY karma task (because of connect:default)
  *  - Unit tests only run on PhantomJS
  * demo
  *  - Build freedom.js, and start a web server for seeing demos at
  *    http://localhost:8000/demo
  * test
- *  - Build freedom.js, and run all unit tests on 
+ *  - Build freedom.js, and run all unit tests on
  *    Chrome, Firefox, and PhantomJS
  * debug
- *  - Same as test, except keeps the browsers open 
+ *  - Same as test, except keeps the browsers open
  *    and reruns tests on watched file changes.
  *  - Used to debug unit tests
  * ci
@@ -373,7 +373,7 @@ module.exports = function (grunt) {
       });
       grunt.task.run('codeclimate:report');
     });
-  
+
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
@@ -416,6 +416,7 @@ module.exports = function (grunt) {
   grunt.registerTask('debug-integration', [
     'prepare_watch',
     'build',
+    'browserify:frame',
     'browserify:jasmine_integration',
     'connect:freedom',
     'karma:integration'
@@ -454,7 +455,7 @@ module.exports = function (grunt) {
   } else {  //When run from command-line
     grunt.registerTask('ci', [ 'build', 'test-phantom', 'gitinfo', 'karma:saucelabs' ]);
   }
-  
+
   // Cut a new release of freedom.js
   grunt.registerTask('release', function (arg) {
     if (arguments.length === 0) {

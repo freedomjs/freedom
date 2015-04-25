@@ -19,6 +19,7 @@ var Core_unprivileged = function(manager, postMessage) {
 Core_unprivileged.unboundChannels = {};
 
 Core_unprivileged.contextId = undefined;
+Core_unprivileged.moduleInternal = undefined;
 
 /**
  * Create a custom channel.
@@ -35,7 +36,7 @@ Core_unprivileged.prototype.createChannel = function(continuation) {
       chan = this.getChannel(proxy);
   this.manager.setup(proxy);
 
-  if (this.manager.delegate && this.manager.toDelegate.core) {
+  if (this.isInModule()) {
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
       request: 'handle',
@@ -93,6 +94,8 @@ Core_unprivileged.prototype.onMessage = function(source, msg) {
     if (Core_unprivileged.unboundChannels[msg.id]) {
       this.bindChannel(msg.id, function() {}, source);
     }
+  } else if (msg.type === 'require') {
+    source.require(msg.id, msg.manifest);
   }
 };
 
@@ -150,7 +153,7 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
       }
     });
     delete Core_unprivileged.unboundChannels[identifier];
-  } else if (this.manager.delegate && this.manager.toDelegate.core) {
+  } else if (this.isInModule()) {
     this.debug.info('delegating channel bind for an unknown ID:' + identifier);
     this.manager.emit(this.manager.delegate, {
       type: 'Delegation',
@@ -185,6 +188,53 @@ Core_unprivileged.prototype.bindChannel = function(identifier, continuation, sou
 };
 
 /**
+ * @method isInModule
+ * @private
+ * @returns {Boolean} Whether this class is running in a module.
+ */
+Core_unprivileged.prototype.isInModule = function () {
+  return (this.manager.delegate && this.manager.toDelegate.core);
+};
+
+/**
+ * Require a dynamic dependency for your freedom module.
+ * If new permissions are needed beyond what are already available to the
+ * freedom context, the user will need to approve of the requested permissions.
+ * @method require
+ * @param {String} manifest The URL of the manifest to require.
+ * @param {String} api The API of the dependency to expose if not default.
+ * @param {Function} callback The function to call with the dependency.
+ */
+Core_unprivileged.prototype.require = function (manifest, api, callback) {
+  if (this.isInModule() && Core_unprivileged.moduleInternal) {
+    // Register a callback with moduleInternal.
+    // DependencyName is the name of the channel moduelInternal will allocate
+    // callback will be called once a link to that channel is seen.
+    var dependencyName =
+        Core_unprivileged.moduleInternal.registerId(api, callback);
+
+    // Request the dependency be added.
+    this.manager.emit(this.manager.delegate, {
+      type: 'Delegation',
+      request: 'handle',
+      flow: 'core',
+      message: {
+        type: 'require',
+        manifest: manifest,
+        id: dependencyName
+      }
+    });
+  } else {
+    this.debug.error('The require function in external context makes no sense' +
+        ' Instead create a new freedom() context.');
+    callback(undefined, {
+      errcode: 'InvalidContext',
+      message: 'Cannot call require() from this context.'
+    });
+  }
+};
+
+/**
  * Get the ID of the current freedom.js context.  Provides an
  * array of module URLs, the lineage of the current context.
  * When not in an application context, the ID is the lineage
@@ -214,9 +264,11 @@ Core_unprivileged.prototype.getLogger = function(name, callback) {
  * @method setId
  * @private
  * @param {String[]} id The lineage of the current context.
+ * @param {ModuleInternal} moduleInternal The Module environment if one exists.
  */
-Core_unprivileged.prototype.setId = function(id) {
+Core_unprivileged.prototype.setId = function(id, moduleInternal) {
   Core_unprivileged.contextId = id;
+  Core_unprivileged.moduleInternal = moduleInternal;
 };
 
 exports.provider = Core_unprivileged;
