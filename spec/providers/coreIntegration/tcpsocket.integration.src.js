@@ -115,7 +115,7 @@ module.exports = function (provider, setup) {
       var paused = false;
       var messageCount = 0;
       dispatch.on('onMessage', function (msg) {
-        if (msg && !(msg.hasOwnProperty('data'))) {
+        if (!(msg.hasOwnProperty('data'))) {
           // Not an 'onData' message.
           return;
         }
@@ -128,8 +128,7 @@ module.exports = function (provider, setup) {
         // Apart from the above exception, check that data doesn't arrive until
         // after the socket resumes.
         expect(paused).toEqual(false);
-        PromiseCompat.all([ socket.close(function () {}),
-                            done() ]);
+        socket.close(done);
       });
 
       socket.pause(function () {
