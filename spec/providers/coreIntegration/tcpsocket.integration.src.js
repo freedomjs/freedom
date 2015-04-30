@@ -115,21 +115,21 @@ module.exports = function (provider, setup) {
       var paused = false;
       var messageCount = 0;
       dispatch.on('onMessage', function (msg) {
-        if (!('data' in msg)) {
+        if (msg && !(msg.hasOwnProperty('data'))) {
           // Not an 'onData' message.
           return;
         }
 
         // One onData is allowed during pause due to https://crbug.com/360026
-        ++messageCount;
-        if (paused && messageCount === 1) {
+        if (paused && ++messageCount === 1) {
           return;
         }
 
         // Apart from the above exception, check that data doesn't arrive until
         // after the socket resumes.
         expect(paused).toEqual(false);
-        socket.close(done);
+        PromiseCompat.all([ socket.close(function () {}),
+                            done() ]);
       });
 
       socket.pause(function () {
