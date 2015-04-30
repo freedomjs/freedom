@@ -113,7 +113,7 @@ module.exports = function (provider, setup) {
     // TODO: this test breaks in node (runs code after done())
     socket.connect('www.google.com', 80, function () {
       var paused = false;
-      var messageCount = 0;
+      var pausedMessageCount = 0;
       dispatch.on('onMessage', function (msg) {
         if (!(msg.hasOwnProperty('data'))) {
           // Not an 'onData' message.
@@ -121,7 +121,7 @@ module.exports = function (provider, setup) {
         }
 
         // One onData is allowed during pause due to https://crbug.com/360026
-        if (paused && ++messageCount === 1) {
+        if (paused && ++pausedMessageCount === 1) {
           return;
         }
 
