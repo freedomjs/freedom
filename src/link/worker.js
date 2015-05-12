@@ -14,6 +14,24 @@ var WorkerLink = function(id, resource) {
   if (id) {
     this.id = id;
   }
+  this.pendingEvents = [];
+  this.isWaitingForAck = false;
+
+  this.onMsg = function(msg) {
+    if (msg.data === 'ack') {
+      this.isWaitingForAck = false;
+      if (this.pendingEvents.length > 0) {
+        this.obj.postMessage(this.pendingEvents);
+        this.pendingEvents = [];
+        this.isWaitingForAck = true;
+      }
+      return;
+    }
+    msg.data.forEach(function(event) {
+      this.emitMessage(event.flow, event.message);
+    }.bind(this));
+    this.obj.postMessage('ack');
+  }.bind(this);
 };
 
 /**
@@ -53,17 +71,17 @@ WorkerLink.prototype.toString = function() {
  * @method setupListener
  */
 WorkerLink.prototype.setupListener = function() {
-  var onMsg = function(msg) {
-    this.emitMessage(msg.data.flow, msg.data.message);
-  }.bind(this);
   this.obj = this.config.global;
-  this.obj.addEventListener('message', onMsg, true);
+  this.obj.addEventListener('message', this.onMsg, true);
   this.stop = function() {
-    this.obj.removeEventListener('message', onMsg, true);
+    this.obj.removeEventListener('message', this.onMsg, true);
     delete this.obj;
   };
   this.emit('started');
   this.obj.postMessage("Ready For Messages");
+
+  this.isWaitingForAck = false;
+  this.pendingEvents = [];
 };
 
 /**
@@ -85,7 +103,7 @@ WorkerLink.prototype.setupWorker = function() {
       this.emit('started');
       return;
     }
-    this.emitMessage(msg.data.flow, msg.data.message);
+    this.onMsg(msg);
   }.bind(this, worker), true);
   this.stop = function() {
     worker.terminate();
@@ -108,10 +126,16 @@ WorkerLink.prototype.deliverMessage = function(flow, message) {
     this.stop();
   } else {
     if (this.obj) {
-      this.obj.postMessage({
+      var event = {
         flow: flow,
         message: message
-      });
+      };
+      if (this.isWaitingForAck) {
+        this.pendingEvents.push(event);
+      } else {
+        this.obj.postMessage([event]);
+        this.isWaitingForAck = true;
+      }
     } else {
       this.once('started', this.onMessage.bind(this, flow, message));
     }
