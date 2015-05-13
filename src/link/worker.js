@@ -15,26 +15,59 @@ var WorkerLink = function(id, resource) {
   if (id) {
     this.id = id;
   }
-  this.pendingEvents = [];
+
+  // All messages waiting to be sent, both "flow messages" (sent by the user of
+  // this class) and acks.
+  this.pendingMessages = [];
+
+  // The number of acks in |this.pendingMessages|.  Always equal to
+  // this.pendingMessages.filter(function(msg) { return msg === 'ack'; }).length
+  // This value is stored here to avoid that computation.
   this.pendingAcks = 0;
-  this.isDrainingReceiveQueue = false;
-  this.unAckedEvents = 0;
+
+  // This is value is incremented when a new block of messages is received from
+  // the other side.  While it is nonzero, all outgoing flow messages will be
+  // held in |this.pendingMessages|.  After all the messages have been emitted, an
+  // asynchronous task is scheduled to decrement it and send the pending
+  // messages if it is zero.  It's possible that another block of messages could
+  // arrive during this asynchronous delay, which is why this value cannot be a
+  // boolean.
+  this.receiveQueuesDraining = 0;
+
+  // The number of flow messages that have been sent but not yet acked.  This
+  // does not include the contents of |this.pendingMessages|.
+  this.unAckedFlowMessages = 0;
 };
 
-WorkerLink.prototype.onMsg = function(msg) {
-  this.isDrainingReceiveQueue = true;
-  msg.data.forEach(function(event) {
-    if (event === 'ack') {
+/**
+ * Handle an incoming message, sent from the other side with |postMessage|.
+ * @method onMessageEvent
+ * @param {MessageEvent} messageEvent The browser-generated event.  In this
+ *     case, the event's data attribute is an array of flow messages and acks.
+ * @return {String} the description of this port.
+ * @private
+ */
+WorkerLink.prototype.onMessageEvent = function(messageEvent) {
+  ++this.receiveQueuesDraining;
+  var messages = messageEvent.data;
+  messages.forEach(function(message) {
+    if (message === 'ack') {
       --this.unAckedEvents;
       return;
     }
-    this.emitMessage(event.flow, event.message);
-    this.pendingEvents.push('ack');
+    this.emitMessage(message.flow, message.message);
+    this.pendingMessages.push('ack');
     this.pendingAcks++;
   }.bind(this));
-  PromiseCompat.resolve().then(function () {
-    this.isDrainingReceiveQueue = false;
-    this.maybeSendPendingEvents();
+
+  // This is intended to allow the 'ack' for a function call to be
+  // batched with the return value if the function returns immediately, even
+  // for a promise provider.  This only works if |this.emitMessage| runs the
+  // function synchronously, Promises resolve in order, and there is at most
+  // one Promise in the function call codepath.
+  PromiseCompat.resolve().then(function() {
+    --this.receiveQueuesDraining;
+    this.maybeSendPendingMessages();
   }.bind(this));
 };
 
@@ -75,7 +108,7 @@ WorkerLink.prototype.toString = function() {
  * @method setupListener
  */
 WorkerLink.prototype.setupListener = function() {
-  var onMsg = this.onMsg.bind(this);
+  var onMsg = this.onMessageEvent.bind(this);
   this.obj = this.config.global;
   this.obj.addEventListener('message', onMsg, true);
   this.stop = function() {
@@ -84,10 +117,6 @@ WorkerLink.prototype.setupListener = function() {
   };
   this.emit('started');
   this.obj.postMessage("Ready For Messages");
-
-  this.pendingEvents = [];
-  this.hasPendingAck = false;
-  this.unAckedEvents = 0;
 };
 
 /**
@@ -109,7 +138,7 @@ WorkerLink.prototype.setupWorker = function() {
       this.emit('started');
       return;
     }
-    this.onMsg(msg);
+    this.onMessageEvent(msg);
   }.bind(this, worker), true);
   this.stop = function() {
     worker.terminate();
@@ -119,21 +148,28 @@ WorkerLink.prototype.setupWorker = function() {
   };
 };
 
-WorkerLink.prototype.maybeSendPendingEvents = function() {
-  if (this.isDrainingReceiveQueue ||
-      this.pendingEvents.length === 0) {
+/**
+ * Sends the contents of |this.pendingMessages|, or waits to accumulate a
+ * larger batch.
+ * @method maybeSendPendingMessages
+ * @private
+ */
+WorkerLink.prototype.maybeSendPendingMessages = function() {
+  if (this.receiveQueuesDraining > 0 ||
+      this.pendingMessages.length === 0) {
     return;
   }
 
   if (this.pendingAcks === 0 && this.unAckedEvents > 0) {
-    // Wait to hear back about the outstanding events.
+    // We're not acking any events, so wait to hear back about
+    // the outstanding events.
     return;
   }
 
-  var sentEvents = this.pendingEvents.length - this.pendingAcks;
-  this.obj.postMessage(this.pendingEvents);
-  this.unAckedEvents += sentEvents;
-  this.pendingEvents = [];
+  var pendingFlowMessages = this.pendingMessages.length - this.pendingAcks;
+  this.obj.postMessage(this.pendingMessages);
+  this.unAckedFlowMessages += pendingFlowMessages;
+  this.pendingMessages = [];
 };
 
 /**
@@ -149,11 +185,11 @@ WorkerLink.prototype.deliverMessage = function(flow, message) {
     this.stop();
   } else {
     if (this.obj) {
-      this.pendingEvents.push({
+      this.pendingMessages.push({
         flow: flow,
         message: message
       });
-      this.maybeSendPendingEvents();
+      this.maybeSendPendingMessages();
     } else {
       this.once('started', this.onMessage.bind(this, flow, message));
     }
