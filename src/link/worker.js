@@ -52,7 +52,7 @@ WorkerLink.prototype.onMessageEvent = function(messageEvent) {
   var messages = messageEvent.data;
   messages.forEach(function(message) {
     if (message === 'ack') {
-      --this.unAckedEvents;
+      --this.unAckedFlowMessages;
       return;
     }
     this.emitMessage(message.flow, message.message);
@@ -160,7 +160,7 @@ WorkerLink.prototype.maybeSendPendingMessages = function() {
     return;
   }
 
-  if (this.pendingAcks === 0 && this.unAckedEvents > 0) {
+  if (this.pendingAcks === 0 && this.unAckedFlowMessages > 0) {
     // We're not acking any events, so wait to hear back about
     // the outstanding events.
     return;
