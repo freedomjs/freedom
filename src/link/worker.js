@@ -1,6 +1,7 @@
 /*globals Worker */
 /*jslint indent:2, white:true, node:true, sloppy:true, browser:true */
 var Link = require('../link');
+var PromiseCompat = require('es6-promise').Promise;
 
 /**
  * A port providing message transport between two freedom contexts via Worker.
@@ -15,23 +16,26 @@ var WorkerLink = function(id, resource) {
     this.id = id;
   }
   this.pendingEvents = [];
-  this.isWaitingForAck = false;
+  this.pendingAcks = 0;
+  this.isDrainingReceiveQueue = false;
+  this.unAckedEvents = 0;
+};
 
-  this.onMsg = function(msg) {
-    if (msg.data === 'ack') {
-      this.isWaitingForAck = false;
-      if (this.pendingEvents.length > 0) {
-        this.obj.postMessage(this.pendingEvents);
-        this.pendingEvents = [];
-        this.isWaitingForAck = true;
-      }
+WorkerLink.prototype.onMsg = function(msg) {
+  this.isDrainingReceiveQueue = true;
+  msg.data.forEach(function(event) {
+    if (event === 'ack') {
+      --this.unAckedEvents;
       return;
     }
-    msg.data.forEach(function(event) {
-      this.emitMessage(event.flow, event.message);
-    }.bind(this));
-    this.obj.postMessage('ack');
-  }.bind(this);
+    this.emitMessage(event.flow, event.message);
+    this.pendingEvents.push('ack');
+    this.pendingAcks++;
+  }.bind(this));
+  PromiseCompat.resolve().then(function () {
+    this.isDrainingReceiveQueue = false;
+    this.maybeSendPendingEvents();
+  }.bind(this));
 };
 
 /**
@@ -71,17 +75,19 @@ WorkerLink.prototype.toString = function() {
  * @method setupListener
  */
 WorkerLink.prototype.setupListener = function() {
+  var onMsg = this.onMsg.bind(this);
   this.obj = this.config.global;
-  this.obj.addEventListener('message', this.onMsg, true);
+  this.obj.addEventListener('message', onMsg, true);
   this.stop = function() {
-    this.obj.removeEventListener('message', this.onMsg, true);
+    this.obj.removeEventListener('message', onMsg, true);
     delete this.obj;
   };
   this.emit('started');
   this.obj.postMessage("Ready For Messages");
 
-  this.isWaitingForAck = false;
   this.pendingEvents = [];
+  this.hasPendingAck = false;
+  this.unAckedEvents = 0;
 };
 
 /**
@@ -113,6 +119,23 @@ WorkerLink.prototype.setupWorker = function() {
   };
 };
 
+WorkerLink.prototype.maybeSendPendingEvents = function() {
+  if (this.isDrainingReceiveQueue ||
+      this.pendingEvents.length === 0) {
+    return;
+  }
+
+  if (this.pendingAcks === 0 && this.unAckedEvents > 0) {
+    // Wait to hear back about the outstanding events.
+    return;
+  }
+
+  var sentEvents = this.pendingEvents.length - this.pendingAcks;
+  this.obj.postMessage(this.pendingEvents);
+  this.unAckedEvents += sentEvents;
+  this.pendingEvents = [];
+};
+
 /**
  * Receive messages from the hub to this port.
  * Received messages will be emitted from the other side of the port.
@@ -126,16 +149,11 @@ WorkerLink.prototype.deliverMessage = function(flow, message) {
     this.stop();
   } else {
     if (this.obj) {
-      var event = {
+      this.pendingEvents.push({
         flow: flow,
         message: message
-      };
-      if (this.isWaitingForAck) {
-        this.pendingEvents.push(event);
-      } else {
-        this.obj.postMessage([event]);
-        this.isWaitingForAck = true;
-      }
+      });
+      this.maybeSendPendingEvents();
     } else {
       this.once('started', this.onMessage.bind(this, flow, message));
     }
