@@ -170,6 +170,7 @@ WorkerLink.prototype.maybeSendPendingMessages = function() {
   this.obj.postMessage(this.pendingMessages);
   this.unAckedFlowMessages += pendingFlowMessages;
   this.pendingMessages = [];
+  this.pendingAcks = 0;
 };
 
 /**
