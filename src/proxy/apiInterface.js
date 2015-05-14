@@ -39,6 +39,20 @@ var ApiInterface = function(def, onMsg, emit, debug) {
         return promise;
       };
       break;
+    case 'voidMethod':
+      this[name] = function() {
+        var streams = Consumer.messageToPortable(prop.value,
+                Array.prototype.slice.call(arguments, 0),
+                debug);
+        emit({
+          action: 'voidMethod',
+          type: name,
+          text: streams.text,
+          binary: streams.binary
+        });
+        return PromiseCompat.resolve();  // HACK HACK HACK
+      };
+      break;
     case 'event':
       if(!events) {
         util.handleEvents(this);
