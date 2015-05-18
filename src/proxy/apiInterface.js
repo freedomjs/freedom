@@ -38,19 +38,18 @@ var ApiInterface = function(def, onMsg, emit, debug) {
         });
         return promise;
       };
-      break;
-    case 'voidMethod':
-      this[name] = function() {
+      this[name].reckless = function () {
         var streams = Consumer.messageToPortable(prop.value,
                 Array.prototype.slice.call(arguments, 0),
                 debug);
         emit({
-          action: 'voidMethod',
+          action: 'method',
           type: name,
+          reqId: null,  // Marks this as a reckless call.
           text: streams.text,
           binary: streams.binary
         });
-        return PromiseCompat.resolve();  // HACK HACK HACK
+        // Return type is void.
       };
       break;
     case 'event':

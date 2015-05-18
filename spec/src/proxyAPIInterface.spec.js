@@ -51,6 +51,19 @@ describe("proxy/APIInterface", function() {
     });
   });
 
+  it("Allows reckless calls.", function() {
+    expect(typeof(api.test.reckless)).toEqual('function');
+    var voidReturn = api.test.reckless('hi');
+    expect(voidReturn).toBe(undefined);
+    expect(emit).toHaveBeenCalledWith({
+      action: 'method',
+      type: 'test',
+      reqId: null,
+      text: ['hi'],
+      binary: []
+    });
+  });
+
   it("Delivers constructor arguments.", function(done) {
     var iface = {
       'constructor': {value: ['string']}

@@ -140,8 +140,12 @@
     // Write buffer data to a socket.
     // Fails with an error if write fails.
     "write": {
-      "type": "voidMethod",
-      "value": ["buffer"]
+      "type": "method",
+      "value": ["buffer"],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
     },
   
     // Receive data on a connected socket.

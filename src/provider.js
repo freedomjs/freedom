@@ -325,23 +325,32 @@ Provider.prototype.getProvider = function (source, identifier, args) {
         prop = port.definition[msg.type];
         debug = port.debug;
         args = Consumer.portableToMessage(prop.value, msg, debug);
-        ret = function (src, msg, prop, resolve, reject) {
-          var streams = Consumer.messageToPortable(prop.ret, resolve,
-                                                       debug);
-          this.emit(this.channels[src], {
-            type: 'method',
-            to: msg.to,
-            message: {
-              to: msg.to,
-              type: 'method',
-              reqId: msg.reqId,
-              name: msg.type,
-              text: streams.text,
-              binary: streams.binary,
-              error: reject
+        if (msg.reqId === null) {
+          // Reckless call.  Ignore return value.
+          ret = function(resolve, reject) {
+            if (reject) {
+              debug.error(reject);
             }
-          });
-        }.bind(port, src, msg, prop);
+          };
+        } else {
+          ret = function (src, msg, prop, resolve, reject) {
+            var streams = Consumer.messageToPortable(prop.ret, resolve,
+                                                         debug);
+            this.emit(this.channels[src], {
+              type: 'method',
+              to: msg.to,
+              message: {
+                to: msg.to,
+                type: 'method',
+                reqId: msg.reqId,
+                name: msg.type,
+                text: streams.text,
+                binary: streams.binary,
+                error: reject
+              }
+            });
+          }.bind(port, src, msg, prop);
+        }
         if (!Array.isArray(args)) {
           args = [args];
         }
@@ -369,23 +378,6 @@ Provider.prototype.getProvider = function (source, identifier, args) {
           } catch (e3) {
             ret(undefined, e3.message + ' ' + e3.stack);
           }
-        }
-      } else if (msg.action === 'voidMethod') {
-        if (typeof this[msg.type] !== 'function') {
-          port.debug.warn("Provider does not implement " + msg.type + "()!");
-          return;
-        }
-        var obj = port.mode === Provider.mode.asynchronous ? instance : this;  // ????
-        prop = port.definition[msg.type];
-        debug = port.debug;
-        args = Consumer.portableToMessage(prop.value, msg, debug);
-        if (!Array.isArray(args)) {
-          args = [args];
-        }
-        try {
-          this[msg.type].apply(obj, args.concat(function () {}));  // HACK: Tack on a dummy function for the async providers.
-        } catch (e) {
-          debug.error(e);
         }
       }
     }.bind(instance, this, source)

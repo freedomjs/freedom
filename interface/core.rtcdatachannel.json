@@ -29,8 +29,8 @@
     }},
     "getBinaryType": {"type": "method", "value": [], "ret": "string"},
     "setBinaryType": {"type": "method", "value": ["string"]},
-    "send": {"type": "voidMethod", "value": ["string"]},
+    "send": {"type": "method", "value": ["string"]},
     // Note: renamed from 'send' to handle the overloaded type.
-    "sendBuffer": {"type": "voidMethod", "value": ["buffer"]}
+    "sendBuffer": {"type": "method", "value": ["buffer"]}
   }
 }

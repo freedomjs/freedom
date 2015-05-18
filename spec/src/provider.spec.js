@@ -103,6 +103,41 @@ describe("Provider", function() {
     });
   });
 
+  it("allows null reqId", function(done) {
+    var iface = port.getInterface();
+    var o = function() {};
+    var called = false, resp;
+    o.prototype.m1 = function(str) {
+      called = true;
+      return Promise.resolve('resolved ' + str);
+    };
+
+    iface.providePromises(o);
+    port.onMessage('default', {
+      channel: 'message'
+    });
+
+    port.onMessage('default', {to: 'testInst', type:'message', message:{
+      'type': 'construct',
+    }});
+
+    port.onMessage('default', {to: 'testInst', type:'message', message: {
+      'action': 'method',
+      'type': 'm1',
+      'text': ['mystr'],
+      'reqId': null
+    }});
+
+    expect(called).toEqual(true);
+
+    port.on('message', function(n) {
+      // There should be no return message because reqId is null.
+      expect(n).toBe(undefined);
+    });
+
+    setTimeout(done, 100);
+  });
+
   it("rejects method calls when the provider errors", function (done) {
     var iface = port.getInterface();
     var o = function() {};
