@@ -9,6 +9,7 @@ var providers = [
   require('../../providers/core/core.rtcpeerconnection'),
   require('../../providers/core/core.rtcdatachannel'),
   require('../../providers/core/core.storage'),
+  require('../../providers/core/core.udppipe'),
   require('../../providers/core/core.view'),
   require('../../providers/core/core.oauth'),
   require('../../providers/core/core.websocket'),

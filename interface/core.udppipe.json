@@ -1,0 +1,38 @@
+{
+  "name": "core.udppipe",
+  "api": {
+    "setTransformer": {
+      "type": "method",
+      "value": [
+        "string",
+        "buffer",
+        "string"
+      ]
+    },
+    "bindLocal": {
+      "type": "method",
+      "value": [{
+        "address": "string",
+        "port": "number"
+      }]
+    },
+    "setBrowserEndpoint": {
+      "type": "method",
+      "value": [{
+        "address": "string",
+        "port": "number"
+      }]
+    },
+    "bindRemote": {
+      "type": "method",
+      "value": [{
+        "address": "string",
+        "port": "number"
+      }],
+      "ret": {
+        "address": "string",
+        "port": "number"
+      }
+    }
+  }
+}
