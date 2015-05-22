@@ -305,6 +305,7 @@ Provider.prototype.getProvider = function (source, identifier, args) {
   return {
     instance: instance,
     onmsg: function (port, src, msg) {
+      var prop, debug, args, returnPromise, ret;
       if (msg.action === 'method') {
         if (typeof this[msg.type] !== 'function') {
           port.debug.warn("Provider does not implement " + msg.type + "()!");
@@ -321,10 +322,17 @@ Provider.prototype.getProvider = function (source, identifier, args) {
           });
           return;
         }
-        var prop = port.definition[msg.type],
-          debug = port.debug,
-          args = Consumer.portableToMessage(prop.value, msg, debug),
-          returnPromise,
+        prop = port.definition[msg.type];
+        debug = port.debug;
+        args = Consumer.portableToMessage(prop.value, msg, debug);
+        if (msg.reqId === null) {
+          // Reckless call.  Ignore return value.
+          ret = function(resolve, reject) {
+            if (reject) {
+              debug.error(reject);
+            }
+          };
+        } else {
           ret = function (src, msg, prop, resolve, reject) {
             var streams = Consumer.messageToPortable(prop.ret, resolve,
                                                          debug);
@@ -342,6 +350,7 @@ Provider.prototype.getProvider = function (source, identifier, args) {
               }
             });
           }.bind(port, src, msg, prop);
+        }
         if (!Array.isArray(args)) {
           args = [args];
         }
