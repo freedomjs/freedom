@@ -115,7 +115,7 @@ module.exports = function (provider, setup) {
       var paused = false;
       var pausedMessageCount = 0;
       dispatch.on('onMessage', function (msg) {
-        if (!(msg.hasOwnProperty('data'))) {
+        if (!msg || !(msg.hasOwnProperty('data'))) {
           // Not an 'onData' message.
           return;
         }
