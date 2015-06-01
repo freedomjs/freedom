@@ -87,7 +87,7 @@ module.exports = function (provider, setup) {
       expect(evt).toEqual('onData');
       expect(msg.data.byteLength).toEqual(10);
       PromiseCompat.all([ client.close(function () {}),
-                          socket.close(function () {} ) ]);
+                          socket.close(function () {}) ]);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
@@ -115,7 +115,7 @@ module.exports = function (provider, setup) {
       var paused = false;
       var pausedMessageCount = 0;
       dispatch.on('onMessage', function (msg) {
-        if (!(msg.hasOwnProperty('data'))) {
+        if (!msg || !(msg.hasOwnProperty('data'))) {
           // Not an 'onData' message.
           return;
         }
@@ -157,7 +157,8 @@ module.exports = function (provider, setup) {
       socket.secure(function() {
         socket.getInfo(function (info) {
           expect(info.connected).toEqual(true);
-          socket.close(done);
+          PromiseCompat.all([socket.close(function () {}),
+                             done()]);
         });
       });
     });
@@ -206,14 +207,14 @@ module.exports = function (provider, setup) {
   it("Socket reusing id of closed socket is also closed", function(done) {
     var cspy = jasmine.createSpy('client'),
         client,
-        socketCopy;
+        clientCopy;
 
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
       client.close(function () {
-        socketCopy = new provider.provider(undefined, function () {},
+        clientCopy = new provider.provider(undefined, function () {},
                                            msg.socket);
-        socketCopy.getInfo(function (info) {
+        clientCopy.getInfo(function (info) {
           // TODO consider changing implementation to give more explicit failure
           expect(info.connected).toEqual(false);
           done();
