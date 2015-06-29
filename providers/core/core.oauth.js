@@ -100,7 +100,9 @@ OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactive,
     });
     return;
   }
-
+  if (interactive === undefined) {
+    interactive = true;
+  }
   this.ongoing[stateObj.state].launchAuthFlow(
       authUrl, stateObj, interactive, continuation);
   delete this.ongoing[stateObj.state];
