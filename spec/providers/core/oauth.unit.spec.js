@@ -14,7 +14,7 @@ MockProvider.prototype.initiateOAuth = function(redirectURIs, cont) {
   return true;
 };
 
-MockProvider.prototype.launchAuthFlow = function(authUrl, stateObj, cont) {
+MockProvider.prototype.launchAuthFlow = function(authUrl, stateObj, interactive, cont) {
   cont("Response Url");
   return true;
 };
@@ -40,7 +40,7 @@ describe('oAuth', function () {
         redirect: "http://localhost/oAuthRedirect",
         state: jasmine.any(Number)
       }));
-      authProvider.launchAuthFlow("AUTH URL", stateObj, callbackTwo);
+      authProvider.launchAuthFlow("AUTH URL", stateObj, true, callbackTwo);
     };
 
     var callbackTwo = function(respUrl) {
@@ -70,7 +70,7 @@ describe('oAuth', function () {
       });
     });
   });
-  
+
   afterEach(function () {
     oAuth.reset();
   });

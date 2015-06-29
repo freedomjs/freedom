@@ -87,10 +87,12 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
  * @method launchAuthFlow
  * @param {String} authUrl - The URL that initiates the auth flow.
  * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
+ * @param {Boolean} interactive - Whether to launch an interactive OAuth flow
  * @param {Function} continuation - Function to call when complete
  *    Expected to see a String value that is the response Url containing the access token
  */
-OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
+OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactive,
+                                          continuation) {
   if (!this.ongoing.hasOwnProperty(stateObj.state)) {
     continuation(undefined, {
       'errcode': 'UNKNOWN',
@@ -99,7 +101,8 @@ OAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
     return;
   }
 
-  this.ongoing[stateObj.state].launchAuthFlow(authUrl, stateObj, continuation);
+  this.ongoing[stateObj.state].launchAuthFlow(
+      authUrl, stateObj, interactive, continuation);
   delete this.ongoing[stateObj.state];
 };
 
