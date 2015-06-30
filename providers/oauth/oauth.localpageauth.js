@@ -65,10 +65,11 @@ LocalPageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
  * @method launchAuthFlow
  * @param {String} authUrl - The URL that initiates the auth flow.
  * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
+ * @param {Boolean} interactive - Whether to launch an interactive flow (ignored)
  * @param {Function} continuation - Function to call when complete
  *    Expected to see a String value that is the response Url containing the access token
  */
-LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, continuation) {
+LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactive, continuation) {
   "use strict";
   var listener = this.storageListener.bind(this, continuation, stateObj);
   this.listeners[stateObj.state] = listener;
