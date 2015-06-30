@@ -87,7 +87,8 @@ OAuth.prototype.initiateOAuth = function (redirectURIs, continuation) {
  * @method launchAuthFlow
  * @param {String} authUrl - The URL that initiates the auth flow.
  * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
- * @param {Boolean} interactive - Whether to launch an interactive OAuth flow
+ * @param {Boolean} interactive - Whether to launch an interactive OAuth flow.
+ *    Defaults to true.
  * @param {Function} continuation - Function to call when complete
  *    Expected to see a String value that is the response Url containing the access token
  */
