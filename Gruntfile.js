@@ -87,16 +87,13 @@ module.exports = function (grunt) {
         ],
       },
       browsers: {
-        browsers: [ 'Chrome', 'Firefox' ],
-        junitReporter: { outputFile: 'shippable/testresults/test-unit.xml', suite: '' },
+        browsers: [ 'Chrome', 'Firefox' ]
       },
       phantom: {
-        browsers: [ 'PhantomJS' ],
-        junitReporter: { outputFile: 'shippable/testresults/test-unit.xml', suite: '' },
+        browsers: [ 'PhantomJS' ]
       },
       integration: {
         browsers: [ 'Chrome', 'Firefox' ],
-        junitReporter: { outputFile: 'shippable/testresults/test-integration.xml', suite: '' },
         coverageReporter: {
           dir: 'build/coverage/'
         },
@@ -188,7 +185,19 @@ module.exports = function (grunt) {
     // Exorcise, Uglify, Concat are used to create a minimized freedom.js with
     // correct sourcemap. Uglify needs an explicit 'sourceMapIn' argument,
     // requiring that exorcise be used before hand. Concat is able to properly
-    // attach a banner while maintaining the correct source-map offsets.
+    // attach a banner while maintaining the correct source-map offsets.    
+    // The replace tasks removes a charset declaration that breaks concat -
+    // it should be removed once concat copes better.
+    replace: {
+      dist: {
+        src: ['build/freedom.worker.js'],
+        overwrite: true,
+        replacements: [{
+          from: 'charset:utf-8;',
+          to: ''
+        }]
+      }
+    },
     exorcise: {
       dist: {
         files: {
@@ -332,6 +341,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
+  grunt.loadNpmTasks('grunt-text-replace');
   grunt.loadTasks('tasks');
 
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
@@ -379,6 +389,7 @@ module.exports = function (grunt) {
     'jshint',
     'create-interface-bundle',
     'browserify:freedom',
+    'replace:dist',
     'concat:full',
     'exorcise',
     'uglify',
