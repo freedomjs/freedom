@@ -22,6 +22,7 @@ var Resource = function (debug) {
     'resource': this.xhrRetriever,
     'chrome': this.xhrRetriever,
     'app': this.xhrRetriever,
+    'file': this.xhrRetriever,
     'manifest': this.manifestRetriever
   };
 };
@@ -246,7 +247,7 @@ Resource.removeRelativePath = function (url) {
  */
 Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
   var protocols = ["http", "https", "chrome", "chrome-extension", "resource",
-                   "app"],
+                   "app", "file"],
     dirname,
     protocolIdx,
     pathIdx,
