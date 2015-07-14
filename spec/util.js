@@ -148,7 +148,6 @@ exports.getResolvers = function() {
     reject();
   }});
   var rsrc = new Resource();
-  resolvers.push({'proto':'file', 'retriever': rsrc.xhrRetriever});
   resolvers.push({'proto':'null', 'retriever': rsrc.xhrRetriever});
   extraResolve(resolvers);
   return resolvers;
