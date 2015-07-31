@@ -4,6 +4,9 @@ var PromiseCompat = require('es6-promise').Promise;
 var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
 var loadedOnStartup = false;
+
+var TIMEOUT = 5000;
+
 /**
  * If there is redirection back to the page, and oAuthRedirectID is set,
  * then report the auth and close the window.
@@ -65,7 +68,7 @@ LocalPageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
  * @method launchAuthFlow
  * @param {String} authUrl - The URL that initiates the auth flow.
  * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
- * @param {Boolean} interactive - Whether to launch an interactive flow (ignored)
+ * @param {Boolean} interactive - Whether to launch an interactive flow
  * @param {Function} continuation - Function to call when complete
  *    Expected to see a String value that is the response Url containing the access token
  */
@@ -76,6 +79,18 @@ LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactive
   window.addEventListener("storage", listener, false);
   // Start 'er up
   window.open(authUrl);
+
+  if (interactive === false) {
+    setTimeout(function() {
+      if (this.listeners[stateObj.state]) {
+        // Listener has not been deleted, indicating oauth has completed.
+        window.removeEventListener(
+            "storage", this.listeners[stateObj.state], false);
+        delete this.listeners[stateObj.state];
+        continuation(undefined, 'Error launching auth flow');
+      }
+    }.bind(this), TIMEOUT);
+  }
 };
 
 /**
@@ -84,6 +99,7 @@ LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactive
  * http://tutorials.jenkov.com/html5/local-storage.html#storage-events
  * @param {Function} continuation function to call with result
  * @param {Object.<string, string>} stateObj the return value from initiateOAuth
+
  * @param {Object} msg storage event
  */
 LocalPageAuth.prototype.storageListener = function(continuation, stateObj, msg) {

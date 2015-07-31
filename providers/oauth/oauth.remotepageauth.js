@@ -3,6 +3,8 @@ var PromiseCompat = require('es6-promise').Promise;
 
 var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
+var TIMEOUT = 5000;
+
 function RemotePageAuth() {
   "use strict";
   this.listeners = {};
@@ -47,7 +49,7 @@ RemotePageAuth.prototype.initiateOAuth = function(redirectURIs, continuation) {
  * @method launchAuthFlow
  * @param {String} authUrl - The URL that initiates the auth flow.
  * @param {Object.<string, string>} stateObj - The return value from initiateOAuth
- * @param {Boolean} interactive - Whether to launch an interactive flow (ignored)
+ * @param {Boolean} interactive - Whether to launch an interactive flow
  * @param {Function} continuation - Function to call when complete
  *    Expected to see a String value that is the response Url containing the access token
  */
@@ -65,8 +67,10 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactiv
     frame.contentWindow.postMessage(stateObj.state, '*');
   }.bind(this));
 
+  var hasCredentials = false;
   window.addEventListener('message', function (frame, msg) {
     if (msg.data && msg.data.key && msg.data.url && this.listeners[msg.data.key]) {
+      hasCredentials = true;
       this.listeners[msg.data.key](msg.data.url);
       delete this.listeners[msg.data.key];
       try {
@@ -76,6 +80,20 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactiv
       }
     }
   }.bind(this, frame), false);
+
+  if (interactive === false) {
+    setTimeout(function() {
+      if (hasCredentials === false) {
+        continuation(undefined, 'Error launching auth flow');
+        delete this.listeners[stateObj.state];
+        try {
+          document.body.removeChild(frame);
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    }.bind(this), TIMEOUT);
+  }
 };
 
 /**
