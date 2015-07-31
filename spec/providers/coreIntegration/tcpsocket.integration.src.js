@@ -227,4 +227,27 @@ module.exports = function (provider, setup) {
     });
 
   });
+
+  // Tests that the sockets passed to server sockets' onConnection events
+  // correctly dispatch onDisconnect events.
+  //
+  // Note that this also implicitly tests the close() method of client sockets.
+  it("onConnection sockets dispatch onDisconnect", function(done) {
+    var onDispatch = function (evt, msg) {
+      expect(evt).toEqual('onDisconnect');
+      done();
+    };
+    dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      receiver = new provider.provider(undefined, onDispatch, msg.socket);
+    });
+
+    socket.listen('127.0.0.1', 0, function () {
+      socket.getInfo(function (info) {
+        var client = new provider.provider(undefined, function (evt, msg) {});
+        client.connect('127.0.0.1', info.localPort, function () {
+          client.close();
+        });
+      });
+    });
+  });
 };
