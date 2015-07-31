@@ -4,6 +4,9 @@ var PromiseCompat = require('es6-promise').Promise;
 var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
 var loadedOnStartup = false;
+
+var TIMEOUT = 5000;
+
 /**
  * If there is redirection back to the page, and oAuthRedirectID is set,
  * then report the auth and close the window.
@@ -86,7 +89,7 @@ LocalPageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactive
         delete this.listeners[stateObj.state];
         continuation(undefined, 'Error launching auth flow');
       }
-    }.bind(this), 5000);
+    }.bind(this), TIMEOUT);
   }
 };
 

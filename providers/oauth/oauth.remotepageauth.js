@@ -3,6 +3,8 @@ var PromiseCompat = require('es6-promise').Promise;
 
 var oAuthRedirectId = 'freedom.oauth.redirect.handler';
 
+var TIMEOUT = 5000;
+
 function RemotePageAuth() {
   "use strict";
   this.listeners = {};
@@ -90,7 +92,7 @@ RemotePageAuth.prototype.launchAuthFlow = function(authUrl, stateObj, interactiv
           console.warn(e);
         }
       }
-    }.bind(this), 5000);
+    }.bind(this), TIMEOUT);
   }
 };
 
