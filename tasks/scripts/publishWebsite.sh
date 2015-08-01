@@ -8,7 +8,7 @@ TAG=$(git describe --abbrev=0 --tags)
 
 # Clone
 rm -rf build/freedomjs
-git clone git@github.com:freedomjs/freedomjs.github.io.git build/freedomjs
+git clone https://github.com/freedomjs/freedomjs.github.io.git build/freedomjs
 
 # Copy latest release
 mkdir -p build/freedomjs/dist/freedom/$TAG
