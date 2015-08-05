@@ -233,20 +233,23 @@ module.exports = function (provider, setup) {
   //
   // Note that this also implicitly tests the close() method of client sockets.
   it("onConnection sockets dispatch onDisconnect", function(done) {
+    var cspy = jasmine.createSpy('client'),
+        client,
+        receiver;
     var onDispatch = function (evt, msg) {
       expect(evt).toEqual('onDisconnect');
-      done();
+      socket.close(done);
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
+      expect(msg.socket).toBeDefined();
       receiver = new provider.provider(undefined, onDispatch, msg.socket);
+      client.close(function () {});
     });
 
     socket.listen('127.0.0.1', 0, function () {
       socket.getInfo(function (info) {
-        var client = new provider.provider(undefined, function (evt, msg) {});
-        client.connect('127.0.0.1', info.localPort, function () {
-          client.close();
-        });
+        client = new provider.provider(undefined, cspy);
+        client.connect('127.0.0.1', info.localPort, function () {});
       });
     });
   });
