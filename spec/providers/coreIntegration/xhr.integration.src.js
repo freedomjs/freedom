@@ -86,6 +86,53 @@ module.exports = function (provider, setup) {
     xhr.send(null);
   });
 
+  // Skip this test unless we are in a chrome app/extension.
+  // TODO: Enable for Firefox (should "just work") and node (requires patching
+  // the xhr2 module to enable restricted headers.)
+  if (chrome && chrome.webViewRequest) {
+    // Try a domain-fronted GET request to a test server run by Tor.
+    it("domain fronting", function(done) {
+      var response;
+      dispatch.gotMessageAsync("onload", [], function(e) {
+        // @todo not implemented in node polyfill yet
+        if (typeof window !== 'undefined') {
+          expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
+        }
+        expect(e.loaded).toEqual(jasmine.any(Number));
+        expect(e.total).toEqual(jasmine.any(Number));
+        xhr.getReadyState().then(function(readyState) {
+          expect(readyState).toEqual(4); // Done
+          return xhr.getStatus();
+        }).then(function(status) {
+          expect(status).toEqual(200);
+          return xhr.getStatusText();
+        }).then(function(statusText) {
+          expect(statusText).toEqual("OK");
+          return xhr.getResponseText();
+        }).then(function(respText) {
+          response = respText;
+          expect(respText).toMatch(/I.m just a happy little web server.\n/);
+          expect(respText.length).toBeGreaterThan(1);
+          return xhr.getResponse();
+        }).then(function(resp) {
+          expect(resp.string).toEqual(response);
+          return xhr.getResponseURL();
+        }).then(function(url) {
+          // @todo not implemented in node polyfill yet
+          if (typeof window !== 'undefined') {
+            expect(url).toEqual("https://ajax.aspnetcdn.com/");
+          }
+          done();
+        });
+      });
+      // This is a domain-fronting test server operated by Tor: see
+      // https://trac.torproject.org/projects/tor/wiki/doc/meek#MicrosoftAzure
+      xhr.open("GET", "https://ajax.aspnetcdn.com/", true);
+      xhr.setRequestHeader("Host", "az786092.vo.msecnd.net");
+      xhr.send(null);
+    });
+  }
+
   // @todo not implemented in node polyfill yet
   if (typeof window !== 'undefined') {
     it("triggers upload events", function(done) {
