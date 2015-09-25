@@ -48,16 +48,16 @@ module.exports = function (provider, setup) {
 
   it("Gets info on client & server sockets", function (done) {
     var cspy = jasmine.createSpy('client'),
-      client,
-      onconnect = function () {
-        client.getInfo(function (info) {
-          expect(info.localPort).toBeGreaterThan(1023);
-          PromiseCompat.all([
-            client.close(function () {}),
-            socket.close(function () {}),
-            done()]);
-        });
-      };
+        client,
+        onConnect = function () {
+          client.getInfo(function (info) {
+            expect(info.localPort).toBeGreaterThan(1023);
+            PromiseCompat.all([
+              client.close(function () {}),
+              socket.close(function () {}),
+              done()]);
+          });
+        };
 
     socket.getInfo(function (info) {
       expect(info.connected).toEqual(false);
@@ -67,7 +67,7 @@ module.exports = function (provider, setup) {
       socket.getInfo(function (info) {
         expect(info.localPort).toBeGreaterThan(1023);
         client = new provider.provider(undefined, cspy);
-        client.connect('127.0.0.1', info.localPort, onconnect);
+        client.connect('127.0.0.1', info.localPort, onConnect);
       });
     });
   });
