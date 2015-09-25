@@ -199,7 +199,7 @@ module.exports = function (provider, setup) {
     socket.listen('127.0.0.1', 9981, function () {
       socket.listen('127.0.0.1', 9981, function (success, err) {
         expect(err.errcode).toEqual('ALREADY_CONNECTED');
-        socket.close(done);
+        PromiseCompat.resolve(socket.close(done));
       });
     });
   });
