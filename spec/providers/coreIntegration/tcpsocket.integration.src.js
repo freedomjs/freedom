@@ -238,7 +238,7 @@ module.exports = function (provider, setup) {
         receiver;
     var onDispatch = function (evt, msg) {
       expect(evt).toEqual('onDisconnect');
-      socket.close(done);
+      socket.close(function () { receiver.close(function () { done() })});
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
