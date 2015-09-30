@@ -48,16 +48,16 @@ module.exports = function (provider, setup) {
 
   it("Gets info on client & server sockets", function (done) {
     var cspy = jasmine.createSpy('client'),
-      client,
-      onconnect = function () {
-        client.getInfo(function (info) {
-          expect(info.localPort).toBeGreaterThan(1023);
-          PromiseCompat.all([
-            client.close(function () {}),
-            socket.close(function () {}),
-            done()]);
-        });
-      };
+        client,
+        onConnect = function () {
+          client.getInfo(function (info) {
+            expect(info.localPort).toBeGreaterThan(1023);
+            PromiseCompat.all([
+              client.close(function () {}),
+              socket.close(function () {}),
+              done()]);
+          });
+        };
 
     socket.getInfo(function (info) {
       expect(info.connected).toEqual(false);
@@ -67,7 +67,7 @@ module.exports = function (provider, setup) {
       socket.getInfo(function (info) {
         expect(info.localPort).toBeGreaterThan(1023);
         client = new provider.provider(undefined, cspy);
-        client.connect('127.0.0.1', info.localPort, onconnect);
+        client.connect('127.0.0.1', info.localPort, onConnect);
       });
     });
   });
@@ -199,7 +199,7 @@ module.exports = function (provider, setup) {
     socket.listen('127.0.0.1', 9981, function () {
       socket.listen('127.0.0.1', 9981, function (success, err) {
         expect(err.errcode).toEqual('ALREADY_CONNECTED');
-        socket.close(done);
+        PromiseCompat.resolve(socket.close(done));
       });
     });
   });
@@ -238,7 +238,7 @@ module.exports = function (provider, setup) {
         receiver;
     var onDispatch = function (evt, msg) {
       expect(evt).toEqual('onDisconnect');
-      socket.close(done);
+      socket.close(function () { receiver.close(function () { done() })});
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
