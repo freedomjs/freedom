@@ -443,7 +443,7 @@ ModuleInternal.prototype.tryLoad = function (importer, url) {
     this.debug.warn(e.stack);
     this.debug.error("Error loading " + url, e);
     this.debug.error("If the stack trace is not useful, see https://" +
-        "github.com/freedomjs/freedom/wiki/Debugging-Script-Parse-Errors");
+        "github.com/freedomjs/freedom/wiki/Debugging");
   }.bind(this));
 };
 
