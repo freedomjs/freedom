@@ -16,12 +16,14 @@
       
       // Socket is already bound
       "ALREADY_BOUND": "Socket already bound",
+      // Socket is already closed
+      "ALREADY_CLOSED": "Socket already closed",
       // Invalid Argument, client error
       "INVALID_ARGUMENT": "Invalid argument",
       // Socket reset because of change in network state.
       "NETWORK_CHANGED": "Network changed",
       // Failure to send data
-      "SNED_FAILED": "Send failed"
+      "SEND_FAILED": "Send failed"
     }},
   
     // Creates a socket, binds it to an interface and port and listens for
