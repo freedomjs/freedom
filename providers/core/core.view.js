@@ -1,4 +1,4 @@
-/*globals document */
+/*globals document,chrome */
 /*jslint indent:2,sloppy:true,node:true */
 var util = require('../../src/util');
 var PromiseCompat = require('es6-promise').Promise;
@@ -55,8 +55,8 @@ Core_View.provider = {
   active: {},
   onOpen: function (id, name, page, resources, postMessage) {
     var container = document.body,
-      root,
-      frame;
+        root,
+        frame;
     
     if (!this.listener) {
       this.listener = function (msg) {
@@ -84,6 +84,11 @@ Core_View.provider = {
 
     container.appendChild(root);
     
+    // Path fix for Chrome extensions
+    if (page.indexOf('chrome-extension://<id>/') === 0) {
+      page = '../' + page.substr(('chrome-extension://' + chrome.runtime.id +
+                                  '/').length);
+    }
     return new PromiseCompat(function (resolve, reject) {
       frame = document.createElement("iframe");
       frame.setAttribute("sandbox", "allow-scripts allow-forms");
