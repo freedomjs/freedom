@@ -152,13 +152,17 @@ module.exports = function (provider, setup) {
   });
 
   it("Secures a socket", function (done) {
-    // TODO - prepareSecure test, if Chrome isn't fixing that soon
-    socket.connect('www.google.com', 443, function () {
-      socket.secure(function() {
-        socket.getInfo(function (info) {
-          expect(info.connected).toEqual(true);
-          PromiseCompat.all([socket.close(function () {}),
-                             done()]);
+    socket.prepareSecure(function(success, err) {
+      expect(err).toBeUndefined();
+      socket.connect('www.google.com', 443, function (success, err) {
+        expect(err).toBeUndefined();
+        socket.secure(function(success, err) {
+          expect(err).toBeUndefined();
+          socket.getInfo(function (info) {
+            expect(info.connected).toEqual(true);
+            PromiseCompat.all([socket.close(function () {}),
+                               done()]);
+          });
         });
       });
     });
@@ -172,7 +176,9 @@ module.exports = function (provider, setup) {
   });
 
   it("Gives error when connecting to invalid domain", function (done) {
-    socket.connect('www.domainexiststobreakourtests.gov', 80,
+    // Some ISPs (e.g. Time Warner) hijack all failed domains, so we use
+    // a failing subdomain on a real domain.
+    socket.connect('nosuchdomain.google.com', 80,
                    function (success, err) {
                      var allowedErrors = ['CONNECTION_FAILED',
                                           'NAME_NOT_RESOLVED'];
