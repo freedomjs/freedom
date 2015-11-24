@@ -1,5 +1,5 @@
 /*globals document,chrome */
-/*jslint indent:2,sloppy:true,node:true */
+/*jslint indent:2,sloppy:true,node:true,evil:true */
 var util = require('../../src/util');
 var PromiseCompat = require('es6-promise').Promise;
 
@@ -54,9 +54,20 @@ Core_View.provider = {
   listener: undefined,
   active: {},
   onOpen: function (id, name, page, resources, postMessage) {
-    var container = document.body,
-        root,
-        frame;
+    var container, root, frame;
+    if (page.indexOf('chrome-extension://<id>/') === 0) {
+      // Chrome app
+      page = '../' + page.substr(('chrome-extension://' + chrome.runtime.id +
+                                  '/').length);
+      // TODO make container assigned to something useful
+    } else if (page.indexOf('resource://') === 0) {
+      // Firefox addon
+      // UGLY hack to avoid browserify trying to process this require
+      eval('container = require("sdk/view/core")(require("sdk/windows")' +
+           '.browserWindows[0]).document.body;');
+    } else {
+      container = document.body;
+    }
     
     if (!this.listener) {
       this.listener = function (msg) {
@@ -84,11 +95,6 @@ Core_View.provider = {
 
     container.appendChild(root);
     
-    // Path fix for Chrome extensions
-    if (page.indexOf('chrome-extension://<id>/') === 0) {
-      page = '../' + page.substr(('chrome-extension://' + chrome.runtime.id +
-                                  '/').length);
-    }
     return new PromiseCompat(function (resolve, reject) {
       frame = document.createElement("iframe");
       frame.setAttribute("sandbox", "allow-scripts allow-forms");
@@ -125,12 +131,12 @@ Core_View.provider = {
 };
 
 /**
- * Ask for this view to open a specific location, either a File relative to
- * the loader, or an explicit code location.
- * @method show
- * @param {String} name The identifier of the view.
- * @param {Function} continuation Function to call when view is loaded.
- */
+* Ask for this view to open a specific location, either a File relative to
+* the loader, or an explicit code location.
+* @method show
+* @param {String} name The identifier of the view.
+* @param {Function} continuation Function to call when view is loaded.
+*/
 Core_View.prototype.show = function (name, continuation) {
   if (this.id) {
     return continuation(undefined, {
@@ -141,7 +147,7 @@ Core_View.prototype.show = function (name, continuation) {
   this.id = util.getId();
 
   var config = this.module.manifest.views,
-    toResolve = [];
+      toResolve = [];
   if (!config || !config[name]) {
     return continuation(undefined, {
       errcode: 'NON_EXISTANT',
@@ -154,17 +160,18 @@ Core_View.prototype.show = function (name, continuation) {
     PromiseCompat.all(toResolve.map(function (fname) {
       return this.module.resource.get(this.module.manifestId, fname);
     }.bind(this))).then(function (files) {
-      this.provider.onOpen(this.id,
-          name,
-          files[files.length - 1],
-          files,
-          this.dispatchEvent.bind(this, 'message')).then(
-        function (c) {
-          // Make sure continuation is called without an argument.
-          c();
-        }.bind({}, continuation),
-        continuation.bind({}, undefined)
-      );
+      this.provider.onOpen(
+        this.id,
+        name,
+        files[files.length - 1],
+        files,
+        this.dispatchEvent.bind(this, 'message')).then(
+          function (c) {
+            // Make sure continuation is called without an argument.
+            c();
+          }.bind({}, continuation),
+          continuation.bind({}, undefined)
+        );
     }.bind(this), function (err) {
       this.module.debug.error('Unable to open view ' + name + ': ', err);
       continuation(undefined, {
@@ -197,9 +204,9 @@ Core_View.prototype.isSecure = function (continuation) {
 };
 
 /**
- * Send a message to an open view.
- * @method postMessage
- */
+* Send a message to an open view.
+* @method postMessage
+*/
 Core_View.prototype.postMessage = function (msg, continuation) {
   if (!this.id) {
     return continuation(undefined, {
@@ -212,9 +219,9 @@ Core_View.prototype.postMessage = function (msg, continuation) {
 };
 
 /**
- * Close an active view.
- * @method close
- */
+* Close an active view.
+* @method close
+*/
 Core_View.prototype.close = function (continuation) {
   if (!this.id) {
     return continuation(undefined, {
@@ -230,11 +237,11 @@ Core_View.prototype.close = function (continuation) {
 
 
 /**
- * Allow a web page to redefine behavior for how views are shown.
- * @method register
- * @static
- * @param {Function} PageProvider The custom view behavior.
- */
+* Allow a web page to redefine behavior for how views are shown.
+* @method register
+* @static
+* @param {Function} PageProvider The custom view behavior.
+*/
 Core_View.register = function (PageProvider) {
   var provider = PageProvider ? new PageProvider() : Core_View.provider;
   exports.provider = Core_View.bind(this, provider);
