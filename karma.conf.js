@@ -1,6 +1,4 @@
 /*jslint node:true */
-var FILES = require('./Gruntfile').FILES;
-
 module.exports = function (config) {
   'use strict';
   config.set({
@@ -8,20 +6,9 @@ module.exports = function (config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
 
-    browserNoActivityTimeout: 30000,
-
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine'],
-
-    // list of files / patterns to load in the browser
-    // Testing Providers for now
-    files: [
-      require.resolve('es5-shim'),
-      require.resolve('es6-promise'),
-      'spec.js',
-      {pattern: 'build/freedom.frame.js', included: false}
-    ],
     
     // web server port
     port: 9876,
@@ -44,18 +31,33 @@ module.exports = function (config) {
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
+
+    // Set timeouts to avoid DISCONNECTED messages
+    captureTimeout: 120000,  // default 60000
+    browserDisconnectTimeout: 10000, // default 2000
+    browserDisconnectTolerance: 1, // default 0
+    browserNoActivityTimeout: 60000, //default 10000
     
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress', 'html', 'coverage', 'saucelabs', 'unicorn', 'story'],
+    reporters: ['progress', 'story', 'html', 'junit', 'coverage', 'saucelabs', 'unicorn'],
     
     // Coverage report options
     coverageReporter: {
-      type: 'lcovonly',
-      dir: 'build/coverage/',
-      file: 'lcov.info'
+      reporters: [ {
+        type: 'lcovonly',
+        dir: 'build/coverage/',
+        file: 'lcov.info'
+      }, {
+        type: 'cobertura',
+        dir: 'shippable/codecoverage',
+        file: 'test-coverage.xml'
+      } ]
     },
+
+    // JUnit report options (for Shippable)
+    junitReporter: { outputDir: 'shippable/testresults/', suite: '' },
 
     // SauceLabs config that gets overwritten in Gruntfile.js
     sauceLabs: {},

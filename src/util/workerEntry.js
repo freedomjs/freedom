@@ -4,6 +4,7 @@ var providers = [
   require('../../providers/core/core.unprivileged'),
   require('../../providers/core/core.echo'),
   require('../../providers/core/core.console'),
+  require('../../providers/core/core.crypto'),
   require('../../providers/core/core.peerconnection'),
   require('../../providers/core/core.rtcpeerconnection'),
   require('../../providers/core/core.rtcdatachannel'),

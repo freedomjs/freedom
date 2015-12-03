@@ -1,7 +1,9 @@
 freedom.js
 =======
 [![Build Status](https://travis-ci.org/freedomjs/freedom.png?branch=master)](https://travis-ci.org/freedomjs/freedom)
+[![Build Status](https://api.shippable.com/projects/54c823bf5ab6cc135289fbd6/badge?branchName=master)](https://app.shippable.com/projects/54c823bf5ab6cc135289fbd6/builds/latest)
 [![Coverage Status](https://coveralls.io/repos/freedomjs/freedom/badge.png?branch=master)](https://coveralls.io/r/freedomjs/freedom?branch=master)
+[![Code Climate](https://codeclimate.com/github/freedomjs/freedom/badges/gpa.svg)](https://codeclimate.com/github/freedomjs/freedom)
 [![Selenium Test Status](https://saucelabs.com/browser-matrix/freedomjs.svg)](https://saucelabs.com/u/freedomjs)
 
 freedom.js is a framework for building peer-to-peer (P2P) web apps. 
@@ -22,16 +24,16 @@ Use freedom.js
 If you want a built version of freedom.js into your website, grab a copy from our CDN:
 
 Websites: 
-* [freedom.latest.js](http://freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
-* [freedom.v0.6.18.js](http://freedomjs.org/dist/freedom/v0.6.18/freedom.v0.6.18.js) (stable)
+* [freedom.latest.js](http://www.freedomjs.org/dist/freedom/latest/freedom.js) (unstable)
+* [freedom.v0.6.19.js](http://www.freedomjs.org/dist/freedom/v0.6.19/freedom.v0.6.19.js) (stable)
 
 Chrome Apps:
-* [freedom-for-chrome.latest.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
-* [freedom-for-chrome.v0.4.9.js](http://freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.9.js) (stable)
+* [freedom-for-chrome.latest.js](http://www.freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.latest.js) (unstable)
+* [freedom-for-chrome.v0.4.12.js](http://www.freedomjs.org/dist/freedom-for-chrome/freedom-for-chrome.v0.4.12.js) (stable)
 
 Firefox Extensions:
-* [freedom-for-firefox.latest.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
-* [freedom-for-firefox.v0.6.7.jsm](http://freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.7.jsm) (stable)
+* [freedom-for-firefox.latest.jsm](http://www.freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.latest.jsm) (unstable)
+* [freedom-for-firefox.v0.6.8.jsm](http://www.freedomjs.org/dist/freedom-for-firefox/freedom-for-firefox.v0.6.8.jsm) (stable)
 
 freedom, freedom-for-node, freedom-for-chrome, and freedom-for-firefox also exist as npm packages
 

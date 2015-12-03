@@ -22,6 +22,7 @@ var Resource = function (debug) {
     'resource': this.xhrRetriever,
     'chrome': this.xhrRetriever,
     'app': this.xhrRetriever,
+    'gopher': this.xhrRetriever,  // For Cordova; see http://crbug.com/513352 .
     'manifest': this.manifestRetriever
   };
 };
@@ -246,7 +247,7 @@ Resource.removeRelativePath = function (url) {
  */
 Resource.prototype.httpResolver = function (manifest, url, resolve, reject) {
   var protocols = ["http", "https", "chrome", "chrome-extension", "resource",
-                   "app"],
+                   "app", "gopher"],
     dirname,
     protocolIdx,
     pathIdx,

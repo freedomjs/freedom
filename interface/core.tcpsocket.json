@@ -37,9 +37,9 @@
       "INVALID_ARGUMENT": "Invalid argument",
       // Connection timed out.
       "TIMED_OUT": "Timed out",
-      // Operation cannot complete because socket is not connected.
+      // Operation cannot complete because socket is not connected
       "NOT_CONNECTED": "Socket not connected",
-      // Socket reset because of change in network state.
+      // Socket reset because of change in network state
       "NETWORK_CHANGED": "Network changed",
       // Connection closed
       "CONNECTION_CLOSED": "Connection closed gracefully",
@@ -48,7 +48,17 @@
       // Connection Refused
       "CONNECTION_REFUSED": "Connection refused",
       // Generic Failure
-      "CONNECTION_FAILED": "Connection failed"
+      "CONNECTION_FAILED": "Connection failed",
+      // DNS lookup failed
+      "NAME_NOT_RESOLVED": "DNS lookup failed",
+      // The network is not connected or configured
+      "INTERNET_DISCONNECTED": "Cannot reach any network",
+      // The IP address is not correctly formed.
+      "ADDRESS_INVALID": "Invalid address",
+      // The IP address is unreachable
+      "ADDRESS_UNREACHABLE": "No route to host",
+      // SOCKS proxy server could not reach host
+      "HOST_UNREACHABLE": "SOCKS proxy server could not reach host"
     }},
     
     // Close a socket. Will Fail if the socket is not connected or already
@@ -81,6 +91,29 @@
   
     // Upgrades a socket to TLS, expected to be invoked after connect.
     "secure": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Pauses a socket.  Once this call returns, at most one more onData event
+    // will be emitted.  Subsequent incoming packets will be queued in a
+    // finite-size buffer, resulting in TCP backpressure to the sender.
+    // TODO: Tighten this definition once https://crbug.com/403076 is fixed.
+    "pause": {
+      "type": "method",
+      "value": [],
+      "err": {
+        "errcode": "string",
+        "message": "string"
+      }
+    },
+  
+    // Allows the socket to resume emitting the onData event.
+    "resume": {
       "type": "method",
       "value": [],
       "err": {

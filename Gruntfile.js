@@ -5,17 +5,17 @@
  * Here are the common tasks used:
  * build
  *  - Lint and compile freedom.js
- *  - (default Grunt task) 
+ *  - (default Grunt task)
  *  - This must be run before ANY karma task (because of connect:default)
  *  - Unit tests only run on PhantomJS
  * demo
  *  - Build freedom.js, and start a web server for seeing demos at
  *    http://localhost:8000/demo
  * test
- *  - Build freedom.js, and run all unit tests on 
+ *  - Build freedom.js, and run all unit tests on
  *    Chrome, Firefox, and PhantomJS
  * debug
- *  - Same as test, except keeps the browsers open 
+ *  - Same as test, except keeps the browsers open
  *    and reruns tests on watched file changes.
  *  - Used to debug unit tests
  * ci
@@ -78,13 +78,31 @@ module.exports = function (grunt) {
         // NOTE: need to run 'connect:default' to serve files
         configFile: 'karma.conf.js',
         singleRun: true,
-        autoWatch: false
+        autoWatch: false,
+        files: [
+          require.resolve('es5-shim'),
+          require.resolve('es6-promise'),
+          'spec-unit.js',
+          { pattern: 'build/freedom.frame.js', included: false }
+        ],
       },
       browsers: {
-        browsers: ['Chrome', 'Firefox']
+        browsers: [ 'Chrome', 'Firefox' ]
       },
       phantom: {
-        browsers: ['PhantomJS']
+        browsers: [ 'PhantomJS' ]
+      },
+      integration: {
+        browsers: [ 'Chrome', 'Firefox' ],
+        coverageReporter: {
+          dir: 'build/coverage/'
+        },
+        options: { files: [
+          require.resolve('es5-shim'),
+          require.resolve('es6-promise'),
+          'freedom.js',
+          'spec-integration.js'
+        ] }
       },
       saucelabs: {
         browsers: ['sauce_chrome_mac', 'sauce_chrome_win', 'sauce_firefox'],
@@ -134,7 +152,7 @@ module.exports = function (grunt) {
       },
       jasmine_unit: {
         files: {
-          'spec.js': FILES.specCoreUnit.concat(
+          'spec-unit.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
             FILES.specProviderUnit
           )
@@ -142,7 +160,7 @@ module.exports = function (grunt) {
       },
       jasmine_coverage: {
         files: {
-          'spec.js': FILES.specCoreUnit.concat(
+          'spec-unit.js': FILES.specCoreUnit.concat(
             FILES.specPlatformUnit,
             FILES.specProviderUnit
           )
@@ -153,13 +171,9 @@ module.exports = function (grunt) {
           }]]
         }
       },
-      jasmine_full: {
+      jasmine_integration: {
         files: {
-          'spec.js': FILES.specCoreUnit.concat(
-            FILES.specPlatformUnit,
-            FILES.specProviderUnit,
-            FILES.specProviderIntegration
-          )
+          'spec-integration.js': FILES.specProviderIntegration
         }
       },
       options: {
@@ -171,7 +185,19 @@ module.exports = function (grunt) {
     // Exorcise, Uglify, Concat are used to create a minimized freedom.js with
     // correct sourcemap. Uglify needs an explicit 'sourceMapIn' argument,
     // requiring that exorcise be used before hand. Concat is able to properly
-    // attach a banner while maintaining the correct source-map offsets.
+    // attach a banner while maintaining the correct source-map offsets.    
+    // The replace tasks removes a charset declaration that breaks concat -
+    // it should be removed once concat copes better.
+    replace: {
+      dist: {
+        src: ['build/freedom.worker.js'],
+        overwrite: true,
+        replacements: [{
+          from: 'charset:utf-8;',
+          to: ''
+        }]
+      }
+    },
     exorcise: {
       dist: {
         files: {
@@ -211,7 +237,8 @@ module.exports = function (grunt) {
     },
     clean: [
       'freedom.*',
-      'spec.js',
+      'spec-unit.js',
+      'spec-integration.js',
       'dist/*',
       'build/*'
     ],
@@ -314,6 +341,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
+  grunt.loadNpmTasks('grunt-text-replace');
   grunt.loadTasks('tasks');
 
   grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
@@ -355,50 +383,67 @@ module.exports = function (grunt) {
       });
       grunt.task.run('codeclimate:report');
     });
-  
+
   // Default tasks.
   grunt.registerTask('build', [
     'jshint',
     'create-interface-bundle',
     'browserify:freedom',
+    'replace:dist',
     'concat:full',
     'exorcise',
     'uglify',
     'concat:min'
   ]);
-  grunt.registerTask('unit', [
+  // Run unit tests on PhantomJS
+  grunt.registerTask('test-phantom', [
     'create-interface-bundle',
     'browserify:frame',
     'browserify:jasmine_unit',
     'connect:freedom',
     'karma:phantom'
   ]);
+  // Run unit+integration tests on Chrome/Firefox
   grunt.registerTask('test', [
-    'jshint',
-    'create-interface-bundle',
+    'build',
     'browserify:frame',
-    'browserify:jasmine_full',
+    'browserify:jasmine_unit',
+    'browserify:jasmine_integration',
     'connect:freedom',
-    'karma:browsers'
+    'karma:browsers',
+    'karma:integration'
   ]);
-  grunt.registerTask('debug', [
+  // Debug unit tests
+  grunt.registerTask('debug-unit', [
     'prepare_watch',
     'jshint',
     'create-interface-bundle',
     'browserify:frame',
-    'browserify:jasmine_full',
+    'browserify:jasmine_unit',
     'connect:freedom',
     'karma:browsers'
   ]);
+  // Debug integration tests
+  grunt.registerTask('debug-integration', [
+    'prepare_watch',
+    'build',
+    'browserify:frame',
+    'browserify:jasmine_integration',
+    'connect:freedom',
+    'karma:integration'
+  ]);
+  // Launch demos
   grunt.registerTask('demo', [
     'build',
     'connect:demo'
   ]);
+  // Publish freedom.js to www.freedomjs.org
   grunt.registerTask('website', [
     'yuidoc',
     'publishWebsite'
   ]);
 
+  // Task to be run by our CI (e.g. Travis)
   if (process.env.TRAVIS_JOB_NUMBER) {
     var jobParts = process.env.TRAVIS_JOB_NUMBER.split('.');
     //When run from Travis from jobs *.1
@@ -412,29 +457,17 @@ module.exports = function (grunt) {
         'gitinfo',
         'karma:saucelabs',
         'coveralls:report',
-        'dynamic_codeclimate'
+        'dynamic_codeclimate',
+        'reportStats'
       ]);
     } else {  //When run from Travis from jobs *.2, *.3, etc.
-      grunt.registerTask('ci', [
-        'build',
-        'browserify:frame',
-        'browserify:jasmine_unit',
-        'connect:freedom',
-        'karma:phantom'
-      ]);
+      grunt.registerTask('ci', [ 'build', 'test-phantom' ]);
     }
   } else {  //When run from command-line
-    grunt.registerTask('ci', [
-      'build',
-      'browserify:frame',
-      'browserify:jasmine_unit',
-      'connect:freedom',
-      'karma:phantom',
-      'gitinfo',
-      'karma:saucelabs'
-    ]);
+    grunt.registerTask('ci', [ 'build', 'test-phantom', 'gitinfo', 'karma:saucelabs' ]);
   }
-  
+
+  // Cut a new release of freedom.js
   grunt.registerTask('release', function (arg) {
     if (arguments.length === 0) {
       arg = 'patch';
@@ -448,5 +481,5 @@ module.exports = function (grunt) {
     ]);
   });
 
-  grunt.registerTask('default', ['build', 'unit']);
+  grunt.registerTask('default', [ 'build', 'test-phantom' ]);
 };

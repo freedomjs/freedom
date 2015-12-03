@@ -1,3 +1,6 @@
+/* globals jasmine,beforeEach,expect,it */
+/* jslint node:true */
+
 var testUtil = require('../../util');
 
 module.exports = function (provider, setup) {
@@ -6,7 +9,8 @@ module.exports = function (provider, setup) {
   beforeEach(function () {
     setup();
     dispatch = testUtil.createTestPort('msgs');
-    xhr = new provider.provider({ provider: { onClose: function(i, f) {}} }, dispatch.onMessage.bind(dispatch));
+    xhr = new provider.provider({ provider: { onClose: function(i, f) {}} },
+                                dispatch.onMessage.bind(dispatch));
   });
 
   it("calling open with async=false returns an error", function(done) {
@@ -29,7 +33,7 @@ module.exports = function (provider, setup) {
 
   it("getReadyState properly returns state", function(done) {
     xhr.getReadyState().then(function(readyState) {
-      expect(readyState).toEqual(0);
+      expect([0, 1]).toContain(readyState);  // xhr2 allows unsent or open
       xhr.open("GET", "https://api.github.com/", true);
       return xhr.getReadyState();
     }).then(function(readyState) {
@@ -37,7 +41,7 @@ module.exports = function (provider, setup) {
       xhr.send(null);
       return xhr.getReadyState();
     }).then(function(readyState) {
-      // Can be either 1 (opened), 2 (headers_received), 3 (loading), or 4 (done)
+      // Can be 1 (opened), 2 (headers_received), 3 (loading), or 4 (done)
       expect(readyState).toBeGreaterThan(0);
       done();
     });
@@ -52,7 +56,7 @@ module.exports = function (provider, setup) {
         expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
       }
       expect(e.loaded).toEqual(jasmine.any(Number));
-      expect(e.total).toEqual(jasmine.any(Number));;
+      expect(e.total).toEqual(jasmine.any(Number));
       xhr.getReadyState().then(function(readyState) {
         expect(readyState).toEqual(4); // Done
         return xhr.getStatus();
@@ -88,12 +92,12 @@ module.exports = function (provider, setup) {
       dispatch.gotMessageAsync("onuploadloadstart", [], function(e) {
         expect(e.lengthComputable).toEqual(jasmine.any(Boolean));
         expect(e.loaded).toEqual(jasmine.any(Number));
-        expect(e.total).toEqual(jasmine.any(Number));;
+        expect(e.total).toEqual(jasmine.any(Number));
         done();
       });
       xhr.open("POST", "http://pastebin.com/api/api_post.php", true);
       xhr.send({ string: "POST" });
     });
-}
+  }
 
 };

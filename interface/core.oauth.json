@@ -5,9 +5,9 @@
      * Indicate the intention to initiate an oAuth flow, allowing an appropriate
      * oAuth provider to begin monitoring for redirection.
      * This will generate a token, which must be passed to the single subsequent call
-     * to launchAuthFlow. 
-     * 
-     * 
+     * to launchAuthFlow.
+     *
+     *
      * @method initiateOAuth
      * @param {String[]} Valid oAuth redirect URIs for your application
      * @return {{redirect: String, state: String}} A chosen redirect URI and
@@ -25,7 +25,7 @@
         "message": "string"
       }
     },
-  
+
     /**
      * oAuth client-side flow - launch the provided URL
      * This must be called after initiateOAuth with the returned state object
@@ -37,10 +37,11 @@
      */
     "launchAuthFlow": {
       "type": "method",
-      "value": ["string", {
-        "redirect": "string",
-        "state": "string"
-      }],
+      "value": [
+        "string",
+        {"redirect": "string", "state": "string"},
+        "boolean"
+      ],
       "ret": "string",
       "err": {
         "errcode": "string",

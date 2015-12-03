@@ -1,7 +1,9 @@
 ### Built files
-/spec.js
+/spec-unit.js
+/spec-integration.js
 /build
 /dist
+/shippable
 /freedom.js
 
 ### Auto-generated

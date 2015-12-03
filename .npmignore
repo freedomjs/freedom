@@ -1,6 +1,7 @@
 ### Built files
 /spec.js
 /build
+/shippable
 
 ### Auto-generated
 /node_modules

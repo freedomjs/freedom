@@ -55,7 +55,7 @@ page.on('peer', function () {
     peer.on('message', function (str) {
       page.emit('message', "from provider: " + JSON.stringify(str));
     });
-    
+
     channels[thisid] = cinfo.channel;
     channels[thisid].on('message', function (m) {
       page.emit('message', "from custom: " + JSON.stringify(m));
@@ -63,12 +63,25 @@ page.on('peer', function () {
     channels[thisid].onClose(function () {
       freedom['core.echo'].close(peer);
     });
- 
+
     peer.setup(cinfo.identifier);
   });
+});
+
+page.on('mkerr', function () {
+  throw new Error("I am a custom error");
 });
 
 friend.on('message', function (str) {
   page.emit('message', str);
 });
 
+page.on('req', function(url) {
+  page.emit('message', 'requiring ' + url);
+  core.require(url).then(function (Dependency) {
+    var d = new Dependency();
+    page.emit('message', 'has methods: ' + JSON.stringify(Object.keys(d)));
+  }, function (err) {
+    page.emit('message', 'Failed to load: ' + err);
+  });
+});

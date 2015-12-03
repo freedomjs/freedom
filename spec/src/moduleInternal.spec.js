@@ -26,7 +26,7 @@ describe('ModuleInternal', function() {
     var path = window.location.href,
         dir_idx = path.lastIndexOf('/');
     loc = path.substr(0, dir_idx) + '/';
-});
+  });
 
   it('configures an app environment', function() {
     var source = testUtil.createTestPort('test');
@@ -97,6 +97,7 @@ describe('ModuleInternal', function() {
     var source = testUtil.createTestPort('test');
     manager.setup(source);
     manager.createLink(source, 'default', app, 'default');
+
     source.on('onMessage', function(msg) {
       // Dependencies will be requested via 'createLink' messages. resolve those.
       if (msg.channel && msg.type === 'createLink') {
@@ -105,7 +106,8 @@ describe('ModuleInternal', function() {
           channel: msg.reverse
         });
       } else if (msg.type === 'resolve') {
-        hub.onMessage(source.messages[1][1].channel, {
+        app.onMessage('default', {
+          type: 'resolve.response',
           id: msg.id,
           data: 'spec/' + msg.data
         });

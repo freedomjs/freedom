@@ -15,7 +15,7 @@ var Provider = function (def, debug) {
   this.id = Consumer.nextId();
   util.handleEvents(this);
   this.debug = debug;
-  
+
   this.definition = def;
   this.mode = Provider.mode.synchronous;
   this.channels = {};
@@ -160,16 +160,25 @@ Provider.prototype.getInterface = function () {
   if (this.iface) {
     return this.iface;
   } else {
+    var sanityCheck = function (provider) {
+      if (typeof provider !== "function") {
+        throw new Error("Provider " + this.toString() +
+            " needs to be implemented by a function.");
+      }
+    };
     this.iface = {
       provideSynchronous: function (prov) {
+        sanityCheck(prov);
         this.providerCls = prov;
         this.mode = Provider.mode.synchronous;
       }.bind(this),
       provideAsynchronous: function (prov) {
+        sanityCheck(prov);
         this.providerCls = prov;
         this.mode = Provider.mode.asynchronous;
       }.bind(this),
       providePromises: function (prov) {
+        sanityCheck(prov);
         this.providerCls = prov;
         this.mode = Provider.mode.promises;
       }.bind(this)
@@ -296,14 +305,34 @@ Provider.prototype.getProvider = function (source, identifier, args) {
   return {
     instance: instance,
     onmsg: function (port, src, msg) {
+      var prop, debug, args, returnPromise, ret;
       if (msg.action === 'method') {
         if (typeof this[msg.type] !== 'function') {
           port.debug.warn("Provider does not implement " + msg.type + "()!");
+          port.emit(port.channels[src], {
+            type: 'method',
+            to: msg.to,
+            message: {
+              to: msg.to,
+              type: 'method',
+              reqId: msg.reqId,
+              name: msg.type,
+              error: 'Provider does not implement ' + msg.type + '()!'
+            }
+          });
           return;
         }
-        var prop = port.definition[msg.type],
-          debug = port.debug,
-          args = Consumer.portableToMessage(prop.value, msg, debug),
+        prop = port.definition[msg.type];
+        debug = port.debug;
+        args = Consumer.portableToMessage(prop.value, msg, debug);
+        if (msg.reqId === null) {
+          // Reckless call.  Ignore return value.
+          ret = function(resolve, reject) {
+            if (reject) {
+              debug.error(reject);
+            }
+          };
+        } else {
           ret = function (src, msg, prop, resolve, reject) {
             var streams = Consumer.messageToPortable(prop.ret, resolve,
                                                          debug);
@@ -321,19 +350,34 @@ Provider.prototype.getProvider = function (source, identifier, args) {
               }
             });
           }.bind(port, src, msg, prop);
+        }
         if (!Array.isArray(args)) {
           args = [args];
         }
         if (port.mode === Provider.mode.synchronous) {
           try {
             ret(this[msg.type].apply(this, args));
-          } catch (e) {
-            ret(undefined, e.message);
+          } catch (e1) {
+            ret(undefined, e1.message + ' ' + e1.stack);
           }
         } else if (port.mode === Provider.mode.asynchronous) {
-          this[msg.type].apply(instance, args.concat(ret));
+          try {
+            this[msg.type].apply(instance, args.concat(ret));
+          } catch (e2) {
+            ret(undefined, e2.message + ' ' + e2.stack);
+          }
         } else if (port.mode === Provider.mode.promises) {
-          this[msg.type].apply(this, args).then(ret, ret.bind({}, undefined));
+          try {
+            returnPromise = this[msg.type].apply(this, args);
+            if (returnPromise && returnPromise.then) {
+              returnPromise.then(ret, ret.bind({}, undefined));
+            } else {
+              ret(undefined, 'No promise returned from ' +
+                  msg.type + ': ' + returnPromise);
+            }
+          } catch (e3) {
+            ret(undefined, e3.message + ' ' + e3.stack);
+          }
         }
       }
     }.bind(instance, this, source)

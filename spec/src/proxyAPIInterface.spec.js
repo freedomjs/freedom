@@ -51,6 +51,19 @@ describe("proxy/APIInterface", function() {
     });
   });
 
+  it("Allows reckless calls.", function() {
+    expect(typeof(api.test.reckless)).toEqual('function');
+    var voidReturn = api.test.reckless('hi');
+    expect(voidReturn).toBe(undefined);
+    expect(emit).toHaveBeenCalledWith({
+      action: 'method',
+      type: 'test',
+      reqId: null,
+      text: ['hi'],
+      binary: []
+    });
+  });
+
   it("Delivers constructor arguments.", function(done) {
     var iface = {
       'constructor': {value: ['string']}
@@ -98,7 +111,7 @@ describe("proxy/APIInterface", function() {
       expect(err).toEqual('Error Occured');
       done();
     });
-    
+
     reg('message', {
       type: 'method',
       reqId: 0,
@@ -210,7 +223,7 @@ describe("Consumer.conform", function() {
       'p3': false,
       'p4': [1,2,3],
       'p6': conformed.p6,
-      'p8': undefined,
+      'p8': conformed.p8,
       'p9': ['1', '[object Object]'],
       'p10': ['true', 0],
       'p11': {}
@@ -234,7 +247,7 @@ describe("Consumer.conform", function() {
     expect(Consumer.conform(["array", "string"], ["test", 12],[], false)).toEqual(["test", "12"]);
     expect(Consumer.conform("object", {"simple":"string"},[], false)).toEqual({"simple": "string"});
     //expect(fdom.proxy.conform.bind({}, "object", function() {},[], false)).toThrow();
-    expect(Consumer.conform("object", function() {},[], false)).not.toBeDefined();
+    expect(Consumer.conform("object", function() {},[], false, debug)).not.toBeDefined();
   });
 
   it("conforms nulls", function() {
@@ -243,7 +256,7 @@ describe("Consumer.conform", function() {
     expect(Consumer.conform("object", null, [], false)).toEqual(null);
     expect(Consumer.conform({"key": "string"}, {"key": undefined}, [], false)).
       toEqual({});
-    expect(Consumer.conform(["string", "string", "string", "string"], 
+    expect(Consumer.conform(["string", "string", "string", "string"],
                               [null, undefined, null, 0], [], false)).
       toEqual([null, undefined, null, "0"]);
     expect(Consumer.conform("object", undefined, [], false)).toEqual(undefined);

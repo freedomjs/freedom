@@ -19,9 +19,9 @@
 
       var freedomPromise;
       if (customView) {
-        freedomPromise = freedom('manifest.json', {view: HeightView});
+        freedomPromise = freedom('connections.json', {view: HeightView});
       } else {
-        freedomPromise = freedom('manifest.json');
+        freedomPromise = freedom('connections.json');
       }
       freedomPromise.then(function (Connections) {
         activeModule = Connections;

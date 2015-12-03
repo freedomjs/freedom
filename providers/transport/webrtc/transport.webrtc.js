@@ -1,10 +1,10 @@
 /*jslint sloppy:true, node:true*/
-/*globals freedom,console,FileReaderSync,exports*/
+/*globals freedom,console,FileReaderSync,exports,Promise:true*/
 
 // For use in unit testing
 if (typeof Promise === 'undefined' && typeof require === 'function') {
   /*jslint -W079 */
-  var Promise = require('es6-promise').Promise;
+  Promise = require('es6-promise').Promise;
   /*jslint +W079 */
 }
 
