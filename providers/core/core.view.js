@@ -59,7 +59,7 @@ Core_View.provider = {
       // Chrome app
       page = '../' + page.substr(('chrome-extension://' + chrome.runtime.id +
                                   '/').length);
-      // TODO make container assigned to something useful
+      container = chrome.app.window.current().document.body;
     } else if (page.indexOf('resource://') === 0) {
       // Firefox addon
       // UGLY hack to avoid browserify trying to process this require
