@@ -16,7 +16,7 @@
     },
     // Specify a single element in the argument object,
     // depending on the type of data to send (e.g. in POST)
-    "send": { "type": "method", "value": [ { "string": "string", "buffer": "buffer" } ] },
+    "send": { "type": "method", "value": [ { "string": "string", "buffer": "buffer", "blob": "blob" } ] },
     "abort": { "type": "method", "value": [] },
     // @param {String} header
     // @return {String} value
