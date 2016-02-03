@@ -61,6 +61,8 @@ XhrProvider.prototype.send = function(data) {
     this._xhr.send(data.string);
   } else if (data.hasOwnProperty("buffer")) {
     this._xhr.send(data.buffer);
+  } else if (data.hasOwnProperty("blob")) {
+    this._xhr.send(data.blob);
   } else {
     this._xhr.send();
   }
