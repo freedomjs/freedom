@@ -1,5 +1,4 @@
 /*jshint node:true*/
-/*global */
 var PromiseCompat = require('es6-promise').Promise;
 var XhrClass = null;
 
