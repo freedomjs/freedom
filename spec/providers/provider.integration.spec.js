@@ -14,14 +14,14 @@ describe("integration-single: social.loopback.json",
          require("./social/social.single.integration.src")
          .bind(this, window.freedom,
                "providers/social/loopback/social.loopback.json", {}));
-describe("integration-single: social.ws.json",
-         require("./social/social.single.integration.src")
-         .bind(this, window.freedom,
-               "providers/social/websocket-server/social.ws.json", {}));
-describe("integration-double: social.ws.json",
-         require("./social/social.double.integration.src")
-         .bind(this, window.freedom,
-               "providers/social/websocket-server/social.ws.json", {}));
+xdescribe("integration-single: social.ws.json",
+          require("./social/social.single.integration.src")
+          .bind(this, window.freedom,
+                "providers/social/websocket-server/social.ws.json", {}));
+xdescribe("integration-double: social.ws.json",
+          require("./social/social.double.integration.src")
+          .bind(this, window.freedom,
+                "providers/social/websocket-server/social.ws.json", {}));
 
 // Storage
 describe("integration: storage.isolated.json",
@@ -42,9 +42,9 @@ describe("integration: storage.shared.json",
 **/
 
 // Transport
-describe("integration: transport.webrtc.json",
-         require("./transport/transport.integration.src").bind(
-           this, "/providers/transport/webrtc/transport.webrtc.json", setup));
+xdescribe("integration: transport.webrtc.json",
+          require("./transport/transport.integration.src").bind(
+            this, "/providers/transport/webrtc/transport.webrtc.json", setup));
 
 // environment
 describe("integration: Module Environment",
