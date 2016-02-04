@@ -157,9 +157,10 @@ WebRTCTransportProvider.prototype._chunk = function(data) {
 };
 
 WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
-  var bufferBound = 0; // upper bound on the # of bytes buffered
+  var bufferBound = 0, // upper bound on the # of bytes buffered
+      sendBuffers, checkBufferedAmount;
 
-  var sendBuffers = function() {
+  sendBuffers = function() {
     var promises = [];
     while(bufferBound + this._chunkSize <= this._pcQueueLimit &&
           buffers.length > 0) {
@@ -176,7 +177,7 @@ WebRTCTransportProvider.prototype._waitSend = function(tag, buffers) {
     return allSends.then(checkBufferedAmount);
   }.bind(this);
 
-  var checkBufferedAmount = function() {
+  checkBufferedAmount = function() {
     return this.pc.getBufferedAmount(tag).then(function(bufferedAmount) {
       bufferBound = bufferedAmount;
       if (bufferedAmount + this._chunkSize > this._pcQueueLimit) {

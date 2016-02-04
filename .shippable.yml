@@ -1,7 +1,8 @@
 build_image: freedomjs/freedom
 language: node_js
 node_js:
-- '0.10'
+- 'stable'
+- '4.2'
 notifications:
   email:
     recipients:

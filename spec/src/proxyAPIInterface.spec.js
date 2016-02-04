@@ -165,14 +165,7 @@ describe("Consumer.conform", function() {
   };
 
   it("Conforms Simple values to templates", function() {
-    var blob = null;
-    if (typeof(Blob) === typeof(Function)) {
-      blob = new Blob(['hi']);
-    } else {
-      var build = new WebKitBlobBuilder();
-      build.append('hi');
-      blob = build.getBlob();
-    }
+    var blob = new Blob(['hi']);
     var template = {
       'p1': 'string',
       'p2': 'number',
@@ -198,7 +191,7 @@ describe("Consumer.conform", function() {
       'p11': {'a': 'hi', 'b': 12}
     };
     var conformed = Consumer.conform(template, correct,
-                                       [blob, new ArrayBuffer(2)], false);
+                                     [blob, new ArrayBuffer(2)], false);
     correct['p5'] = conformed['p5'];
     correct['p6'] = conformed['p6'];
     expect(conformed).toEqual(correct);
