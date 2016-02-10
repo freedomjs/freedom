@@ -96,20 +96,20 @@ module.exports = function (pc, dc, setup) {
     });
   });
 
-  xit("Checks that Firefox actually signals data channel closing.", function () {
+  it("Checks that Firefox actually signals data channel closing.", function () {
     //TODO: fix below.
   });
 
   it("Closes Cleanly", function (done) {
     var alice, bob, aliceChannel, bobChannel,
-      aliceCandidates = [],
-      aliceOffer;
+        aliceCandidates = [],
+        aliceOffer;
     var onClose = jasmine.createSpy('onclose');
     onClose.and.callFake(function () {
       // TODO: Firefox doesn't yet close remote data channels.
       if (onClose.calls.count() === 2 ||
           (typeof navigator !== 'undefined' &&
-              navigator.userAgent.indexOf("Firefox") > 0) ||
+           navigator.userAgent.indexOf("Firefox") > 0) ||
           (typeof Components !== 'undefined' /*ffox addon*/)) {
         alice.close();
         bob.close();
