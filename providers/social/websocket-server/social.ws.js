@@ -21,11 +21,7 @@ function WSSocialProvider(dispatchEvent, webSocket) {
   this.dispatchEvent = dispatchEvent;
 
   this.websocket = freedom["core.websocket"] || webSocket;
-  if (typeof DEBUG !== 'undefined' && DEBUG) {
-    this.WS_URL = 'ws://p2pbr.com:8082/route/';
-  } else {
-    this.WS_URL = 'wss://p2pbr.com/route/';
-  }
+  this.WS_URL = 'ws://social.dorabella.io:8082/route/';
   this.social = freedom();
 
   this.conn = null;   // Web Socket
@@ -34,7 +30,6 @@ function WSSocialProvider(dispatchEvent, webSocket) {
   //Note that in this.websocket, there is a 1-1 relationship between user and client
   this.users = {};    // List of seen users (<user_profile>)
   this.clients = {};  // List of seen clients (<client_state>)
-
 }
 
 /**
@@ -148,13 +143,13 @@ WSSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 };
 
 /**
-   * Disconnects from the Web Socket server
-   * e.g. logout(Object options)
-   * No options needed
-   * 
-   * @method logout
-   * @return {Object} status - same schema as 'onStatus' events
-   **/
+ * Disconnects from the Web Socket server
+ * e.g. logout(Object options)
+ * No options needed
+ *
+ * @method logout
+ * @return {Object} status - same schema as 'onStatus' events
+ **/
 WSSocialProvider.prototype.logout = function(continuation) {
   if (this.conn === null) { // We may not have been logged in
     this.changeRoster(this.id, false);
@@ -245,16 +240,16 @@ WSSocialProvider.prototype.onMessage = function(finishLogin, msg) {
       this.changeRoster(msg.msg[i], true);
     }
     finishLogin.finish(this.changeRoster(this.id, true));
-  // If directed message, emit event
+    // If directed message, emit event
   } else if (msg.cmd === 'message') {
     this.dispatchEvent('onMessage', {
       from: this.changeRoster(msg.from, true),
       message: msg.msg
     });
-  // Roster change event
+    // Roster change event
   } else if (msg.cmd === 'roster') {
     this.changeRoster(msg.id, msg.online);
-  // No idea what this message is, but let's keep track of who it's from
+    // No idea what this message is, but let's keep track of who it's from
   } else if (msg.from) {
     this.changeRoster(msg.from, true);
   }
