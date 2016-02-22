@@ -25,7 +25,7 @@
     "grunt": "^0.4.5",
     "grunt-browserify": "^4.0.1",
     "grunt-bump": "^0.7.0",
-    "grunt-codeclimate-reporter": "1.2.0",
+    "grunt-codeclimate-reporter": "1.1.2",
     "grunt-contrib-clean": "~1.0.0",
     "grunt-contrib-concat": "^1.0.0",
     "grunt-contrib-connect": "~0.11.2",
@@ -55,7 +55,7 @@
     "node-json-minify": "^1.0.0",
     "phantomjs-prebuilt": "^2.1.4",
     "request": "^2.69.0",
-    "webrtc-adapter": "^0.0.7"
+    "webrtc-adapter": "0.0.7"
   },
   "scripts": {
     "test": "grunt ci --verbose",
