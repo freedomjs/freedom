@@ -1,4 +1,4 @@
-/*globals Blob, ArrayBuffer, DataView */
+/*globals Blob, ArrayBuffer, DataView, Components */
 /*jslint indent:2, node:true, sloppy:true */
 var util = require('./util');
 
@@ -433,9 +433,15 @@ Consumer.makeArrayBuffer = function (thing, debug) {
     return thing;
   } else if (thing.constructor.name === "ArrayBuffer" &&
       typeof thing.prototype === "undefined") {
+    if (typeof Components !== 'undefined') {
+      // Firefox case
+      return Components.utils.cloneInto(thing, {});
+    }
     // Workaround for webkit origin ownership issue.
     // https://github.com/UWNetworksLab/freedom/issues/28
-    return new DataView(thing).buffer;
+    var b = new Uint8Array(thing.byteLength);
+    b.set(new Uint8Array(thing));
+    return b.buffer;
   } else {
     debug.error('expecting ArrayBuffer, but saw ' +
         (typeof thing) + ': ' + JSON.stringify(thing));

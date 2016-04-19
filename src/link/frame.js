@@ -12,6 +12,9 @@ var util = require('../util');
  */
 var Frame = function(id, resource) {
   Link.call(this, id, resource);
+  if (id) {
+    this.id = id;
+  }
 };
 
 /**
@@ -91,10 +94,10 @@ Frame.prototype.setupListener = function() {
  * @method getURL
  */
 Frame.prototype.getURL = function(blob) {
-  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
-    return webkitURL.createObjectURL(blob);
-  } else {
+  if (typeof URL !== 'undefined' && URL.createObjectURL) {
     return URL.createObjectURL(blob);
+  } else if (typeof webkitURL !== 'undefined') {
+    return webkitURL.createObjectURL(blob);
   }
 };
 
@@ -105,10 +108,10 @@ Frame.prototype.getURL = function(blob) {
  * @method getURL
  */
 Frame.prototype.revokeURL = function(url) {
-  if (typeof URL !== 'object' && typeof webkitURL !== 'undefined') {
-    webkitURL.revokeObjectURL(url);
-  } else {
+  if (typeof URL !== 'undefined' && URL.createObjectURL) {
     URL.revokeObjectURL(url);
+  } else if (typeof webkitURL !== 'undefined') {
+    webkitURL.revokeObjectURL(url);
   }
 };
 
@@ -120,8 +123,6 @@ Frame.prototype.setupFrame = function() {
   var frame, onMsg;
   this.getDocument();
   frame = this.makeFrame(this.config.source, this.config.inject);
-  
-  this.root.appendChild(frame);
 
   onMsg = function(frame, msg) {
     if (!this.obj) {
@@ -158,8 +159,10 @@ Frame.prototype.makeFrame = function(src, inject) {
       extra = '',
       loader,
       blob;
+  //frame.sandbox = 'allow-scripts allow-same-origin';  # Works on Chrome but not CCA?
 
   if (inject) {
+    //fdom.debug.log('Injection is not well-supported in extensions');
     if (!inject.length) {
       inject = [inject];
     }
@@ -170,11 +173,15 @@ Frame.prototype.makeFrame = function(src, inject) {
     });
   }
   loader = '<html><meta http-equiv="Content-type" content="text/html;' +
-    'charset=UTF-8">' + extra + '<script src="' + src + '" onerror="' +
+    'charset=UTF-8">' + extra + '<script src="' + src + '#isModule" onerror="' +
     'throw new Error(\'Loading of ' + src +' Failed!\');' +
-    '"></script></html>';
-  blob = util.getBlob(loader, 'text/html');
-  frame.src = this.getURL(blob);
+    '"></script><script>console.log("IFRAME!!!");</script></html>';
+  frame.src = 'about:blank#' + this.id;
+  this.root.appendChild(frame);
+  var scriptTag = frame.contentWindow.document.createElement('script');
+  scriptTag.type = "text/javascript";
+  scriptTag.src = src + '#isModule';
+  frame.contentWindow.document.body.appendChild(scriptTag);
 
   return frame;
 };
@@ -189,11 +196,16 @@ Frame.prototype.makeFrame = function(src, inject) {
 Frame.prototype.deliverMessage = function(flow, message) {
   if (this.obj) {
     //fdom.debug.log('message sent to worker: ', flow, message);
-    this.obj.postMessage({
-      src: this.src,
-      flow: flow,
-      message: message
-    }, '*');
+    try {
+      this.obj.postMessage({
+        src: this.src,
+        flow: flow,
+        message: message
+      }, '*');
+    } catch (e) {
+      //fdom.debug.log('Failed to post message:', message);
+      throw e;
+    }
   } else {
     this.once('started', this.onMessage.bind(this, flow, message));
   }
