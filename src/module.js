@@ -29,6 +29,12 @@ var Module = function (manifestURL, manifest, creator, policy) {
   this.externalPortMap = {};
   this.internalPortMap = {};
   this.dependantChannels = [];
+  // Map from dependency names to target URLs, from this module's manifest.
+  this.dependencyUrls = {};
+  // Map from depenency names to arrays of pending messages.  Once a
+  // dependency is fully started, the pending messages will be drained and its
+  // entry in this map will be deleted.
+  this.pendingMessages = {};
   this.started = false;
 
   util.handleEvents(this);
@@ -66,6 +72,7 @@ Module.prototype.onMessage = function (flow, message) {
         msg.api = this.manifest.dependencies[message.name].api;
       }
       this.emit(message.channel, msg);
+      this.drainPendingMessages(message.name);
       return;
     } else if (message.core) {
       this.core = new message.core();
@@ -111,6 +118,7 @@ Module.prototype.onMessage = function (flow, message) {
           }.bind(this, flow));
         }
       }
+      this.drainPendingMessages(message.name);
       return;
     } else if (!this.started) {
       this.once('start', this.onMessage.bind(this, flow, message));
@@ -126,6 +134,39 @@ Module.prototype.onMessage = function (flow, message) {
       }
     }
   }
+};
+
+/**
+ * Store a pending message for a flow that isn't ready yet.  The message will
+ * be sent in-order by drainPendingMessages when the flow becomes ready.  This
+ * is used to ensure messages are not lost while the target module is loading.
+ * @method addPendingMessage
+ * @param {String} name The flow to store a message for.
+ * @param {Object} message The message to store.
+ * @private
+ */
+Module.prototype.addPendingMessage = function (name, message) {
+  if (!this.pendingMessages[name]) {
+    this.pendingMessages[name] = [];
+  }
+  this.pendingMessages[name].push(message);
+};
+
+/**
+ * Send all pending messages for a flow that is now ready.  The messages will
+ * be sent in-order.  This is used to ensure messages are not lost while the
+ * target module is loading.
+ * @method addPendingMessage
+ * @param {String} name The flow to send pending messages.
+ * @private
+ */
+Module.prototype.drainPendingMessages = function (name) {
+  if (!this.pendingMessages[name]) {
+    return;
+  }
+  this.pendingMessages[name].forEach(
+      this.emit.bind(this, this.externalPortMap[name]));
+  delete this.pendingMessages[name];
 };
 
 /**
@@ -321,6 +362,15 @@ Module.prototype.emitMessage = function (name, message) {
     }.bind(this, message.id), function () {
       this.debug.warn('Error Resolving URL for Module.');
     }.bind(this));
+  } else if (!this.externalPortMap[name]) {
+    // Store this message until we have a port for that name.
+    this.addPendingMessage(name, message);
+    // Start asynchronous loading of the target module if it's a dependency
+    // and loading hasn't started.
+    if (name in this.dependencyUrls &&
+        this.dependantChannels.indexOf(name) === -1) {
+      this.require(name, this.dependencyUrls[name]);
+    }
   } else {
     this.emit(this.externalPortMap[name], message);
   }
@@ -404,10 +454,15 @@ Module.prototype.loadLinks = function () {
     util.eachProp(this.manifest.dependencies, function (desc, name) {
       if (channels.indexOf(name) < 0) {
         channels.push(name);
-        this.dependantChannels.push(name);
       }
-
-      this.addDependency(desc.url, name);
+      this.dependencyUrls[name] = desc.url;
+      // Turn the relative URL of the dependency's manifest into an absolute
+      // URL, load it, and send a message to the module informing it of the
+      // dependency's API.  Once the module has received all of these updates,
+      // it will emit a 'start' message.
+      this.resource.get(this.manifestId, desc.url)
+          .then(this.policy.loadManifest.bind(this.policy))
+          .then(this.updateEnv.bind(this, name));
     }.bind(this));
   }
   // Note that messages can be synchronous, so some ports may already be bound.
