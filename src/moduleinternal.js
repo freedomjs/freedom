@@ -417,11 +417,22 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
 
 
   if (!this.config.global.importScripts) {
+    var allScripts = [];
     importer = function (url, resolve, reject) {
-      var script = this.config.global.document.createElement('script');
-      script.src = url;
-      script.addEventListener('load', resolve, true);
-      this.config.global.document.body.appendChild(script);
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.addEventListener('readystatechange', function() {
+        if (xhr.status === 200 && xhr.readyState === xhr.DONE) {
+          allScripts.push(xhr.responseText);
+          if (allScripts.length === scripts_count) {
+            var moduleFunction =
+                eval('(function(window, freedom) {\n' + allScripts.join('\n') + '})');  // jshint ignore:line
+            moduleFunction(this.config.global, this.config.global.freedom);  // jshint ignore:line
+          }
+          resolve(true);
+        }
+      }.bind(this));
+      xhr.send();
     }.bind(this);
   }
 

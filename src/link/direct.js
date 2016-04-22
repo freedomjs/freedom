@@ -1,6 +1,8 @@
 /*jslint indent:2, white:true, node:true, sloppy:true */
+/*globals Proxy */
 var Link = require('../link');
 var entry = require('../entry');
+var util = require('../util');
 
 /**
  * A port providing message transport between two freedom contexts in the same namespace.
@@ -29,11 +31,20 @@ Direct.prototype.start = function() {
   } else {
     this.config.global.directLink = this;
 
-    // Keep fdom.debug connected to parent hub.
-    var child = entry(undefined, {
-      isModule: true,
-      portType: 'Direct'
-    });
+    // Allow overwriting global.freedom without replacing the outer scope's freedom.
+    var newGlobal = util.mixin({}, this.config.global);
+    newGlobal.freedom = null;
+    var thisDirect = this;
+    var startChild = function() {
+      console.log('Creating direct child');
+      entry({
+        isModule: true,
+        portType: Direct,
+        providers: thisDirect.config.providers,
+        global: newGlobal
+      });
+    }.bind(newGlobal);
+    startChild();
   }
 };
 
