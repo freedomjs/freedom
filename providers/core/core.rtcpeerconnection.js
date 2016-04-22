@@ -1,14 +1,19 @@
 /*jslint indent:2,sloppy:true, node:true */
 
-var adapter = require('webrtc-adapter');
 var PromiseCompat = require('es6-promise').Promise;
-var RTCPeerConnection = adapter.RTCPeerConnection;
-var RTCSessionDescription = adapter.RTCSessionDescription;
-var RTCIceCandidate = adapter.RTCIceCandidate;
+var wrtcClass, RTCPeerConnection, RTCSessionDescription, RTCIceCandidate;
+if (!(typeof module !== 'undefined' && this.module !== module)) {
+  // non-node environment, use webrtc-adapter (node should use setImpl)
+  wrtcClass = require('webrtc-adapter');
+}
 
 var DataChannel = require('./core.rtcdatachannel');
 
 var RTCPeerConnectionAdapter = function (cap, dispatchEvent, configuration) {
+  RTCPeerConnection = wrtcClass.RTCPeerConnection;
+  RTCSessionDescription = wrtcClass.RTCSessionDescription;
+  RTCIceCandidate = wrtcClass.RTCIceCandidate;
+
   this.dispatchEvent = dispatchEvent;
   try {
     this.connection = new RTCPeerConnection(configuration);
@@ -222,3 +227,7 @@ exports.name = "core.rtcpeerconnection";
 exports.provider = RTCPeerConnectionAdapter;
 exports.style = "providePromises";
 exports.flags = {provider: true};
+exports.setImpl = function(impl) {
+  "use strict";
+  wrtcClass = impl;
+};
