@@ -110,9 +110,9 @@ module.exports = function (provider, setup) {
   });
 
   it("Pauses and resumes", function (done) {
-    // TODO: this test breaks in node (runs code after done())
     socket.connect('www.google.com', 80, function () {
       var paused = false;
+      var closed = false;
       var pausedMessageCount = 0;
       dispatch.on('onMessage', function (msg) {
         if (!msg || !(msg.hasOwnProperty('data'))) {
@@ -128,7 +128,11 @@ module.exports = function (provider, setup) {
         // Apart from the above exception, check that data doesn't arrive until
         // after the socket resumes.
         expect(paused).toEqual(false);
-        socket.close(done);
+
+        if (!closed) {
+          closed = true;
+          socket.close(done);
+        }
       });
 
       socket.pause(function () {

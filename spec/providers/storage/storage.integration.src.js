@@ -142,7 +142,7 @@ module.exports = function(freedom, provider_url, freedomOpts, useArrayBuffer) {
   });
 
   //@todo - not sure if this is even desired behavior
-  it("shares data between different instances", function(done) {
+  xit("shares data between different instances", function(done) {
     var s2 = new Storage();
     client.set("k", util.beforeSet("v")).then(function(ret) {
       return s2.get("k");
