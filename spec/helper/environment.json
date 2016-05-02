@@ -9,7 +9,14 @@
   "api": {
     "environment": {
       "testCrypto": {"type": "method", "value":[], "ret": "object"},
-      "testRequire": {"type": "method", "value":["string"], "ret": "string"}
+      "testRequire": {"type": "method", "value":["string"], "ret": "string"},
+      "testBrokenDependency": {"type": "method", "value":[], "ret": "object"}
+    }
+  },
+  "dependencies": {
+    "broken": {
+      "url": "broken.json",
+      "api": "doNothing"
     }
   }
 }
