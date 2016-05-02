@@ -36,6 +36,7 @@ var Module = function (manifestURL, manifest, creator, policy) {
   // entry in this map will be deleted.
   this.pendingMessages = {};
   this.started = false;
+  this.failed = false;
 
   util.handleEvents(this);
 };
@@ -47,6 +48,16 @@ var Module = function (manifestURL, manifest, creator, policy) {
  * @param {Object} message The message received.
  */
 Module.prototype.onMessage = function (flow, message) {
+  if (this.failed && message.to) {
+    // We've attempted to load the module and failed, so short-circuit any
+    // messages bound for the provider, and respond with an error reply instead.
+    // This error is handled in Consumer, resulting in triggering the
+    // freedom['moduleName'].onError listeners.
+    this.emit(this.externalPortMap[flow], {
+      type: 'error',
+    });
+    return;
+  }
   if (flow === 'control') {
     if (message.type === 'setup') {
       this.controlChannel = message.channel;
@@ -234,6 +245,7 @@ Module.prototype.start = function () {
     this.port.on(this.emitMessage.bind(this));
     this.port.addErrorHandler(function (err) {
       this.debug.warn('Module Failed', err);
+      this.failed = true;
       this.emit(this.controlChannel, {
         request: 'close'
       });
@@ -362,6 +374,11 @@ Module.prototype.emitMessage = function (name, message) {
     }.bind(this, message.id), function () {
       this.debug.warn('Error Resolving URL for Module.');
     }.bind(this));
+  } else if (name === 'ModInternal' && message.type === 'error') {
+    this.failed = true;
+    // The start event ensures that we process any pending messages, in case
+    // one of them requires a short-circuit error response.
+    this.emit('start');
   } else if (!this.externalPortMap[name]) {
     // Store this message until we have a port for that name.
     this.addPendingMessage(name, message);
