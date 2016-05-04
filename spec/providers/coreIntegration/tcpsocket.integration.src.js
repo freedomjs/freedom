@@ -245,10 +245,14 @@ module.exports = function (provider, setup) {
   it("onConnection sockets dispatch onDisconnect", function(done) {
     var cspy = jasmine.createSpy('client'),
         client,
-        receiver;
+        receiver,
+        received;
     var onDispatch = function (evt, msg) {
-      expect(evt).toEqual('onDisconnect');
-      socket.close(function () { receiver.close(function () { done() })});
+      if (!received) {
+        received = true;
+        expect(evt).toEqual('onDisconnect');
+        socket.close(function () { receiver.close(function () { done() })});
+      }
     };
     dispatch.gotMessageAsync('onConnection', [], function (msg) {
       expect(msg.socket).toBeDefined();
