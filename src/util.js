@@ -133,7 +133,12 @@ util.str2ab = function(str) {
  * @returns {String} The decoded buffer.
  */
 util.ab2str = function(buffer) {
-  return String.fromCharCode.apply(null, new Uint16Array(buffer));
+  var str = '';
+  var a = new Uint16Array(buffer);
+  for (var i = 0; i < a.length; i++) {
+    str += String.fromCharCode(a[i]);
+  }
+  return str;
 };
 
 /**
