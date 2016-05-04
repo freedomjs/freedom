@@ -1,0 +1,15 @@
+{
+  "name": "Broken module",
+  "description": "Module cannot load because the script file does not exist",
+  "app": {
+    "script": "nonexistent.js"
+  },
+  "provides": [
+    "doNothing"
+  ],
+  "default": "doNothing",
+  "api": {
+    "doNothing": {
+    }
+  }
+}
