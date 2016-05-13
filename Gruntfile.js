@@ -292,7 +292,8 @@ module.exports = function (grunt) {
       options: {
         // list of tasks that are required before publishing
         requires: [],
-        // if the workspace is dirty, abort publishing (to avoid publishing local changes)
+        // if the workspace is dirty, abort publishing
+        // (to avoid publishing local changes)
         abortIfDirty: true
       }
     },
@@ -331,45 +332,47 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-prompt');
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
-                     function () {
-                       grunt.config.merge({
-                         browserify: {
-                           options: {
-                             debug: true,
-                             watch: true
-                           }
-                         },
-                         karma: {
-                           options: {
-                             singleRun: false,
-                             autoWatch: true,
-                             reporters: ['progress', 'html'],
-                             coverageReporter: {}
-                           }
-                         }
-                       });
-                     });
-  grunt.registerTask('dynamic_codeclimate', 'Run codeclimate with correct lcov.',
-                     function () {
-                       var file = require("glob").sync("build/coverage/PhantomJS**/lcov.info");
-                       if (file.length !== 1) {
-                         return grunt.log.error("lcov file not present or distinguishable for code climate");
-                       }
-                       require('fs').renameSync(file[0], "build/coverage/lcov.info");
-                       grunt.config.merge({
-                         codeclimate: {
-                           report: {
-                             src: "build/coverage/lcov.info",
-                             options: {
-                               file: "build/coverage/lcov.info",
-                               token: process.env.CODECLIMATETOKEN
-                             }
-                           }
-                         }
-                       });
-                       grunt.task.run('codeclimate:report');
-                     });
+  grunt.registerTask(
+    'prepare_watch', 'Run browserify and karma in watch mode.',
+    function () {
+      grunt.config.merge({
+        browserify: {
+          options: {
+            debug: true,
+            watch: true
+          }
+        },
+        karma: {
+          options: {
+            singleRun: false,
+            autoWatch: true,
+            reporters: ['progress', 'html'],
+            coverageReporter: {}
+          }
+        }
+      });
+    });
+  grunt.registerTask(
+    'dynamic_codeclimate', 'Run codeclimate with correct lcov.',
+    function () {
+      var file = require("glob").sync("build/coverage/PhantomJS**/lcov.info");
+      if (file.length !== 1) {
+        return grunt.log.error("lcov file not present or distinguishable for code climate");
+      }
+      require('fs').renameSync(file[0], "build/coverage/lcov.info");
+      grunt.config.merge({
+        codeclimate: {
+          report: {
+            src: "build/coverage/lcov.info",
+            options: {
+              file: "build/coverage/lcov.info",
+              token: process.env.CODECLIMATETOKEN
+            }
+          }
+        }
+      });
+      grunt.task.run('codeclimate:report');
+    });
 
   // Default tasks.
   grunt.registerTask('build', [
@@ -450,7 +453,8 @@ module.exports = function (grunt) {
       grunt.registerTask('ci', [ 'build', 'test-phantom' ]);
     }
   } else {  //When run from command-line
-    grunt.registerTask('ci', [ 'build', 'test-phantom', 'gitinfo', 'karma:saucelabs' ]);
+    grunt.registerTask(
+      'ci', [ 'build', 'test-phantom', 'gitinfo', 'karma:saucelabs' ]);
   }
 
   // Cut a new release of freedom.js
