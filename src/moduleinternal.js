@@ -375,7 +375,6 @@ ModuleInternal.prototype.mapProxies = function (manifest) {
  * @param {String[]} scripts The URLs of the scripts to load.
  */
 ModuleInternal.prototype.loadScripts = function (from, scripts) {
-  // TODO(salomegeo): add a test for failure.
   var importer = function (script, resolve, reject) {
     try {
       this.config.global.importScripts(script);
@@ -421,6 +420,7 @@ ModuleInternal.prototype.loadScripts = function (from, scripts) {
       var script = this.config.global.document.createElement('script');
       script.src = url;
       script.addEventListener('load', resolve, true);
+      script.addEventListener('error', reject, true);
       this.config.global.document.body.appendChild(script);
     }.bind(this);
   }
@@ -444,6 +444,12 @@ ModuleInternal.prototype.tryLoad = function (importer, url) {
     this.debug.error("Error loading " + url, e);
     this.debug.error("If the stack trace is not useful, see https://" +
         "github.com/freedomjs/freedom/wiki/Debugging");
+    // This event is caught in Module, which will then respond to any messages
+    // for the provider with short-circuit errors.
+    this.emit(this.externalChannel, {
+      type: 'error'
+    });
+    throw e;
   }.bind(this));
 };
 

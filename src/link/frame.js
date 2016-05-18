@@ -70,7 +70,7 @@ Frame.prototype.toString = function() {
  */
 Frame.prototype.setupListener = function() {
   var onMsg = function(msg) {
-    if (msg.data.src !== 'in') {
+    if (msg.data.src && msg.data.src !== 'in') {
       this.emitMessage(msg.data.flow, msg.data.message);
     }
   }.bind(this);
@@ -128,7 +128,7 @@ Frame.prototype.setupFrame = function() {
       this.obj = frame;
       this.emit('started');
     }
-    if (msg.data.src !== 'out') {
+    if (msg.data.src && msg.data.src !== 'out') {
       this.emitMessage(msg.data.flow, msg.data.message);
     }
   }.bind(this, frame.contentWindow);

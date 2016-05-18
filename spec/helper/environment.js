@@ -44,6 +44,14 @@ EnvironmentTest.prototype.testRequire = function (url) {
   });
 };
 
+EnvironmentTest.prototype.testBrokenDependency = function () {
+  var p = new Promise(function(resolve, reject) {
+    freedom['broken'].onError(resolve.bind(null, 'failed'));
+  });
+  var x = freedom['broken']();
+  return p;
+};
+
 
 /** REGISTER **/
 if (typeof freedom !== 'undefined') {

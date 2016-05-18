@@ -186,18 +186,6 @@ module.exports = function (grunt) {
     // correct sourcemap. Uglify needs an explicit 'sourceMapIn' argument,
     // requiring that exorcise be used before hand. Concat is able to properly
     // attach a banner while maintaining the correct source-map offsets.    
-    // The replace tasks removes a charset declaration that breaks concat -
-    // it should be removed once concat copes better.
-    replace: {
-      dist: {
-        src: ['build/freedom.worker.js'],
-        overwrite: true,
-        replacements: [{
-          from: 'charset:utf-8;',
-          to: ''
-        }]
-      }
-    },
     exorcise: {
       dist: {
         files: {
@@ -304,7 +292,8 @@ module.exports = function (grunt) {
       options: {
         // list of tasks that are required before publishing
         requires: [],
-        // if the workspace is dirty, abort publishing (to avoid publishing local changes)
+        // if the workspace is dirty, abort publishing
+        // (to avoid publishing local changes)
         abortIfDirty: true
       }
     },
@@ -341,10 +330,10 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-npm');
   grunt.loadNpmTasks('grunt-prompt');
-  grunt.loadNpmTasks('grunt-text-replace');
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('prepare_watch', 'Run browserify and karma in watch mode.',
+  grunt.registerTask(
+    'prepare_watch', 'Run browserify and karma in watch mode.',
     function () {
       grunt.config.merge({
         browserify: {
@@ -363,7 +352,8 @@ module.exports = function (grunt) {
         }
       });
     });
-  grunt.registerTask('dynamic_codeclimate', 'Run codeclimate with correct lcov.',
+  grunt.registerTask(
+    'dynamic_codeclimate', 'Run codeclimate with correct lcov.',
     function () {
       var file = require("glob").sync("build/coverage/PhantomJS**/lcov.info");
       if (file.length !== 1) {
@@ -389,7 +379,6 @@ module.exports = function (grunt) {
     'jshint',
     'create-interface-bundle',
     'browserify:freedom',
-    'replace:dist',
     'concat:full',
     'exorcise',
     'uglify',
@@ -464,7 +453,8 @@ module.exports = function (grunt) {
       grunt.registerTask('ci', [ 'build', 'test-phantom' ]);
     }
   } else {  //When run from command-line
-    grunt.registerTask('ci', [ 'build', 'test-phantom', 'gitinfo', 'karma:saucelabs' ]);
+    grunt.registerTask(
+      'ci', [ 'build', 'test-phantom', 'gitinfo', 'karma:saucelabs' ]);
   }
 
   // Cut a new release of freedom.js
