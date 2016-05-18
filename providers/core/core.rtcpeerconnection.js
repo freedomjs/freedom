@@ -2,14 +2,13 @@
 
 var PromiseCompat = require('es6-promise').Promise;
 var wrtcClass, RTCPeerConnection, RTCSessionDescription, RTCIceCandidate;
-if (!(typeof module !== 'undefined' && this.module !== module)) {
-  // non-node environment, use webrtc-adapter (node should use setImpl)
-  wrtcClass = require('webrtc-adapter');
-}
-
 var DataChannel = require('./core.rtcdatachannel');
 
 var RTCPeerConnectionAdapter = function (cap, dispatchEvent, configuration) {
+  if (typeof wrtcClass === 'undefined') {
+    // only works in browser, so node should use setImpl (see exports)
+    wrtcClass = require('webrtc-adapter');
+  }
   RTCPeerConnection = wrtcClass.RTCPeerConnection;
   RTCSessionDescription = wrtcClass.RTCSessionDescription;
   RTCIceCandidate = wrtcClass.RTCIceCandidate;
