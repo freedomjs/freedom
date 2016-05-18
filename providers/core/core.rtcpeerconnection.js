@@ -173,7 +173,21 @@ RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChan
 
 RTCPeerConnectionAdapter.prototype.getStats = function (selector) {
   return new PromiseCompat(function (resolve, reject) {
-    this.connection.getStats(selector, resolve, reject);
+    if (typeof module !== 'undefined' && this.module !== module) {
+      // node-wrtc has different getStats API
+      this.connection.getStats(function(response) {
+        var standardReport = {};
+        var reports = response.result();
+        var id = 0;  // nodewrtc stats report lacks id field
+        reports.forEach(function (report) {
+          report.id = String(id++);  // string to use as object key
+          standardReport[report.id] = report;
+        });
+        resolve(standardReport);
+      }, reject);
+    } else {
+      this.connection.getStats(selector, resolve, reject);
+    }
   }.bind(this));
 };
 
