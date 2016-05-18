@@ -7,11 +7,15 @@ var DataChannel = require('./core.rtcdatachannel');
 var RTCPeerConnectionAdapter = function (cap, dispatchEvent, configuration) {
   if (typeof wrtcClass === 'undefined') {
     // only works in browser, so node should use setImpl (see exports)
-    wrtcClass = require('webrtc-adapter');
+    var adapter = require('webrtc-adapter');
+    RTCPeerConnection = adapter.RTCPeerConnection;
+    RTCSessionDescription = adapter.RTCSessionDescription;
+    RTCIceCandidate = adapter.RTCIceCandidate;
+  } else {
+    RTCPeerConnection = wrtcClass.RTCPeerConnection;
+    RTCSessionDescription = wrtcClass.RTCSessionDescription;
+    RTCIceCandidate = wrtcClass.RTCIceCandidate;
   }
-  RTCPeerConnection = wrtcClass.RTCPeerConnection;
-  RTCSessionDescription = wrtcClass.RTCSessionDescription;
-  RTCIceCandidate = wrtcClass.RTCIceCandidate;
 
   this.dispatchEvent = dispatchEvent;
   try {
@@ -63,8 +67,7 @@ RTCPeerConnectionAdapter.prototype.createAnswer = function () {
 RTCPeerConnectionAdapter.prototype.setLocalDescription = function (description) {
   return new PromiseCompat(function (resolve, reject) {
     this.connection.setLocalDescription(new RTCSessionDescription(description),
-      resolve,
-      reject);
+                                        resolve, reject);
   }.bind(this));
 };
 
@@ -75,8 +78,7 @@ RTCPeerConnectionAdapter.prototype.getLocalDescription = function () {
 RTCPeerConnectionAdapter.prototype.setRemoteDescription = function (description) {
   return new PromiseCompat(function (resolve, reject) {
     this.connection.setRemoteDescription(new RTCSessionDescription(description),
-      resolve,
-      reject);
+                                         resolve, reject);
   }.bind(this));
 };
 
@@ -96,8 +98,7 @@ RTCPeerConnectionAdapter.prototype.updateIce = function (configuration) {
 RTCPeerConnectionAdapter.prototype.addIceCandidate = function (candidate) {
   return new PromiseCompat(function (resolve, reject) {
     this.connection.addIceCandidate(new RTCIceCandidate(candidate),
-      resolve,
-      reject);
+                                    resolve, reject);
   }.bind(this));
 };
 
@@ -172,7 +173,10 @@ RTCPeerConnectionAdapter.prototype.createDataChannel = function (label, dataChan
 
 RTCPeerConnectionAdapter.prototype.getStats = function (selector) {
   return new PromiseCompat(function (resolve, reject) {
-    if (typeof module !== 'undefined' && this.module !== module) {
+    if (typeof wrtcClass === 'undefined') {
+      // used webrtc-adapter
+      this.connection.getStats(selector, resolve, reject);
+    } else {
       // node-wrtc has different getStats API
       this.connection.getStats(function(response) {
         var standardReport = {};
@@ -184,8 +188,6 @@ RTCPeerConnectionAdapter.prototype.getStats = function (selector) {
         });
         resolve(standardReport);
       }, reject);
-    } else {
-      this.connection.getStats(selector, resolve, reject);
     }
   }.bind(this));
 };
