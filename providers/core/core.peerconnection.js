@@ -6,6 +6,7 @@
 /**
  * DataPeer - a class that wraps peer connections and data channels.
  */
+var RTCPeerConnectionAdapter = require('./core.rtcpeerconnection');
 // TODO: check that Handling of pranswer is treated appropriately.
 var SimpleDataPeerState = {
   DISCONNECTED: 'DISCONNECTED',
@@ -15,43 +16,13 @@ var SimpleDataPeerState = {
 
 function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   var constraints,
-    config,
-    i;
+      config,
+      i;
   this.peerName = peerName;
   this.channels = {};
   this.dataChannelCallbacks = dataChannelCallbacks;
   this.onConnectedQueue = [];
-
-  if (typeof mocks.RTCPeerConnection !== "undefined") {
-    this.RTCPeerConnection = mocks.RTCPeerConnection;
-  } else if (typeof webkitRTCPeerConnection !== "undefined") {
-    this.RTCPeerConnection = webkitRTCPeerConnection;
-  } else if (typeof mozRTCPeerConnection !== "undefined") {
-    this.RTCPeerConnection = mozRTCPeerConnection;
-  } else {
-    throw new Error("This environment does not appear to support RTCPeerConnection");
-  }
-
-  if (typeof mocks.RTCSessionDescription !== "undefined") {
-    this.RTCSessionDescription = mocks.RTCSessionDescription;
-  } else if (typeof RTCSessionDescription !== "undefined") {
-    this.RTCSessionDescription = RTCSessionDescription;
-  } else if (typeof mozRTCSessionDescription !== "undefined") {
-    this.RTCSessionDescription = mozRTCSessionDescription;
-  } else {
-    throw new Error("This environment does not appear to support RTCSessionDescription");
-  }
-
-  if (typeof mocks.RTCIceCandidate !== "undefined") {
-    this.RTCIceCandidate = mocks.RTCIceCandidate;
-  } else if (typeof RTCIceCandidate !== "undefined") {
-    this.RTCIceCandidate = RTCIceCandidate;
-  } else if (typeof mozRTCIceCandidate !== "undefined") {
-    this.RTCIceCandidate = mozRTCIceCandidate;
-  } else {
-    throw new Error("This environment does not appear to support RTCIceCandidate");
-  }
-
+  this.RTCPeerConnection = RTCPeerConnectionAdapter;
 
   constraints = {
     optional: [{DtlsSrtpKeyAgreement: true}]
@@ -67,24 +38,26 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
       'url' : stunServers[i]
     });
   }
-  this.pc = new this.RTCPeerConnection(config, constraints);
+  this.pc = new this.RTCPeerConnection(config);//, constraints);
   // Add basic event handlers.
-  this.pc.addEventListener("icecandidate",
-                            this.onIceCallback.bind(this));
-  this.pc.addEventListener("negotiationneeded",
-                            this.onNegotiationNeeded.bind(this));
-  this.pc.addEventListener("datachannel",
-                            this.onDataChannel.bind(this));
-  this.pc.addEventListener("signalingstatechange", function () {
+  this.pc.on("onicecandidate",
+             this.onIceCallback.bind(this));
+  this.pc.on("onnegotiationneeded",
+             this.onNegotiationNeeded.bind(this));
+  this.pc.on("ondatachannel",
+             this.onDataChannel.bind(this));
+  this.pc.on("onsignalingstatechange", function () {
     // TODO: come up with a better way to detect connection.  We start out
     // as "stable" even before we are connected.
     // TODO: this is not fired for connections closed by the other side.
     // This will be fixed in m37, at that point we should dispatch an onClose
     // event here for freedom.transport to pick up.
-    if (this.pc.signalingState === "stable") {
-      this.pcState = SimpleDataPeerState.CONNECTED;
-      this.onConnectedQueue.map(function (callback) { callback(); });
-    }
+    this.pc.getSignalingState().then(function(signalState) {
+      if (signalState === "stable") {
+        this.pcState = SimpleDataPeerState.CONNECTED;
+        this.onConnectedQueue.map(function (callback) { callback(); });
+      }
+    }.bind(this));
   }.bind(this));
   // This state variable is used to fake offer/answer when they are wrongly
   // requested and we really just need to reuse what we already have.
@@ -157,7 +130,7 @@ SimpleDataPeer.prototype.setSendSignalMessage = function (sendSignalMessageFn) {
 SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
   //console.log(this.peerName + ": " + "handleSignalMessage: \n" + messageText);
   var json = JSON.parse(messageText),
-    ice_candidate;
+      ice_candidate;
 
   // TODO: If we are offering and they are also offerring at the same time,
   // pick the one who has the lower randomId?
@@ -178,7 +151,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
       // Failure
       function (e) {
         console.error(this.peerName + ": " +
-            "setRemoteDescription failed:", e);
+                      "setRemoteDescription failed:", e);
       }.bind(this)
     );
   } else if (json.candidate) {
@@ -188,7 +161,7 @@ SimpleDataPeer.prototype.handleSignalMessage = function (messageText) {
     this.pc.addIceCandidate(ice_candidate);
   } else {
     console.warn(this.peerName + ": " +
-        "handleSignalMessage got unexpected message: ", messageText);
+                 "handleSignalMessage got unexpected message: ", messageText);
   }
 };
 
@@ -199,7 +172,7 @@ SimpleDataPeer.prototype.negotiateConnection = function () {
     this.onDescription.bind(this),
     function (e) {
       console.error(this.peerName + ": " +
-          "createOffer failed: ", e.toString());
+                    "createOffer failed: ", e.toString());
       this.pcState = SimpleDataPeerState.DISCONNECTED;
     }.bind(this)
   );
@@ -244,13 +217,13 @@ SimpleDataPeer.prototype.onDescription = function (description) {
       }.bind(this),
       function (e) {
         console.error(this.peerName + ": " +
-            "setLocalDescription failed:", e);
+                      "setLocalDescription failed:", e);
       }.bind(this)
     );
   } else {
     console.error(this.peerName + ": " +
-        "_onDescription: _sendSignalMessage is not set, so we did not " +
-            "set the local description. ");
+                  "_onDescription: _sendSignalMessage is not set, so we did not " +
+                  "set the local description. ");
   }
 };
 
@@ -268,27 +241,27 @@ SimpleDataPeer.prototype.onNegotiationNeeded = function (e) {
         //console.log(this.peerName + ": " + op + " succeeded ");
       }.bind(this);
     }.bind(this),
-      logFail = function (op) {
-        return function (e) {
-          //console.log(this.peerName + ": " + op + " failed: " + e);
+        logFail = function (op) {
+          return function (e) {
+            //console.log(this.peerName + ": " + op + " failed: " + e);
+          }.bind(this);
         }.bind(this);
-      }.bind(this);
     if (this.pc.localDescription && this.pc.remoteDescription &&
         this.pc.localDescription.type === "offer") {
       this.pc.setLocalDescription(this.pc.localDescription,
-                                   logSuccess("setLocalDescription"),
-                                   logFail("setLocalDescription"));
+                                  logSuccess("setLocalDescription"),
+                                  logFail("setLocalDescription"));
       this.pc.setRemoteDescription(this.pc.remoteDescription,
-                                    logSuccess("setRemoteDescription"),
-                                    logFail("setRemoteDescription"));
+                                   logSuccess("setRemoteDescription"),
+                                   logFail("setRemoteDescription"));
     } else if (this.pc.localDescription && this.pc.remoteDescription &&
-        this.pc.localDescription.type === "answer") {
+               this.pc.localDescription.type === "answer") {
       this.pc.setRemoteDescription(this.pc.remoteDescription,
-                                    logSuccess("setRemoteDescription"),
-                                    logFail("setRemoteDescription"));
+                                   logSuccess("setRemoteDescription"),
+                                   logFail("setRemoteDescription"));
       this.pc.setLocalDescription(this.pc.localDescription,
-                                   logSuccess("setLocalDescription"),
-                                   logFail("setLocalDescription"));
+                                  logSuccess("setLocalDescription"),
+                                  logFail("setLocalDescription"));
     } else {
       console.error(this.peerName + ', onNegotiationNeeded failed');
     }
@@ -384,44 +357,44 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
   var mocks = {RTCPeerConnection: this.RTCPeerConnection,
                RTCSessionDescription: this.RTCSessionDescription,
                RTCIceCandidate: this.RTCIceCandidate},
-    self = this,
-    dataChannelCallbacks = {
-      // onOpenFn is called at the point messages will actually get through.
-      onOpenFn: function (dataChannel, info) {
-        self.dispatchEvent("onOpenDataChannel",
-                         { channelId: info.label});
-      },
-      onCloseFn: function (dataChannel, info) {
-        self.dispatchEvent("onCloseDataChannel",
-                         { channelId: info.label});
-      },
-      // Default on real message prints it to console.
-      onMessageFn: function (dataChannel, info, event) {
-        if (event.data instanceof ArrayBuffer) {
-          self.dispatchEvent('onReceived', {
-            'channelLabel': info.label,
-            'buffer': event.data
-          });
-        } else if (event.data instanceof Blob) {
-          self.dispatchEvent('onReceived', {
-            'channelLabel': info.label,
-            'binary': event.data
-          });
-        } else if (typeof (event.data) === 'string') {
-          self.dispatchEvent('onReceived', {
-            'channelLabel': info.label,
-            'text': event.data
-          });
+      self = this,
+      dataChannelCallbacks = {
+        // onOpenFn is called at the point messages will actually get through.
+        onOpenFn: function (dataChannel, info) {
+          self.dispatchEvent("onOpenDataChannel",
+                             { channelId: info.label});
+        },
+        onCloseFn: function (dataChannel, info) {
+          self.dispatchEvent("onCloseDataChannel",
+                             { channelId: info.label});
+        },
+        // Default on real message prints it to console.
+        onMessageFn: function (dataChannel, info, event) {
+          if (event.data instanceof ArrayBuffer) {
+            self.dispatchEvent('onReceived', {
+              'channelLabel': info.label,
+              'buffer': event.data
+            });
+          } else if (event.data instanceof Blob) {
+            self.dispatchEvent('onReceived', {
+              'channelLabel': info.label,
+              'binary': event.data
+            });
+          } else if (typeof (event.data) === 'string') {
+            self.dispatchEvent('onReceived', {
+              'channelLabel': info.label,
+              'text': event.data
+            });
+          }
+        },
+        // Default on error, prints it.
+        onErrorFn: function (dataChannel, info, err) {
+          console.error(dataChannel.peerName + ": dataChannel(" +
+                        dataChannel.dataChannel.label + "): error: ", err);
         }
       },
-      // Default on error, prints it.
-      onErrorFn: function (dataChannel, info, err) {
-        console.error(dataChannel.peerName + ": dataChannel(" +
-                      dataChannel.dataChannel.label + "): error: ", err);
-      }
-    },
-    channelId,
-    openDataChannelContinuation;
+      channelId,
+      openDataChannelContinuation;
 
   this.peer = new SimpleDataPeer(this.peerName, stunServers,
                                  dataChannelCallbacks, mocks);
@@ -434,7 +407,7 @@ PeerConnection.prototype.setup = function (signallingChannelId, peerName,
       this.signallingChannel.emit('message', msg);
     }.bind(this));
     this.signallingChannel.on('message',
-        this.peer.handleSignalMessage.bind(this.peer));
+                              this.peer.handleSignalMessage.bind(this.peer));
     this.signallingChannel.emit('ready');
     if (!initiateConnection) {
       this.peer.runWhenConnected(continuation);
@@ -502,3 +475,7 @@ PeerConnection.prototype.close = function (continuation) {
 exports.provider = PeerConnection;
 exports.name = 'core.peerconnection';
 exports.flags = {module: true};
+exports.setImpl = function(impl) {
+  "use strict";
+  RTCPeerConnectionAdapter.setImpl(impl);
+};
