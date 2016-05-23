@@ -84,13 +84,15 @@ module.exports = function (pc, dc, setup) {
   });
 
   it("Sends binary messages across data channels", function (done) {
-    var payloadBytes = new Uint8Array([5, 200, 45, 128, 1]);
+    // payload in separate array as node bytearray clears and fails expects
+    var payload = [5, 200, 45, 128, 1];
+    var payloadBytes = new Uint8Array(payload);
     sendMessageToPeer(payloadBytes.buffer, function(result) {
       expect(result.buffer).not.toBeUndefined();
-      expect(result.buffer.byteLength).toEqual(payloadBytes.buffer.byteLength);
+      expect(result.buffer.byteLength).toEqual(payload.length);
       var resultBytes = new Uint8Array(result.buffer);
       for (var i = 0; i < resultBytes.length; i++) {
-        expect(resultBytes[i]).toEqual(payloadBytes[i]);
+        expect(resultBytes[i]).toEqual(payload[i]);
       }
       done();
     });
