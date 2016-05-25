@@ -113,7 +113,7 @@ describe("providers/core/peerconnection", function() {
     // Modify the SimpleDataPeer's pc object to change the state to CONNECTED,
     // so that SimpleDataPeer.runWhenConnected callbacks will be run.
     peerconnection.peer.pc.signalingState = 'stable';
-    peerconnection.peer.pc.listeners['signalingstatechange']();
+    //peerconnection.peer.pc.listeners['signalingstatechange']();
   });
 
   it("Opens data channel", function(done) {
@@ -177,7 +177,7 @@ describe("providers/core/peerconnection", function() {
     var rtcpc = MockRTCPeerConnection.mostRecent;
     var dataChannel;
     var sendInfo = {channelLabel: "sendDC",
-                   text: "Hello World"};
+                    text: "Hello World"};
     peerconnection.openDataChannel("sendDC", openDataChannelContinuation);
 
     function openDataChannelContinuation() {
@@ -217,17 +217,17 @@ describe("providers/core/peerconnection", function() {
       var dataChannel = RTCDataChannel.mostRecent;
       peerconnection.
         getBufferedAmount("bufAmountDC",
-                           checkBufferedAmount.bind(undefined, 0));
+                          checkBufferedAmount.bind(undefined, 0));
 
       dataChannel.bufferedAmount = 1;
       peerconnection.
         getBufferedAmount("bufAmountDC",
-                           checkBufferedAmount.bind(undefined, 1));
+                          checkBufferedAmount.bind(undefined, 1));
 
       dataChannel.bufferedAmount = 1337;
       peerconnection.
         getBufferedAmount("bufAmountDC",
-                           checkBufferedAmount.bind(undefined, 1337));
+                          checkBufferedAmount.bind(undefined, 1337));
       done();
     }
     function checkBufferedAmount(expected, valueReturned) {
