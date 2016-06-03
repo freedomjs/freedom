@@ -12,11 +12,12 @@ var SimpleDataPeerState = {
   CONNECTING: 'CONNECTING',
   CONNECTED: 'CONNECTED'
 };
+var wrtcClass;  // defined as optional fill e.g. for node
 
 function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   var constraints,
-    config,
-    i;
+      config,
+      i;
   this.peerName = peerName;
   this.channels = {};
   this.dataChannelCallbacks = dataChannelCallbacks;
@@ -24,6 +25,8 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
 
   if (typeof mocks.RTCPeerConnection !== "undefined") {
     this.RTCPeerConnection = mocks.RTCPeerConnection;
+  } else if (typeof wrtcClass.RTCPeerConnection !== "undefined") {
+    this.RTCPeerConnection = wrtcClass.RTCPeerConnection;
   } else if (typeof webkitRTCPeerConnection !== "undefined") {
     this.RTCPeerConnection = webkitRTCPeerConnection;
   } else if (typeof mozRTCPeerConnection !== "undefined") {
@@ -34,6 +37,8 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
 
   if (typeof mocks.RTCSessionDescription !== "undefined") {
     this.RTCSessionDescription = mocks.RTCSessionDescription;
+  } else if (typeof wrtcClass.RTCSessionDescription !== "undefined") {
+    this.RTCSessionDescription = wrtcClass.RTCSessionDescription;
   } else if (typeof RTCSessionDescription !== "undefined") {
     this.RTCSessionDescription = RTCSessionDescription;
   } else if (typeof mozRTCSessionDescription !== "undefined") {
@@ -44,6 +49,8 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
 
   if (typeof mocks.RTCIceCandidate !== "undefined") {
     this.RTCIceCandidate = mocks.RTCIceCandidate;
+  } else if (typeof wrtcClass.RTCIceCandidate !== "undefined") {
+    this.RTCIceCandidate = wrtcClass.RTCIceCandidate;
   } else if (typeof RTCIceCandidate !== "undefined") {
     this.RTCIceCandidate = RTCIceCandidate;
   } else if (typeof mozRTCIceCandidate !== "undefined") {
@@ -70,11 +77,11 @@ function SimpleDataPeer(peerName, stunServers, dataChannelCallbacks, mocks) {
   this.pc = new this.RTCPeerConnection(config, constraints);
   // Add basic event handlers.
   this.pc.addEventListener("icecandidate",
-                            this.onIceCallback.bind(this));
+                           this.onIceCallback.bind(this));
   this.pc.addEventListener("negotiationneeded",
-                            this.onNegotiationNeeded.bind(this));
+                           this.onNegotiationNeeded.bind(this));
   this.pc.addEventListener("datachannel",
-                            this.onDataChannel.bind(this));
+                           this.onDataChannel.bind(this));
   this.pc.addEventListener("signalingstatechange", function () {
     // TODO: come up with a better way to detect connection.  We start out
     // as "stable" even before we are connected.
@@ -502,3 +509,7 @@ PeerConnection.prototype.close = function (continuation) {
 exports.provider = PeerConnection;
 exports.name = 'core.peerconnection';
 exports.flags = {module: true};
+exports.setImpl = function(impl) {
+  "use strict";
+  wrtcClass = impl;
+};
