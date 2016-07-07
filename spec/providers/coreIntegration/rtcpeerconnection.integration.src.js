@@ -310,27 +310,23 @@ module.exports = function (pc, dc, setup) {
         {url: '-invalid-url-'}
       ]
     });
-  
-    var testOver = done;
-    var finished = function() {
-      if (testOver) {
-        var done = testOver;
-        testOver = false;
-        done();
-      }
-    };
 
     var timeoutId = setTimeout(function () {
       // Option 1. subsequent calls fail.
       badPeer.createOffer().then(function() {
         console.error('Expected call to bad rtc connection to fail.');
-      }, finished);
+      }, function(err) {
+        // should have gotten onClose
+        expect(false).toBe(true);
+        done();
+      });
     }, 100);
   
     peercon.onClose(badPeer, function () {
       // Option 2. a constructor error forces a system level on-close.
       clearTimeout(timeoutId);
-      finished();
+      expect(true).toBe(true);
+      done();
     });
   });
 };
