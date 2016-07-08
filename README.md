@@ -53,7 +53,7 @@ on our GitHub [wiki](https://github.com/freedomjs/freedom/wiki).
 See freedom.js
 -------
 
-[Demos](http://freedomjs.org/demo/) show many of the common freedom.js patterns.
+[Demos](http://www.freedomjs.org/dist/freedom/latest/demo/) show many of the common freedom.js patterns.
 
 To run the demonstrations locally, run ```grunt demo```.
 
