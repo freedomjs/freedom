@@ -223,7 +223,7 @@ module.exports = function (provider, setup) {
       expect(msg.socket).toBeDefined();
       client.close(function () {
         clientCopy = new provider.provider(undefined, function () {},
-                                           msg.socket);
+                                           client.id);
         clientCopy.getInfo(function (info) {
           // TODO consider changing implementation to give more explicit failure
           expect(info.connected).toEqual(false);
