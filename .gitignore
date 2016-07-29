@@ -5,6 +5,7 @@
 /dist
 /shippable
 /freedom.js
+/karma_html
 
 ### Auto-generated
 /node_modules
