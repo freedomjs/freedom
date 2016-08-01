@@ -346,7 +346,7 @@ module.exports = function (grunt) {
           options: {
             singleRun: false,
             autoWatch: true,
-            reporters: ['progress', 'html'],
+            reporters: ['progress', 'kjhtml'],
             coverageReporter: {}
           }
         }
