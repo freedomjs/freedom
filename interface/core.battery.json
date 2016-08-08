@@ -1,0 +1,14 @@
+{
+  "name": "core.battery",
+  "api": {
+    "getCharging": {"type": "method", "value": [], "ret": "boolean"},
+    "getChargingTime": {"type": "method", "value": [], "ret": "number"},
+    "getDischargingTime": {"type": "method", "value": [], "ret": "number"},
+    "getLevel": {"type": "method", "value": [], "ret": "number"},
+
+    "chargingchange": { "type": "event", "value": { "charging": "boolean" } },
+    "chargingtimechange": { "type": "event", "value": { "chargingTime": "number" } },
+    "dischargingtimechange": { "type": "event", "value": { "dischargingTime": "number" } },
+    "levelchange": { "type": "event", "value": { "level": "number" } }
+  }
+}

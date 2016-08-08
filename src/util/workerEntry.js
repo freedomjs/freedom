@@ -12,7 +12,8 @@ var providers = [
   require('../../providers/core/core.view'),
   require('../../providers/core/core.oauth'),
   require('../../providers/core/core.websocket'),
-  require('../../providers/core/core.xhr')
+  require('../../providers/core/core.xhr'),
+  require('../../providers/core/core.battery')
 ];
 
 function getFreedomScript() {
