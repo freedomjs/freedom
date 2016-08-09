@@ -11,10 +11,12 @@ var BatteryProvider = function(cap, dispatchEvent) {
     this._batteryPromise.then(function(battery) {
       this._setupListeners(battery, dispatchEvent);
     }.bind(this));
+  } else {
+    console.warn("Trying to use core.battery API without client support");
   }
 };
 
-BatteryProvider.prototype.getCharging = function() {
+BatteryProvider.prototype.isCharging = function() {
   "use strict";
   if (!this._batteryPromise) {
     return PromiseCompat.resolve(true);  // Charging / plugged in
@@ -63,8 +65,7 @@ BatteryProvider.prototype._setupListeners = function(battery, dispatchEvent) {
     "levelchange"
   ];
   events.forEach(function (eventName) {
-    battery.addEventListener(eventName, dispatchEvent.bind(this, eventName),
-        false);
+    battery.addEventListener(eventName, dispatchEvent.bind(this, eventName));
   });
 };
 

@@ -34,19 +34,19 @@ describe("core.battery", function() {
   afterEach(function() {
   });
 
-  it("getCharging", function(done) {
+  it("isCharging", function(done) {
     CoreBattery.setNavigator(mockNavigator);
     var bat = new CoreBattery.provider(undefined, discardEvent);
-    bat.getCharging().then(function(charging) {
+    bat.isCharging().then(function(charging) {
       expect(charging).toEqual(mockBattery.charging);
       done();
     });
   });
 
-  it("getCharging fallback", function(done) {
+  it("isCharging fallback", function(done) {
     CoreBattery.setNavigator({});
     var bat = new CoreBattery.provider(undefined, discardEvent);
-    bat.getCharging().then(function(charging) {
+    bat.isCharging().then(function(charging) {
       expect(charging).toEqual(true);
       done();
     });
