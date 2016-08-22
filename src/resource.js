@@ -344,7 +344,7 @@ Resource.prototype.xhrRetriever = function (url, resolve, reject) {
     }
   }.bind(this, resolve, reject), false);
   ref.overrideMimeType("application/json");
-  ref.open("GET", url, true);
+  ref.open("GET", url, false);
   ref.send();
 };
 
