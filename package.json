@@ -54,7 +54,7 @@
     "node-json-minify": "^1.0.0",
     "phantomjs-prebuilt": "^2.1.9",
     "request": "^2.74.0",
-    "webrtc-adapter": "1.4.0"
+    "webrtc-adapter": "0.0.7"
   },
   "scripts": {
     "test": "grunt ci --verbose",
