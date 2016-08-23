@@ -1,4 +1,4 @@
-/*globals XMLHttpRequest */
+/*globals XMLHttpRequest,chrome */
 /*jslint indent:2,node:true,sloppy:true */
 var PromiseCompat = require('es6-promise').Promise;
 
@@ -344,7 +344,15 @@ Resource.prototype.xhrRetriever = function (url, resolve, reject) {
     }
   }.bind(this, resolve, reject), false);
   ref.overrideMimeType("application/json");
-  ref.open("GET", url, false);
+  if (typeof navigator !== 'undefined' && navigator && navigator.userAgent &&
+      navigator.userAgent.indexOf('Chrome') !== -1 && !chrome.app.runtime) {
+    // Chrome (browser, not apps/extensions) fails to load multiple APIs
+    // from the same manifest unless they are loaded synchronously
+    ref.open("GET", url, false);
+  } else {
+    // Async for all other cases, especially Chrome apps (which fail otherwise)
+    ref.open("GET", url, true);
+  }
   ref.send();
 };
 
