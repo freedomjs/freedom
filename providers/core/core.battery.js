@@ -1,7 +1,10 @@
 /*globals navigator*/
 /*jshint node:true*/
 var PromiseCompat = require('es6-promise').Promise;
-var nav = navigator;
+var nav = false;
+if (typeof navigator !== 'undefined') {
+  nav = navigator;
+}
 
 var BatteryProvider = function(cap, dispatchEvent) {
   "use strict";
