@@ -9,8 +9,9 @@
 // Window object.
 
 var PromiseCompat = require('es6-promise').Promise;
-var nav = navigator;
-var win = window;
+// Alias navigator/window if defined, else set to false
+var nav = typeof navigator !== 'undefined' && navigator;
+var win = typeof window !== 'undefined' && window;
 
 var OnlineProvider = function(cap, dispatchEvent) {
   "use strict";
