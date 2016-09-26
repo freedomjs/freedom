@@ -1,7 +1,7 @@
 {
   "name": "freedom",
   "description": "Embracing a distributed web",
-  "version": "0.6.34",
+  "version": "0.6.35",
   "homepage": "http://freedomjs.org",
   "license": "Apache-2.0",
   "bugs": {
