@@ -1,0 +1,9 @@
+{
+  "name": "core.online",
+  "api": {
+    "isOnline": {"type": "method", "value": [], "ret": "boolean"},
+
+    "online": { "type": "event", "value": {} },
+    "offline": { "type": "event", "value": {} }
+  }
+}
