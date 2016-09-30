@@ -9,9 +9,10 @@
 // Window object.
 
 var PromiseCompat = require('es6-promise').Promise;
-// Alias navigator/window if defined, else set to false
-var nav = typeof navigator !== 'undefined' && navigator;
-var win = typeof window !== 'undefined' && window;
+// Alias navigator/window if defined, else set to false.
+// Use window.top due to observed weird behaviors inside iframes.
+var win = typeof window !== 'undefined' && window.top;
+var nav = win && win.navigator;
 
 var OnlineProvider = function(cap, dispatchEvent) {
   "use strict";
