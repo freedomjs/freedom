@@ -21,6 +21,16 @@ module.exports = function (provider, setup) {
     return new Uint8Array(arr).buffer;
   }
 
+  it("Connects and closes cleanly", function (done) {
+    socket.connect('www.google.com', 80, function () {
+      expect(true).toEqual(true);
+      socket.close(function() {
+        expect(dispatch.gotMessage('onDisconnect').errcode).toEqual('SUCCESS');
+        done();
+      });
+    });
+  });
+
   it("Works as a Client", function (done) {
     socket.connect('www.google.com', 80, function () {
       var written = false;
