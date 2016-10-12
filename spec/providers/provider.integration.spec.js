@@ -14,14 +14,15 @@ describe("integration-single: social.loopback.json",
          require("./social/social.single.integration.src")
          .bind(this, window.freedom,
                "providers/social/loopback/social.loopback.json", {}));
-describe("integration-single: social.ws.json",
-         require("./social/social.single.integration.src")
-         .bind(this, window.freedom,
-               "providers/social/websocket-server/social.ws.json", {}));
-describe("integration-double: social.ws.json",
-         require("./social/social.double.integration.src")
-         .bind(this, window.freedom,
-               "providers/social/websocket-server/social.ws.json", {}));
+// TODO - re-enable these tests when websocker server available again
+xdescribe("integration-single: social.ws.json",
+          require("./social/social.single.integration.src")
+          .bind(this, window.freedom,
+                "providers/social/websocket-server/social.ws.json", {}));
+xdescribe("integration-double: social.ws.json",
+          require("./social/social.double.integration.src")
+          .bind(this, window.freedom,
+                "providers/social/websocket-server/social.ws.json", {}));
 
 // Storage
 describe("integration: storage.isolated.json",
